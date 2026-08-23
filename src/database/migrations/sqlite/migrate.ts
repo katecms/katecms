@@ -285,19 +285,29 @@ async function applySchemas(driver: SqliteDriver, extra?: SchemaJob): Promise<Mi
   }
 }
 
-function logMigrationResult(result: MigrationResult): void {
+function sqliteDatabaseLabel(options: MigrateSqliteOptions): string {
+  if (options.d1) {
+    return 'Cloudflare D1 database'
+  }
+  if (options.filename != null && options.filename !== '') {
+    return `SQLite database «${options.filename}»`
+  }
+  return 'SQLite database (open connection)'
+}
+
+function logMigrationResult(result: MigrationResult, database: string): void {
   for (const id of result.applied) {
     console.log(
       id === SCHEMA_ID
-        ? '[MiraiCMS] The database has been imported successfully.'
-        : `[MiraiCMS] Schema «${id}» imported successfully.`,
+        ? `[MiraiCMS] The ${database} has been imported successfully.`
+        : `[MiraiCMS] Schema «${id}» imported successfully into the ${database}.`,
     )
   }
   for (const id of result.alreadyApplied) {
     console.log(
       id === SCHEMA_ID
-        ? '[MiraiCMS] The database has already been imported previously.'
-        : `[MiraiCMS] Schema «${id}» has already been imported previously.`,
+        ? `[MiraiCMS] The ${database} has already been imported previously.`
+        : `[MiraiCMS] Schema «${id}» has already been imported previously into the ${database}.`,
     )
   }
 }
@@ -311,6 +321,6 @@ export async function migrateSqlite(input: string | MigrateSqliteOptions): Promi
   }
 
   const result = await withDriver(options, driver => applySchemas(driver, resolveExtraSchema(options)))
-  logMigrationResult(result)
+  logMigrationResult(result, sqliteDatabaseLabel(options))
   return result
 }

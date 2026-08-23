@@ -1,6 +1,6 @@
 import { defineNitroPlugin } from 'nitropack/runtime'
 import { useRuntimeConfig } from '#imports'
-import { migrateSqlite } from '../../../database/migrations'
+import { migrateSqlite, migratePostgres } from '../../../database/migrations'
 
 export default defineNitroPlugin(async () => {
   const filename = useRuntimeConfig().miraicmsSqliteFilename
@@ -8,4 +8,6 @@ export default defineNitroPlugin(async () => {
     throw new Error('[MiraiCMS] miraicmsSqliteFilename is not set in runtimeConfig.')
   }
   await migrateSqlite({ filename })
+
+  await migratePostgres({ connectionString: 'postgres://postgres:admin@127.0.0.1:5432/miraicms' })
 })

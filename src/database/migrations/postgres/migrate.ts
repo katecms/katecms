@@ -106,14 +106,15 @@ async function applyOne(
 async function applySchemas(
   client: Queryable,
   extra?: SchemaJob,
-): Promise<MigrationResult> {
+): Promise<MigrationResult & { database: string }> {
   await client.query('BEGIN')
   try {
-    const version = await client.query<{ num: string, label: string }>(`
+    const version = await client.query<{ num: string, label: string, db: string }>(`
       SELECT current_setting('server_version_num') AS num,
-             current_setting('server_version') AS label
+             current_setting('server_version') AS label,
+             current_database() AS db
     `)
-    const { num, label } = version.rows[0]!
+    const { num, label, db } = version.rows[0]!
     if (Number(num) < MIN_SERVER_VERSION_NUM) {
       throw new Error(
         `[MiraiCMS] PostgreSQL 15 or newer is required to run CMS migrations (found ${label}).`,
@@ -141,7 +142,7 @@ async function applySchemas(
     }
 
     await client.query('COMMIT')
-    return { applied, alreadyApplied }
+    return { applied, alreadyApplied, database: db }
   }
   catch (error) {
     try {
@@ -178,19 +179,24 @@ async function withClient<T>(
   }
 }
 
-function logMigrationResult(result: MigrationResult): void {
+function postgresDatabaseLabel(name: string | undefined): string {
+  const trimmed = name?.trim()
+  return trimmed ? `PostgreSQL database «${trimmed}»` : 'PostgreSQL database'
+}
+
+function logMigrationResult(result: MigrationResult, database: string): void {
   for (const id of result.applied) {
     console.log(
       id === SCHEMA_ID
-        ? '[MiraiCMS] The database has been imported successfully.'
-        : `[MiraiCMS] Schema «${id}» imported successfully.`,
+        ? `[MiraiCMS] The ${database} has been imported successfully.`
+        : `[MiraiCMS] Schema «${id}» imported successfully into the ${database}.`,
     )
   }
   for (const id of result.alreadyApplied) {
     console.log(
       id === SCHEMA_ID
-        ? '[MiraiCMS] The database has already been imported previously.'
-        : `[MiraiCMS] Schema «${id}» has already been imported previously.`,
+        ? `[MiraiCMS] The ${database} has already been imported previously.`
+        : `[MiraiCMS] Schema «${id}» has already been imported previously into the ${database}.`,
     )
   }
 }
@@ -203,7 +209,10 @@ export async function migratePostgres(input: string | MigrateOptions): Promise<M
     )
   }
 
-  const result = await withClient(options, client => applySchemas(client, resolveExtraSchema(options)))
-  logMigrationResult(result)
+  const { database, ...result } = await withClient(
+    options,
+    client => applySchemas(client, resolveExtraSchema(options)),
+  )
+  logMigrationResult(result, postgresDatabaseLabel(database))
   return result
 }

@@ -1,5 +1,5 @@
 import type { Insertable, Kysely, Selectable, Updateable } from 'kysely'
-import type { Database, CollectionsTable } from '../schema'
+import type { Database, CollectionsTable } from '../client/schema'
 
 export type Collection = Selectable<CollectionsTable>
 export type NewCollection = Insertable<CollectionsTable>
@@ -79,6 +79,17 @@ export async function updateCollection(
   return db
     .updateTable('collections')
     .set(patch)
+    .where('id', '=', id)
+    .returningAll()
+    .executeTakeFirst()
+}
+
+export async function deleteCollection(
+  db: Kysely<Database>,
+  id: number,
+): Promise<Collection | undefined> {
+  return db
+    .deleteFrom('collections')
     .where('id', '=', id)
     .returningAll()
     .executeTakeFirst()

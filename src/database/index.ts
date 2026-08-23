@@ -12,14 +12,12 @@ export type {
   OptionsTable,
   UsersTable,
   UserStatus,
-} from './schema'
-
-export { createPostgresDb } from './postgres'
-export type { CreatePostgresDbOptions } from './postgres'
-
-export { createSqliteDb } from './sqlite'
-export type { CreateSqliteDbOptions } from './sqlite'
-export type { D1Database } from './d1-dialect'
+} from './client'
+export { createPostgresDb } from './client'
+export type { CreatePostgresDbOptions } from './client'
+export { createSqliteDb } from './client'
+export type { CreateSqliteDbOptions } from './client'
+export type { D1Database } from './client'
 
 export { migratePostgres, migrateSqlite } from './migrations'
 
@@ -33,6 +31,20 @@ export {
   findCollectionById,
   listCollections,
   updateCollection,
+  deleteCollection,
+  deleteCollectionMeta,
+  findCollectionMeta,
+  listCollectionMeta,
+  setCollectionMeta,
+  createCollectionRevision,
+  findCollectionRevisionById,
+  listCollectionRevisions,
+  createMedia,
+  deleteMedia,
+  findMediaByFilename,
+  findMediaById,
+  listMedia,
+  updateMedia,
 } from './queries'
 export type {
   NewUser,
@@ -41,4 +53,10 @@ export type {
   Collection,
   CollectionUpdate,
   NewCollection,
+  CollectionMeta,
+  CollectionRevision,
+  NewCollectionRevision,
+  Media,
+  MediaUpdate,
+  NewMedia,
 } from './queries'

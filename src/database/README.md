@@ -5,21 +5,38 @@
 ```ts
 import {
   createCollection,
+  createCollectionRevision,
+  createMedia,
   createPostgresDb,
   createSqliteDb,
   createUser,
+  deleteCollection,
+  deleteCollectionMeta,
+  deleteMedia,
+  findCollectionById,
+  findCollectionMeta,
+  findCollectionRevisionById,
+  findMediaByFilename,
+  findMediaById,
   findUserByEmail,
   findUserById,
+  listCollectionMeta,
+  listCollectionRevisions,
   listCollections,
+  listMedia,
   listUsers,
   migratePostgres,
   migrateSqlite,
+  setCollectionMeta,
   updateCollection,
+  updateMedia,
   updateUser,
 } from './database'
 ```
 
 Типичный порядок: миграция → клиент → запросы. Один и тот же `db` отдаёте в функции запросов из своих роутов.
+
+Папки: `client/` — Kysely и типы таблиц, `queries/` — запросы, `migrations/` — SQL и раннеры. Снаружи по-прежнему `from './database'`.
 
 ## Быстрый старт
 
@@ -76,7 +93,7 @@ await db.destroy() // биндинг D1 не закрывается
 
 ## Клиент
 
-Фабрики возвращают `Kysely<Database>`. Типы таблиц — корневой `schema.ts`.
+Фабрики возвращают `Kysely<Database>`. Типы таблиц — `client/schema.ts`.
 
 SQLite и D1 в БД хранят даты как ISO-текст, JSON как текст, `autoload` как `0`/`1`. Клиент приводит это к общему виду: `Date`, объект, `boolean`. Postgres так и отдаёт `timestamptz` / `jsonb` / `boolean`.
 
@@ -173,6 +190,8 @@ finally {
 
 Если `status` — `published`, а `published_at` нет, подставляется текущее время (так требует CHECK в схеме). Циклы `parent_id` отсекает триггер в БД.
 
+`deleteCollection` — жёсткое удаление. Meta, ревизии и связи с dictionaries снимаются каскадом; у дочерних записей `parent_id` становится `NULL`. В корзину без удаления из таблицы: `updateCollection(..., { status: 'trash' })`.
+
 ```ts
 const page = await createCollection(db, {
   type: 'page',
@@ -193,13 +212,74 @@ const drafted = await updateCollection(db, page.id, {
   title: 'About us',
 })
 // нет такой строки → undefined
+
+await updateCollection(db, page.id, { status: 'trash' })
+const removed = await deleteCollection(db, page.id)
+// нет такой строки → undefined
+```
+
+## Запросы: collection_meta
+
+Ключ-значение на запись коллекции. Первичный ключ — `(collection_id, key)`. `setCollectionMeta` вставляет или обновляет.
+
+```ts
+await setCollectionMeta(db, page.id, 'seo.title', 'About')
+await setCollectionMeta(db, page.id, 'seo.title', 'About us') // upsert
+
+const row = await findCollectionMeta(db, page.id, 'seo.title')
+const all = await listCollectionMeta(db, page.id)
+await deleteCollectionMeta(db, page.id, 'seo.title') // true, если строка была
+```
+
+## Запросы: collection_revisions
+
+Снимок `data` (json). Строки не обновляются — только создание и чтение. При удалении коллекции ревизии снимаются каскадом.
+
+```ts
+const revision = await createCollectionRevision(db, {
+  collection_id: page.id,
+  author_id: user.id,
+  data: { title: page.title, fields: page.fields, blocks: page.blocks },
+})
+
+const latest = await listCollectionRevisions(db, page.id) // created_at desc, затем id
+const one = await findCollectionRevisionById(db, revision.id)
+```
+
+## Запросы: media
+
+Только строка в таблице. Файл на диск, URL и sharp — снаружи. `filename` уникален.
+
+```ts
+const item = await createMedia(db, {
+  filename: 'photo.webp',
+  mime_type: 'image/webp',
+  filesize: 12_345,
+  width: 1200,
+  height: 800,
+  alt: 'Lake',
+  uploaded_by: user.id,
+})
+
+const byId = await findMediaById(db, item.id)
+const byName = await findMediaByFilename(db, 'photo.webp')
+const library = await listMedia(db) // created_at desc
+
+await updateMedia(db, item.id, {
+  alt: 'Lake at dusk',
+  variants_status: 'ready',
+  variants: [{ filename: 'photo-480x480.webp', width: 480, height: 480 }],
+})
+
+const removed = await deleteMedia(db, item.id)
+// нет такой строки → undefined
 ```
 
 ## Миграции
 
 Применяет схему CMS один раз, затем SQL дополнений. Журнал — `_miraicms_migrations`. Повторный запуск пропускает уже записанные id. Результат: `{ applied, alreadyApplied }`.
 
-Если правите `postgres.sql` или `sqlite.sql`, обновите `migrations/*/schema.ts` (раннер берёт встроенную копию) и типы в корневом `schema.ts`.
+Если правите `postgres.sql` или `sqlite.sql`, обновите `migrations/*/schema.ts` (раннер берёт встроенную копию) и типы в `client/schema.ts`.
 
 ### PostgreSQL
 

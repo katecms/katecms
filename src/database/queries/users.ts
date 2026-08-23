@@ -1,6 +1,6 @@
 import type { Insertable, Kysely, Selectable, Updateable } from 'kysely'
 import { sql } from 'kysely'
-import type { Database, UsersTable } from '../schema'
+import type { Database, UsersTable } from '../client/schema'
 
 export type User = Selectable<UsersTable>
 export type NewUser = Insertable<UsersTable>

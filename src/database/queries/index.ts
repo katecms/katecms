@@ -1,5 +1,6 @@
 export {
   createUser,
+  deleteUser,
   findUserByEmail,
   findUserById,
   listUsers,
@@ -57,7 +58,7 @@ export {
   listDictionariesByCollection,
   unlinkCollectionDictionary,
 } from './collection-dictionaries'
-export type { CollectionDictionary } from './collection-dictionaries'
+export type { CollectionDictionary, ListCollectionsByDictionaryOptions } from './collection-dictionaries'
 
 export {
   deleteOption,

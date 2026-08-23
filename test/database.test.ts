@@ -1,0 +1,202 @@
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { sql } from 'kysely'
+import { afterEach, describe, expect, it } from 'vitest'
+import {
+  createCollection,
+  createDictionary,
+  createSqliteDb,
+  createUser,
+  deleteUser,
+  findDictionaryByTypeAndSlug,
+  findUserByEmail,
+  linkCollectionDictionary,
+  listCollectionsByDictionary,
+  migrateSqlite,
+  setOption,
+  unlinkCollectionDictionary,
+  updateCollection,
+  updateUser,
+} from '../src/database'
+import { SCHEMA_SQL as postgresSchemaSql } from '../src/database/migrations/postgres/schema'
+import { SCHEMA_SQL as sqliteSchemaSql } from '../src/database/migrations/sqlite/schema'
+
+const require = createRequire(import.meta.url)
+const BetterSqlite = require('better-sqlite3') as new (file: string) => {
+  exec: (sql: string) => unknown
+  prepare: (sql: string) => { all: (...params: unknown[]) => unknown, run: (...params: unknown[]) => unknown }
+  close: () => void
+}
+
+const tempDirs: string[] = []
+
+afterEach(() => {
+  while (tempDirs.length > 0) {
+    const dir = tempDirs.pop()
+    if (dir) {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  }
+})
+
+async function memoryDb() {
+  const sqlite = new BetterSqlite(':memory:')
+  await migrateSqlite({ database: sqlite })
+  const db = createSqliteDb({ database: sqlite })
+  return {
+    db,
+    sqlite,
+    async close() {
+      await db.destroy()
+      sqlite.close()
+    },
+  }
+}
+
+describe('database layer', () => {
+  it('keeps .sql copies identical to schema.ts', () => {
+    const sqliteSql = readFileSync(
+      new URL('../src/database/migrations/sqlite/sqlite.sql', import.meta.url),
+      'utf8',
+    )
+    const postgresSql = readFileSync(
+      new URL('../src/database/migrations/postgres/postgres.sql', import.meta.url),
+      'utf8',
+    )
+    expect(sqliteSql.replaceAll('\r\n', '\n')).toBe(sqliteSchemaSql.replaceAll('\r\n', '\n'))
+    expect(postgresSql.replaceAll('\r\n', '\n')).toBe(postgresSchemaSql.replaceAll('\r\n', '\n'))
+  })
+
+  it('round-trips JSON primitives on SQLite', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      expect(await setOption(db, 'flag', false)).toMatchObject({ value: false })
+      expect(await setOption(db, 'count', 42)).toMatchObject({ value: 42 })
+      expect(await setOption(db, 'title', 'Mirai')).toMatchObject({ value: 'Mirai' })
+      expect(await setOption(db, 'site', { name: 'Mirai' })).toMatchObject({ value: { name: 'Mirai' } })
+    }
+    finally {
+      await close()
+    }
+  })
+
+  it('trims email on update and type+slug on dictionary lookup', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      const user = await createUser(db, {
+        email: 'Ada@example.com',
+        password_hash: 'hash',
+      })
+      await updateUser(db, user.id, { email: '  Ada@example.com  ' })
+      const found = await findUserByEmail(db, 'ada@example.com')
+      expect(found?.email).toBe('Ada@example.com')
+
+      await createDictionary(db, {
+        type: 'category',
+        slug: 'news',
+        title: 'News',
+      })
+      const term = await findDictionaryByTypeAndSlug(db, '  category  ', '  news  ')
+      expect(term?.slug).toBe('news')
+    }
+    finally {
+      await close()
+    }
+  })
+
+  it('sets published_at only when it is empty', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      const user = await createUser(db, {
+        email: 'ada@example.com',
+        password_hash: 'hash',
+      })
+      const page = await createCollection(db, {
+        type: 'page',
+        slug: 'about',
+        title: 'About',
+        status: 'published',
+        author_id: user.id,
+      })
+      const firstPublishedAt = page.published_at
+      expect(firstPublishedAt).toBeInstanceOf(Date)
+
+      await new Promise(resolve => setTimeout(resolve, 20))
+      const again = await updateCollection(db, page.id, { status: 'published', title: 'About us' })
+      expect(again?.published_at).toEqual(firstPublishedAt)
+    }
+    finally {
+      await close()
+    }
+  })
+
+  it('hides trash from listCollectionsByDictionary unless includeTrash', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      const user = await createUser(db, {
+        email: 'ada@example.com',
+        password_hash: 'hash',
+      })
+      const page = await createCollection(db, {
+        type: 'page',
+        slug: 'about',
+        title: 'About',
+        author_id: user.id,
+      })
+      const category = await createDictionary(db, {
+        type: 'category',
+        slug: 'news',
+        title: 'News',
+      })
+      await linkCollectionDictionary(db, page.id, category.id)
+      await updateCollection(db, page.id, { status: 'trash' })
+
+      expect(await listCollectionsByDictionary(db, category.id)).toHaveLength(0)
+      expect(await listCollectionsByDictionary(db, category.id, { includeTrash: true })).toHaveLength(1)
+      expect(await unlinkCollectionDictionary(db, page.id, category.id)).toBe(true)
+      expect(await unlinkCollectionDictionary(db, page.id, category.id)).toBe(false)
+    }
+    finally {
+      await close()
+    }
+  })
+
+  it('deletes a user and rejects id 0', async () => {
+    const { db, sqlite, close } = await memoryDb()
+    try {
+      const user = await createUser(db, {
+        email: 'ada@example.com',
+        password_hash: 'hash',
+      })
+      const removed = await deleteUser(db, user.id)
+      expect(removed?.id).toBe(user.id)
+      expect(await findUserByEmail(db, 'ada@example.com')).toBeUndefined()
+
+      expect(() => {
+        sqlite.prepare('INSERT INTO users (id, email, password_hash) VALUES (0, ?, ?)').run('zero@x.test', 'hash')
+      }).toThrow()
+    }
+    finally {
+      await close()
+    }
+  })
+
+  it('enables WAL and busy_timeout on file databases', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'miraicms-'))
+    tempDirs.push(dir)
+    const file = join(dir, 'miraicms.db')
+    await migrateSqlite(file)
+    const db = createSqliteDb(file)
+    try {
+      const timeout = await sql<{ timeout: number }>`PRAGMA busy_timeout`.execute(db)
+      expect(Number(timeout.rows[0]?.timeout)).toBe(5000)
+      const mode = await sql<{ journal_mode: string }>`PRAGMA journal_mode`.execute(db)
+      expect(mode.rows[0]?.journal_mode.toLowerCase()).toBe('wal')
+    }
+    finally {
+      await db.destroy()
+    }
+  })
+})

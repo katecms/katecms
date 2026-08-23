@@ -63,7 +63,8 @@ CREATE TABLE IF NOT EXISTS users (
   role          text NOT NULL DEFAULT 'subscriber',
   status        text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'banned')),
   created_at    timestamptz NOT NULL DEFAULT now(),
-  updated_at    timestamptz NOT NULL DEFAULT now()
+  updated_at    timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT users_id_positive CHECK (id > 0)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique ON users (lower(email));
 DROP TRIGGER IF EXISTS users_set_updated_at ON users;
@@ -87,6 +88,7 @@ CREATE TABLE IF NOT EXISTS collections (
   created_at    timestamptz NOT NULL DEFAULT now(),
   updated_at    timestamptz NOT NULL DEFAULT now(),
   published_at  timestamptz,
+  CONSTRAINT collections_id_positive CHECK (id > 0),
   CONSTRAINT collections_parent_not_self CHECK (parent_id IS DISTINCT FROM id),
   CONSTRAINT collections_published_at_present
     CHECK (status <> 'published' OR published_at IS NOT NULL)
@@ -106,7 +108,7 @@ CREATE TRIGGER collections_set_updated_at
   EXECUTE FUNCTION cms_set_updated_at();
 DROP TRIGGER IF EXISTS collections_prevent_hierarchy_cycle ON collections;
 CREATE TRIGGER collections_prevent_hierarchy_cycle
-  BEFORE UPDATE OF parent_id ON collections
+  BEFORE INSERT OR UPDATE OF parent_id ON collections
   FOR EACH ROW
   EXECUTE FUNCTION cms_prevent_hierarchy_cycle();
 
@@ -122,7 +124,8 @@ CREATE TABLE IF NOT EXISTS collection_revisions (
   collection_id bigint NOT NULL REFERENCES collections (id) ON DELETE CASCADE,
   author_id     bigint REFERENCES users (id) ON DELETE SET NULL,
   data          jsonb NOT NULL,
-  created_at    timestamptz NOT NULL DEFAULT now()
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT collection_revisions_id_positive CHECK (id > 0)
 );
 CREATE INDEX IF NOT EXISTS collection_revisions_collection_created_idx
   ON collection_revisions (collection_id, created_at DESC, id DESC);
@@ -140,7 +143,8 @@ CREATE TABLE IF NOT EXISTS media (
   variants        jsonb NOT NULL DEFAULT '[]'::jsonb,
   variants_status text NOT NULL DEFAULT 'none' CHECK (variants_status IN ('none', 'pending', 'ready', 'failed')),
   created_at      timestamptz NOT NULL DEFAULT now(),
-  updated_at      timestamptz NOT NULL DEFAULT now()
+  updated_at      timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT media_id_positive CHECK (id > 0)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS media_filename_unique ON media (filename);
 CREATE INDEX IF NOT EXISTS media_uploaded_by_idx ON media (uploaded_by);
@@ -159,6 +163,7 @@ CREATE TABLE IF NOT EXISTS dictionaries (
   parent_id  bigint REFERENCES dictionaries (id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT dictionaries_id_positive CHECK (id > 0),
   CONSTRAINT dictionaries_parent_not_self CHECK (parent_id IS DISTINCT FROM id)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS dictionaries_type_slug_unique ON dictionaries (type, slug);
@@ -173,7 +178,7 @@ CREATE TRIGGER dictionaries_set_updated_at
   EXECUTE FUNCTION cms_set_updated_at();
 DROP TRIGGER IF EXISTS dictionaries_prevent_hierarchy_cycle ON dictionaries;
 CREATE TRIGGER dictionaries_prevent_hierarchy_cycle
-  BEFORE UPDATE OF parent_id ON dictionaries
+  BEFORE INSERT OR UPDATE OF parent_id ON dictionaries
   FOR EACH ROW
   EXECUTE FUNCTION cms_prevent_hierarchy_cycle();
 

@@ -1,6 +1,8 @@
-import { mkdirSync } from 'node:fs'
-import { dirname, isAbsolute, resolve } from 'node:path'
+import { createRequire } from 'node:module'
 import { SCHEMA_SQL } from './schema'
+import { isMemorySqliteFilename, resolveSqliteFilename } from '../../client/sqlite-filename'
+
+const require = createRequire(import.meta.url)
 
 interface MigrationResult {
   applied: string[]
@@ -119,26 +121,6 @@ function adaptD1(d1: D1Database): SqliteDriver {
   }
 }
 
-function isMemoryDatabase(filename: string): boolean {
-  return filename === ':memory:' || filename.startsWith('file:')
-}
-
-function resolveSqliteFilename(filename: string): string {
-  if (isMemoryDatabase(filename)) {
-    return filename
-  }
-  const path = isAbsolute(filename) ? filename : resolve(filename)
-  mkdirSync(dirname(path), { recursive: true })
-  return path
-}
-
-function runtimeImport(specifier: string): Promise<unknown> {
-  // Keep optional Node builtins out of `import('...')` so Nitro/Rollup does not
-  // warn about unresolved optional drivers at build time.
-  const load = new Function('s', 'return import(s)') as (s: string) => Promise<unknown>
-  return load(specifier)
-}
-
 function isModuleNotFound(error: unknown): boolean {
   return Boolean(
     error
@@ -170,52 +152,36 @@ function fileHandle(db: SqliteDatabase): { driver: SqliteDriver, close: () => vo
   }
 }
 
-async function openWithBetterSqlite(
-  path: string,
-): Promise<{ driver: SqliteDriver, close: () => void } | undefined> {
+function openWithBetterSqlite(path: string): { driver: SqliteDriver, close: () => void } {
   try {
-    const imported = await runtimeImport('better-sqlite3') as {
-      default?: new (file: string) => SqliteDatabase
-    } | (new (file: string) => SqliteDatabase)
-    const Database = typeof imported === 'function' ? imported : imported.default
-    if (!Database) {
-      return undefined
-    }
+    const Database = require('better-sqlite3') as new (file: string) => SqliteDatabase
     return fileHandle(new Database(path))
   }
   catch (error) {
     if (isModuleNotFound(error) || isMissingNativeBindings(error)) {
-      return undefined
+      throw new Error(
+        '[MiraiCMS] migrateSqlite() needs the `better-sqlite3` package to open a file database. Pass `{ d1 }` for Cloudflare D1, or `{ database }` with an open SQLite connection.',
+        { cause: error },
+      )
     }
     throw openFailed(path, error)
   }
 }
 
-async function openWithNodeSqlite(path: string): Promise<{ driver: SqliteDriver, close: () => void }> {
-  const { DatabaseSync } = await runtimeImport('node:sqlite') as {
-    DatabaseSync: new (file: string) => SqliteDatabase
-  }
-  return fileHandle(new DatabaseSync(path))
+function openFileDatabase(filename: string): { driver: SqliteDriver, close: () => void } {
+  return openWithBetterSqlite(resolveSqliteFilename(filename))
 }
 
-async function openFileDatabase(filename: string): Promise<{ driver: SqliteDriver, close: () => void }> {
-  const path = resolveSqliteFilename(filename)
-  const better = await openWithBetterSqlite(path)
-  if (better) {
-    return better
+async function applyConnectionPragmas(
+  driver: SqliteDriver,
+  options: { busyTimeout: boolean, wal: boolean },
+): Promise<void> {
+  await driver.exec('PRAGMA foreign_keys = ON')
+  if (options.busyTimeout) {
+    await driver.exec('PRAGMA busy_timeout = 5000')
   }
-
-  try {
-    return await openWithNodeSqlite(path)
-  }
-  catch (error) {
-    if (!isModuleNotFound(error)) {
-      throw openFailed(path, error)
-    }
-    throw new Error(
-      '[MiraiCMS] migrateSqlite() needs the `better-sqlite3` package or Node.js 22+ (`node:sqlite`) to open a file database. Pass `{ d1 }` for Cloudflare D1, or `{ database }` with an open SQLite connection.',
-      { cause: error },
-    )
+  if (options.wal) {
+    await driver.exec('PRAGMA journal_mode = WAL')
   }
 }
 
@@ -224,10 +190,14 @@ async function withDriver<T>(
   fn: (driver: SqliteDriver) => Promise<T>,
 ): Promise<T> {
   if (options.d1) {
-    return fn(adaptD1(options.d1))
+    const driver = adaptD1(options.d1)
+    await applyConnectionPragmas(driver, { busyTimeout: false, wal: false })
+    return fn(driver)
   }
   if (options.database) {
-    return fn(adaptFileDatabase(options.database))
+    const driver = adaptFileDatabase(options.database)
+    await applyConnectionPragmas(driver, { busyTimeout: true, wal: false })
+    return fn(driver)
   }
   if (!options.filename) {
     throw new Error(
@@ -235,8 +205,12 @@ async function withDriver<T>(
     )
   }
 
-  const { driver, close } = await openFileDatabase(options.filename)
+  const { driver, close } = openFileDatabase(options.filename)
   try {
+    await applyConnectionPragmas(driver, {
+      busyTimeout: true,
+      wal: !isMemorySqliteFilename(options.filename),
+    })
     return await fn(driver)
   }
   finally {

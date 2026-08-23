@@ -27,14 +27,15 @@ export async function findDictionaryByTypeAndSlug(
   type: string,
   slug: string,
 ): Promise<Dictionary | undefined> {
+  const normalizedType = type.trim()
   const normalizedSlug = slug.trim()
-  if (!normalizedSlug) {
+  if (!normalizedType || !normalizedSlug) {
     return undefined
   }
   return db
     .selectFrom('dictionaries')
     .selectAll()
-    .where('type', '=', type)
+    .where('type', '=', normalizedType)
     .where('slug', '=', normalizedSlug)
     .executeTakeFirst()
 }

@@ -1,7 +1,7 @@
 import { Kysely, PostgresDialect } from 'kysely'
 import type { PostgresPool } from 'kysely'
 import pg from 'pg'
-import type { ClientConfig, Pool } from 'pg'
+import type { ClientConfig, CustomTypesConfig, Pool } from 'pg'
 import type { Database } from './schema'
 import { PostgresJsonPlugin } from './values'
 
@@ -10,15 +10,15 @@ export interface CreatePostgresDbOptions extends ClientConfig {
   pool?: Pool
 }
 
-let int8ParserInstalled = false
-
-function installInt8Parser(): void {
-  if (int8ParserInstalled) {
-    return
+function cmsInt8Types(): CustomTypesConfig {
+  return {
+    getTypeParser: (oid, format) => {
+      if (oid === pg.types.builtins.INT8) {
+        return (value: string) => Number(value)
+      }
+      return pg.types.getTypeParser(oid, format)
+    },
   }
-  int8ParserInstalled = true
-  // bigint / identity columns otherwise arrive as strings.
-  pg.types.setTypeParser(pg.types.builtins.INT8, value => Number(value))
 }
 
 function resolveOptions(input: string | CreatePostgresDbOptions): CreatePostgresDbOptions {
@@ -39,7 +39,10 @@ function hasConnectionConfig(options: CreatePostgresDbOptions): boolean {
 
 function toClientConfig(options: CreatePostgresDbOptions): ClientConfig {
   const { pool: _pool, ...clientConfig } = options
-  return clientConfig
+  return {
+    ...clientConfig,
+    types: cmsInt8Types(),
+  }
 }
 
 function toKyselyPool(pool: Pool, endOnDestroy: boolean): PostgresPool {
@@ -57,6 +60,9 @@ function toKyselyPool(pool: Pool, endOnDestroy: boolean): PostgresPool {
 /**
  * Typed Kysely client for PostgreSQL. Connection is passed in; nothing is read
  * from env. Call `db.destroy()` to close a pool this function created.
+ *
+ * INT8 (`bigint` / identity) is parsed as `number` only on pools this function
+ * creates. An existing `pool` keeps its own type parsers.
  */
 export function createPostgresDb(input: string | CreatePostgresDbOptions): Kysely<Database> {
   const options = resolveOptions(input)
@@ -65,8 +71,6 @@ export function createPostgresDb(input: string | CreatePostgresDbOptions): Kysel
       '[MiraiCMS] createPostgresDb() needs a database connection: pass a URL string, `connectionString`, host/database credentials, or an existing `pool`.',
     )
   }
-
-  installInt8Parser()
 
   const pool = options.pool ?? new pg.Pool(toClientConfig(options))
   const endOnDestroy = !options.pool

@@ -101,7 +101,7 @@ function serializeSqliteValue(column: string, value: unknown): unknown {
   if (value == null) {
     return value
   }
-  if (JSON_COLUMNS.has(column) && typeof value === 'object') {
+  if (JSON_COLUMNS.has(column)) {
     return JSON.stringify(value)
   }
   if (TIMESTAMP_COLUMNS.has(column) && value instanceof Date) {
@@ -160,14 +160,16 @@ export class SqliteValuePlugin implements KyselyPlugin {
 }
 
 function serializePostgresValue(column: string, value: unknown): unknown {
-  // `pg` sends JS arrays as Postgres arrays, not jsonb.
-  if (JSON_COLUMNS.has(column) && Array.isArray(value)) {
+  if (value == null) {
+    return value
+  }
+  if (JSON_COLUMNS.has(column)) {
     return JSON.stringify(value)
   }
   return value
 }
 
-/** Stringify jsonb array columns so `pg` does not bind them as SQL arrays. */
+/** JSON.stringify every jsonb bind so `pg` never sends arrays/primitives as SQL types. */
 export class PostgresJsonPlugin implements KyselyPlugin {
   readonly #transformer = new ColumnValueTransformer(serializePostgresValue)
 

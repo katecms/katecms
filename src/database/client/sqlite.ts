@@ -1,8 +1,7 @@
 import { createRequire } from 'node:module'
-import { mkdirSync } from 'node:fs'
-import { dirname, isAbsolute, resolve } from 'node:path'
 import { CompiledQuery, Kysely, SqliteDialect } from 'kysely'
 import type { SqliteDatabase } from 'kysely'
+import { isMemorySqliteFilename, resolveSqliteFilename } from './sqlite-filename'
 import { D1Dialect } from './d1-dialect'
 import type { D1Database } from './d1-dialect'
 import type { Database } from './schema'
@@ -25,19 +24,6 @@ function resolveOptions(input: string | CreateSqliteDbOptions): CreateSqliteDbOp
   return input
 }
 
-function isMemoryDatabase(filename: string): boolean {
-  return filename === ':memory:' || filename.startsWith('file:')
-}
-
-function resolveSqliteFilename(filename: string): string {
-  if (isMemoryDatabase(filename)) {
-    return filename
-  }
-  const path = isAbsolute(filename) ? filename : resolve(filename)
-  mkdirSync(dirname(path), { recursive: true })
-  return path
-}
-
 function openBetterSqlite(path: string): SqliteDatabase {
   const Database = require('better-sqlite3') as new (file: string) => SqliteDatabase
   return new Database(path)
@@ -51,6 +37,17 @@ function wrapDatabase(database: SqliteDatabase, closeOnDestroy: boolean): Sqlite
         database.close()
       }
     },
+  }
+}
+
+async function applySqlitePragmas(
+  connection: { executeQuery: (query: CompiledQuery) => Promise<unknown> },
+  wal: boolean,
+): Promise<void> {
+  await connection.executeQuery(CompiledQuery.raw('PRAGMA foreign_keys = ON'))
+  await connection.executeQuery(CompiledQuery.raw('PRAGMA busy_timeout = 5000'))
+  if (wal) {
+    await connection.executeQuery(CompiledQuery.raw('PRAGMA journal_mode = WAL'))
   }
 }
 
@@ -77,6 +74,7 @@ export function createSqliteDb(input: string | CreateSqliteDbOptions): Kysely<Da
     })
   }
 
+  const openedFile = options.filename != null && !isMemorySqliteFilename(options.filename)
   const database = options.database
     ? wrapDatabase(options.database, false)
     : wrapDatabase(openBetterSqlite(resolveSqliteFilename(options.filename!)), true)
@@ -85,7 +83,7 @@ export function createSqliteDb(input: string | CreateSqliteDbOptions): Kysely<Da
     dialect: new SqliteDialect({
       database,
       async onCreateConnection(connection) {
-        await connection.executeQuery(CompiledQuery.raw('PRAGMA foreign_keys = ON'))
+        await applySqlitePragmas(connection, openedFile)
       },
     }),
     plugins: [new SqliteValuePlugin()],

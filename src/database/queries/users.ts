@@ -67,13 +67,27 @@ export async function updateUser(
   values: UserUpdate,
 ): Promise<User | undefined> {
   const { id: _id, ...rest } = values
-  const patch = definedValues(rest)
+  const patch = definedValues({
+    ...rest,
+    ...rest.email !== undefined ? { email: rest.email.trim() } : {},
+  })
   if (Object.keys(patch).length === 0) {
     return findUserById(db, id)
   }
   return db
     .updateTable('users')
     .set(patch)
+    .where('id', '=', id)
+    .returningAll()
+    .executeTakeFirst()
+}
+
+export async function deleteUser(
+  db: Kysely<Database>,
+  id: number,
+): Promise<User | undefined> {
+  return db
+    .deleteFrom('users')
     .where('id', '=', id)
     .returningAll()
     .executeTakeFirst()

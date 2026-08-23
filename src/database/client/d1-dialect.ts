@@ -27,11 +27,22 @@ export interface D1Database {
   exec?: (query: string) => Promise<unknown>
 }
 
-function returnsRows(sql: string): boolean {
-  const head = sql.trimStart().slice(0, 12).toUpperCase()
-  if (head.startsWith('PRAGMA')) {
+function pragmaReturnsRows(sql: string): boolean {
+  const trimmed = sql.trim()
+  if (!/^PRAGMA\b/i.test(trimmed)) {
     return false
   }
+  // `PRAGMA name = value` is a setter. Bare / function PRAGMAs return rows
+  // (`table_info`, `foreign_key_list`, `journal_mode`, …).
+  return !/=/.test(trimmed)
+}
+
+function returnsRows(sql: string): boolean {
+  const trimmed = sql.trimStart()
+  if (/^PRAGMA\b/i.test(trimmed)) {
+    return pragmaReturnsRows(trimmed)
+  }
+  const head = trimmed.slice(0, 12).toUpperCase()
   return head.startsWith('SELECT')
     || head.startsWith('WITH')
     || head.startsWith('EXPLAIN')

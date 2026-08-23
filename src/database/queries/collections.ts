@@ -14,11 +14,14 @@ function definedValues<T extends object>(values: T): Partial<T> {
 function withPublishedAt<T extends {
   status?: string
   published_at?: Date | string | null
-}>(values: T): T {
-  if (values.status === 'published' && (values.published_at == null)) {
-    return { ...values, published_at: new Date() }
+}>(values: T, existingPublishedAt?: Date | string | null): T {
+  if (values.status !== 'published' || values.published_at != null) {
+    return values
   }
-  return values
+  if (existingPublishedAt != null) {
+    return values
+  }
+  return { ...values, published_at: new Date() }
 }
 
 export async function findCollectionById(
@@ -68,14 +71,20 @@ export async function updateCollection(
   values: CollectionUpdate,
 ): Promise<Collection | undefined> {
   const { id: _id, ...rest } = values
-  const patch = withPublishedAt(definedValues({
+  const defined = definedValues({
     ...rest,
     ...rest.slug !== undefined ? { slug: rest.slug.trim() } : {},
     ...rest.title !== undefined ? { title: rest.title.trim() } : {},
-  }))
-  if (Object.keys(patch).length === 0) {
+  })
+  if (Object.keys(defined).length === 0) {
     return findCollectionById(db, id)
   }
+  let existingPublishedAt: Date | string | null | undefined
+  if (defined.status === 'published' && defined.published_at == null) {
+    const current = await findCollectionById(db, id)
+    existingPublishedAt = current?.published_at ?? null
+  }
+  const patch = withPublishedAt(defined, existingPublishedAt)
   return db
     .updateTable('collections')
     .set(patch)

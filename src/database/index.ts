@@ -23,6 +23,7 @@ export { migratePostgres, migrateSqlite } from './migrations'
 
 export {
   createUser,
+  deleteUser,
   findUserByEmail,
   findUserById,
   listUsers,
@@ -78,5 +79,6 @@ export type {
   DictionaryUpdate,
   NewDictionary,
   CollectionDictionary,
+  ListCollectionsByDictionaryOptions,
   Option,
 } from './queries'

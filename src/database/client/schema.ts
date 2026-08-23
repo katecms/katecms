@@ -3,8 +3,9 @@ import type { ColumnType, Generated } from 'kysely'
 /**
  * Kysely types for the CMS tables.
  *
- * Mirror `migrations/postgres/postgres.sql` and `migrations/sqlite/sqlite.sql`.
- * Keep this file in sync when those schemas change.
+ * Canonical DDL lives in `migrations/postgres/schema.ts` and `migrations/sqlite/schema.ts`.
+ * The `.sql` files next to them are generated copies for reading. Keep all three in sync
+ * when the schema changes: schema.ts (source), the `.sql` copy, and this file.
  *
  * Select types describe the shared JS shape: `Date`, parsed JSON, `boolean`.
  * SQLite/D1 store dates as ISO text, JSON as text, and `autoload` as 0/1;

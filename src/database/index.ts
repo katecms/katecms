@@ -29,5 +29,16 @@ export {
   findUserById,
   listUsers,
   updateUser,
+  createCollection,
+  findCollectionById,
+  listCollections,
+  updateCollection,
 } from './queries'
-export type { NewUser, User, UserUpdate } from './queries'
+export type {
+  NewUser,
+  User,
+  UserUpdate,
+  Collection,
+  CollectionUpdate,
+  NewCollection,
+} from './queries'

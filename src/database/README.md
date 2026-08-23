@@ -1,76 +1,207 @@
 # База данных
 
-Без привязки к Nuxt/Next: подключение передаёте сами.
+Слой без Nuxt и Next: миграции, клиент Kysely и запросы к таблицам. Подключение передаёте сами — URL, пул, файл или биндинг D1. Env внутри не читается.
 
 ```ts
 import {
+  createCollection,
   createPostgresDb,
   createSqliteDb,
   createUser,
   findUserByEmail,
+  findUserById,
+  listCollections,
+  listUsers,
   migratePostgres,
   migrateSqlite,
+  updateCollection,
+  updateUser,
 } from './database'
 ```
+
+Типичный порядок: миграция → клиент → запросы. Один и тот же `db` отдаёте в функции запросов из своих роутов.
+
+## Быстрый старт
+
+### PostgreSQL
+
+```ts
+const url = 'postgres://postgres:admin@127.0.0.1:5432/miraicms'
+
+await migratePostgres(url)
+
+const db = createPostgresDb(url)
+
+const user = await createUser(db, {
+  email: 'ada@example.com',
+  password_hash: hash, // хеш считаете снаружи
+  name: 'Ada',
+  role: 'admin',
+})
+
+await db.destroy() // закрывает пул, который создал createPostgresDb
+```
+
+Нужен PostgreSQL **15+**.
+
+### SQLite (файл)
+
+```ts
+const file = './data/miraicms.db'
+
+await migrateSqlite(file)
+
+const db = createSqliteDb(file)
+
+const found = await findUserByEmail(db, 'ada@example.com')
+
+await db.destroy() // закрывает файл, который открыл createSqliteDb
+```
+
+Файл открывается через `better-sqlite3`. Родительская папка создаётся сама.
+
+### Cloudflare D1
+
+```ts
+await migrateSqlite({ d1: env.DB })
+
+const db = createSqliteDb({ d1: env.DB })
+
+const users = await listUsers(db)
+
+await db.destroy() // биндинг D1 не закрывается
+```
+
+В Worker не используйте `better-sqlite3`. Kysely-транзакции (`db.transaction()`) на D1 не работают: нет сессии между запросами. Нужен один statement или `env.DB.batch()`.
 
 ## Клиент
 
-Типы таблиц — `schema.ts` (Kysely). Фабрики не читают env: URL, пул или файл передаёте аргументом.
+Фабрики возвращают `Kysely<Database>`. Типы таблиц — корневой `schema.ts`.
+
+SQLite и D1 в БД хранят даты как ISO-текст, JSON как текст, `autoload` как `0`/`1`. Клиент приводит это к общему виду: `Date`, объект, `boolean`. Postgres так и отдаёт `timestamptz` / `jsonb` / `boolean`.
+
+### PostgreSQL
 
 ```ts
-const pg = createPostgresDb('postgres://postgres:admin@127.0.0.1:5432/miraicms')
-const pgFromPool = createPostgresDb({ pool }) // `destroy()` этот пул не закрывает
+const db = createPostgresDb('postgres://postgres:admin@127.0.0.1:5432/miraicms')
 
-const sqlite = createSqliteDb('./data/miraicms.db')
-const sqliteFromDb = createSqliteDb({ database }) // `destroy()` это соединение не закрывает
-const d1 = createSqliteDb({ d1: env.DB })
+const db = createPostgresDb({ connectionString: process.env.DATABASE_URL })
 
-await pg.destroy()
-await sqlite.destroy()
-await d1.destroy()
+const db = createPostgresDb({
+  host: '127.0.0.1',
+  port: 5432,
+  database: 'miraicms',
+  user: 'postgres',
+  password: 'admin',
+})
+
+const db = createPostgresDb({ pool })
+// destroy() этот пул не закрывает
 ```
 
-SQLite/D1: даты → `Date`, JSON-текст → объект, `autoload` 0/1 → `boolean`. Kysely-транзакции на D1 не поддерживаются (нет сессии между запросами).
+Для Vercel Postgres / Neon в клиенте можно взять pooled URL (`POSTGRES_URL`) — это обычные запросы приложения. Миграции — только non-pooling, см. ниже.
 
-## Запросы
-
-Функции принимают `Kysely<Database>`, без env и без HTTP.
+### SQLite (файл)
 
 ```ts
-import {
-  createUser,
-  findUserByEmail,
-  findUserById,
-  listUsers,
-  updateUser,
-} from './database'
+const db = createSqliteDb('./data/miraicms.db')
+const db = createSqliteDb({ filename: './data/miraicms.db' })
+const db = createSqliteDb({ filename: ':memory:' })
 
-const user = await findUserByEmail(db, 'a@b.c')
+const db = createSqliteDb({ database })
+// database — соединение better-sqlite3; destroy() его не закрывает
+```
+
+Нужно ровно одно из: путь / `{ filename }` / `{ database }` / `{ d1 }`.
+
+### D1
+
+```ts
+const db = createSqliteDb({ d1: env.DB })
+```
+
+## Запросы: users
+
+Все функции принимают `db`. Нет HTTP, сессии и хеша пароля — это в роуте.
+
+Строки приходят целиком, включая `password_hash`. Email ищется без учёта регистра (`lower(email)`).
+
+```ts
 const created = await createUser(db, {
-  email: 'a@b.c',
+  email: 'Ada@example.com', // сохранится с trim; поиск идёт в нижнем регистре
   password_hash: hash,
+  name: 'Ada',
+  role: 'editor',
+  status: 'active',
+  avatar: null,
 })
-await updateUser(db, created.id, { name: 'Ada' })
-const users = await listUsers(db)
+
+const byId = await findUserById(db, created.id)
+const byEmail = await findUserByEmail(db, 'ada@example.com')
+
+const patched = await updateUser(db, created.id, {
+  name: 'Ada Lovelace',
+  status: 'banned',
+})
+// нет такой строки → undefined
+// пустой patch → текущая строка, как findUserById
+
+const all = await listUsers(db) // created_at, затем id
+```
+
+В роуте (Nuxt `defineEventHandler` или Next `GET`/`POST` — без разницы):
+
+```ts
+const db = createPostgresDb(process.env.DATABASE_URL!)
+try {
+  const user = await findUserByEmail(db, email)
+  if (!user) {
+    return null
+  }
+  return { id: user.id, email: user.email, name: user.name }
+}
+finally {
+  await db.destroy()
+}
+```
+
+Если пул живёт всё время процесса, создайте `db` один раз и не вызывайте `destroy()` на каждый запрос.
+
+## Запросы: collections
+
+Запись в таблице `collections` (страница, пост и т.д. — различаются полем `type`). Корзина (`trash`) в список не входит. Хеш пароля записи, если нужен, считаете снаружи.
+
+Если `status` — `published`, а `published_at` нет, подставляется текущее время (так требует CHECK в схеме). Циклы `parent_id` отсекает триггер в БД.
+
+```ts
+const page = await createCollection(db, {
+  type: 'page',
+  slug: 'about',
+  title: 'About',
+  status: 'published',
+  author_id: user.id,
+  parent_id: null,
+  fields: {},
+  blocks: [],
+})
+
+const byId = await findCollectionById(db, page.id)
+const pages = await listCollections(db, 'page') // без trash; menu_order, затем created_at desc
+
+const drafted = await updateCollection(db, page.id, {
+  status: 'draft',
+  title: 'About us',
+})
+// нет такой строки → undefined
 ```
 
 ## Миграции
 
-Применяет схему CMS один раз, затем при необходимости SQL дополнений.
+Применяет схему CMS один раз, затем SQL дополнений. Журнал — `_miraicms_migrations`. Повторный запуск пропускает уже записанные id. Результат: `{ applied, alreadyApplied }`.
 
-```ts
-import { migratePostgres, migrateSqlite } from './database'
-```
+Если правите `postgres.sql` или `sqlite.sql`, обновите `migrations/*/schema.ts` (раннер берёт встроенную копию) и типы в корневом `schema.ts`.
 
-Применённые схемы пишутся в `_miraicms_migrations`. Повторный запуск пропускает уже записанные id. Результат: `{ applied, alreadyApplied }`.
-
-Дополнение передаёт то же подключение, что и модуль. `schemaId` должен быть стабильным и не равен `miraicms`.
-
-Если правите `postgres.sql` или `sqlite.sql`, синхронизируйте `migrations/*/schema.ts` (раннер берёт встроенную копию, чтобы бандлеру не нужен был `.sql`) и типы в корневом `schema.ts`.
-
-## PostgreSQL
-
-Нужен **PostgreSQL 15+**. Схема — `migrations/postgres/postgres.sql`.
+### PostgreSQL
 
 ```ts
 await migratePostgres('postgres://postgres:admin@127.0.0.1:5432/miraicms')
@@ -85,26 +216,21 @@ await migratePostgres({
   password: 'admin',
 })
 
-await migratePostgres({ pool }) // существующий `pg.Pool`; `migratePostgres()` его не закрывает
-
-await migratePostgres({
-  connectionString: process.env.DATABASE_URL,
-  schemaId: 'shop',
-  schemaSql: 'CREATE TABLE IF NOT EXISTS products (id bigint PRIMARY KEY);',
-})
+await migratePostgres({ pool })
+// migratePostgres() этот пул не закрывает
 ```
+
+Схема: `migrations/postgres/postgres.sql`.
 
 ### Vercel Postgres
 
-Vercel Postgres — это PostgreSQL на Neon. SQL тот же; нужна **прямая** (non-pooling) строка и runtime **Node**. Не используйте pooled URL, Edge и пул `@vercel/postgres`: `migratePostgres()` работает через `pg` (TCP), транзакцию и `pg_advisory_xact_lock`.
+Это PostgreSQL на Neon. Для **миграции** нужна прямая (non-pooling) строка и runtime **Node**. Не используйте pooled URL, Edge и пул `@vercel/postgres`: раннер работает через `pg` (TCP), транзакцию и `pg_advisory_xact_lock`.
 
 ```ts
 await migratePostgres({
   connectionString: process.env.POSTGRES_URL_NON_POOLING,
 })
 ```
-
-`POSTGRES_URL` (pooled) — для запросов приложения, не для этого раннера.
 
 Если в URL нет `sslmode=require`:
 
@@ -115,36 +241,47 @@ await migratePostgres({
 })
 ```
 
-Запускайте миграцию при деплое / в Node-хуке, не на каждый Edge-запрос.
+`POSTGRES_URL` (pooled) — для запросов приложения, не для `migratePostgres()`. Миграцию запускайте при деплое / в Node-хуке, не на каждый Edge-запрос.
 
-## SQLite
-
-Работает с **файлом SQLite** (Node) и **Cloudflare D1**. Схема — `migrations/sqlite/sqlite.sql`. На каждом соединении раннер включает `PRAGMA foreign_keys = ON`.
-
-### Файл
-
-Путь к файлу, `:memory:`, или уже открытое соединение (`better-sqlite3` / `node:sqlite`). Для `{ filename }` раннер открывает файл через `better-sqlite3`, а если пакета нет — через `node:sqlite` (Node.js 22+).
+### SQLite (файл)
 
 ```ts
 await migrateSqlite('./data/miraicms.db')
 await migrateSqlite({ filename: './data/miraicms.db' })
 await migrateSqlite({ filename: ':memory:' })
 
-await migrateSqlite({ database }) // существующее соединение; `migrateSqlite()` его не закрывает
+await migrateSqlite({ database })
+// migrateSqlite() это соединение не закрывает
+```
+
+Схема: `migrations/sqlite/sqlite.sql`. На соединении включается `PRAGMA foreign_keys = ON`. Для `{ filename }` используется `better-sqlite3`, иначе `node:sqlite` (Node.js 22+).
+
+### Cloudflare D1
+
+Тот же SQL. Передавайте биндинг, не путь к файлу.
+
+```ts
+await migrateSqlite({ d1: env.DB })
+```
+
+Запускайте в Worker / Node-совместимом runtime Cloudflare.
+
+### Таблицы дополнения
+
+Дополнение передаёт то же подключение. `schemaId` стабильный и не равен `miraicms`.
+
+```ts
+await migratePostgres({
+  connectionString: process.env.DATABASE_URL,
+  schemaId: 'shop',
+  schemaSql: 'CREATE TABLE IF NOT EXISTS products (id bigint PRIMARY KEY);',
+})
 
 await migrateSqlite({
   filename: './data/miraicms.db',
   schemaId: 'shop',
   schemaSql: 'CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT);',
 })
-```
-
-### Cloudflare D1
-
-Тот же SQL. Передавайте биндинг D1, не путь к файлу. Не используйте `better-sqlite3` внутри Worker.
-
-```ts
-await migrateSqlite({ d1: env.DB })
 
 await migrateSqlite({
   d1: env.DB,
@@ -153,4 +290,19 @@ await migrateSqlite({
 })
 ```
 
-Запускайте в Worker / Node-совместимом runtime Cloudflare, не как локальный файл на диске VPS.
+<!-- Этот раздел всегда держите последним в файле. -->
+
+## Зависимости
+
+npm-пакеты этого слоя. Ставьте только то, чем пользуетесь.
+
+| Когда | Пакет | Зачем |
+|---|---|---|
+| Всегда | `kysely` | Типы, клиент, запросы |
+| PostgreSQL | `pg` | `migratePostgres()`, `createPostgresDb()` |
+| SQLite-файл | `better-sqlite3` | `createSqliteDb(path)`, `migrateSqlite(path)` |
+| D1 | — | Биндинг `env.DB`, отдельный пакет не нужен |
+
+Для файла SQLite миграция без `better-sqlite3` может взять встроенный `node:sqlite` (Node.js **22+**). Клиент `createSqliteDb({ filename })` открывает файл через `better-sqlite3`.
+
+`pg` и `better-sqlite3` — нативные/сетевые драйверы. В Cloudflare Worker их нет: там только `{ d1 }`.

@@ -6,29 +6,44 @@
 import {
   createCollection,
   createCollectionRevision,
+  createDictionary,
   createMedia,
   createPostgresDb,
   createSqliteDb,
   createUser,
   deleteCollection,
   deleteCollectionMeta,
+  deleteDictionary,
   deleteMedia,
+  deleteOption,
   findCollectionById,
   findCollectionMeta,
   findCollectionRevisionById,
+  findDictionaryById,
+  findDictionaryByTypeAndSlug,
   findMediaByFilename,
   findMediaById,
+  findOption,
   findUserByEmail,
   findUserById,
+  linkCollectionDictionary,
+  listAutoloadOptions,
   listCollectionMeta,
   listCollectionRevisions,
   listCollections,
+  listCollectionsByDictionary,
+  listDictionaries,
+  listDictionariesByCollection,
   listMedia,
+  listOptions,
   listUsers,
   migratePostgres,
   migrateSqlite,
   setCollectionMeta,
+  setOption,
+  unlinkCollectionDictionary,
   updateCollection,
+  updateDictionary,
   updateMedia,
   updateUser,
 } from './database'
@@ -273,6 +288,56 @@ await updateMedia(db, item.id, {
 
 const removed = await deleteMedia(db, item.id)
 // нет такой строки → undefined
+```
+
+## Запросы: dictionaries
+
+Справочник (категории, теги и т.д.) — различаются полем `type`. Пара `type` + `slug` уникальна. Циклы `parent_id` отсекает триггер в БД.
+
+`deleteDictionary` снимает связи в `collection_dictionaries` каскадом; у дочерних терминов `parent_id` становится `NULL`.
+
+```ts
+const category = await createDictionary(db, {
+  type: 'category',
+  slug: 'news',
+  title: 'News',
+  parent_id: null,
+  fields: {},
+})
+
+const byId = await findDictionaryById(db, category.id)
+const bySlug = await findDictionaryByTypeAndSlug(db, 'category', 'news')
+const categories = await listDictionaries(db, 'category') // title, затем id
+
+await updateDictionary(db, category.id, { title: 'Newsroom' })
+const removedTerm = await deleteDictionary(db, category.id)
+```
+
+## Запросы: collection_dictionaries
+
+Связь many-to-many между записью коллекции и термином. Повторный `link` не дублирует строку.
+
+```ts
+await linkCollectionDictionary(db, page.id, category.id)
+const terms = await listDictionariesByCollection(db, page.id)
+const posts = await listCollectionsByDictionary(db, category.id)
+await unlinkCollectionDictionary(db, page.id, category.id) // true, если связь была
+```
+
+## Запросы: options
+
+Ключ-значение сайта. `value` — любой JSON (в том числе объект как у `collections.fields`). Схема полей админки в БД не хранится.
+
+`setOption` вставляет или обновляет. `autoload` по умолчанию `true`; при обновлении без третьего аргумента флаг не меняется.
+
+```ts
+await setOption(db, 'site', { title: 'Mirai', description: 'CMS' })
+await setOption(db, 'maintenance', false, false)
+
+const site = await findOption(db, 'site')
+const boot = await listAutoloadOptions(db)
+const all = await listOptions(db)
+await deleteOption(db, 'maintenance') // true, если строка была
 ```
 
 ## Миграции

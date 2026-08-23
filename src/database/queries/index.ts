@@ -40,3 +40,30 @@ export {
   updateMedia,
 } from './media'
 export type { Media, MediaUpdate, NewMedia } from './media'
+
+export {
+  createDictionary,
+  deleteDictionary,
+  findDictionaryById,
+  findDictionaryByTypeAndSlug,
+  listDictionaries,
+  updateDictionary,
+} from './dictionaries'
+export type { Dictionary, DictionaryUpdate, NewDictionary } from './dictionaries'
+
+export {
+  linkCollectionDictionary,
+  listCollectionsByDictionary,
+  listDictionariesByCollection,
+  unlinkCollectionDictionary,
+} from './collection-dictionaries'
+export type { CollectionDictionary } from './collection-dictionaries'
+
+export {
+  deleteOption,
+  findOption,
+  listAutoloadOptions,
+  listOptions,
+  setOption,
+} from './options'
+export type { Option } from './options'

@@ -47,12 +47,12 @@ import {
   updateDictionary,
   updateMedia,
   updateUser,
-} from './database'
+} from './core'
 ```
 
 Типичный порядок: миграция → клиент → запросы. Один и тот же `db` отдаёте в функции запросов из своих роутов.
 
-Папки: `client/` — Kysely и типы таблиц, `queries/` — запросы, `migrations/` — SQL и раннеры. Снаружи по-прежнему `from './database'`.
+Папки: `client/` — Kysely и типы таблиц, `queries/` — запросы, `migrations/` — SQL и раннеры. Снаружи — `from './core'`.
 
 ## Быстрый старт
 

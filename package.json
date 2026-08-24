@@ -35,8 +35,8 @@
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit",
-    "check-updates": "ncu",
-    "upgrade-deps": "ncu -u && pnpm install"
+    "check-updates": "ncu --target minor",
+    "upgrade-deps": "ncu --target minor -u && pnpm install"
   },
   "dependencies": {
     "@nuxt/kit": "^4.5.2",

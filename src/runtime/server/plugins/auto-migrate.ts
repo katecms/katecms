@@ -1,6 +1,6 @@
 import { defineNitroPlugin } from 'nitropack/runtime'
 import { useRuntimeConfig } from '#imports'
-import { migrateSqlite, migratePostgres } from '../../../database/migrations'
+import { migrateSqlite, migratePostgres } from '../../../core/database/migrations'
 
 export default defineNitroPlugin(async () => {
   const filename = useRuntimeConfig().miraicmsSqliteFilename

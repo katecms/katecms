@@ -19,9 +19,9 @@ import {
   unlinkCollectionDictionary,
   updateCollection,
   updateUser,
-} from '../src/database'
-import { SCHEMA_SQL as postgresSchemaSql } from '../src/database/migrations/postgres/schema'
-import { SCHEMA_SQL as sqliteSchemaSql } from '../src/database/migrations/sqlite/schema'
+} from '../src/core'
+import { SCHEMA_SQL as postgresSchemaSql } from '../src/core/database/migrations/postgres/schema'
+import { SCHEMA_SQL as sqliteSchemaSql } from '../src/core/database/migrations/sqlite/schema'
 
 const require = createRequire(import.meta.url)
 const BetterSqlite = require('better-sqlite3') as new (file: string) => {
@@ -58,11 +58,11 @@ async function memoryDb() {
 describe('database layer', () => {
   it('keeps .sql copies identical to schema.ts', () => {
     const sqliteSql = readFileSync(
-      new URL('../src/database/migrations/sqlite/sqlite.sql', import.meta.url),
+      new URL('../src/core/database/migrations/sqlite/sqlite.sql', import.meta.url),
       'utf8',
     )
     const postgresSql = readFileSync(
-      new URL('../src/database/migrations/postgres/postgres.sql', import.meta.url),
+      new URL('../src/core/database/migrations/postgres/postgres.sql', import.meta.url),
       'utf8',
     )
     expect(sqliteSql.replaceAll('\r\n', '\n')).toBe(sqliteSchemaSql.replaceAll('\r\n', '\n'))

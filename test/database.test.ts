@@ -10,15 +10,19 @@ import {
   createSqliteDb,
   createUser,
   deleteUser,
+  findCollectionBySlugPath,
   findDictionaryByTypeAndSlug,
   findUserByEmail,
   linkCollectionDictionary,
+  listCollectionParentOptions,
   listCollectionsByDictionary,
+  loadCollectionSlugPath,
   migrateSqlite,
   setOption,
   unlinkCollectionDictionary,
   updateCollection,
   updateUser,
+  validateCollectionParent,
 } from '../src/core'
 import { SCHEMA_SQL as postgresSchemaSql } from '../src/core/database/migrations/postgres/schema'
 import { SCHEMA_SQL as sqliteSchemaSql } from '../src/core/database/migrations/sqlite/schema'
@@ -197,6 +201,57 @@ describe('database layer', () => {
     }
     finally {
       await db.destroy()
+    }
+  })
+
+  it('resolves hierarchical slug paths and parent options', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      const user = await createUser(db, {
+        email: 'ada@example.com',
+        password_hash: 'hash',
+      })
+      const parent = await createCollection(db, {
+        type: 'page',
+        slug: 'about',
+        title: 'About',
+        status: 'published',
+        author_id: user.id,
+      })
+      const child = await createCollection(db, {
+        type: 'page',
+        slug: 'team',
+        title: 'Team',
+        status: 'published',
+        author_id: user.id,
+        parent_id: parent.id,
+      })
+      const draft = await createCollection(db, {
+        type: 'page',
+        slug: 'secret',
+        title: 'Secret',
+        status: 'draft',
+        author_id: user.id,
+        parent_id: parent.id,
+      })
+
+      expect(await loadCollectionSlugPath(db, 'page', child.id)).toBe('about/team')
+      expect(await findCollectionBySlugPath(db, 'page', ['about', 'team'])).toMatchObject({ id: child.id })
+      expect(await findCollectionBySlugPath(db, 'page', ['about', 'secret'], ['published'])).toBeUndefined()
+      expect(await findCollectionBySlugPath(db, 'page', ['about', 'secret'])).toMatchObject({ id: draft.id })
+
+      const options = await listCollectionParentOptions(db, 'page', child.id)
+      expect(options.map(option => option.slugPath).sort()).toEqual(['about', 'about/secret'])
+
+      expect(await validateCollectionParent(db, 'page', parent.id, parent.id)).toEqual({
+        ok: false,
+        error: 'An entry cannot be its own parent.',
+      })
+      expect(await validateCollectionParent(db, 'page', parent.id, child.id)).toEqual({ ok: true })
+      expect(await validateCollectionParent(db, 'page', null)).toEqual({ ok: true })
+    }
+    finally {
+      await close()
     }
   })
 })

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { autop, createBlockInstance, ensureBlockIds, isValidBlockId, newBlockId, nl2br } from '../src/core'
+import {
+  autop,
+  createBlockInstance,
+  ensureBlockIds,
+  isValidBlockId,
+  newBlockId,
+  nl2br,
+} from '../src/core'
 
 describe('newBlockId', () => {
   it('returns an anchor-safe id', () => {

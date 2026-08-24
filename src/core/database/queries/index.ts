@@ -12,10 +12,20 @@ export {
   createCollection,
   deleteCollection,
   findCollectionById,
+  findCollectionBySlugPath,
+  listCollectionParentOptions,
   listCollections,
+  loadCollectionSlugPath,
   updateCollection,
+  validateCollectionParent,
 } from './collections'
-export type { Collection, CollectionUpdate, NewCollection } from './collections'
+export type {
+  Collection,
+  CollectionParentOption,
+  CollectionUpdate,
+  NewCollection,
+  ValidateCollectionParentResult,
+} from './collections'
 
 export {
   deleteCollectionMeta,

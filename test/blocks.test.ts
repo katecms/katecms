@@ -40,6 +40,7 @@ describe('ensureBlockIds', () => {
 describe('nl2br / autop', () => {
   it('converts newlines', () => {
     expect(nl2br('a\nb')).toBe('a<br>b')
+    expect(nl2br('<b>x</b>')).toBe('&lt;b&gt;x&lt;/b&gt;')
     expect(autop('one\n\ntwo\nlines')).toBe('<p>one</p><p>two<br>lines</p>')
   })
 })

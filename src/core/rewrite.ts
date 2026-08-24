@@ -33,6 +33,11 @@ export interface CollectionPathMatch {
  *
  * `%name%` is one segment for flat collections, or one or more segments when
  * `hierarchical: true`.
+ *
+ * Matching order: longer rewrite strings first. When two rewrites have the same
+ * length, `Object.entries` order is used (the order keys were declared in the
+ * config object). The algorithm is not changed; adapters should not rely on
+ * equal-length ties being stable across engines.
  */
 export function matchCollectionPath(
   collections: Collections,

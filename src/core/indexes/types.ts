@@ -1,7 +1,10 @@
 /** A field index that should exist according to the resolved config. */
 export interface DesiredFieldIndex {
   collectionSlug: string
+  /** Leaf field key (last path segment). */
   fieldName: string
+  /** JSON path from `fields` root, e.g. `['seo', 'title']`. */
+  fieldPath: string[]
   fieldType: string
   indexName: string
   expression: string
@@ -18,6 +21,7 @@ export interface IndexSyncChange {
   indexName: string
   collectionSlug?: string
   fieldName?: string
+  fieldPath?: string[]
   fieldType?: string
   action: 'create' | 'drop'
   sql: string

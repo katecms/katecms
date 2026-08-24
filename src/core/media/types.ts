@@ -1,11 +1,4 @@
-/**
- * State of asynchronous variant generation for a media item:
- * - `none`: not an image / nothing to generate
- * - `pending`: generation scheduled
- * - `ready`: generation finished
- * - `failed`: generation errored
- */
-export type MediaVariantsStatus = 'none' | 'pending' | 'ready' | 'failed'
+import type { MediaVariantsStatus } from '../database/client/schema'
 
 /**
  * A generated derivative stored beside the original.

@@ -5,6 +5,9 @@ export type { Condition, ConditionalLogic, Operator }
 /** Current form state: field name → value. */
 export type FormValues = Record<string, unknown>
 
+/** Cap `matches` patterns so a crafted regex cannot hang the process. */
+export const MAX_MATCHES_PATTERN_LENGTH = 200
+
 const TEXT_LIKE: Operator[] = [
   'empty',
   'notEmpty',
@@ -98,6 +101,9 @@ export function evaluateCondition(condition: Condition, raw: unknown): boolean {
     case 'notContains':
       return arr ? !arr.includes(target) : !String(raw ?? '').includes(target)
     case 'matches':
+      if (target.length > MAX_MATCHES_PATTERN_LENGTH) {
+        return false
+      }
       try {
         return new RegExp(target).test(String(raw ?? ''))
       }

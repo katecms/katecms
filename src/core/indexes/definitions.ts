@@ -1,4 +1,4 @@
-import type { Collections, Fields } from '../config'
+import type { Collections, Field, Fields } from '../config'
 import type {
   ActualFieldIndex,
   DesiredFieldIndex,
@@ -7,8 +7,11 @@ import type {
 } from './types'
 
 export const FIELD_INDEX_TABLE = 'collections'
-export const INDEX_NAME_PREFIX = 'collections_fld_'
+/** Trailing `__` so `{collection}` / `{path}` segments cannot fuse with the prefix. */
+export const INDEX_NAME_PREFIX = 'collections_fld__'
 export const INDEX_NAME_SUFFIX = '_idx'
+/** PostgreSQL identifier length limit (bytes). */
+export const MAX_INDEX_NAME_BYTES = 63
 
 /** Field types that can be indexed as scalar JSONB text extractions. */
 const INDEXABLE_SCALAR_TYPES = new Set([
@@ -28,16 +31,11 @@ const INDEXABLE_SCALAR_TYPES = new Set([
   'color_picker',
 ])
 
-const STRUCTURAL_FIELD_TYPES = new Set([
-  'group',
-  'repeater',
-  'flexible_content',
-  'clone',
-  'accordion',
-  'tab',
-  'message',
-  'separator',
-])
+const NESTED_OBJECT_TYPES = new Set(['group'])
+const HOIST_PANEL_TYPES = new Set(['tab', 'accordion'])
+const SKIP_NEST_TYPES = new Set(['repeater', 'flexible_content'])
+/** Inserted after the collection slug so a nested path cannot look like a root field. */
+const NESTED_INDEX_MARKER = 'n'
 
 /** Slugs and field keys must be safe PostgreSQL identifier fragments. */
 export function isSafeIdentifier(value: string): boolean {
@@ -68,23 +66,66 @@ export function getPostgresCast(fieldType: string): string | null {
   }
 }
 
-/** Build the btree expression for a JSONB scalar field. */
-export function buildIndexExpression(fieldName: string, fieldType: string): string {
-  const escapedField = escapeSqlString(fieldName)
+/**
+ * Build the btree expression for a JSONB scalar at `fieldPath`.
+ * Root field `title` → `(fields->>'title')`.
+ * Nested `seo.title` → `(fields->'seo'->>'title')`.
+ */
+export function buildIndexExpression(fieldPath: string | string[], fieldType: string): string {
+  const path = Array.isArray(fieldPath) ? fieldPath : [fieldPath]
+  if (path.length === 0) {
+    throw new Error('Index field path must not be empty.')
+  }
+  const escaped = path.map(segment => escapeSqlString(segment))
+  const json = escaped.length === 1
+    ? `fields->>'${escaped[0]}'`
+    : `fields${escaped.slice(0, -1).map(segment => `->'${segment}'`).join('')}->>'${escaped[escaped.length - 1]}'`
   const cast = getPostgresCast(fieldType)
   if (cast) {
-    return `((fields->>'${escapedField}')::${cast})`
+    return `((${json})::${cast})`
   }
-  return `(fields->>'${escapedField}')`
+  return `(${json})`
 }
 
-/** `collections_fld_{collection}_{field}_idx` */
-export function buildIndexName(collectionSlug: string, fieldName: string): string {
-  return `${INDEX_NAME_PREFIX}${collectionSlug}_${fieldName}${INDEX_NAME_SUFFIX}`
+/**
+ * Root field: `collections_fld__{collection}__{field}_idx`.
+ * Nested field: `collections_fld__{collection}__n__{seg}__{seg}_idx`
+ * so the name cannot be mistaken for a parent-level index.
+ */
+export function buildIndexName(collectionSlug: string, fieldPath: string | string[]): string {
+  const path = Array.isArray(fieldPath) ? fieldPath : [fieldPath]
+  const segments = path.length > 1
+    ? [collectionSlug, NESTED_INDEX_MARKER, ...path]
+    : [collectionSlug, ...path]
+  return `${INDEX_NAME_PREFIX}${segments.join('__')}${INDEX_NAME_SUFFIX}`
+}
+
+/**
+ * Parse a name produced by {@link buildIndexName}.
+ * Returns null when the name is not a core-managed field index.
+ */
+export function parseManagedFieldIndexName(indexName: string): {
+  collectionSlug: string
+  fieldPath: string[]
+} | null {
+  if (!indexName.startsWith(INDEX_NAME_PREFIX) || !indexName.endsWith(INDEX_NAME_SUFFIX)) {
+    return null
+  }
+  const body = indexName.slice(INDEX_NAME_PREFIX.length, indexName.length - INDEX_NAME_SUFFIX.length)
+  const parts = body.split('__')
+  if (parts.length < 2 || parts.some(part => !part || !isSafeIdentifier(part))) {
+    return null
+  }
+  const collectionSlug = parts[0]!
+  const rest = parts.slice(1)
+  const fieldPath = rest[0] === NESTED_INDEX_MARKER && rest.length > 1
+    ? rest.slice(1)
+    : rest
+  return { collectionSlug, fieldPath }
 }
 
 export function isManagedFieldIndexName(indexName: string): boolean {
-  return indexName.startsWith(INDEX_NAME_PREFIX) && indexName.endsWith(INDEX_NAME_SUFFIX)
+  return parseManagedFieldIndexName(indexName) !== null
 }
 
 /** Full `CREATE INDEX` DDL for one desired index definition. */
@@ -101,6 +142,7 @@ export function buildDropIndexSql(indexName: string): string {
 function collectIndexedFields(
   fields: Fields | undefined,
   collectionSlug: string,
+  pathPrefix: string[],
   desired: DesiredFieldIndex[],
   warnings: string[],
 ): void {
@@ -109,32 +151,95 @@ function collectIndexedFields(
   }
 
   for (const [fieldName, field] of Object.entries(fields)) {
+    if (HOIST_PANEL_TYPES.has(field.type)) {
+      for (const panel of (field as Field & { panels?: Array<{ subFields?: Fields }> }).panels ?? []) {
+        collectIndexedFields(panel.subFields, collectionSlug, pathPrefix, desired, warnings)
+      }
+      continue
+    }
+
+    if (NESTED_OBJECT_TYPES.has(field.type)) {
+      const group = field as Field & { subFields?: Fields }
+      collectIndexedFields(group.subFields, collectionSlug, [...pathPrefix, fieldName], desired, warnings)
+      continue
+    }
+
+    if (SKIP_NEST_TYPES.has(field.type)) {
+      const nested = field as Field & { subFields?: Fields, layouts?: Record<string, { subFields?: Fields }> }
+      if (hasIndexedDescendant(nested.subFields) || Object.values(nested.layouts ?? {}).some(layout => hasIndexedDescendant(layout.subFields))) {
+        warnings.push(
+          `Indexed fields inside "${[...pathPrefix, fieldName].join('.')}" (${field.type}) in collection "${collectionSlug}" were skipped; repeaters and flexible content are not scalar-indexed.`,
+        )
+      }
+      continue
+    }
+
     if (!('indexed' in field) || !field.indexed) {
       continue
     }
 
-    if (!isSafeIdentifier(collectionSlug) || !isSafeIdentifier(fieldName)) {
+    const fieldPath = [...pathPrefix, fieldName]
+    const pathLabel = fieldPath.join('.')
+
+    if (!isSafeIdentifier(collectionSlug) || fieldPath.some(segment => !isSafeIdentifier(segment))) {
       warnings.push(
-        `Skipped field "${fieldName}" in collection "${collectionSlug}": slug/name must match /^[a-zA-Z_][a-zA-Z0-9_]*$/.`,
+        `Skipped field "${pathLabel}" in collection "${collectionSlug}": slug/name must match /^[a-zA-Z_][a-zA-Z0-9_]*$/.`,
       )
       continue
     }
 
-    if (STRUCTURAL_FIELD_TYPES.has(field.type) || !INDEXABLE_SCALAR_TYPES.has(field.type)) {
+    if (!INDEXABLE_SCALAR_TYPES.has(field.type)) {
       warnings.push(
-        `Field "${fieldName}" (${field.type}) in collection "${collectionSlug}" does not support scalar indexing and was skipped.`,
+        `Field "${pathLabel}" (${field.type}) in collection "${collectionSlug}" does not support scalar indexing and was skipped.`,
       )
       continue
+    }
+
+    const indexName = buildIndexName(collectionSlug, fieldPath)
+    if (Buffer.byteLength(indexName, 'utf8') > MAX_INDEX_NAME_BYTES) {
+      throw new Error(
+        `Field index name exceeds ${MAX_INDEX_NAME_BYTES} bytes: ${indexName}`,
+      )
     }
 
     desired.push({
       collectionSlug,
       fieldName,
+      fieldPath,
       fieldType: field.type,
-      indexName: buildIndexName(collectionSlug, fieldName),
-      expression: buildIndexExpression(fieldName, field.type),
+      indexName,
+      expression: buildIndexExpression(fieldPath, field.type),
     })
   }
+}
+
+function hasIndexedDescendant(fields: Fields | undefined): boolean {
+  if (!fields) {
+    return false
+  }
+  for (const field of Object.values(fields)) {
+    if ('indexed' in field && field.indexed) {
+      return true
+    }
+    if ('subFields' in field && hasIndexedDescendant(field.subFields)) {
+      return true
+    }
+    if ('layouts' in field) {
+      for (const layout of Object.values(field.layouts ?? {})) {
+        if (hasIndexedDescendant(layout.subFields)) {
+          return true
+        }
+      }
+    }
+    if ('panels' in field) {
+      for (const panel of field.panels ?? []) {
+        if (hasIndexedDescendant(panel.subFields)) {
+          return true
+        }
+      }
+    }
+  }
+  return false
 }
 
 /** Walk collection field configs and collect every `indexed: true` scalar field. */
@@ -146,7 +251,7 @@ export function collectDesiredFieldIndexes(collections: Collections): {
   const warnings: string[] = []
 
   for (const [collectionSlug, collection] of Object.entries(collections)) {
-    collectIndexedFields(collection.fields, collectionSlug, desired, warnings)
+    collectIndexedFields(collection.fields, collectionSlug, [], desired, warnings)
   }
 
   return { desired, warnings }
@@ -176,6 +281,18 @@ export function indexDefinitionsMatch(indexDef: string, expectedExpression: stri
   return normalizeIndexExpression(actualExpression) === normalizeIndexExpression(expectedExpression)
 }
 
+function toCreateChange(desiredIndex: DesiredFieldIndex): IndexSyncChange {
+  return {
+    indexName: desiredIndex.indexName,
+    collectionSlug: desiredIndex.collectionSlug,
+    fieldName: desiredIndex.fieldName,
+    fieldPath: desiredIndex.fieldPath,
+    fieldType: desiredIndex.fieldType,
+    action: 'create',
+    sql: buildCreateIndexSql(desiredIndex),
+  }
+}
+
 /** Compare config-derived indexes with the PostgreSQL catalog. */
 export function computeIndexDiff(
   desired: DesiredFieldIndex[],
@@ -189,6 +306,10 @@ export function computeIndexDiff(
   const changes: IndexSyncChange[] = []
 
   for (const [indexName, actualIndex] of actualByName) {
+    if (!isManagedFieldIndexName(indexName)) {
+      continue
+    }
+
     const desiredIndex = desiredByName.get(indexName)
     if (!desiredIndex) {
       toDrop.push(actualIndex)
@@ -208,14 +329,7 @@ export function computeIndexDiff(
         action: 'drop',
         sql: buildDropIndexSql(indexName),
       })
-      changes.push({
-        indexName,
-        collectionSlug: desiredIndex.collectionSlug,
-        fieldName: desiredIndex.fieldName,
-        fieldType: desiredIndex.fieldType,
-        action: 'create',
-        sql: buildCreateIndexSql(desiredIndex),
-      })
+      changes.push(toCreateChange(desiredIndex))
     }
   }
 
@@ -224,14 +338,7 @@ export function computeIndexDiff(
       continue
     }
     toCreate.push(desiredIndex)
-    changes.push({
-      indexName,
-      collectionSlug: desiredIndex.collectionSlug,
-      fieldName: desiredIndex.fieldName,
-      fieldType: desiredIndex.fieldType,
-      action: 'create',
-      sql: buildCreateIndexSql(desiredIndex),
-    })
+    changes.push(toCreateChange(desiredIndex))
   }
 
   return {

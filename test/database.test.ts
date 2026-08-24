@@ -13,6 +13,7 @@ import {
   findCollectionBySlugPath,
   findDictionaryByTypeAndSlug,
   findUserByEmail,
+  listUsers,
   linkCollectionDictionary,
   listCollectionParentOptions,
   listCollectionsByDictionary,
@@ -95,7 +96,7 @@ describe('database layer', () => {
       })
       await updateUser(db, user.id, { email: '  Ada@example.com  ' })
       const found = await findUserByEmail(db, 'ada@example.com')
-      expect(found?.email).toBe('Ada@example.com')
+      expect(found?.email).toBe('ada@example.com')
 
       await createDictionary(db, {
         type: 'category',
@@ -187,6 +188,68 @@ describe('database layer', () => {
     }
   })
 
+  it('refuses to delete the last owner', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      const owner = await createUser(db, {
+        email: 'owner@example.com',
+        password_hash: 'hash',
+        role: 'owner',
+      })
+      await expect(deleteUser(db, owner.id)).rejects.toThrow(/last owner/)
+
+      const other = await createUser(db, {
+        email: 'owner2@example.com',
+        password_hash: 'hash',
+        role: 'owner',
+      })
+      await expect(deleteUser(db, owner.id)).resolves.toMatchObject({ id: owner.id })
+      await expect(deleteUser(db, other.id)).rejects.toThrow(/last owner/)
+      await expect(updateUser(db, other.id, { role: 'admin' })).rejects.toThrow(/last owner/)
+    }
+    finally {
+      await close()
+    }
+  })
+
+  it('rejects duplicate dictionary slugs among siblings', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      await createDictionary(db, { type: 'category', slug: 'news', title: 'News' })
+      await expect(createDictionary(db, {
+        type: 'category',
+        slug: 'news',
+        title: 'News 2',
+      })).rejects.toThrow()
+
+      const parent = await createDictionary(db, { type: 'category', slug: 'topics', title: 'Topics' })
+      await createDictionary(db, {
+        type: 'category',
+        slug: 'news',
+        title: 'Child news',
+        parent_id: parent.id,
+      })
+    }
+    finally {
+      await close()
+    }
+  })
+
+  it('pages user lists', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      await createUser(db, { email: 'a@example.com', password_hash: 'hash' })
+      await createUser(db, { email: 'b@example.com', password_hash: 'hash' })
+      await createUser(db, { email: 'c@example.com', password_hash: 'hash' })
+      const page = await listUsers(db, { limit: 2, offset: 1 })
+      expect(page).toHaveLength(2)
+      expect(page.map(user => user.email)).toEqual(['b@example.com', 'c@example.com'])
+    }
+    finally {
+      await close()
+    }
+  })
+
   it('enables WAL and busy_timeout on file databases', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'miraicms-'))
     tempDirs.push(dir)
@@ -249,6 +312,10 @@ describe('database layer', () => {
       })
       expect(await validateCollectionParent(db, 'page', parent.id, child.id)).toEqual({ ok: true })
       expect(await validateCollectionParent(db, 'page', null)).toEqual({ ok: true })
+      expect(await validateCollectionParent(db, 'page', child.id, parent.id)).toEqual({
+        ok: false,
+        error: 'Cannot set a descendant as parent.',
+      })
     }
     finally {
       await close()

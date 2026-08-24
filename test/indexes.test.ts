@@ -34,10 +34,10 @@ describe('field index definitions', () => {
 
     expect(warnings).toHaveLength(1)
     expect(desired).toHaveLength(2)
-    expect(buildIndexName('products', 'price')).toBe('collections_fld_products_price_idx')
+    expect(buildIndexName('products', 'price')).toBe('collections_fld__products__price_idx')
     expect(buildIndexExpression('price', 'number')).toBe('((fields->>\'price\')::numeric)')
     expect(buildCreateIndexSql(desired[0]!)).toBe(
-      'CREATE INDEX IF NOT EXISTS collections_fld_products_price_idx ON collections (((fields->>\'price\')::numeric)) WHERE type = \'products\'',
+      'CREATE INDEX IF NOT EXISTS collections_fld__products__price_idx ON collections (((fields->>\'price\')::numeric)) WHERE type = \'products\'',
     )
   })
 
@@ -45,8 +45,9 @@ describe('field index definitions', () => {
     const desired: DesiredFieldIndex[] = [{
       collectionSlug: 'products',
       fieldName: 'price',
+      fieldPath: ['price'],
       fieldType: 'number',
-      indexName: 'collections_fld_products_price_idx',
+      indexName: 'collections_fld__products__price_idx',
       expression: '((fields->>\'price\')::numeric)',
     }]
     const actual: ActualFieldIndex[] = []
@@ -61,8 +62,8 @@ describe('field index definitions', () => {
   it('detects obsolete indexes to drop', () => {
     const desired: DesiredFieldIndex[] = []
     const actual: ActualFieldIndex[] = [{
-      indexName: 'collections_fld_products_price_idx',
-      indexDef: 'CREATE INDEX collections_fld_products_price_idx ON public.collections USING btree (((fields ->> \'price\'::text))::numeric) WHERE (type = \'products\'::text)',
+      indexName: 'collections_fld__products__price_idx',
+      indexDef: 'CREATE INDEX collections_fld__products__price_idx ON public.collections USING btree (((fields ->> \'price\'::text))::numeric) WHERE (type = \'products\'::text)',
     }]
 
     const diff = computeIndexDiff(desired, actual)
@@ -75,13 +76,14 @@ describe('field index definitions', () => {
     const desired: DesiredFieldIndex[] = [{
       collectionSlug: 'products',
       fieldName: 'price',
+      fieldPath: ['price'],
       fieldType: 'number',
-      indexName: 'collections_fld_products_price_idx',
+      indexName: 'collections_fld__products__price_idx',
       expression: '((fields->>\'price\')::numeric)',
     }]
     const actual: ActualFieldIndex[] = [{
-      indexName: 'collections_fld_products_price_idx',
-      indexDef: 'CREATE INDEX collections_fld_products_price_idx ON public.collections USING btree ((fields ->> \'price\'::text)) WHERE (type = \'products\'::text)',
+      indexName: 'collections_fld__products__price_idx',
+      indexDef: 'CREATE INDEX collections_fld__products__price_idx ON public.collections USING btree ((fields ->> \'price\'::text)) WHERE (type = \'products\'::text)',
     }]
 
     const diff = computeIndexDiff(desired, actual)
@@ -91,15 +93,57 @@ describe('field index definitions', () => {
 
   it('matches equivalent PostgreSQL index definitions', () => {
     const expected = '((fields->>\'price\')::numeric)'
-    const actual = 'CREATE INDEX collections_fld_products_price_idx ON public.collections USING btree (((fields ->> \'price\'::text))::numeric) WHERE (type = \'products\'::text)'
+    const actual = 'CREATE INDEX collections_fld__products__price_idx ON public.collections USING btree (((fields ->> \'price\'::text))::numeric) WHERE (type = \'products\'::text)'
     expect(indexDefinitionsMatch(actual, expected)).toBe(true)
   })
 
   it('does not treat schema indexes as managed field indexes', () => {
-    expect(isManagedFieldIndexName('collections_fld_pages_price_idx')).toBe(true)
+    expect(isManagedFieldIndexName('collections_fld__pages__price_idx')).toBe(true)
     expect(isManagedFieldIndexName('collections_status_idx')).toBe(false)
     expect(isManagedFieldIndexName('collections_author_id_idx')).toBe(false)
     expect(isManagedFieldIndexName('collections_parent_id_idx')).toBe(false)
+  })
+
+  it('names nested indexes so they cannot look like the parent field', () => {
+    const { desired } = collectDesiredFieldIndexes({
+      products: {
+        labels: { name: 'Products' },
+        fields: {
+          title: { label: 'Title', type: 'text', indexed: true },
+          seo: {
+            type: 'group',
+            label: 'SEO',
+            subFields: {
+              title: { label: 'SEO title', type: 'text', indexed: true },
+            },
+          },
+        },
+      },
+    })
+    expect(desired.map(item => item.indexName).sort()).toEqual([
+      'collections_fld__products__n__seo__title_idx',
+      'collections_fld__products__title_idx',
+    ])
+  })
+
+  it('throws when a generated index name exceeds 63 bytes', () => {
+    expect(() => collectDesiredFieldIndexes({
+      very_long_collection_slug_name: {
+        labels: { name: 'Long' },
+        fields: {
+          very_long_field_name_too: { label: 'X', type: 'text', indexed: true },
+        },
+      },
+    })).toThrow(/63/)
+  })
+
+  it('does not drop indexes whose names core cannot parse', () => {
+    const diff = computeIndexDiff([], [{
+      indexName: 'collections_status_idx',
+      indexDef: 'CREATE INDEX collections_status_idx ON collections (status)',
+    }])
+    expect(diff.hasChanges).toBe(false)
+    expect(diff.toDrop).toEqual([])
   })
 })
 
@@ -144,7 +188,7 @@ describe('applyFieldIndexDiff', () => {
       toCreate: [],
       toDrop: [],
       changes: [{
-        indexName: 'collections_fld_products_price_idx',
+        indexName: 'collections_fld__products__price_idx',
         action: 'drop',
         sql: 'DROP TABLE collections',
       }],
@@ -157,8 +201,9 @@ describe('applyFieldIndexDiff', () => {
     const desired: DesiredFieldIndex = {
       collectionSlug: 'products',
       fieldName: 'price',
+      fieldPath: ['price'],
       fieldType: 'number',
-      indexName: 'collections_fld_products_price_idx',
+      indexName: 'collections_fld__products__price_idx',
       expression: buildIndexExpression('price', 'number'),
     }
     const diff: IndexSyncDiff = {

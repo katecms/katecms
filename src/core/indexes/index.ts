@@ -9,6 +9,7 @@ export {
   FIELD_INDEX_TABLE,
   INDEX_NAME_PREFIX,
   INDEX_NAME_SUFFIX,
+  MAX_INDEX_NAME_BYTES,
   buildCreateIndexSql,
   buildDropIndexSql,
   buildIndexExpression,
@@ -22,6 +23,7 @@ export {
   isManagedFieldIndexName,
   isSafeIdentifier,
   normalizeIndexExpression,
+  parseManagedFieldIndexName,
 } from './definitions'
 export {
   FIELD_INDEX_LOCK_KEY,

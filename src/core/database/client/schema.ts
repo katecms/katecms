@@ -12,13 +12,19 @@ import type { ColumnType, Generated } from 'kysely'
  * `createSqliteDb()` maps those to this shape.
  */
 
-/** timestamptz / ISO text: read as `Date` from Postgres, written as `Date` or string. */
-type Timestamp = ColumnType<Date, Date | string, Date | string>
+/** timestamptz / ISO text: read as `Date`, written as `Date` or string. Insert may omit (DB default). */
+type Timestamp = ColumnType<Date, Date | string | undefined, Date | string>
+
+/** Nullable timestamp without a required insert value. */
+type TimestampNullable = ColumnType<Date | null, Date | string | null | undefined, Date | string | null>
 
 /**
  * jsonb / JSON text. `pg` parses jsonb; SQLite/D1 text is parsed by the client plugin.
+ *
+ * Do not wrap this in `Generated<>`: Kysely's `Selectable` only unwraps one
+ * `ColumnType`, so `Generated<Json<T>>` would leave `Json<T>` on select.
  */
-type Json<T = unknown> = ColumnType<T, T, T>
+type Json<T = unknown> = ColumnType<T, T | undefined, T>
 
 export type UserStatus = 'active' | 'banned'
 export type CollectionStatus = 'published' | 'draft' | 'trash'
@@ -32,8 +38,8 @@ export interface UsersTable {
   avatar: Json | null
   role: Generated<string>
   status: Generated<UserStatus>
-  created_at: Generated<Timestamp>
-  updated_at: Generated<Timestamp>
+  created_at: Timestamp
+  updated_at: Timestamp
 }
 
 export interface CollectionsTable {
@@ -42,15 +48,15 @@ export interface CollectionsTable {
   status: Generated<CollectionStatus>
   slug: string
   title: string
-  fields: Generated<Json<Record<string, unknown>>>
-  blocks: Generated<Json<unknown[]>>
+  fields: Json<Record<string, unknown>>
+  blocks: Json<unknown[]>
   author_id: number | null
   parent_id: number | null
   menu_order: Generated<number>
   password_hash: string | null
-  created_at: Generated<Timestamp>
-  updated_at: Generated<Timestamp>
-  published_at: Timestamp | null
+  created_at: Timestamp
+  updated_at: Timestamp
+  published_at: TimestampNullable
 }
 
 export interface CollectionMetaTable {
@@ -64,7 +70,7 @@ export interface CollectionRevisionsTable {
   collection_id: number
   author_id: number | null
   data: Json
-  created_at: Generated<Timestamp>
+  created_at: Timestamp
 }
 
 export interface MediaTable {
@@ -77,10 +83,10 @@ export interface MediaTable {
   alt: string | null
   caption: string | null
   uploaded_by: number | null
-  variants: Generated<Json<unknown[]>>
+  variants: Json<unknown[]>
   variants_status: Generated<MediaVariantsStatus>
-  created_at: Generated<Timestamp>
-  updated_at: Generated<Timestamp>
+  created_at: Timestamp
+  updated_at: Timestamp
 }
 
 export interface DictionariesTable {
@@ -88,10 +94,10 @@ export interface DictionariesTable {
   slug: string
   title: string
   type: string
-  fields: Generated<Json<Record<string, unknown>>>
+  fields: Json<Record<string, unknown>>
   parent_id: number | null
-  created_at: Generated<Timestamp>
-  updated_at: Generated<Timestamp>
+  created_at: Timestamp
+  updated_at: Timestamp
 }
 
 export interface CollectionDictionariesTable {
@@ -107,7 +113,7 @@ export interface OptionsTable {
 
 export interface MigrationsTable {
   id: string
-  applied_at: Generated<Timestamp>
+  applied_at: Timestamp
 }
 
 export interface Database {

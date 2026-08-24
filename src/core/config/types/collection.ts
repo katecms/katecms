@@ -35,12 +35,12 @@ export interface CollectionDefinition {
   rewrite?: string
   fields?: Fields
   /**
-   * Blocks allowed for this collection's entries:
+   * Blocks allowed on entries of this collection:
    * - an array of block slugs from the top-level `blocks` registry,
    * - `true` to allow every registered block,
-   * - `false`/omitted to disable blocks. Default: false.
+   * - `false` / omitted to disable blocks. Default: false.
    */
-  // blocks?: string[] | boolean
+  blocks?: string[] | boolean
 }
 
 /**

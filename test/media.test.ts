@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { Buffer } from 'node:buffer'
 import sharp from 'sharp'
 import { afterEach, describe, expect, it } from 'vitest'
-import type { Media, MediaStorage } from '../src/core'
+import type { MediaStorage } from '../src/core'
 import {
   buildPublicUrl,
   createLocalMediaStorage,
@@ -16,6 +16,7 @@ import {
   sanitizeFilename,
   toMediaItem,
   uniqueFilename,
+  incrementFilename,
   variantFilename,
 } from '../src/core'
 
@@ -69,6 +70,11 @@ describe('sanitizeFilename / uniqueFilename', () => {
 
   it('falls back to file.<ext> when the original name is missing', async () => {
     expect(await prepareUploadKey(undefined, 'image/png', async () => false)).toBe('file.png')
+  })
+
+  it('bumps a numeric suffix before the extension', () => {
+    expect(incrementFilename('photo.jpg')).toBe('photo-1.jpg')
+    expect(incrementFilename('photo-1.jpg')).toBe('photo-2.jpg')
   })
 })
 
@@ -162,10 +168,10 @@ describe('toMediaItem', () => {
         height: 16,
         filesize: 4,
       }],
-      variants_status: 'ready',
+      variants_status: 'ready' as const,
       created_at: new Date('2026-01-02T00:00:00.000Z'),
       updated_at: new Date('2026-01-02T00:00:00.000Z'),
-    } as Media
+    }
 
     const item = toMediaItem(row, {
       publicUrl: key => `/uploads/${key}`,

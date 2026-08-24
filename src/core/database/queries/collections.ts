@@ -1,6 +1,8 @@
 import type { Insertable, Kysely, Selectable, Updateable } from 'kysely'
 import type { CollectionStatus, Database, CollectionsTable } from '../client/schema'
 import { buildSlugPathMap } from '../../rewrite'
+import { applyListPaging } from './paging'
+import type { ListPaging } from './paging'
 
 export type Collection = Selectable<CollectionsTable>
 export type NewCollection = Insertable<CollectionsTable>
@@ -39,21 +41,27 @@ export async function findCollectionById(
 export async function listCollections(
   db: Kysely<Database>,
   type: string,
+  paging?: ListPaging,
 ): Promise<Collection[]> {
-  return db
+  const query = db
     .selectFrom('collections')
     .selectAll()
     .where('type', '=', type)
     .where('status', '!=', 'trash')
     .orderBy('menu_order', 'asc')
     .orderBy('created_at', 'desc')
-    .execute()
+  return applyListPaging(query, paging).execute()
 }
 
 export async function createCollection(
   db: Kysely<Database>,
   values: NewCollection,
 ): Promise<Collection> {
+  const parentId = values.parent_id ?? null
+  const check = await validateCollectionParent(db, values.type, parentId)
+  if (!check.ok) {
+    throw new Error(check.error)
+  }
   const row = withPublishedAt({
     ...values,
     slug: values.slug.trim(),
@@ -80,10 +88,24 @@ export async function updateCollection(
   if (Object.keys(defined).length === 0) {
     return findCollectionById(db, id)
   }
+  const current = await findCollectionById(db, id)
+  if (!current) {
+    return undefined
+  }
+  if (defined.parent_id !== undefined) {
+    const check = await validateCollectionParent(
+      db,
+      defined.type ?? current.type,
+      defined.parent_id ?? null,
+      id,
+    )
+    if (!check.ok) {
+      throw new Error(check.error)
+    }
+  }
   let existingPublishedAt: Date | string | null | undefined
   if (defined.status === 'published' && defined.published_at == null) {
-    const current = await findCollectionById(db, id)
-    existingPublishedAt = current?.published_at ?? null
+    existingPublishedAt = current.published_at ?? null
   }
   const patch = withPublishedAt(defined, existingPublishedAt)
   return db
@@ -153,14 +175,23 @@ export async function loadCollectionSlugPath(
   type: string,
   id: number,
 ): Promise<string> {
-  const rows = await db
-    .selectFrom('collections')
-    .select(['id', 'slug', 'parent_id'])
-    .where('type', '=', type)
-    .where('status', '!=', 'trash')
-    .execute()
-
-  return buildSlugPathMap(rows).get(id) ?? ''
+  const segments: string[] = []
+  let currentId: number | null = id
+  const seen = new Set<number>()
+  while (currentId != null && !seen.has(currentId)) {
+    seen.add(currentId)
+    const row = await db
+      .selectFrom('collections')
+      .select(['slug', 'parent_id', 'type', 'status'])
+      .where('id', '=', currentId)
+      .executeTakeFirst()
+    if (!row || row.type !== type || row.status === 'trash') {
+      break
+    }
+    segments.unshift(row.slug)
+    currentId = row.parent_id
+  }
+  return segments.join('/')
 }
 
 export interface CollectionParentOption {
@@ -175,26 +206,56 @@ export interface CollectionParentOption {
  * Parent picker rows for a hierarchical collection (excludes trash and,
  * optionally, an entry so it cannot parent itself).
  */
+function descendantIds(
+  rows: Array<{ id: number, parent_id: number | null }>,
+  rootId: number,
+): Set<number> {
+  const children = new Map<number, number[]>()
+  for (const row of rows) {
+    if (row.parent_id == null) {
+      continue
+    }
+    const list = children.get(row.parent_id) ?? []
+    list.push(row.id)
+    children.set(row.parent_id, list)
+  }
+  const out = new Set<number>()
+  const stack = [...(children.get(rootId) ?? [])]
+  while (stack.length > 0) {
+    const id = stack.pop()!
+    if (out.has(id)) {
+      continue
+    }
+    out.add(id)
+    stack.push(...(children.get(id) ?? []))
+  }
+  return out
+}
+
 export async function listCollectionParentOptions(
   db: Kysely<Database>,
   type: string,
   excludeId?: number,
 ): Promise<CollectionParentOption[]> {
-  let query = db
+  const rows = await db
     .selectFrom('collections')
     .select(['id', 'title', 'slug', 'parent_id'])
     .where('type', '=', type)
     .where('status', '!=', 'trash')
     .orderBy('menu_order', 'asc')
     .orderBy('title', 'asc')
+    .execute()
 
+  const blocked = excludeId === undefined
+    ? new Set<number>()
+    : descendantIds(rows, excludeId)
   if (excludeId !== undefined) {
-    query = query.where('id', '!=', excludeId)
+    blocked.add(excludeId)
   }
 
-  const rows = await query.execute()
-  const paths = buildSlugPathMap(rows)
-  return rows.map(row => ({
+  const visible = rows.filter(row => !blocked.has(row.id))
+  const paths = buildSlugPathMap(visible)
+  return visible.map(row => ({
     id: row.id,
     title: row.title,
     slug: row.slug,
@@ -209,7 +270,8 @@ export type ValidateCollectionParentResult
 
 /**
  * Check that `parentId` belongs to the same collection type, is not trash,
- * and is not the entry itself. HTTP mapping stays in the adapter.
+ * is not the entry itself, and is not a descendant (cycle). HTTP mapping
+ * stays in the adapter.
  */
 export async function validateCollectionParent(
   db: Kysely<Database>,
@@ -226,12 +288,29 @@ export async function validateCollectionParent(
 
   const parent = await db
     .selectFrom('collections')
-    .select(['id', 'type', 'status'])
+    .select(['id', 'type', 'status', 'parent_id'])
     .where('id', '=', parentId)
     .executeTakeFirst()
 
   if (!parent || parent.type !== type || parent.status === 'trash') {
     return { ok: false, error: 'Parent entry not found.' }
+  }
+
+  if (selfId !== undefined) {
+    let walkId: number | null = parentId
+    const seen = new Set<number>()
+    while (walkId != null && !seen.has(walkId)) {
+      if (walkId === selfId) {
+        return { ok: false, error: 'Cannot set a descendant as parent.' }
+      }
+      seen.add(walkId)
+      const row = await db
+        .selectFrom('collections')
+        .select(['parent_id'])
+        .where('id', '=', walkId)
+        .executeTakeFirst()
+      walkId = row?.parent_id ?? null
+    }
   }
 
   return { ok: true }

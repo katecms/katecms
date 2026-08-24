@@ -62,8 +62,9 @@ async function render(
   input: Buffer,
   size: ResolvedImageSize | null,
   job: FormatJob,
+  maxInputPixels: number,
 ): Promise<RenderResult> {
-  let pipeline = sharp(input, { failOn: 'none' })
+  let pipeline = sharp(input, { failOn: 'none', limitInputPixels: maxInputPixels })
 
   if (size) {
     pipeline = pipeline.resize({
@@ -129,7 +130,7 @@ export async function generateVariants(options: GenerateVariantsOptions): Promis
 
   try {
     for (const { size, job } of tasks) {
-      const out = await render(data, size, job)
+      const out = await render(data, size, job, config.maxInputPixels)
       const variantKey = variantFilename(key, out.width, out.height, job.ext, size === null)
 
       if (variantKey === key) {

@@ -8,9 +8,15 @@ export interface MediaConfig {
   /** Maximum upload size in megabytes. Defaults to 10. */
   maxFileSize?: number
   /**
-   * Allowed MIME types. An empty array allows any type.
+   * Allowed MIME types. An empty array allows nothing.
+   * Omit the option to use the built-in default list.
    */
   allowedMimeTypes?: string[]
+  /**
+   * Maximum decoded pixel count (width × height) sharp will accept.
+   * Defaults to 50_000_000 (~7071×7071).
+   */
+  maxInputPixels?: number
   /**
    * Generate an AVIF copy of every uploaded raster image (and of each registered
    * `imageSizes` entry). `true` uses the default quality (80); pass an object to
@@ -79,6 +85,7 @@ export interface ResolvedMediaConfig {
   dir?: string
   maxFileSize: number
   allowedMimeTypes: string[]
+  maxInputPixels: number
   avif: ResolvedImageFormat | false
   webp: ResolvedImageFormat | false
   imageSizes: ResolvedImageSize[]

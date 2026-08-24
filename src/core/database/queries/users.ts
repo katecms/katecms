@@ -1,6 +1,9 @@
 import type { Insertable, Kysely, Selectable, Updateable } from 'kysely'
 import { sql } from 'kysely'
+import { OWNER_ROLE } from '../../config'
 import type { Database, UsersTable } from '../client/schema'
+import { applyListPaging } from './paging'
+import type { ListPaging } from './paging'
 
 export type User = Selectable<UsersTable>
 export type NewUser = Insertable<UsersTable>
@@ -38,13 +41,16 @@ export async function findUserByEmail(
     .executeTakeFirst()
 }
 
-export async function listUsers(db: Kysely<Database>): Promise<User[]> {
-  return db
+export async function listUsers(
+  db: Kysely<Database>,
+  paging?: ListPaging,
+): Promise<User[]> {
+  const query = db
     .selectFrom('users')
     .selectAll()
     .orderBy('created_at', 'asc')
     .orderBy('id', 'asc')
-    .execute()
+  return applyListPaging(query, paging).execute()
 }
 
 export async function createUser(
@@ -55,7 +61,7 @@ export async function createUser(
     .insertInto('users')
     .values({
       ...values,
-      email: values.email.trim(),
+      email: values.email.trim().toLowerCase(),
     })
     .returningAll()
     .executeTakeFirstOrThrow()
@@ -69,10 +75,16 @@ export async function updateUser(
   const { id: _id, ...rest } = values
   const patch = definedValues({
     ...rest,
-    ...rest.email !== undefined ? { email: rest.email.trim() } : {},
+    ...rest.email !== undefined ? { email: rest.email.trim().toLowerCase() } : {},
   })
   if (Object.keys(patch).length === 0) {
     return findUserById(db, id)
+  }
+  if (patch.role !== undefined && patch.role !== OWNER_ROLE) {
+    const current = await findUserById(db, id)
+    if (current?.role === OWNER_ROLE) {
+      await assertNotLastOwner(db, id)
+    }
   }
   return db
     .updateTable('users')
@@ -82,10 +94,28 @@ export async function updateUser(
     .executeTakeFirst()
 }
 
+async function countOwners(db: Kysely<Database>): Promise<number> {
+  const row = await db
+    .selectFrom('users')
+    .select(db.fn.countAll<number>().as('count'))
+    .where('role', '=', OWNER_ROLE)
+    .executeTakeFirstOrThrow()
+  return Number(row.count)
+}
+
+async function assertNotLastOwner(db: Kysely<Database>, userId: number): Promise<void> {
+  const remaining = await countOwners(db)
+  const user = await findUserById(db, userId)
+  if (user?.role === OWNER_ROLE && remaining <= 1) {
+    throw new Error('Cannot remove the last owner.')
+  }
+}
+
 export async function deleteUser(
   db: Kysely<Database>,
   id: number,
 ): Promise<User | undefined> {
+  await assertNotLastOwner(db, id)
   return db
     .deleteFrom('users')
     .where('id', '=', id)

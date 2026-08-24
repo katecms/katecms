@@ -40,12 +40,14 @@ function assertSafeIndexChange(change: IndexSyncChange): void {
     throw new Error(`Refusing to create index ${change.indexName} without field metadata`)
   }
 
+  const fieldPath = change.fieldPath ?? [change.fieldName]
   const expected: DesiredFieldIndex = {
     collectionSlug: change.collectionSlug,
     fieldName: change.fieldName,
+    fieldPath,
     fieldType: change.fieldType,
     indexName: change.indexName,
-    expression: buildIndexExpression(change.fieldName, change.fieldType),
+    expression: buildIndexExpression(fieldPath, change.fieldType),
   }
   if (change.sql !== buildCreateIndexSql(expected)) {
     throw new Error(`Refusing to execute unexpected CREATE INDEX SQL for ${change.indexName}`)

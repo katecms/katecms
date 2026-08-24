@@ -1,3 +1,5 @@
+export { resolveCloneFields } from './clone'
+export type { ResolveCloneFieldsResult } from './clone'
 export { isLayoutOnlyFieldType, LAYOUT_ONLY_FIELD_TYPES } from './layout'
 export {
   collectPanelDefaults,
@@ -11,6 +13,7 @@ export {
 export {
   evaluateCondition,
   FIELD_OPERATORS,
+  MAX_MATCHES_PATTERN_LENGTH,
   isOperatorAllowed,
   isVisible,
 } from './visibility'

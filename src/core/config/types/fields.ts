@@ -1,6 +1,6 @@
 import type { ConditionalLogic } from './conditional-logic'
 
-/** Набор вариантов: { значение: подпись } */
+/** Choice map: { value: label } */
 type Choices = Record<string, string>
 
 type ImageChoices = Record<string, {
@@ -8,10 +8,10 @@ type ImageChoices = Record<string, {
   image: string
 }>
 
-/** Значение варианта select */
+/** Select choice value */
 export type SelectChoiceValue = string | number
 
-/** Обычный вариант select */
+/** Single select choice */
 export interface SelectChoiceItem {
   val?: SelectChoiceValue
   lbl: string
@@ -20,7 +20,7 @@ export interface SelectChoiceItem {
   check?: boolean
 }
 
-/** Группа вариантов select */
+/** Select choice group */
 export interface SelectChoiceGroup {
   type: 'group'
   title: string
@@ -28,13 +28,13 @@ export interface SelectChoiceGroup {
   childs: SelectChoiceItem[]
 }
 
-/** Вариант или группа для поля select */
+/** Choice or group for a select field */
 export type SelectChoice = SelectChoiceItem | SelectChoiceGroup
 
-/** v-model значение UiSelect / SelectField */
+/** Select field value */
 export type SelectModelValue = SelectChoiceValue | SelectChoiceValue[] | '' | null
 
-/** Базовые свойства, общие для всех полей. label обязателен. */
+/** Base properties shared by all fields. `label` is required. */
 interface BaseField {
   label: string
   instructions?: string
@@ -45,7 +45,7 @@ interface BaseField {
 }
 
 /* ============================================================
- * Базовые / текстовые
+ * Basic / text
  * ============================================================ */
 
 interface TextField extends BaseField {
@@ -64,7 +64,7 @@ interface TextareaField extends BaseField {
   maxLength?: number
   rows?: number
   placeholder?: string
-  /** Обработка переносов строк */
+  /** Newline handling */
   newLines?: 'autop' | 'br' | '' // default: ''
   indexed?: boolean
 }
@@ -116,19 +116,19 @@ interface PasswordField extends BaseField {
 }
 
 /* ============================================================
- * Контент / медиа
+ * Content / media
  * ============================================================ */
 
 interface WysiwygField extends BaseField {
   type: 'wysiwyg'
   defaultValue?: string
   tabs?: 'all' | 'visual' | 'text'
-  /** `full` (default) — все инструменты; `basic` — урезанный набор */
+  /** `full` (default) — all tools; `basic` — reduced set */
   toolbar?: 'full' | 'basic'
   mediaUpload?: boolean
-  /** Кастомные размеры шрифта (например `['12px','16px','24px']`). По умолчанию 8–96px. */
+  /** Custom font sizes (e.g. `['12px','16px','24px']`). Default 8–96px. */
   fontSize?: string[]
-  /** Кастомная палитра цветов текста (hex). */
+  /** Custom text colour palette (hex). */
   colorPalette?: string[]
 }
 
@@ -138,7 +138,7 @@ interface OembedField extends BaseField {
   height?: number
 }
 
-/** Общие настройки ограничений для медиа-полей */
+/** Shared constraint settings for media fields */
 interface MediaConstraints {
   minSize?: number
   maxSize?: number
@@ -176,7 +176,7 @@ interface GalleryField extends BaseField, MediaConstraints, ImageDimensions {
 }
 
 /* ============================================================
- * Выбор
+ * Choice
  * ============================================================ */
 
 export interface SelectField extends BaseField {
@@ -252,7 +252,7 @@ interface TrueFalseField extends BaseField {
 }
 
 /* ============================================================
- * Связи
+ * Relationships
  * ============================================================ */
 
 interface LinkField extends BaseField {
@@ -314,7 +314,7 @@ interface UserField extends BaseField {
 }
 
 /* ============================================================
- * Продвинутые
+ * Advanced
  * ============================================================ */
 
 interface OpenStreetMapField extends BaseField {
@@ -364,7 +364,7 @@ interface ColorPickerField extends BaseField {
 }
 
 /* ============================================================
- * Структура / вёрстка (с вложенными полями)
+ * Structure / layout (nested fields)
  * ============================================================ */
 
 interface GroupField extends BaseField {
@@ -381,7 +381,7 @@ interface RepeaterField extends BaseField {
   subFields: Fields
 }
 
-/** Макет блока flexible content. Ключ записи = имя макета. */
+/** Flexible content layout. The record key is the layout name. */
 export interface FlexibleLayout {
   label: string
   preview?: string // Preview image (Example: img_block.png)
@@ -403,7 +403,7 @@ interface FlexibleContentField extends BaseField {
 
 interface CloneField extends BaseField {
   type: 'clone'
-  /** Ключи клонируемых полей / групп полей */
+  /** Keys of fields / field groups to clone */
   clone: string[]
   display?: 'seamless' | 'group'
   layout?: 'block' | 'table' | 'row'
@@ -412,9 +412,9 @@ interface CloneField extends BaseField {
 }
 
 /* ============================================================
- * Оформление (без значения)
- * tab / accordion — только UI: subFields панелей пишутся плоско
- * в родительский values, без объекта под ключом самого поля.
+ * Presentation (no value)
+ * tab / accordion are UI-only: panel subFields are written flat
+ * into the parent values, not under the field's own key.
  * ============================================================ */
 
 interface Panel {
@@ -448,7 +448,7 @@ interface SeparatorField extends Omit<BaseField, 'label'> {
 }
 
 /* ============================================================
- * Объединение всех типов + корневой тип конфига
+ * Union of every field type + the root config type
  * ============================================================ */
 
 export type Field
@@ -490,5 +490,5 @@ export type Field
     | MessageField
     | SeparatorField
 
-/** Ключ = имя поля (вместо name). Значение = конфиг поля. */
+/** Key = field name (instead of `name`). Value = field config. */
 export type Fields = Record<string, Field>

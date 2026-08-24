@@ -78,3 +78,4 @@ export {
   setOption,
 } from './options'
 export type { Option } from './options'
+export type { ListPaging } from './paging'

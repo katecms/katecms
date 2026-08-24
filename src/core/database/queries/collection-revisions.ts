@@ -1,5 +1,7 @@
 import type { Insertable, Kysely, Selectable } from 'kysely'
 import type { CollectionRevisionsTable, Database } from '../client/schema'
+import { applyListPaging } from './paging'
+import type { ListPaging } from './paging'
 
 export type CollectionRevision = Selectable<CollectionRevisionsTable>
 export type NewCollectionRevision = Insertable<CollectionRevisionsTable>
@@ -18,14 +20,15 @@ export async function findCollectionRevisionById(
 export async function listCollectionRevisions(
   db: Kysely<Database>,
   collectionId: number,
+  paging?: ListPaging,
 ): Promise<CollectionRevision[]> {
-  return db
+  const query = db
     .selectFrom('collection_revisions')
     .selectAll()
     .where('collection_id', '=', collectionId)
     .orderBy('created_at', 'desc')
     .orderBy('id', 'desc')
-    .execute()
+  return applyListPaging(query, paging).execute()
 }
 
 export async function createCollectionRevision(

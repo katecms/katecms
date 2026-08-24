@@ -19,6 +19,8 @@ describe('parseSafeUrl', () => {
     expect(parseSafeUrl('http://127.0.0.1/x').ok).toBe(false)
     expect(parseSafeUrl('http://192.168.0.1/x').ok).toBe(false)
     expect(parseSafeUrl('http://10.0.0.1/x').ok).toBe(false)
+    expect(parseSafeUrl('http://2130706433/x').ok).toBe(false)
+    expect(parseSafeUrl('http://foo.localhost/x').ok).toBe(false)
   })
 })
 
@@ -54,6 +56,18 @@ describe('fetchOembed', () => {
     }
     expect(calls).toHaveLength(1)
     expect(calls[0]).toContain('youtube.com/oembed')
+  })
+
+  it('does not treat a lookalike hostname as a known provider', async () => {
+    const calls: string[] = []
+    const fetchFn: typeof fetch = async (input) => {
+      calls.push(String(input))
+      return new Response('<html></html>', { status: 200 })
+    }
+    const result = await fetchOembed({ url: 'https://notyoutube.com/watch?v=abc', fetch: fetchFn })
+    expect(calls[0]).not.toContain('youtube.com/oembed')
+    expect(calls[0]).toContain('notyoutube.com')
+    expect(result.ok).toBe(false)
   })
 
   it('discovers an endpoint from HTML when the provider is unknown', async () => {

@@ -87,4 +87,5 @@ export type {
   CollectionDictionary,
   ListCollectionsByDictionaryOptions,
   Option,
+  ListPaging,
 } from './queries'

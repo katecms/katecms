@@ -5,9 +5,11 @@ import {
   collectVisibleValueKeys,
   createFieldDefault,
   evaluateCondition,
+  MAX_MATCHES_PATTERN_LENGTH,
   isLayoutOnlyFieldType,
   isOperatorAllowed,
   isVisible,
+  resolveCloneFields,
 } from '../src/core'
 
 const text = (overrides: Partial<Extract<Field, { type: 'text' }>> = {}): Extract<Field, { type: 'text' }> => ({
@@ -48,6 +50,10 @@ describe('evaluateCondition', () => {
     expect(evaluateCondition({ field: 'a', operator: 'gt', value: 2 }, ['a', 'b', 'c'])).toBe(true)
     expect(evaluateCondition({ field: 'a', operator: 'matches', value: '^a+$' }, 'aaa')).toBe(true)
     expect(evaluateCondition({ field: 'a', operator: 'matches', value: '(' }, 'aaa')).toBe(false)
+    expect(evaluateCondition(
+      { field: 'a', operator: 'matches', value: 'a'.repeat(MAX_MATCHES_PATTERN_LENGTH + 1) },
+      'a',
+    )).toBe(false)
   })
 })
 
@@ -102,5 +108,22 @@ describe('buildFormValues', () => {
       ['title', text()],
     ])
     expect([...keys].sort()).toEqual(['n', 'title'])
+  })
+})
+
+describe('resolveCloneFields', () => {
+  it('expands clone fields into prefixed copies', () => {
+    const { fields, warnings } = resolveCloneFields({
+      title: text(),
+      copy: {
+        type: 'clone',
+        label: 'Copy',
+        clone: ['title'],
+        prefixName: true,
+      },
+    })
+    expect(warnings).toEqual([])
+    expect(fields.copy).toBeUndefined()
+    expect(fields.copy_title).toMatchObject({ type: 'text', label: 'Title' })
   })
 })

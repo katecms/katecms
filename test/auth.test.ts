@@ -29,6 +29,26 @@ describe('hashPassword / verifyPassword', () => {
     expect(await verifyPassword('secret-pass', 'bcrypt$salt$hash')).toBe(false)
     expect(await verifyPassword('secret-pass', 'scrypt$onlysalt')).toBe(false)
   })
+
+  it('embeds scrypt parameters and still verifies legacy hashes', async () => {
+    const stored = await hashPassword('secret-pass')
+    expect(stored.split('$')).toHaveLength(6)
+
+    const { promisify } = await import('node:util')
+    const { randomBytes, scrypt: scryptCb } = await import('node:crypto')
+    const scrypt = promisify(scryptCb)
+    const salt = randomBytes(16)
+    const derived = await scrypt('legacy-pass', salt, 64) as Buffer
+    const legacy = `scrypt$${salt.toString('hex')}$${derived.toString('hex')}`
+    expect(await verifyPassword('legacy-pass', legacy)).toBe(true)
+    expect(await verifyPassword('wrong-pass', legacy)).toBe(false)
+  })
+
+  it('rejects oversized passwords in hash and verify', async () => {
+    const tooLong = 'x'.repeat(MAX_PASSWORD_LENGTH + 1)
+    await expect(hashPassword(tooLong)).rejects.toThrow(String(MAX_PASSWORD_LENGTH))
+    expect(await verifyPassword(tooLong, 'scrypt$1$1$1$aa$bb')).toBe(false)
+  })
 })
 
 describe('validateEmail', () => {

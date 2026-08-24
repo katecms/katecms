@@ -1,5 +1,10 @@
 import type { Media } from '../database'
-import type { MediaItem, MediaVariant, MediaVariantsStatus, StoredMediaVariant } from './types'
+import type { MediaVariantsStatus } from '../database/client/schema'
+import type { MediaItem, MediaVariant, StoredMediaVariant } from './types'
+
+/** Drain a leftover Kysely `ColumnType` so mapper input is plain JS values. */
+type SelectType<T> = T extends { readonly __select__: infer S } ? S : T
+type MediaRow = { [K in keyof Media]: SelectType<Media[K]> }
 
 function isStoredVariant(value: unknown): value is StoredMediaVariant {
   if (!value || typeof value !== 'object') {
@@ -27,7 +32,7 @@ export interface ToMediaItemOptions {
  * Map a `media` row to the client DTO. `url` / variant URLs are derived so they
  * stay in sync if the public prefix changes.
  */
-export function toMediaItem(row: Media, options: ToMediaItemOptions): MediaItem {
+export function toMediaItem(row: MediaRow, options: ToMediaItemOptions): MediaItem {
   const raw = Array.isArray(row.variants) ? row.variants : []
   const variants: MediaVariant[] = raw.filter(isStoredVariant).map(variant => ({
     ...variant,

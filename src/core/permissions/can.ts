@@ -30,9 +30,9 @@ export function isOwner(user: RoleHolder, roles: RoleMap): boolean {
   return getRole(roles, user.role)?.superuser === true
 }
 
-/** Whether the user may run schema/index maintenance (owner or built-in admin). */
+/** Whether the user may run schema/index maintenance (owner or `maintenance` role). */
 export function isAdminOrOwner(user: RoleHolder, roles: RoleMap): boolean {
-  return isOwner(user, roles) || user.role === 'admin'
+  return isOwner(user, roles) || getRole(roles, user.role)?.maintenance === true
 }
 
 function resourceAllows(right: ResourceRights, action: RoleAction): boolean {
@@ -80,4 +80,56 @@ export function can(
     return scopedAllows(right as ScopedRights, action, options.scope)
   }
   return resourceAllows(right as ResourceRights, action)
+}
+
+export interface EntryAuthor {
+  authorId: number | null
+}
+
+export interface CanOnEntryOptions extends CanOptions {
+  /** Authenticated user id, compared to {@link EntryAuthor.authorId}. */
+  userId: number
+}
+
+/**
+ * Permission check for one stored entry (update/delete).
+ *
+ * `read` / `create` follow {@link can}. `update` / `delete` additionally require
+ * `userId === entry.authorId`, unless the role is owner, has `maintenance`,
+ * or has blanket (`true`) rights on the resource/scope.
+ */
+export function canOnEntry(
+  user: RoleHolder,
+  resource: Resource,
+  action: RoleAction,
+  entry: EntryAuthor,
+  options: CanOnEntryOptions,
+): boolean {
+  if (!can(user, resource, action, options)) {
+    return false
+  }
+  if (action === 'read' || action === 'create') {
+    return true
+  }
+  if (isAdminOrOwner(user, options.roles)) {
+    return true
+  }
+  const role = getRole(options.roles, user.role)
+  if (!role) {
+    return false
+  }
+  const right = role.rights[resource]
+  if (right === true) {
+    return true
+  }
+  if (
+    right
+    && typeof right === 'object'
+    && !Array.isArray(right)
+    && options.scope !== undefined
+    && right[options.scope] === true
+  ) {
+    return true
+  }
+  return entry.authorId === options.userId
 }

@@ -1,22 +1,69 @@
-import type { MiraiCmsConfig, ResolvedMiraiCmsConfig } from './types'
+import type { Blocks, Collections, Fields, MiraiCmsConfig, ResolvedMiraiCmsConfig, Taxonomies } from './types'
 import { defaults } from './defaults'
+import { resolveCloneFields } from '../fields/clone'
 import { resolveMediaConfig } from './resolve-media'
 import { resolveRoles } from './resolve-roles'
 
-/** Merge user CMS config with defaults, resolve roles and media. */
+function resolveFieldsTree(fields: Fields | undefined, warnings: string[]): Fields | undefined {
+  if (!fields) {
+    return fields
+  }
+  const resolved = resolveCloneFields(fields)
+  warnings.push(...resolved.warnings)
+  return resolved.fields
+}
+
+function resolveCollectionFields(collections: Collections, warnings: string[]): Collections {
+  const result: Collections = {}
+  for (const [slug, definition] of Object.entries(collections)) {
+    result[slug] = {
+      ...definition,
+      fields: resolveFieldsTree(definition.fields, warnings),
+    }
+  }
+  return result
+}
+
+function resolveTaxonomyFields(taxonomies: Taxonomies, warnings: string[]): Taxonomies {
+  const result: Taxonomies = {}
+  for (const [slug, definition] of Object.entries(taxonomies)) {
+    result[slug] = {
+      ...definition,
+      fields: resolveFieldsTree(definition.fields, warnings),
+    }
+  }
+  return result
+}
+
+function resolveBlockFields(blocks: Blocks, warnings: string[]): Blocks {
+  const result: Blocks = {}
+  for (const [slug, definition] of Object.entries(blocks)) {
+    result[slug] = {
+      ...definition,
+      fields: resolveFieldsTree(definition.fields, warnings),
+    }
+  }
+  return result
+}
+
+/** Merge user CMS config with defaults, resolve roles, media, and clone fields. */
 export function resolveMiraiCmsConfig(config: MiraiCmsConfig = {}): ResolvedMiraiCmsConfig {
   const roles = resolveRoles(config.roles)
   const media = resolveMediaConfig(config.media)
+  const cloneWarnings: string[] = []
+  const collections = resolveCollectionFields(config.collections ?? {}, cloneWarnings)
+  const taxonomies = resolveTaxonomyFields(config.taxonomies ?? {}, cloneWarnings)
+  const blocks = resolveBlockFields(config.blocks ?? {}, cloneWarnings)
 
   return {
     adminPath: config.adminPath ?? defaults.adminPath!,
     loginPath: config.loginPath ?? defaults.loginPath!,
     registerPath: config.registerPath ?? defaults.registerPath!,
-    collections: config.collections ?? {},
-    taxonomies: config.taxonomies ?? {},
-    blocks: config.blocks ?? {},
+    collections,
+    taxonomies,
+    blocks,
     media: media.media,
     roles: roles.roles,
-    warnings: [...roles.warnings, ...media.warnings],
+    warnings: [...roles.warnings, ...media.warnings, ...cloneWarnings],
   }
 }

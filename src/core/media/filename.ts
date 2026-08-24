@@ -117,6 +117,18 @@ export async function prepareUploadKey(
   return uniqueFilename(baseName, exists)
 }
 
+/** Append or bump a numeric suffix before the extension (`a.jpg` → `a-1.jpg` → `a-2.jpg`). */
+export function incrementFilename(name: string): string {
+  const dot = name.lastIndexOf('.')
+  const base = dot > 0 ? name.slice(0, dot) : name
+  const ext = dot > 0 ? name.slice(dot) : ''
+  const match = /^(.*)-(\d+)$/.exec(base)
+  if (match) {
+    return `${match[1]}-${Number(match[2]) + 1}${ext}`
+  }
+  return `${base}-1${ext}`
+}
+
 /**
  * Read intrinsic pixel dimensions from the file header for PNG, GIF, JPEG, WebP.
  * Returns null for vector/unknown formats or malformed data.

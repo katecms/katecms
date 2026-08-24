@@ -22,5 +22,6 @@ export const defaults: MiraiCmsConfig = {
     avif: false,
     webp: false,
     imageSizes: [],
+    maxInputPixels: 50_000_000,
   },
 }

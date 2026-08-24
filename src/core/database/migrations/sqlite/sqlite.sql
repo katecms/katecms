@@ -208,7 +208,8 @@ CREATE TABLE IF NOT EXISTS dictionaries (
   CONSTRAINT dictionaries_id_positive CHECK (id > 0),
   CONSTRAINT dictionaries_parent_not_self CHECK (parent_id IS NULL OR parent_id != id)
 );
-CREATE UNIQUE INDEX IF NOT EXISTS dictionaries_type_slug_unique ON dictionaries (type, slug);
+CREATE UNIQUE INDEX IF NOT EXISTS dictionaries_type_parent_slug_unique
+  ON dictionaries (type, COALESCE(parent_id, 0), slug);
 CREATE INDEX IF NOT EXISTS dictionaries_parent_id_idx ON dictionaries (parent_id);
 CREATE INDEX IF NOT EXISTS dictionaries_type_parent_idx ON dictionaries (type, parent_id);
 DROP TRIGGER IF EXISTS dictionaries_set_updated_at;

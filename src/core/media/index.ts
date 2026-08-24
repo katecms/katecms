@@ -2,7 +2,6 @@ export type {
   ImageDimensions,
   MediaItem,
   MediaVariant,
-  MediaVariantsStatus,
   StoredMediaVariant,
 } from './types'
 export {
@@ -12,6 +11,7 @@ export {
   sanitizeFilename,
   transliterate,
   uniqueFilename,
+  incrementFilename,
   variantFilename,
 } from './filename'
 export { buildPublicUrl, createLocalMediaStorage } from './storage'

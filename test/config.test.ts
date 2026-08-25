@@ -119,6 +119,24 @@ describe('resolveMiraiCmsConfig', () => {
     expect(resolved.roles.owner?.superuser).toBe(true)
     expect(resolved.warnings.length).toBeGreaterThanOrEqual(2)
   })
+
+  it('fills database defaults and accepts Postgres', () => {
+    expect(resolveMiraiCmsConfig().database).toEqual({
+      driver: '',
+      url: '',
+      sqliteFilename: defaults.database?.sqliteFilename,
+    })
+    expect(resolveMiraiCmsConfig({
+      database: {
+        driver: 'postgres',
+        url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
+      },
+    }).database).toEqual({
+      driver: 'postgres',
+      url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
+      sqliteFilename: defaults.database?.sqliteFilename,
+    })
+  })
 })
 
 describe('can', () => {

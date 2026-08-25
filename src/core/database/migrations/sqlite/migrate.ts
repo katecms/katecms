@@ -1,8 +1,8 @@
-import { createRequire } from 'node:module'
 import { SCHEMA_SQL } from './schema'
+import { nodeRequire } from '../../client/node-require'
 import { isMemorySqliteFilename, resolveSqliteFilename } from '../../client/sqlite-filename'
 
-const require = createRequire(import.meta.url)
+const require = nodeRequire
 
 interface MigrationResult {
   applied: string[]

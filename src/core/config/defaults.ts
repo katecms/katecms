@@ -1,5 +1,11 @@
 import type { MiraiCmsConfig } from './types'
 
+/**
+ * Built-in CMS defaults.
+ *
+ * Database is SQLite at `data/miraicms.db`. For PostgreSQL 15+:
+ * `{ driver: 'postgres', url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms' }`.
+ */
 export const defaults: MiraiCmsConfig = {
   adminPath: 'admin',
   loginPath: 'login',
@@ -8,6 +14,9 @@ export const defaults: MiraiCmsConfig = {
   taxonomies: {},
   blocks: {},
   roles: {},
+  database: {
+    sqliteFilename: 'data/miraicms.db',
+  },
   media: {
     maxFileSize: 10,
     allowedMimeTypes: [

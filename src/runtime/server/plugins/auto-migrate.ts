@@ -1,13 +1,28 @@
 import { defineNitroPlugin } from 'nitropack/runtime'
 import { useRuntimeConfig } from '#imports'
-import { migrateSqlite, migratePostgres } from '../../../core/database/migrations'
+import { migratePostgres, migrateSqlite } from '../../../core/database/migrations'
+import { resolveDatabaseTarget } from '../../../core/database/client'
+
+function trimEnv(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : ''
+}
 
 export default defineNitroPlugin(async () => {
-  const filename = useRuntimeConfig().miraicmsSqliteFilename
-  if (typeof filename !== 'string' || filename.length === 0) {
-    throw new Error('[MiraiCMS] miraicmsSqliteFilename is not set in runtimeConfig.')
-  }
-  await migrateSqlite({ filename })
+  const database = useRuntimeConfig().miraicms?.database
+  const driver = trimEnv(database?.driver)
+  const url = trimEnv(database?.url)
+    || (driver === 'postgres' ? trimEnv(process.env.DATABASE_URL) : '')
 
-  await migratePostgres({ connectionString: 'postgres://postgres:admin@127.0.0.1:5432/miraicms' })
+  const target = resolveDatabaseTarget({
+    driver,
+    url,
+    sqliteFilename: database?.sqliteFilename,
+  })
+
+  if (target.driver === 'postgres') {
+    await migratePostgres(target.url)
+    return
+  }
+
+  await migrateSqlite({ filename: target.filename })
 })

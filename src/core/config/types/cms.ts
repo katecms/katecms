@@ -1,5 +1,6 @@
 import type { Blocks } from './block'
 import type { Collections } from './collection'
+import type { DatabaseConfig, ResolvedDatabaseConfig } from './database'
 import type { MediaConfig, ResolvedMediaConfig } from './media'
 import type { ResolvedRole, Roles } from './roles'
 import type { Taxonomies } from './taxonomy'
@@ -12,6 +13,13 @@ export interface MiraiCmsConfig {
   collections?: Collections
   taxonomies?: Taxonomies
   blocks?: Blocks
+  /**
+   * Database connection. Default is SQLite at `data/miraicms.db`.
+   *
+   * @example
+   * { driver: 'postgres', url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms' }
+   */
+  database?: DatabaseConfig
   media?: MediaConfig
   /**
    * Extend or customise user roles. Built-in roles (`owner`, `admin`, `editor`,
@@ -22,7 +30,7 @@ export interface MiraiCmsConfig {
   roles?: Roles
 }
 
-/** CMS config after defaults, role merge, and media normalisation. */
+/** CMS config after defaults, role merge, media and database normalisation. */
 export interface ResolvedMiraiCmsConfig {
   adminPath: string
   loginPath: string
@@ -30,6 +38,7 @@ export interface ResolvedMiraiCmsConfig {
   collections: Collections
   taxonomies: Taxonomies
   blocks: Blocks
+  database: ResolvedDatabaseConfig
   media: ResolvedMediaConfig
   roles: Record<string, ResolvedRole>
   warnings: string[]

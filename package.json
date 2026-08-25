@@ -35,6 +35,7 @@
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit",
+    "test:basic": "vitest run test/basic.test.ts",
     "check-updates": "ncu --target minor",
     "upgrade-deps": "ncu --target minor -u && pnpm install"
   },

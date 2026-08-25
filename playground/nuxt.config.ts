@@ -2,5 +2,10 @@ export default defineNuxtConfig({
   modules: ['miraicms'],
   devtools: { enabled: true },
   compatibilityDate: 'latest',
-  miraicms: {},
+  miraicms: {
+    // database: {
+    //   driver: 'postgres',
+    //   url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
+    // },
+  },
 })

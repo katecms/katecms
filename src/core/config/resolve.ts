@@ -1,6 +1,7 @@
 import type { Blocks, Collections, Fields, MiraiCmsConfig, ResolvedMiraiCmsConfig, Taxonomies } from './types'
 import { defaults } from './defaults'
 import { resolveCloneFields } from '../fields/clone'
+import { resolveDatabaseConfig } from './resolve-database'
 import { resolveMediaConfig } from './resolve-media'
 import { resolveRoles } from './resolve-roles'
 
@@ -46,10 +47,11 @@ function resolveBlockFields(blocks: Blocks, warnings: string[]): Blocks {
   return result
 }
 
-/** Merge user CMS config with defaults, resolve roles, media, and clone fields. */
+/** Merge user CMS config with defaults, resolve roles, media, database, and clone fields. */
 export function resolveMiraiCmsConfig(config: MiraiCmsConfig = {}): ResolvedMiraiCmsConfig {
   const roles = resolveRoles(config.roles)
   const media = resolveMediaConfig(config.media)
+  const database = resolveDatabaseConfig(config.database)
   const cloneWarnings: string[] = []
   const collections = resolveCollectionFields(config.collections ?? {}, cloneWarnings)
   const taxonomies = resolveTaxonomyFields(config.taxonomies ?? {}, cloneWarnings)
@@ -62,8 +64,9 @@ export function resolveMiraiCmsConfig(config: MiraiCmsConfig = {}): ResolvedMira
     collections,
     taxonomies,
     blocks,
+    database: database.database,
     media: media.media,
     roles: roles.roles,
-    warnings: [...roles.warnings, ...media.warnings, ...cloneWarnings],
+    warnings: [...roles.warnings, ...media.warnings, ...database.warnings, ...cloneWarnings],
   }
 }

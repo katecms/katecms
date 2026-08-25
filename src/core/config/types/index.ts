@@ -1,6 +1,11 @@
 export type { Block, Blocks } from './block'
 export type { CollectionDefinition, CollectionLabels, Collections } from './collection'
 export type {
+  DatabaseConfig,
+  DatabaseDriver,
+  ResolvedDatabaseConfig,
+} from './database'
+export type {
   MiraiCmsConfig,
   ResolvedMiraiCmsConfig,
 } from './cms'

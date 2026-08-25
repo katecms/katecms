@@ -20,6 +20,11 @@ export type { CreateSqliteDbOptions } from './client'
 export type { D1Database } from './client'
 
 export { migratePostgres, migrateSqlite } from './migrations'
+export { resolveDatabaseTarget } from './client'
+export type {
+  DatabaseTarget,
+  ResolveDatabaseTargetInput,
+} from './client'
 
 export {
   createUser,

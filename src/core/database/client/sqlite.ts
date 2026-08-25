@@ -1,13 +1,13 @@
-import { createRequire } from 'node:module'
 import { CompiledQuery, Kysely, SqliteDialect } from 'kysely'
 import type { SqliteDatabase } from 'kysely'
+import { nodeRequire } from './node-require'
 import { isMemorySqliteFilename, resolveSqliteFilename } from './sqlite-filename'
 import { D1Dialect } from './d1-dialect'
 import type { D1Database } from './d1-dialect'
 import type { Database } from './schema'
 import { SqliteValuePlugin } from './values'
 
-const require = createRequire(import.meta.url)
+const require = nodeRequire
 
 export interface CreateSqliteDbOptions {
   filename?: string

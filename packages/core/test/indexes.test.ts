@@ -6,7 +6,7 @@ import type {
   DesiredFieldIndex,
   Field,
   IndexSyncDiff,
-} from '../src/core'
+} from '../src'
 import {
   applyFieldIndexDiff,
   buildCreateIndexSql,
@@ -17,7 +17,7 @@ import {
   computeIndexDiff,
   indexDefinitionsMatch,
   isManagedFieldIndexName,
-} from '../src/core'
+} from '../src'
 
 describe('field index definitions', () => {
   it('builds partial expression indexes from indexed scalar fields', () => {

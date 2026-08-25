@@ -8,7 +8,7 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
-    "miraicms": "workspace:*",
+    "@miraicms/nuxt": "workspace:*",
     "nuxt": "^4.5.2"
   }
 }

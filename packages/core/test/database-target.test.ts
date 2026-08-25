@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolveDatabaseTarget } from '../src/core'
+import { resolveDatabaseTarget } from '../src'
 
 describe('resolveDatabaseTarget', () => {
   it('defaults to SQLite when driver and url are empty', () => {

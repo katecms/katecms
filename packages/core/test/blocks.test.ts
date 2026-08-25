@@ -6,7 +6,7 @@ import {
   isValidBlockId,
   newBlockId,
   nl2br,
-} from '../src/core'
+} from '../src'
 
 describe('newBlockId', () => {
   it('returns an anchor-safe id', () => {

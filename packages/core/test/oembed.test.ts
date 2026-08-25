@@ -4,7 +4,7 @@ import {
   fetchOembed,
   parseOembedLink,
   parseSafeUrl,
-} from '../src/core'
+} from '../src'
 
 describe('parseSafeUrl', () => {
   it('accepts public http(s) URLs', () => {

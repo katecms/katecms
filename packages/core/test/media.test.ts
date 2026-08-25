@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { Buffer } from 'node:buffer'
 import sharp from 'sharp'
 import { afterEach, describe, expect, it } from 'vitest'
-import type { MediaStorage } from '../src/core'
+import type { MediaStorage } from '../src'
 import {
   buildPublicUrl,
   createLocalMediaStorage,
@@ -18,7 +18,7 @@ import {
   uniqueFilename,
   incrementFilename,
   variantFilename,
-} from '../src/core'
+} from '../src'
 
 const tempDirs: string[] = []
 

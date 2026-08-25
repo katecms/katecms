@@ -8,9 +8,9 @@ import {
   findUserByEmail,
   migratePostgres,
   setOption,
-} from '../src/core'
+} from '../src'
 import type { Kysely } from 'kysely'
-import type { Database } from '../src/core'
+import type { Database } from '../src'
 
 /** Override with DATABASE_URL. Default is the local URL from the README. */
 const POSTGRES_URL = process.env.DATABASE_URL

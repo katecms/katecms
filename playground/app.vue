@@ -1,6 +1,6 @@
 <template>
   <div>
-    Nuxt module playground!
+    Nuxt module playground!!!
   </div>
 </template>
 

@@ -1,82 +1,30 @@
 {
-  "name": "miraicms",
+  "name": "miraicms-monorepo",
   "version": "1.0.0",
-  "description": "A Nuxt module that adds a full CMS to your application.",
+  "private": true,
+  "description": "MiraiCMS monorepo: framework-agnostic core and Nuxt adapter.",
   "repository": "https://github.com/ldu1991/miraicms",
   "license": "MIT",
   "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/types.d.mts",
-      "import": "./dist/module.mjs"
-    }
-  },
-  "main": "./dist/module.mjs",
-  "typesVersions": {
-    "*": {
-      ".": [
-        "./dist/types.d.mts"
-      ]
-    }
-  },
-  "files": [
-    "dist"
-  ],
-  "workspaces": [
-    "playground"
-  ],
   "scripts": {
-    "prepack": "nuxt-module-build build",
-    "dev": "pnpm run dev:prepare && nuxt dev playground",
-    "dev:build": "nuxt build playground",
-    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxt prepare playground",
-    "release": "pnpm run lint && pnpm run test && pnpm run prepack && changelogen --release && npm publish && git push --follow-tags",
+    "dev": "pnpm run dev:prepare && pnpm --filter miraicms-module-playground dev",
+    "dev:build": "pnpm --filter miraicms-module-playground build",
+    "dev:prepare": "pnpm --filter @miraicms/core build && pnpm --filter @miraicms/nuxt dev:prepare && pnpm --filter miraicms-module-playground exec nuxt prepare",
+    "prepack": "pnpm --filter @miraicms/core build && pnpm --filter @miraicms/nuxt prepack",
+    "release": "pnpm run lint && pnpm run test && pnpm run prepack && changelogen --release && pnpm --filter @miraicms/core publish && pnpm --filter @miraicms/nuxt publish && git push --follow-tags",
     "lint": "eslint .",
-    "test": "vitest run",
-    "test:watch": "vitest watch",
-    "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit",
-    "test:basic": "vitest run test/basic.test.ts",
+    "test": "pnpm --filter @miraicms/core test && pnpm --filter @miraicms/core build && pnpm --filter @miraicms/nuxt test",
+    "test:watch": "pnpm --filter @miraicms/core test:watch",
+    "test:types": "pnpm --filter @miraicms/core typecheck && pnpm --filter @miraicms/nuxt test:types",
+    "test:basic": "pnpm --filter @miraicms/nuxt test:basic",
     "check-updates": "ncu --target minor",
     "upgrade-deps": "ncu --target minor -u && pnpm install"
   },
-  "dependencies": {
-    "@nuxt/kit": "^4.5.2",
-    "@tiptap/core": "^3.29.2",
-    "@tiptap/extension-subscript": "^3.29.2",
-    "@tiptap/extension-superscript": "^3.29.2",
-    "@tiptap/extension-table": "^3.29.2",
-    "@tiptap/extension-text-align": "^3.29.2",
-    "@tiptap/extension-text-style": "^3.29.2",
-    "@tiptap/pm": "^3.29.2",
-    "@tiptap/starter-kit": "^3.29.2",
-    "@tiptap/vue-3": "^3.29.2",
-    "better-sqlite3": "^13.0.3",
-    "c12": "4.0.0-beta.5",
-    "kysely": "^0.29.4",
-    "leaflet": "^1.9.4",
-    "leaflet-control-geocoder": "^4.0.0",
-    "leaflet.locatecontrol": "^0.90.0",
-    "pg": "^8.23.0",
-    "sharp": "^0.35.3"
-  },
   "devDependencies": {
-    "@nuxt/devtools": "^3.4.1",
     "@nuxt/eslint-config": "^1.17.0",
-    "@nuxt/module-builder": "^1.0.3",
-    "@nuxt/schema": "^4.5.2",
-    "@nuxt/test-utils": "^4.1.0",
-    "@types/leaflet": "^1.9.22",
-    "@types/leaflet.locatecontrol": "^0.85.1",
-    "@types/node": "latest",
-    "@types/pg": "^8.21.0",
     "changelogen": "^0.6.2",
     "eslint": "^10.8.1",
     "npm-check-updates": "^23.0.2",
-    "nuxt": "^4.5.2",
-    "sass-embedded": "^1.100.0",
-    "typescript": "^5.9.3",
-    "vitest": "^4.1.10",
-    "vue": "^3.5.41",
-    "vue-tsc": "^3.3.9"
+    "typescript": "^5.9.3"
   }
 }

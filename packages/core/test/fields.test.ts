@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Field, Fields } from '../src/core'
+import type { Field, Fields } from '../src'
 import {
   buildFormValues,
   collectVisibleValueKeys,
@@ -10,7 +10,7 @@ import {
   isOperatorAllowed,
   isVisible,
   resolveCloneFields,
-} from '../src/core'
+} from '../src'
 
 const text = (overrides: Partial<Extract<Field, { type: 'text' }>> = {}): Extract<Field, { type: 'text' }> => ({
   type: 'text',

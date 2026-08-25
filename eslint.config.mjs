@@ -1,17 +1,16 @@
 // @ts-check
 import { createConfigForNuxt } from '@nuxt/eslint-config/flat'
 
-// Run `npx @eslint/config-inspector` to inspect the resolved config interactively
 export default createConfigForNuxt({
   features: {
-    // Rules for module authors
     tooling: true,
-    // Rules for formatting
     stylistic: true,
   },
   dirs: {
     src: [
       './playground',
+      './packages/nuxt',
+      './packages/core',
     ],
   },
 })
@@ -22,7 +21,7 @@ export default createConfigForNuxt({
   })
   .append({
     files: [
-      'src/runtime/pages/**/*.vue',
+      'packages/nuxt/src/runtime/pages/**/*.vue',
       'playground/pages/**/*.vue',
     ],
     rules: {

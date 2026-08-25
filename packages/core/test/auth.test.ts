@@ -6,7 +6,7 @@ import {
   validateEmail,
   validatePassword,
   verifyPassword,
-} from '../src/core'
+} from '../src'
 
 describe('hashPassword / verifyPassword', () => {
   it('round-trips a password', async () => {

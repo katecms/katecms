@@ -12,7 +12,7 @@ import {
   resolveMediaConfig,
   resolveRoles,
   isMimeAllowed,
-} from '../src/core'
+} from '../src'
 
 describe('defineMiraiCmsConfig', () => {
   it('returns the given config', () => {

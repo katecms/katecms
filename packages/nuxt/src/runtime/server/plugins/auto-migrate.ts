@@ -1,7 +1,6 @@
 import { defineNitroPlugin } from 'nitropack/runtime'
 import { useRuntimeConfig } from '#imports'
-import { migratePostgres, migrateSqlite } from '../../../core/database/migrations'
-import { resolveDatabaseTarget } from '../../../core/database/client'
+import { migratePostgres, migrateSqlite, resolveDatabaseTarget } from '@miraicms/core'
 
 function trimEnv(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''

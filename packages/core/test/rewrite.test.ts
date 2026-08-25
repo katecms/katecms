@@ -4,7 +4,7 @@ import {
   buildSlugPathMap,
   matchCollectionPath,
   normalizePublicPath,
-} from '../src/core'
+} from '../src'
 
 const collections = {
   pages: {

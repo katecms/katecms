@@ -1,0 +1,42 @@
+{
+  "name": "@miraicms/core",
+  "version": "1.0.0",
+  "description": "Framework-agnostic MiraiCMS core: config, database, auth, fields, media.",
+  "repository": "https://github.com/ldu1991/miraicms",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "prepack": "unbuild",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "kysely": "^0.29.4",
+    "pg": "^8.23.0",
+    "better-sqlite3": "^13.0.3",
+    "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/pg": "^8.21.0",
+    "typescript": "^5.9.3",
+    "unbuild": "^3.6.1",
+    "vitest": "^4.1.10"
+  }
+}

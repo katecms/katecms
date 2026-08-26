@@ -39,7 +39,7 @@ const moduleRequire = createRequire(import.meta.url)
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: '@miraicms/nuxt',
+    name: 'miraicms-nuxt',
     configKey: 'miraicms',
   },
   defaults: {},

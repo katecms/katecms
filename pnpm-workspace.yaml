@@ -1,6 +1,6 @@
 packages:
   - packages/*
-  - playground
+  - playground-nuxt
 
 onlyBuiltDependencies:
   - better-sqlite3

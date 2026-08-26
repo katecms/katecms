@@ -1,5 +1,5 @@
 {
-  "name": "@miraicms/nuxt",
+  "name": "miraicms-nuxt",
   "version": "1.0.0",
   "description": "Nuxt module that adds MiraiCMS to your application.",
   "repository": "https://github.com/ldu1991/miraicms",

@@ -8,8 +8,8 @@ export default createConfigForNuxt({
   },
   dirs: {
     src: [
-      './playground',
-      './packages/nuxt',
+      './playground-nuxt',
+      './packages/miraicms-nuxt',
       './packages/core',
     ],
   },
@@ -21,8 +21,8 @@ export default createConfigForNuxt({
   })
   .append({
     files: [
-      'packages/nuxt/src/runtime/pages/**/*.vue',
-      'playground/pages/**/*.vue',
+      'packages/miraicms-nuxt/src/runtime/pages/**/*.vue',
+      'playground-nuxt/pages/**/*.vue',
     ],
     rules: {
       'vue/multi-word-component-names': 'off',

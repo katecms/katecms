@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "miraicms-module-playground",
+  "name": "miraicms-playground-nuxt",
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
@@ -8,7 +8,7 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
-    "@miraicms/nuxt": "workspace:*",
+    "miraicms-nuxt": "workspace:*",
     "nuxt": "^4.5.2"
   }
 }

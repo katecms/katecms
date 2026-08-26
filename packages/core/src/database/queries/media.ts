@@ -1,5 +1,5 @@
 import type { Insertable, Kysely, Selectable, Updateable } from 'kysely'
-import type { Database, MediaTable } from '../client/schema'
+import type { Database, MediaTable } from '../client'
 import { incrementFilename } from '../../media/filename'
 import { isUniqueConstraintError } from './errors'
 import { applyListPaging } from './paging'

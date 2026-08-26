@@ -1,7 +1,7 @@
 import type { Insertable, Kysely, Selectable, Updateable } from 'kysely'
 import { sql } from 'kysely'
 import { OWNER_ROLE } from '../../config'
-import type { Database, UsersTable } from '../client/schema'
+import type { Database, UsersTable } from '../client'
 import { applyListPaging } from './paging'
 import type { ListPaging } from './paging'
 

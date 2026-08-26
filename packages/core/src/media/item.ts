@@ -1,5 +1,4 @@
-import type { Media } from '../database'
-import type { MediaVariantsStatus } from '../database/client/schema'
+import type { Media, MediaVariantsStatus } from '../database'
 import type { MediaItem, MediaVariant, StoredMediaVariant } from './types'
 
 /** Drain a leftover Kysely `ColumnType` so mapper input is plain JS values. */

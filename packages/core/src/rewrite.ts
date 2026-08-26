@@ -1,4 +1,4 @@
-import type { Collections } from './config/types/collection'
+import type { Collections } from './config'
 
 /** Strip query/hash, ensure leading slash, drop trailing slash (except `/`). */
 export function normalizePublicPath(path: string): string {

@@ -1,4 +1,4 @@
-import type { MediaVariantsStatus } from '../database/client/schema'
+import type { MediaVariantsStatus } from '../database'
 
 /**
  * A generated derivative stored beside the original.

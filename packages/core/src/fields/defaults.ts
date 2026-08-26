@@ -1,4 +1,4 @@
-import type { Field, Fields } from '../config/types/fields'
+import type { Field, Fields } from '../config'
 import { isLayoutOnlyFieldType } from './layout'
 
 type PanelContainerField = Extract<Field, { type: 'tab' | 'accordion' }>

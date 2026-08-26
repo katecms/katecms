@@ -1,5 +1,5 @@
 import type { Insertable, Kysely, Selectable, Updateable } from 'kysely'
-import type { CollectionStatus, Database, CollectionsTable } from '../client/schema'
+import type { CollectionStatus, Database, CollectionsTable } from '../client'
 import { buildSlugPathMap } from '../../rewrite'
 import { applyListPaging } from './paging'
 import type { ListPaging } from './paging'

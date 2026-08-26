@@ -1,6 +1,6 @@
 import type { Blocks, Collections, Fields, MiraiCmsConfig, ResolvedMiraiCmsConfig, Taxonomies } from './types'
 import { defaults } from './defaults'
-import { resolveCloneFields } from '../fields/clone'
+import { resolveCloneFields } from '../fields'
 import { resolveDatabaseConfig } from './resolve-database'
 import { resolveMediaConfig } from './resolve-media'
 import { resolveRoles } from './resolve-roles'

@@ -9,7 +9,6 @@ export {
   readImageSize,
   resolveExtension,
   sanitizeFilename,
-  transliterate,
   uniqueFilename,
   incrementFilename,
   variantFilename,

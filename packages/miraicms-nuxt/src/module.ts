@@ -5,27 +5,16 @@ import {
   createResolver,
   addServerPlugin,
 } from '@nuxt/kit'
-import type { DatabaseConfig, ResolvedDatabaseConfig } from '@miraicms/core'
-import { resolveDatabaseConfig } from '@miraicms/core'
+import type {
+  MiraiCmsConfig,
+  ResolvedMiraiCmsConfig,
+} from '@miraicms/core'
+import { resolveMiraiCmsConfig } from '@miraicms/core'
 
 export type {
-  DatabaseConfig,
-  DatabaseDriver,
-  ResolvedDatabaseConfig,
+  MiraiCmsConfig,
+  ResolvedMiraiCmsConfig,
 } from '@miraicms/core'
-
-export interface ModuleOptions {
-  /**
-   * Database connection. Default is SQLite at `<rootDir>/data/miraicms.db`.
-   *
-   * `url` is overridable at runtime via `NUXT_MIRAICMS_DATABASE_URL`.
-   * `DATABASE_URL` is read only when `driver` is `'postgres'`.
-   *
-   * @example
-   * { driver: 'postgres', url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms' }
-   */
-  database?: DatabaseConfig
-}
 
 function resolveModuleSqliteFilename(rootDir: string, filename: string): string {
   const value = filename.trim()
@@ -37,7 +26,7 @@ function resolveModuleSqliteFilename(rootDir: string, filename: string): string 
 
 const moduleRequire = createRequire(import.meta.url)
 
-export default defineNuxtModule<ModuleOptions>({
+export default defineNuxtModule<MiraiCmsConfig>({
   meta: {
     name: 'miraicms-nuxt',
     configKey: 'miraicms',
@@ -47,27 +36,30 @@ export default defineNuxtModule<ModuleOptions>({
     const resolver = createResolver(import.meta.url)
     const existing = nuxt.options.runtimeConfig.miraicms
     const existingDatabase = existing?.database
-    const { database, warnings } = resolveDatabaseConfig({
-      driver: options.database?.driver
-        ?? (existingDatabase?.driver === 'postgres' || existingDatabase?.driver === 'sqlite'
-          ? existingDatabase.driver
-          : undefined),
-      url: options.database?.url ?? existingDatabase?.url,
-      sqliteFilename: options.database?.sqliteFilename ?? existingDatabase?.sqliteFilename,
+    const resolved = resolveMiraiCmsConfig({
+      ...options,
+      database: {
+        driver: options.database?.driver
+          ?? (existingDatabase?.driver === 'postgres' || existingDatabase?.driver === 'sqlite'
+            ? existingDatabase.driver
+            : undefined),
+        url: options.database?.url ?? existingDatabase?.url,
+        sqliteFilename: options.database?.sqliteFilename ?? existingDatabase?.sqliteFilename,
+      },
     })
 
-    for (const warning of warnings) {
+    for (const warning of resolved.warnings) {
       console.warn(`[MiraiCMS] ${warning}`)
     }
 
     nuxt.options.runtimeConfig.miraicms = {
       ...existing,
+      ...resolved,
       database: {
-        driver: database.driver,
-        url: database.url,
+        ...resolved.database,
         sqliteFilename: resolveModuleSqliteFilename(
           nuxt.options.rootDir,
-          database.sqliteFilename,
+          resolved.database.sqliteFilename,
         ),
       },
     }
@@ -93,8 +85,6 @@ export default defineNuxtModule<ModuleOptions>({
 
 declare module 'nuxt/schema' {
   interface RuntimeConfig {
-    miraicms: {
-      database: ResolvedDatabaseConfig
-    }
+    miraicms: ResolvedMiraiCmsConfig
   }
 }

@@ -20,7 +20,7 @@ export type RoleAction = 'read' | 'create' | 'update' | 'delete'
 export type ResourceRights = RoleAction[] | boolean
 
 /**
- * Rights on a keyed resource (collections, taxonomies). One of:
+ * Rights on a keyed resource (collections, dictionaries). One of:
  * - a boolean covering every entry (`true` = all actions, `false` = none);
  * - an action list applied to every entry (e.g. `['read']` = read any entry);
  * - a per-entry map keyed by slug (entries not listed get no access).
@@ -34,8 +34,8 @@ export type ScopedRights = boolean | RoleAction[] | Record<string, ResourceRight
 export interface RoleRights {
   /** Per-collection rights (keyed by collection slug) or a blanket boolean. */
   collections?: ScopedRights
-  /** Per-taxonomy rights (keyed by taxonomy slug) or a blanket boolean. */
-  taxonomies?: ScopedRights
+  /** Per-dictionary rights (keyed by dictionary slug) or a blanket boolean. */
+  dictionaries?: ScopedRights
   /** Rights on the media library. */
   media?: ResourceRights
   /** Rights to manage users (create/edit/delete accounts and roles). */
@@ -74,7 +74,7 @@ export type Roles = Record<string, Role | false>
  */
 export interface ResolvedRoleRights {
   collections: ScopedRights
-  taxonomies: ScopedRights
+  dictionaries: ScopedRights
   media: ResourceRights
   users: ResourceRights
   options: ResourceRights

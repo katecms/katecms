@@ -1,10 +1,10 @@
 import type { ResolvedRole, ResourceRights, RoleAction, ScopedRights } from '../config'
 
 /** Resources that rights can be granted on. */
-export type Resource = 'collections' | 'taxonomies' | 'media' | 'users' | 'options'
+export type Resource = 'collections' | 'dictionaries' | 'media' | 'users' | 'options'
 
 /** Keyed resources whose rights are scoped by an entry slug. */
-const SCOPED_RESOURCES = new Set<Resource>(['collections', 'taxonomies'])
+const SCOPED_RESOURCES = new Set<Resource>(['collections', 'dictionaries'])
 
 /** The minimal user shape needed to evaluate permissions. */
 export type RoleHolder = { role: string }
@@ -14,7 +14,7 @@ export type RoleMap = Record<string, ResolvedRole>
 export interface CanOptions {
   /** Resolved roles from {@link resolveRoles} / {@link resolveMiraiCmsConfig}. */
   roles: RoleMap
-  /** Collection/taxonomy slug when `resource` is scoped. */
+  /** Collection/dictionary slug when `resource` is scoped. */
   scope?: string
 }
 
@@ -59,7 +59,7 @@ function scopedAllows(right: ScopedRights, action: RoleAction, scope: string | u
 /**
  * Whether `user` may perform `action` on `resource`.
  *
- * For keyed resources (`collections`, `taxonomies`) pass `options.scope`.
+ * For keyed resources (`collections`, `dictionaries`) pass `options.scope`.
  * The `owner` superuser always passes.
  */
 export function can(

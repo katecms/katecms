@@ -1,4 +1,4 @@
-import type { Blocks, Collections, Fields, MiraiCmsConfig, ResolvedMiraiCmsConfig, Taxonomies } from './types'
+import type { Blocks, Collections, Dictionaries, Fields, MiraiCmsConfig, ResolvedMiraiCmsConfig } from './types'
 import { defaults } from './defaults'
 import { resolveCloneFields } from '../fields'
 import { resolveDatabaseConfig } from './resolve-database'
@@ -25,9 +25,9 @@ function resolveCollectionFields(collections: Collections, warnings: string[]): 
   return result
 }
 
-function resolveTaxonomyFields(taxonomies: Taxonomies, warnings: string[]): Taxonomies {
-  const result: Taxonomies = {}
-  for (const [slug, definition] of Object.entries(taxonomies)) {
+function resolveDictionaryFields(dictionaries: Dictionaries, warnings: string[]): Dictionaries {
+  const result: Dictionaries = {}
+  for (const [slug, definition] of Object.entries(dictionaries)) {
     result[slug] = {
       ...definition,
       fields: resolveFieldsTree(definition.fields, warnings),
@@ -54,7 +54,7 @@ export function resolveMiraiCmsConfig(config: MiraiCmsConfig = {}): ResolvedMira
   const database = resolveDatabaseConfig(config.database)
   const cloneWarnings: string[] = []
   const collections = resolveCollectionFields(config.collections ?? {}, cloneWarnings)
-  const taxonomies = resolveTaxonomyFields(config.taxonomies ?? {}, cloneWarnings)
+  const dictionaries = resolveDictionaryFields(config.dictionaries ?? {}, cloneWarnings)
   const blocks = resolveBlockFields(config.blocks ?? {}, cloneWarnings)
 
   return {
@@ -62,7 +62,7 @@ export function resolveMiraiCmsConfig(config: MiraiCmsConfig = {}): ResolvedMira
     loginPath: config.loginPath ?? defaults.loginPath!,
     registerPath: config.registerPath ?? defaults.registerPath!,
     collections,
-    taxonomies,
+    dictionaries,
     blocks,
     database: database.database,
     media: media.media,

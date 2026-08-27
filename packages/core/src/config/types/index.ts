@@ -44,4 +44,4 @@ export type {
   Roles,
   ScopedRights,
 } from './roles'
-export type { Taxonomies, Taxonomy, TaxonomyLabels } from './taxonomy'
+export type { Dictionaries, DictionaryDefinition, DictionaryLabels } from './dictionary'

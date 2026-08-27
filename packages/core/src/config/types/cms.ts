@@ -3,7 +3,7 @@ import type { Collections } from './collection'
 import type { DatabaseConfig, ResolvedDatabaseConfig } from './database'
 import type { MediaConfig, ResolvedMediaConfig } from './media'
 import type { ResolvedRole, Roles } from './roles'
-import type { Taxonomies } from './taxonomy'
+import type { Dictionaries } from './dictionary'
 
 /** User-facing CMS configuration (framework-agnostic). */
 export interface MiraiCmsConfig {
@@ -11,7 +11,7 @@ export interface MiraiCmsConfig {
   loginPath?: string
   registerPath?: string
   collections?: Collections
-  taxonomies?: Taxonomies
+  dictionaries?: Dictionaries
   blocks?: Blocks
   /**
    * Database connection. Default is SQLite at `data/miraicms.db`.
@@ -36,7 +36,7 @@ export interface ResolvedMiraiCmsConfig {
   loginPath: string
   registerPath: string
   collections: Collections
-  taxonomies: Taxonomies
+  dictionaries: Dictionaries
   blocks: Blocks
   database: ResolvedDatabaseConfig
   media: ResolvedMediaConfig

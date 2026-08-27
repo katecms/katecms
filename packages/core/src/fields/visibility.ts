@@ -68,7 +68,7 @@ export const FIELD_OPERATORS: Record<string, Operator[]> = {
   post_object: RELATIONAL,
   relationship: RELATIONAL,
   user: RELATIONAL,
-  taxonomy: RELATIONAL,
+  dictionary: RELATIONAL,
 }
 
 export function isOperatorAllowed(type: string, operator: Operator): boolean {

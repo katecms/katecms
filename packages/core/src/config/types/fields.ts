@@ -263,7 +263,7 @@ interface LinkField extends BaseField {
 interface PostObjectField extends BaseField {
   type: 'post_object'
   postType?: string[]
-  taxonomy?: string[]
+  dictionary?: string[]
   allowNull?: boolean
   multiple?: boolean
   returnFormat?: 'object' | 'id'
@@ -274,7 +274,7 @@ interface PostObjectField extends BaseField {
 interface PageLinkField extends BaseField {
   type: 'page_link'
   postType?: string[]
-  taxonomy?: string[]
+  dictionary?: string[]
   allowNull?: boolean
   multiple?: boolean
   allowArchives?: boolean
@@ -283,18 +283,18 @@ interface PageLinkField extends BaseField {
 interface RelationshipField extends BaseField {
   type: 'relationship'
   postType?: string[]
-  taxonomy?: string[]
+  dictionary?: string[]
   min?: number
   max?: number
-  filters?: Array<'search' | 'post_type' | 'taxonomy'>
+  filters?: Array<'search' | 'post_type' | 'dictionary'>
   elements?: Array<'featured_image'>
   returnFormat?: 'object' | 'id'
   bidirectionalTarget?: string[]
 }
 
-interface TaxonomyField extends BaseField {
-  type: 'taxonomy'
-  taxonomy: string
+interface DictionaryField extends BaseField {
+  type: 'dictionary'
+  dictionary: string
   fieldType?: 'checkbox' | 'multi_select' | 'radio' | 'select'
   multiple?: boolean
   allowNull?: boolean
@@ -474,7 +474,7 @@ export type Field
     | PostObjectField
     | PageLinkField
     | RelationshipField
-    | TaxonomyField
+    | DictionaryField
     | UserField
     | OpenStreetMapField
     | DatePickerField

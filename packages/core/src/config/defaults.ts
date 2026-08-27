@@ -11,7 +11,7 @@ export const defaults: MiraiCmsConfig = {
   loginPath: 'login',
   registerPath: 'register',
   collections: {},
-  taxonomies: {},
+  dictionaries: {},
   blocks: {},
   roles: {},
   database: {

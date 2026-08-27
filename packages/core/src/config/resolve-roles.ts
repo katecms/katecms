@@ -10,7 +10,7 @@ export const OWNER_ROLE = 'owner'
 /** Every capability, granted on every resource. Used by the `owner` superuser. */
 const FULL_RIGHTS: RoleRights = {
   collections: true,
-  taxonomies: true,
+  dictionaries: true,
   media: true,
   users: true,
   options: true,
@@ -30,7 +30,7 @@ export const BUILT_IN_ROLES: Roles = {
     label: 'Editor',
     rights: {
       collections: true,
-      taxonomies: true,
+      dictionaries: true,
       media: true,
     },
   },
@@ -53,7 +53,7 @@ export const BUILT_IN_ROLES: Roles = {
 function normalizeRights(rights?: RoleRights): ResolvedRoleRights {
   return {
     collections: rights?.collections ?? false,
-    taxonomies: rights?.taxonomies ?? false,
+    dictionaries: rights?.dictionaries ?? false,
     media: rights?.media ?? false,
     users: rights?.users ?? false,
     options: rights?.options ?? false,

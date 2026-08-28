@@ -7,5 +7,18 @@ export default defineNuxtConfig({
     //   driver: 'postgres',
     //   url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
     // },
+    collections: {
+      df: {
+        labels: { name: 'DF' },
+        hierarchical: true,
+        rewrite: '/df/%name%',
+        fields: {
+          about: {
+            label: 'About',
+            type: 'text',
+          },
+        },
+      },
+    },
   },
 })

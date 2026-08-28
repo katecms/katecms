@@ -11,11 +11,6 @@ import type {
 } from '@miraicms/core'
 import { resolveMiraiCmsConfig } from '@miraicms/core'
 
-export type {
-  MiraiCmsConfig,
-  ResolvedMiraiCmsConfig,
-} from '@miraicms/core'
-
 function resolveModuleSqliteFilename(rootDir: string, filename: string): string {
   const value = filename.trim()
   if (value === ':memory:' || isAbsolute(value) || value.startsWith('file:')) {
@@ -83,7 +78,19 @@ export default defineNuxtModule<MiraiCmsConfig>({
   },
 })
 
+declare module '@nuxt/schema' {
+  interface NuxtConfig {
+    miraicms?: MiraiCmsConfig
+  }
+  interface RuntimeConfig {
+    miraicms: ResolvedMiraiCmsConfig
+  }
+}
+
 declare module 'nuxt/schema' {
+  interface NuxtConfig {
+    miraicms?: MiraiCmsConfig
+  }
   interface RuntimeConfig {
     miraicms: ResolvedMiraiCmsConfig
   }

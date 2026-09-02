@@ -1,0 +1,21 @@
+@use 'sass:math';
+@use 'functions' as *;
+
+@mixin placeholder($color: #555555, $opacity: 1) {
+  &::-webkit-input-placeholder {
+    color: $color;
+    opacity: $opacity;
+  }
+  &::-moz-placeholder {
+    color: $color;
+    opacity: $opacity;
+  }
+  &::-ms-input-placeholder {
+    color: $color;
+    opacity: $opacity;
+  }
+  &::placeholder {
+    color: $color;
+    opacity: $opacity;
+  }
+}

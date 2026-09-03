@@ -1,5 +1,7 @@
 export type * from './types'
 export { defaults } from './defaults'
+export { mergeMiraiCmsConfig } from './merge'
+export type { MergedMiraiCmsConfig } from './merge'
 export { defineMiraiCmsConfig } from './define'
 export { resolveMiraiCmsConfig } from './resolve'
 export { resolveDatabaseConfig } from './resolve-database'

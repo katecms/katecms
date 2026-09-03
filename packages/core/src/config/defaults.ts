@@ -1,4 +1,4 @@
-import type { MiraiCmsConfig } from './types'
+import type { Blocks, Collections, Dictionaries, ImageSize, MiraiCmsConfig, Roles } from './types'
 
 /**
  * Built-in CMS defaults.
@@ -6,14 +6,14 @@ import type { MiraiCmsConfig } from './types'
  * Database is SQLite at `data/miraicms.db`. For PostgreSQL 15+:
  * `{ driver: 'postgres', url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms' }`.
  */
-export const defaults: MiraiCmsConfig = {
+export const defaults = {
   adminPath: 'admin',
   loginPath: 'login',
   registerPath: 'register',
-  collections: {},
-  dictionaries: {},
-  blocks: {},
-  roles: {},
+  collections: {} as Collections,
+  dictionaries: {} as Dictionaries,
+  blocks: {} as Blocks,
+  roles: {} as Roles,
   database: {
     sqliteFilename: 'data/miraicms.db',
   },
@@ -28,9 +28,9 @@ export const defaults: MiraiCmsConfig = {
       'application/pdf',
       'video/mp4',
     ],
-    avif: false,
-    webp: false,
-    imageSizes: [],
+    avif: false as boolean,
+    webp: false as boolean,
+    imageSizes: [] as ImageSize[],
     maxInputPixels: 50_000_000,
   },
-}
+} satisfies MiraiCmsConfig

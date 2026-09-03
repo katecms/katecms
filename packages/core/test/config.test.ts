@@ -8,6 +8,7 @@ import {
   isAdminOrOwner,
   isOwner,
   isValidRole,
+  mergeMiraiCmsConfig,
   resolveMiraiCmsConfig,
   resolveMediaConfig,
   resolveRoles,
@@ -105,6 +106,32 @@ describe('resolveMediaConfig', () => {
   it('treats an empty MIME allow-list as deny-all', () => {
     expect(isMimeAllowed('image/png', [])).toBe(false)
     expect(isMimeAllowed('image/png', ['image/png'])).toBe(true)
+  })
+})
+
+describe('mergeMiraiCmsConfig', () => {
+  it('fills defaults and lets user values win', () => {
+    const config = mergeMiraiCmsConfig({
+      adminPath: 'studio',
+      database: { url: 'postgres://localhost/miraicms' },
+      media: { maxFileSize: 20 },
+    })
+    expect(config.adminPath).toBe('studio')
+    expect(config.loginPath).toBe('login')
+    expect(config.database.sqliteFilename).toBe(defaults.database.sqliteFilename)
+    expect(config.database.url).toBe('postgres://localhost/miraicms')
+    expect(config.media.maxFileSize).toBe(20)
+    expect(config.media.allowedMimeTypes).toEqual(defaults.media.allowedMimeTypes)
+  })
+
+  it('skips undefined overlay keys so they do not wipe defaults', () => {
+    const config = mergeMiraiCmsConfig({
+      adminPath: undefined,
+      database: { sqliteFilename: undefined, url: 'postgres://localhost/miraicms' },
+    })
+    expect(config.adminPath).toBe('admin')
+    expect(config.database.sqliteFilename).toBe(defaults.database.sqliteFilename)
+    expect(config.database.url).toBe('postgres://localhost/miraicms')
   })
 })
 

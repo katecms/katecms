@@ -31,7 +31,7 @@ export function resolveDatabaseConfig(config?: DatabaseConfig): ResolveDatabaseR
     database: {
       driver,
       url: trim(database.url),
-      sqliteFilename: trim(database.sqliteFilename) || defaults.database!.sqliteFilename!,
+      sqliteFilename: trim(database.sqliteFilename) || defaults.database.sqliteFilename,
     },
     warnings,
   }

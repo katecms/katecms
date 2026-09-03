@@ -71,7 +71,7 @@ export function isMimeAllowed(mimeType: string, allowed: string[]): boolean {
 export function resolveMediaConfig(config?: MediaConfig): ResolveMediaResult {
   const media = config ?? {}
   const { sizes, warnings } = resolveImageSizes(media.imageSizes)
-  const defaultMaxFileSize = defaults.media!.maxFileSize!
+  const defaultMaxFileSize = defaults.media.maxFileSize
   let maxFileSize = media.maxFileSize ?? defaultMaxFileSize
   if (!Number.isFinite(maxFileSize) || maxFileSize <= 0) {
     warnings.push(`maxFileSize must be greater than 0; using ${defaultMaxFileSize}.`)
@@ -81,7 +81,7 @@ export function resolveMediaConfig(config?: MediaConfig): ResolveMediaResult {
   return {
     media: {
       maxFileSize,
-      allowedMimeTypes: media.allowedMimeTypes ?? defaults.media!.allowedMimeTypes!,
+      allowedMimeTypes: media.allowedMimeTypes ?? defaults.media.allowedMimeTypes,
       maxInputPixels: Number.isFinite(maxInputPixels) && maxInputPixels > 0
         ? maxInputPixels
         : DEFAULT_MAX_INPUT_PIXELS,

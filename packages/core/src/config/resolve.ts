@@ -1,5 +1,5 @@
 import type { Blocks, Collections, Dictionaries, Fields, MiraiCmsConfig, ResolvedMiraiCmsConfig } from './types'
-import { defaults } from './defaults'
+import { mergeMiraiCmsConfig } from './merge'
 import { resolveCloneFields } from '../fields'
 import { resolveDatabaseConfig } from './resolve-database'
 import { resolveMediaConfig } from './resolve-media'
@@ -49,18 +49,19 @@ function resolveBlockFields(blocks: Blocks, warnings: string[]): Blocks {
 
 /** Merge user CMS config with defaults, resolve roles, media, database, and clone fields. */
 export function resolveMiraiCmsConfig(config: MiraiCmsConfig = {}): ResolvedMiraiCmsConfig {
-  const roles = resolveRoles(config.roles)
-  const media = resolveMediaConfig(config.media)
-  const database = resolveDatabaseConfig(config.database)
+  const merged = mergeMiraiCmsConfig(config)
+  const roles = resolveRoles(merged.roles)
+  const media = resolveMediaConfig(merged.media)
+  const database = resolveDatabaseConfig(merged.database)
   const cloneWarnings: string[] = []
-  const collections = resolveCollectionFields(config.collections ?? {}, cloneWarnings)
-  const dictionaries = resolveDictionaryFields(config.dictionaries ?? {}, cloneWarnings)
-  const blocks = resolveBlockFields(config.blocks ?? {}, cloneWarnings)
+  const collections = resolveCollectionFields(merged.collections, cloneWarnings)
+  const dictionaries = resolveDictionaryFields(merged.dictionaries, cloneWarnings)
+  const blocks = resolveBlockFields(merged.blocks, cloneWarnings)
 
   return {
-    adminPath: config.adminPath ?? defaults.adminPath!,
-    loginPath: config.loginPath ?? defaults.loginPath!,
-    registerPath: config.registerPath ?? defaults.registerPath!,
+    adminPath: merged.adminPath,
+    loginPath: merged.loginPath,
+    registerPath: merged.registerPath,
     collections,
     dictionaries,
     blocks,

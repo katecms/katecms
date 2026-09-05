@@ -23,12 +23,17 @@ const fields: Fields = {
     append: 'Append',
     columnWidth: 50,
   },
-  text_plain: {
-    type: 'text',
-    label: 'Plain text',
-    instructions: 'Without addons',
+  textarea_test: {
+    type: 'textarea',
+    label: 'Textarea',
+    instructions: 'Textarea instructions',
+    required: true,
     position: 'main',
-    placeholder: 'Type here',
+    placeholder: 'Textarea',
+    defaultValue: 'Textarea Test Default\n\nTextarea Test Default\nTextarea Test Default\n\nTextarea Test Default',
+    maxLength: 500,
+    rows: 6,
+    newLines: 'autop',
     columnWidth: 50,
   },
   text_sidebar: {

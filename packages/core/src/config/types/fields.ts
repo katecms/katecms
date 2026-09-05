@@ -401,16 +401,6 @@ interface FlexibleContentField extends BaseField {
   layouts: Record<string, FlexibleLayout>
 }
 
-interface CloneField extends BaseField {
-  type: 'clone'
-  /** Keys of fields / field groups to clone */
-  clone: string[]
-  display?: 'seamless' | 'group'
-  layout?: 'block' | 'table' | 'row'
-  prefixLabel?: boolean
-  prefixName?: boolean
-}
-
 /* ============================================================
  * Presentation (no value)
  * tab / accordion are UI-only: panel subFields are written flat
@@ -484,7 +474,6 @@ export type Field
     | GroupField
     | RepeaterField
     | FlexibleContentField
-    | CloneField
     | AccordionField
     | TabField
     | MessageField

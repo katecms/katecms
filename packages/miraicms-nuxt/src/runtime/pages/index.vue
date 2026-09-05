@@ -13,16 +13,16 @@ const rootClass = 'miraicms'
 
 <template>
   <div :class="[rootClass]">
-    <div :class="[`${rootClass}__header`]">
+    <div :class="[`${rootClass}-header`]">
       <!--      <NuxtCmsAppHeader /> -->
     </div>
 
-    <div :class="[`${rootClass}__sidebar`]">
+    <div :class="[`${rootClass}-sidebar`]">
       <!--      <NuxtCmsAppSidebar /> -->
     </div>
 
-    <div :class="[`${rootClass}__main`]">
-      <div :class="[`${rootClass}__main-wrapper`]">
+    <div :class="[`${rootClass}-main`]">
+      <div :class="[`${rootClass}-main-wrapper`]">
         <NuxtPage />
       </div>
     </div>
@@ -123,20 +123,20 @@ $root: '.miraicms';
   width: 100%;
   height: 100vh;
 
-  &__header {
+  &-header {
     grid-area: header;
     border-bottom: 1px solid $color-border;
     box-shadow: $shadow-sm;
     min-height: $topbar-h;
   }
 
-  &__sidebar {
+  &-sidebar {
     grid-area: sidebar;
     border-right: 1px solid $color-border;
     background-color: $color-bg;
   }
 
-  &__main {
+  &-main {
     grid-area: main;
     overflow: auto;
     min-height: 0;

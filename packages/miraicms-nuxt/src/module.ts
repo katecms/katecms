@@ -5,6 +5,7 @@ import {
   createResolver,
   addServerPlugin,
   extendPages,
+  addComponentsDir,
 } from '@nuxt/kit'
 import type {
   MiraiCmsConfig,
@@ -79,6 +80,12 @@ export default defineNuxtModule<MiraiCmsConfig>({
     })
 
     addServerPlugin(resolver.resolve('./runtime/server/plugins/auto-migrate'))
+
+    addComponentsDir({
+      path: resolver.resolve('./runtime/components'),
+      prefix: 'MiraiCms',
+      pathPrefix: false,
+    })
 
     // Pages
     extendPages((pages) => {

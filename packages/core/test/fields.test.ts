@@ -9,7 +9,6 @@ import {
   isLayoutOnlyFieldType,
   isOperatorAllowed,
   isVisible,
-  resolveCloneFields,
 } from '../src'
 
 const text = (overrides: Partial<Extract<Field, { type: 'text' }>> = {}): Extract<Field, { type: 'text' }> => ({
@@ -108,22 +107,5 @@ describe('buildFormValues', () => {
       ['title', text()],
     ])
     expect([...keys].sort()).toEqual(['n', 'title'])
-  })
-})
-
-describe('resolveCloneFields', () => {
-  it('expands clone fields into prefixed copies', () => {
-    const { fields, warnings } = resolveCloneFields({
-      title: text(),
-      copy: {
-        type: 'clone',
-        label: 'Copy',
-        clone: ['title'],
-        prefixName: true,
-      },
-    })
-    expect(warnings).toEqual([])
-    expect(fields.copy).toBeUndefined()
-    expect(fields.copy_title).toMatchObject({ type: 'text', label: 'Title' })
   })
 })

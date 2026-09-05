@@ -101,7 +101,7 @@ const config = defineMiraiCmsConfig({
 const resolved = resolveMiraiCmsConfig(config)
 ```
 
-`defineMiraiCmsConfig` — только типизация, значение не меняет. `resolveMiraiCmsConfig` подставляет дефолты, мержит роли, нормализует media/database и разворачивает `clone`-поля. Предупреждения (зарезервированное имя размера, дубликаты, неизвестный драйвер, попытка переопределить `owner`) попадают в `resolved.warnings`.
+`defineMiraiCmsConfig` — только типизация, значение не меняет. `resolveMiraiCmsConfig` подставляет дефолты, мержит роли, нормализует media/database. Предупреждения (зарезервированное имя размера, дубликаты, неизвестный драйвер, попытка переопределить `owner`) попадают в `resolved.warnings`.
 
 Пути админки по умолчанию: `adminPath: 'admin'`, `loginPath: 'login'`, `registerPath: 'register'`.
 
@@ -240,8 +240,6 @@ validatePassword(plain) // минимум MIN_PASSWORD_LENGTH (8)
 Типы значений: `text`, `textarea`, `number`, `range`, `email`, `url`, `password`, `wysiwyg`, `oembed`, `image`, `file`, `gallery`, `select`, `checkbox`, `radio`, `image_select`, `button_group`, `true_false`, `link`, `post_object`, `page_link`, `relationship`, `dictionary`, `user`, `open_street_map`, `date_picker`, `date_time_picker`, `time_picker`, `color_picker`, `group`, `repeater`, `flexible_content`.
 
 Только вёрстка (ключа значения нет): `tab`, `accordion`, `separator`, `message`. У `tab` / `accordion` `subFields` панелей пишутся **плоско** в родителя, не под ключом контейнера.
-
-`clone` копирует указанные поля. `prefixName: true` — префикс `{cloneKey}_`. `display: 'group'` оборачивает в группу, `seamless` (дефолт) вставляет в родителя. Разворачивает `resolveCloneFields` (его вызывает `resolveMiraiCmsConfig`).
 
 Условная видимость: `conditionalLogic` — массив групп (OR), внутри группы AND. Операторы: `empty`, `notEmpty`, `equal`, `notEqual`, `contains`, `notContains`, `matches`, `gt`, `lt`. Набор по типу поля — `FIELD_OPERATORS` / `isOperatorAllowed`. Паттерн `matches` длиннее `MAX_MATCHES_PATTERN_LENGTH` (200) не матчится. HTML в `nl2br`/`autop` экранируется; здесь значения сырые.
 

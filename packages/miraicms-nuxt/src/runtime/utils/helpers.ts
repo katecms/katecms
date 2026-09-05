@@ -7,7 +7,7 @@ const fieldModules = import.meta.glob<{ default: Component }>(
 
 const fieldComponents: Record<string, Component> = Object.fromEntries(
   Object.entries(fieldModules).map(([path, mod]) => {
-    const name = path.split('/').pop()!.replace(/\.vue$/, '')
+    const name = path.split(/[/\\]/).pop()!.replace(/\.vue$/, '')
     return [name, mod.default]
   }),
 )
@@ -23,3 +23,4 @@ function toPascalCase(str: string): string {
 export function resolveField(type: string): Component | undefined {
   return fieldComponents[`${toPascalCase(type)}Field`]
 }
+

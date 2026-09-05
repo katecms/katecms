@@ -48,10 +48,12 @@ $root: '.miraicms-field-addon';
   white-space: nowrap;
 
   &--prepend {
+    border-right: 0;
     border-radius: $border-radius-inter 0 0 $border-radius-inter;
   }
 
   &--append {
+    border-left: 0;
     border-radius: 0 $border-radius-inter $border-radius-inter 0;
   }
 }

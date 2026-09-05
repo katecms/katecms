@@ -82,15 +82,6 @@ body#miraicms-body {
     font-family: inherit;
   }
 
-  button,
-  input,
-  select,
-  textarea {
-    font: inherit;
-    letter-spacing: inherit;
-    color: inherit;
-  }
-
   img,
   svg,
   video,

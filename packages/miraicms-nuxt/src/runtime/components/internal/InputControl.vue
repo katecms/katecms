@@ -84,13 +84,13 @@ $root: '.miraicms-input-control';
     @include placeholder($color-muted);
 
     &--is-prepend {
-      border-left: 0;
+      //border-left: 0;
       border-top-left-radius: 0;
       border-bottom-left-radius: 0;
     }
 
     &--is-append {
-      border-right: 0;
+      //border-right: 0;
       border-top-right-radius: 0;
       border-bottom-right-radius: 0;
     }

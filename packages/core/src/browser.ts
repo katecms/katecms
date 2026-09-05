@@ -1,0 +1,26 @@
+/**
+ * Browser-safe subset of the core package.
+ *
+ * Vite/Nuxt client builds resolve `@miraicms/core` here (package.json
+ * `"browser"` export). Database, media, indexes apply, and password hashing
+ * stay on the Node entry (`src/index.ts`).
+ */
+export * from './config'
+export * from './permissions'
+export {
+  EMAIL_RE,
+  MAX_PASSWORD_LENGTH,
+  MIN_PASSWORD_LENGTH,
+  validateEmail,
+  validatePassword,
+} from './auth/account'
+export type {
+  ValidationFailure,
+  ValidationResult,
+  ValidationSuccess,
+} from './auth/account'
+export * from './fields'
+export * from './rewrite'
+export * from './blocks'
+export * from './text'
+export * from './oembed'

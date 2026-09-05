@@ -1,5 +1,4 @@
-import { createRequire } from 'node:module'
-import { dirname, isAbsolute, join } from 'node:path'
+import { isAbsolute, join } from 'node:path'
 import {
   defineNuxtModule,
   createResolver,
@@ -23,8 +22,6 @@ function resolveModuleSqliteFilename(rootDir: string, filename: string): string 
   }
   return join(rootDir, value)
 }
-
-const moduleRequire = createRequire(import.meta.url)
 
 export default defineNuxtModule<MiraiCmsConfig>({
   meta: {
@@ -63,21 +60,6 @@ export default defineNuxtModule<MiraiCmsConfig>({
         ),
       },
     }
-
-    nuxt.hook('nitro:config', (nitroConfig) => {
-      nitroConfig.alias ||= {}
-      nitroConfig.alias['@miraicms/core'] = join(
-        dirname(moduleRequire.resolve('@miraicms/core/package.json')),
-        'dist/index.mjs',
-      )
-      nitroConfig.externals ||= {}
-      const extra = ['@miraicms/core', 'better-sqlite3', 'pg', 'sharp', 'kysely']
-      const current = nitroConfig.externals.external
-      nitroConfig.externals.external = [
-        ...(Array.isArray(current) ? current : current ? [current] : []),
-        ...extra,
-      ]
-    })
 
     addServerPlugin(resolver.resolve('./runtime/server/plugins/auto-migrate'))
 

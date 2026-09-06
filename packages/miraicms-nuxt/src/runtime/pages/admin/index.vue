@@ -280,6 +280,30 @@ const fields: Fields = {
     position: 'main',
     columnWidth: 100,
   },
+  group_test: {
+    type: 'group',
+    label: 'Group',
+    instructions: 'Group instructions',
+    position: 'main',
+    columnWidth: 100,
+    subFields: {
+      title: {
+        type: 'text',
+        label: 'Title',
+        required: true,
+        placeholder: 'Title',
+        defaultValue: '',
+        columnWidth: 50,
+      },
+      description: {
+        type: 'textarea',
+        label: 'Description',
+        placeholder: 'Description',
+        defaultValue: '',
+        columnWidth: 50,
+      },
+    },
+  },
   accordion_test: {
     type: 'accordion',
     position: 'main',

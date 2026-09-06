@@ -3,10 +3,14 @@ export {
   deleteUser,
   findUserByEmail,
   findUserById,
+  hasAnyUser,
   listUsers,
+  toSafeUser,
   updateUser,
 } from './users'
 export type { NewUser, User, UserUpdate } from './users'
+
+export { isUniqueConstraintError } from './errors'
 
 export {
   createCollection,

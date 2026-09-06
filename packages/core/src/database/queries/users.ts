@@ -1,6 +1,7 @@
 import type { Insertable, Kysely, Selectable, Updateable } from 'kysely'
 import { sql } from 'kysely'
 import { OWNER_ROLE } from '../../config'
+import type { SafeUser } from '../../auth/types'
 import type { Database, UsersTable } from '../client'
 import { applyListPaging } from './paging'
 import type { ListPaging } from './paging'
@@ -51,6 +52,26 @@ export async function listUsers(
     .orderBy('created_at', 'asc')
     .orderBy('id', 'asc')
   return applyListPaging(query, paging).execute()
+}
+
+/** Whether at least one account exists (drives first-run registration). */
+export async function hasAnyUser(db: Kysely<Database>): Promise<boolean> {
+  const row = await db
+    .selectFrom('users')
+    .select('id')
+    .limit(1)
+    .executeTakeFirst()
+  return Boolean(row)
+}
+
+export function toSafeUser(user: User | SafeUser): SafeUser {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    avatar: user.avatar ?? null,
+    role: user.role,
+  }
 }
 
 export async function createUser(

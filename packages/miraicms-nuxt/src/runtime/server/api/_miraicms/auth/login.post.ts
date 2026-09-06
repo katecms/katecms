@@ -1,0 +1,62 @@
+import { createError, defineEventHandler, readBody } from 'h3'
+import {
+  MAX_PASSWORD_LENGTH,
+  findUserByEmail,
+  toSafeUser,
+  verifyPassword,
+} from '@miraicms/core'
+import type { SafeUser } from '@miraicms/core'
+import { getDb } from '../../../utils/db'
+import { setUserSession } from '../../../utils/session'
+import {
+  assertAuthAttemptAllowed,
+  getAuthAttemptKey,
+  invalidCredentialsError,
+  recordAuthAttemptFailure,
+  recordAuthAttemptSuccess,
+} from '../../../utils/auth-rate-limit'
+
+interface LoginBody {
+  email?: unknown
+  password?: unknown
+}
+
+export default defineEventHandler(async (event): Promise<{ user: SafeUser }> => {
+  const body = await readBody<LoginBody>(event)
+  const email = typeof body?.email === 'string' ? body.email.trim() : ''
+  const password = typeof body?.password === 'string' ? body.password : ''
+
+  if (!email || !password) {
+    throw createError({ statusCode: 422, statusMessage: 'Unprocessable Entity', message: 'Укажите email и пароль.' })
+  }
+
+  const attemptKey = getAuthAttemptKey(event, 'login', email)
+  assertAuthAttemptAllowed(event, attemptKey)
+
+  // Same generic error for "no such user", "banned" and "wrong password" so the
+  // endpoint doesn't reveal which emails are registered.
+  function fail(): never {
+    const { retryAfterMs } = recordAuthAttemptFailure(attemptKey)
+    throw invalidCredentialsError(retryAfterMs)
+  }
+
+  // An over-long password can never match a stored hash; reject before scrypt
+  // so it can't be abused as a CPU-bound denial-of-service vector.
+  if (password.length > MAX_PASSWORD_LENGTH) {
+    fail()
+  }
+
+  const user = await findUserByEmail(getDb(), email)
+  if (!user || user.status === 'banned') {
+    fail()
+  }
+
+  const ok = await verifyPassword(password, user.password_hash)
+  if (!ok) {
+    fail()
+  }
+
+  recordAuthAttemptSuccess(attemptKey)
+  await setUserSession(event, user.id)
+  return { user: toSafeUser(user) }
+})

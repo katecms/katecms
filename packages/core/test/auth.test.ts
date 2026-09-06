@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
+  createAuthRateLimiter,
   hashPassword,
   validateEmail,
   validatePassword,
@@ -82,5 +83,50 @@ describe('validatePassword', () => {
     if (!long.ok) {
       expect(long.error).toContain(String(MAX_PASSWORD_LENGTH))
     }
+  })
+})
+
+describe('createAuthRateLimiter', () => {
+  it('allows the first failures then imposes a cooldown', () => {
+    let now = 1_000
+    const limiter = createAuthRateLimiter({
+      maxAttempts: 3,
+      delayMs: 5_000,
+      maxDelayMs: 30_000,
+      now: () => now,
+    })
+
+    expect(limiter.check('user').allowed).toBe(true)
+    expect(limiter.recordFailure('user').retryAfterMs).toBe(0)
+    expect(limiter.recordFailure('user').retryAfterMs).toBe(0)
+    const locked = limiter.recordFailure('user')
+    expect(locked.allowed).toBe(false)
+    expect(locked.retryAfterMs).toBe(5_000)
+
+    expect(limiter.check('user')).toEqual({ allowed: false, retryAfterMs: 5_000 })
+    now += 4_999
+    expect(limiter.check('user').allowed).toBe(false)
+    now += 1
+    expect(limiter.check('user').allowed).toBe(true)
+  })
+
+  it('clears the count on success and after the inactivity window', () => {
+    let now = 0
+    const limiter = createAuthRateLimiter({
+      maxAttempts: 2,
+      delayMs: 1_000,
+      windowMs: 10_000,
+      now: () => now,
+    })
+
+    limiter.recordFailure('a')
+    limiter.recordSuccess('a')
+    expect(limiter.check('a').allowed).toBe(true)
+
+    limiter.recordFailure('b')
+    limiter.recordFailure('b')
+    expect(limiter.check('b').allowed).toBe(false)
+    now += 10_000
+    expect(limiter.check('b').allowed).toBe(true)
   })
 })

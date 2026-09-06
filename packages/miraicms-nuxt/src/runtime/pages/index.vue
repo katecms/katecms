@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useHead } from '#imports'
+import { useAuth } from '../composables/useAuth'
 
 useHead({
   bodyAttrs: {
@@ -9,12 +10,21 @@ useHead({
 })
 
 const rootClass = 'miraicms'
+const { user, logout, loggingOut } = useAuth()
 </script>
 
 <template>
   <div :class="[rootClass]">
     <div :class="[`${rootClass}-header`]">
-      <!--      <NuxtCmsAppHeader /> -->
+      <button
+        v-if="user"
+        type="button"
+        :class="[`${rootClass}-header-logout`]"
+        :disabled="loggingOut"
+        @click="logout"
+      >
+        {{ loggingOut ? 'Выхожу…' : 'Выйти' }}
+      </button>
     </div>
 
     <div :class="[`${rootClass}-sidebar`]">
@@ -116,9 +126,29 @@ $root: '.miraicms';
 
   &-header {
     grid-area: header;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 math-rem(12);
     border-bottom: 1px solid $color-border;
     box-shadow: $shadow-sm;
     min-height: $topbar-h;
+
+    &-logout {
+      padding: math-rem(6) math-rem(12);
+      border: 1px solid $color-border;
+      border-radius: math-rem(6);
+      background: $color-bg;
+      color: $color-ink;
+      font: inherit;
+      font-size: math-rem(13);
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
   }
 
   &-sidebar {

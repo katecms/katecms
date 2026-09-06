@@ -13,7 +13,9 @@ import {
   findCollectionBySlugPath,
   findDictionaryByTypeAndSlug,
   findUserByEmail,
+  hasAnyUser,
   listUsers,
+  toSafeUser,
   linkCollectionDictionary,
   listCollectionParentOptions,
   listCollectionsByDictionary,
@@ -229,6 +231,30 @@ describe('database layer', () => {
         title: 'Child news',
         parent_id: parent.id,
       })
+    }
+    finally {
+      await close()
+    }
+  })
+
+  it('reports whether any user exists and omits the hash from SafeUser', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      expect(await hasAnyUser(db)).toBe(false)
+      const user = await createUser(db, {
+        email: 'ada@example.com',
+        password_hash: 'secret-hash',
+        role: 'owner',
+      })
+      expect(await hasAnyUser(db)).toBe(true)
+      expect(toSafeUser(user)).toEqual({
+        id: user.id,
+        email: 'ada@example.com',
+        name: null,
+        avatar: null,
+        role: 'owner',
+      })
+      expect(toSafeUser(user)).not.toHaveProperty('password_hash')
     }
     finally {
       await close()

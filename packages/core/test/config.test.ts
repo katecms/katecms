@@ -50,6 +50,14 @@ describe('resolveRoles', () => {
     expect(roles.admin).toBeDefined()
   })
 
+  it('ignores admin: false and records a warning', () => {
+    const { roles, warnings } = resolveRoles({ admin: false })
+    expect(roles.admin).toBeDefined()
+    expect(roles.admin?.maintenance).toBe(true)
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]).toContain('admin')
+  })
+
   it('adds a custom role and replaces a built-in one', () => {
     const { roles } = resolveRoles({
       admin: { label: 'Ops', rights: { media: ['read'] } },

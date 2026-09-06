@@ -1,0 +1,115 @@
+@use 'functions' as *;
+@use 'variables' as *;
+
+@mixin miraicms-auth-document {
+  body#miraicms-body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: system-ui, sans-serif;
+    font-size: math-rem(15);
+    line-height: 1.5;
+    color: $color-ink;
+    background-color: $color-bg;
+    caret-color: $color-ink;
+    accent-color: $color-accent;
+    color-scheme: light;
+    margin: 0;
+    min-height: 100%;
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+  }
+
+  html:has(> body#miraicms-body) {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@mixin miraicms-auth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: math-rem(24);
+  background: $color-bg;
+  color: $color-ink;
+
+  &__card {
+    width: 100%;
+    max-width: math-rem(400);
+    padding: math-rem(32);
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: math-rem(10);
+    box-shadow: $shadow-md;
+  }
+
+  &__logo {
+    display: block;
+    width: math-rem(148);
+    height: auto;
+    margin: 0 0 math-rem(24);
+  }
+
+  &__title {
+    margin: 0 0 math-rem(8);
+    font-size: math-rem(22);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: $color-ink;
+  }
+
+  &__subtitle {
+    margin: 0 0 math-rem(24);
+    font-size: math-rem(14);
+    line-height: 1.5;
+    color: $color-muted;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: math-rem(14);
+  }
+
+  &__actions {
+    margin-top: math-rem(6);
+
+    :deep(.miraicms-btn) {
+      width: 100%;
+    }
+  }
+
+  &__error {
+    margin-top: math-rem(16);
+    padding: math-rem(12) math-rem(14);
+    border-radius: $border-radius;
+    background: $color-danger-bg;
+    color: $color-danger;
+    font-size: math-rem(14);
+    line-height: 1.5;
+  }
+
+  &__footer {
+    margin: math-rem(20) 0 0;
+    font-size: math-rem(13);
+    color: $color-muted;
+    text-align: center;
+
+    a {
+      color: $color-accent;
+      font-weight: 600;
+      text-decoration: none;
+
+      &:hover {
+        color: $color-accent-hover;
+        text-decoration: underline;
+      }
+    }
+  }
+}

@@ -7,6 +7,15 @@ import type { ResolvedRole, ResolvedRoleRights, RoleRights, Roles } from './type
  */
 export const OWNER_ROLE = 'owner'
 
+/**
+ * Built-in administrator slug. Unlike `editor` / `author` / `subscriber` it
+ * cannot be hidden from config (`admin: false` is ignored).
+ */
+export const ADMIN_ROLE = 'admin'
+
+/** Default role assigned to every self-registered account after the first. */
+export const SUBSCRIBER_ROLE = 'subscriber'
+
 /** Every capability, granted on every resource. Used by the `owner` superuser. */
 const FULL_RIGHTS: RoleRights = {
   collections: true,
@@ -18,7 +27,8 @@ const FULL_RIGHTS: RoleRights = {
 
 /**
  * Built-in roles available in every install (besides the reserved `owner`).
- * Any of these can be overridden or hidden from CMS config.
+ * `editor`, `author` and `subscriber` can be overridden or hidden from CMS
+ * config. `admin` can be overridden but cannot be hidden.
  */
 export const BUILT_IN_ROLES: Roles = {
   admin: {
@@ -70,8 +80,10 @@ export interface ResolveRolesResult {
  * protected `owner` superuser.
  *
  * - A `Role` definition adds a new role or fully replaces a built-in one.
- * - `false` hides a built-in role.
- * - Any entry for the reserved `owner` slug is ignored (warning in `warnings`).
+ * - `false` hides a built-in role (`editor` / `author` / `subscriber` / custom).
+ * - `owner` is reserved: any config entry is ignored.
+ * - `admin` cannot be hidden (`admin: false` is ignored); a `Role` definition
+ *   still replaces its rights.
  */
 export function resolveRoles(configRoles?: Roles): ResolveRolesResult {
   const warnings: string[] = []
@@ -80,6 +92,10 @@ export function resolveRoles(configRoles?: Roles): ResolveRolesResult {
   for (const [slug, definition] of Object.entries(configRoles ?? {})) {
     if (slug === OWNER_ROLE) {
       warnings.push('role "owner" is reserved and cannot be overridden; ignoring config entry.')
+      continue
+    }
+    if (slug === ADMIN_ROLE && definition === false) {
+      warnings.push('role "admin" cannot be disabled; ignoring config entry.')
       continue
     }
     merged[slug] = definition

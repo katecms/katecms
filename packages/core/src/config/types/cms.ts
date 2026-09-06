@@ -24,8 +24,8 @@ export interface MiraiCmsConfig {
   /**
    * Extend or customise user roles. Built-in roles (`owner`, `admin`, `editor`,
    * `author`, `subscriber`) are always available; entries here add new roles,
-   * override a built-in role's rights, or hide one with `false`. The `owner`
-   * role is reserved and cannot be changed.
+   * override a built-in role's rights, or hide one with `false`. `owner` is
+   * reserved and cannot be changed. `admin` cannot be hidden.
    */
   roles?: Roles
 }

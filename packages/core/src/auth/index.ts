@@ -6,4 +6,14 @@ export {
   validatePassword,
 } from './account'
 export type { ValidationFailure, ValidationResult, ValidationSuccess } from './account'
+export type { AuthState, SafeUser } from './types'
 export { hashPassword, verifyPassword } from './password'
+export {
+  DEFAULT_AUTH_RATE_LIMIT,
+  createAuthRateLimiter,
+} from './rate-limit'
+export type {
+  AuthRateLimitDecision,
+  AuthRateLimitOptions,
+  AuthRateLimiter,
+} from './rate-limit'

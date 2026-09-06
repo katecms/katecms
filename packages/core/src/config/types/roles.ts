@@ -6,8 +6,9 @@
  * you add new roles, override the rights of a built-in one (by re-declaring its
  * slug), or hide a built-in one (`author: false`).
  *
- * The `owner` slug is reserved: it always exists as a protected superuser role
- * with full access and cannot be overridden or hidden.
+ * `owner` is reserved: it always exists as a protected superuser role with full
+ * access and cannot be overridden or hidden. `admin` cannot be hidden
+ * (`admin: false` is ignored).
  */
 
 /** A CRUD action that can be granted on a resource. */
@@ -63,8 +64,9 @@ export interface Role {
  * - Add a new role by giving it a {@link Role} definition.
  * - Override a built-in role (`admin`/`editor`/`author`/`subscriber`) by
  *   re-declaring its slug; the definition fully replaces the built-in one.
- * - Hide a built-in role by setting it to `false` (e.g. `author: false`).
- * - The `owner` slug is reserved and any entry for it is ignored.
+ * - Hide `editor` / `author` / `subscriber` (or a custom role) with `false`.
+ * - `owner` is reserved and any entry for it is ignored.
+ * - `admin` cannot be hidden (`admin: false` is ignored).
  */
 export type Roles = Record<string, Role | false>
 

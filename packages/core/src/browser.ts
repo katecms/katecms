@@ -20,6 +20,7 @@ export type {
   ValidationResult,
   ValidationSuccess,
 } from './auth/account'
+export type { AuthState, SafeUser } from './auth/types'
 export * from './fields'
 export * from './rewrite'
 export * from './blocks'

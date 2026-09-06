@@ -4,6 +4,8 @@ import {
   createResolver,
   addServerPlugin,
   addServerHandler,
+  addRouteMiddleware,
+  addImports,
   extendPages,
   addComponentsDir,
 } from '@nuxt/kit'
@@ -66,6 +68,14 @@ export default defineNuxtModule<MiraiCmsConfig>({
       },
     }
 
+    nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {}
+    nuxt.options.runtimeConfig.public.miraicms = {
+      ...nuxt.options.runtimeConfig.public.miraicms,
+      adminPath: resolved.adminPath,
+      loginPath: resolved.loginPath,
+      registerPath: resolved.registerPath,
+    }
+
     addServerPlugin(resolver.resolve('./runtime/server/plugins/auto-migrate'))
 
     addServerHandler({
@@ -95,6 +105,44 @@ export default defineNuxtModule<MiraiCmsConfig>({
       handler: resolver.resolve('./runtime/server/api/uploads/[...key].get'),
     })
 
+    addServerHandler({
+      route: '/api/_miraicms/auth/state',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/auth/state.get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/auth/login',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/auth/login.post'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/auth/register',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/auth/register.post'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/auth/logout',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/auth/logout.post'),
+    })
+
+    addRouteMiddleware({
+      name: 'miraicms-auth-guard',
+      path: resolver.resolve('./runtime/middleware/auth-guard'),
+      global: true,
+    })
+
+    addImports([
+      {
+        name: 'useAuth',
+        from: resolver.resolve('./runtime/composables/useAuth'),
+      },
+      {
+        name: 'useCmsPaths',
+        from: resolver.resolve('./runtime/composables/useCmsPaths'),
+      },
+    ])
+
     addComponentsDir({
       path: resolver.resolve('./runtime/components'),
       prefix: 'MiraiCms',
@@ -106,7 +154,7 @@ export default defineNuxtModule<MiraiCmsConfig>({
       pages.push(
         {
           name: 'admin',
-          path: `/${config.adminPath}`,
+          path: `/${resolved.adminPath}`,
           file: resolver.resolve('./runtime/pages/index.vue'),
           meta: {
             layout: false,
@@ -161,6 +209,22 @@ export default defineNuxtModule<MiraiCmsConfig>({
             // },
           ],
         },
+        {
+          name: 'login',
+          path: `/${resolved.loginPath}`,
+          file: resolver.resolve('./runtime/pages/login.vue'),
+          meta: {
+            layout: false,
+          },
+        },
+        {
+          name: 'register',
+          path: `/${resolved.registerPath}`,
+          file: resolver.resolve('./runtime/pages/register.vue'),
+          meta: {
+            layout: false,
+          },
+        },
       )
     })
   },
@@ -173,6 +237,13 @@ declare module '@nuxt/schema' {
   interface RuntimeConfig {
     miraicms: ResolvedMiraiCmsConfig
   }
+  interface PublicRuntimeConfig {
+    miraicms: {
+      adminPath: string
+      loginPath: string
+      registerPath: string
+    }
+  }
 }
 
 declare module 'nuxt/schema' {
@@ -181,5 +252,12 @@ declare module 'nuxt/schema' {
   }
   interface RuntimeConfig {
     miraicms: ResolvedMiraiCmsConfig
+  }
+  interface PublicRuntimeConfig {
+    miraicms: {
+      adminPath: string
+      loginPath: string
+      registerPath: string
+    }
   }
 }

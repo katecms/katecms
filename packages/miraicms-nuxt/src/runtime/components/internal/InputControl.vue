@@ -30,7 +30,7 @@ function onInput(event: Event) {
 </script>
 
 <template>
-  <div :class="rootClass">
+  <div :class="[rootClass, `${rootClass}--type-${type}`]">
     <MiraiCmsFieldAddon
       :field="field"
       position="prepend"
@@ -68,6 +68,21 @@ $root: '.miraicms-input-control';
   display: flex;
   position: relative;
 
+  &--type-range {
+    :deep(.miraicms-field-addon) {
+      border: 1px solid $color-border;
+      border-radius: $border-radius-inter;
+    }
+
+    :deep(.miraicms-field-addon--prepend) {
+      margin-right: math-rem(10);
+    }
+
+    :deep(.miraicms-field-addon--append) {
+      margin-left: math-rem(10);
+    }
+  }
+
   &__input {
     height: math-rem(38);
     border: 1px solid $color-border;
@@ -84,13 +99,11 @@ $root: '.miraicms-input-control';
     @include placeholder($color-muted);
 
     &--is-prepend {
-      //border-left: 0;
       border-top-left-radius: 0;
       border-bottom-left-radius: 0;
     }
 
     &--is-append {
-      //border-right: 0;
       border-top-right-radius: 0;
       border-bottom-right-radius: 0;
     }
@@ -126,7 +139,7 @@ $root: '.miraicms-input-control';
       border: 0;
       border-radius: 0;
       align-self: flex-end;
-      margin: 0 math-rem(10);
+      margin: math-rem(24) 0 0;
 
       &:focus {
         outline: none;

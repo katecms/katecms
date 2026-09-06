@@ -42,7 +42,7 @@ const model = defineModel<number>()
 
 .miraicms-range-field-value {
   position: absolute;
-  top: -3px;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
   font-variant-numeric: tabular-nums;

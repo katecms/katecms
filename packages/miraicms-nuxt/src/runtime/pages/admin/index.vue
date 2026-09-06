@@ -464,6 +464,17 @@ const fields: Fields = {
     maxSize: 10,
     columnWidth: 50,
   },
+  image_test: {
+    type: 'image',
+    label: 'Image',
+    instructions: 'Image instructions',
+    required: true,
+    position: 'main',
+    returnFormat: 'array',
+    library: 'all',
+    cropType: true,
+    columnWidth: 50,
+  },
   link_test: {
     type: 'link',
     label: 'Link',

@@ -255,7 +255,7 @@ function confirmSelection() {
             :disabled="uploading"
             @click="emit('upload')"
           >
-            {{ uploading ? 'Uploading…' : 'Upload file' }}
+            {{ uploading ? 'Uploading…' : (isImageKind ? 'Upload image' : 'Upload file') }}
           </MiraiCmsUiButton>
 
           <MiraiCmsUiButton

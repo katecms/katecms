@@ -304,6 +304,54 @@ const fields: Fields = {
       },
     },
   },
+  tab_test: {
+    type: 'tab',
+    placement: 'top',
+    position: 'main',
+    columnWidth: 100,
+    panels: [
+      {
+        label: 'Tab 1',
+        subFields: {
+          tab_title: {
+            type: 'text',
+            label: 'Title',
+            required: true,
+            placeholder: 'Title',
+            defaultValue: '',
+            columnWidth: 50,
+          },
+          tab_description: {
+            type: 'textarea',
+            label: 'Description',
+            placeholder: 'Description',
+            defaultValue: '',
+            columnWidth: 50,
+          },
+        },
+      },
+      {
+        label: 'Tab 2',
+        subFields: {
+          tab_title_2: {
+            type: 'text',
+            label: 'Title 2',
+            required: true,
+            placeholder: 'Title',
+            defaultValue: '',
+            columnWidth: 50,
+          },
+          tab_description_2: {
+            type: 'textarea',
+            label: 'Description 2',
+            placeholder: 'Description',
+            defaultValue: '',
+            columnWidth: 50,
+          },
+        },
+      },
+    ],
+  },
   accordion_test: {
     type: 'accordion',
     position: 'main',

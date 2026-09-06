@@ -318,6 +318,38 @@ interface UserField extends BaseField {
  * Advanced
  * ============================================================ */
 
+/** Nominatim address parts stored on an OpenStreetMap marker. */
+export interface OsmAddress {
+  'house_number': string
+  'road': string
+  'suburb': string
+  'city_district': string
+  'city': string
+  'ISO3166-2-lvl4': string
+  'postcode': string
+  'country': string
+  'country_code': string
+  'building': string
+  'town': string
+  'village': string
+  'hamlet': string
+  'state': string
+}
+
+/** Stored value of one OpenStreetMap marker. */
+export interface OsmMarker {
+  label: string
+  default_label: string
+  lat: number
+  lng: number
+  zoom: number
+  address: OsmAddress
+  place_id: string
+}
+
+/** Form value of an `open_street_map` field. */
+export type OsmMarkerValue = OsmMarker | OsmMarker[] | null
+
 interface OpenStreetMapField extends BaseField {
   type: 'open_street_map'
   height?: number

@@ -23,5 +23,3 @@ function toPascalCase(str: string): string {
 export function resolveField(type: string): Component | undefined {
   return fieldComponents[`${toPascalCase(type)}Field`]
 }
-
-

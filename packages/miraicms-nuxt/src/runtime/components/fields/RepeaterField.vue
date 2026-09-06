@@ -772,31 +772,31 @@ onBeforeUnmount(() => {
           v-if="showCollapseAll || showExpandAll"
           :class="`${rootClass}__toggle-all-group`"
         >
-          <button
+          <MiraiCmsUiButton
             v-if="showCollapseAll"
-            type="button"
-            :class="`${rootClass}__toggle-all`"
+            tag="button"
+            :variant="['secondary', 'small']"
             @click="collapseAllRows"
           >
             Collapse all
-          </button>
-          <button
+          </MiraiCmsUiButton>
+          <MiraiCmsUiButton
             v-if="showExpandAll"
-            type="button"
-            :class="`${rootClass}__toggle-all`"
+            tag="button"
+            :variant="['secondary', 'small']"
             @click="expandAllRows"
           >
             Expand all
-          </button>
+          </MiraiCmsUiButton>
         </div>
-        <button
-          type="button"
-          :class="[`${rootClass}__add`, { 'is-disabled': !canAdd }]"
+        <MiraiCmsUiButton
+          tag="button"
+          variant="small"
           :disabled="!canAdd"
           @click="addRow"
         >
           {{ buttonLabel }}
-        </button>
+        </MiraiCmsUiButton>
       </div>
     </div>
   </MiraiCmsFieldWrapper>
@@ -990,39 +990,6 @@ $root: '.miraicms-repeater-field';
     display: flex;
     flex-wrap: wrap;
     gap: math-rem(8);
-  }
-
-  &__toggle-all {
-    padding: math-rem(8) math-rem(14);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background-color: $color-surface;
-    color: $color-ink;
-    cursor: pointer;
-
-    &:hover {
-      border-color: $color-accent;
-    }
-  }
-
-  &__add {
-    align-self: flex-start;
-    padding: math-rem(8) math-rem(14);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background-color: $color-surface;
-    color: $color-ink;
-    cursor: pointer;
-
-    &:hover:not(:disabled) {
-      border-color: $color-accent;
-    }
-
-    &.is-disabled,
-    &:disabled {
-      opacity: .6;
-      cursor: default;
-    }
   }
 }
 </style>

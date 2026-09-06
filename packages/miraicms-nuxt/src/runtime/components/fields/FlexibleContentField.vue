@@ -678,32 +678,31 @@ onBeforeUnmount(() => {
           v-if="showCollapseAll || showExpandAll"
           :class="`${rootClass}__toggle-all-group`"
         >
-          <button
+          <MiraiCmsUiButton
             v-if="showCollapseAll"
-            type="button"
-            :class="`${rootClass}__toggle-all`"
+            tag="button"
+            variant="secondary"
             @click="collapseAllRows"
           >
             Collapse all
-          </button>
-          <button
+          </MiraiCmsUiButton>
+          <MiraiCmsUiButton
             v-if="showExpandAll"
-            type="button"
-            :class="`${rootClass}__toggle-all`"
+            tag="button"
+            variant="secondary"
             @click="expandAllRows"
           >
             Expand all
-          </button>
+          </MiraiCmsUiButton>
         </div>
         <div :class="`${rootClass}__add-wrap`">
-          <button
-            type="button"
-            :class="[`${rootClass}__add`, { 'is-disabled': !canAdd }]"
+          <MiraiCmsUiButton
+            tag="button"
             :disabled="!canAdd"
             @click="openLayoutPicker(0)"
           >
             {{ buttonLabel }}
-          </button>
+          </MiraiCmsUiButton>
         </div>
       </div>
 
@@ -900,32 +899,32 @@ onBeforeUnmount(() => {
           v-if="showCollapseAll || showExpandAll"
           :class="`${rootClass}__toggle-all-group`"
         >
-          <button
+          <MiraiCmsUiButton
             v-if="showCollapseAll"
-            type="button"
-            :class="`${rootClass}__toggle-all`"
+            tag="button"
+            variant="secondary"
             @click="collapseAllRows"
           >
             Collapse all
-          </button>
-          <button
+          </MiraiCmsUiButton>
+          <MiraiCmsUiButton
             v-if="showExpandAll"
-            type="button"
-            :class="`${rootClass}__toggle-all`"
+            tag="button"
+            variant="secondary"
             @click="expandAllRows"
           >
             Expand all
-          </button>
+          </MiraiCmsUiButton>
         </div>
         <div :class="`${rootClass}__add-wrap`">
-          <button
-            type="button"
-            :class="[`${rootClass}__add`, { 'is-disabled': !canAdd }]"
+          <MiraiCmsUiButton
+            tag="button"
+            variant="small"
             :disabled="!canAdd"
             @click="openLayoutPicker(rows.length)"
           >
             {{ buttonLabel }}
-          </button>
+          </MiraiCmsUiButton>
         </div>
       </div>
     </div>
@@ -944,14 +943,22 @@ onBeforeUnmount(() => {
             <h2 :class="`${rootClass}__picker-title`">
               Choose a block
             </h2>
-            <button
-              type="button"
-              :class="`${rootClass}__picker-close`"
+            <MiraiCmsUiButton
+              tag="button"
+              :variant="['tertiary', 'small', 'icon']"
               aria-label="Close"
               @click="closeLayoutPicker"
             >
-              ×
-            </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 640 640"
+                fill="currentColor"
+              >
+                <path
+                  d="M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z"
+                />
+              </svg>
+            </MiraiCmsUiButton>
           </div>
 
           <div :class="`${rootClass}__picker-grid`">
@@ -1152,43 +1159,10 @@ $root: '.miraicms-flexible-content-field';
     gap: math-rem(8);
   }
 
-  &__toggle-all {
-    padding: math-rem(8) math-rem(14);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background-color: $color-surface;
-    color: $color-ink;
-    cursor: pointer;
-
-    &:hover {
-      border-color: $color-accent;
-    }
-  }
-
   &__add-wrap {
     position: relative;
     align-self: flex-start;
     margin-left: auto;
-  }
-
-  &__add {
-    align-self: flex-start;
-    padding: math-rem(8) math-rem(14);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background-color: $color-surface;
-    color: $color-ink;
-    cursor: pointer;
-
-    &:hover:not(:disabled) {
-      border-color: $color-accent;
-    }
-
-    &.is-disabled,
-    &:disabled {
-      opacity: .6;
-      cursor: default;
-    }
   }
 
   &__picker {
@@ -1229,23 +1203,6 @@ $root: '.miraicms-flexible-content-field';
     font-size: math-rem(16);
     font-weight: 600;
     color: $color-ink;
-  }
-
-  &__picker-close {
-    width: 32px;
-    height: 32px;
-    border: 0;
-    border-radius: $border-radius;
-    background: transparent;
-    color: $color-muted;
-    font-size: 24px;
-    line-height: 1;
-    cursor: pointer;
-
-    &:hover {
-      background: $color-accent-wash;
-      color: $color-ink;
-    }
   }
 
   &__picker-grid {

@@ -105,7 +105,7 @@ $root: '.miraicms-btn';
   border: 1px solid transparent;
   border-radius: $border-radius-inter;
   font-family: inherit;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1;
   height: math-rem(40);
   padding: 0 math-rem(16);

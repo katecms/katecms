@@ -686,13 +686,13 @@ watch(formatButtons, (buttons) => {
             @blur="onInputApply"
           >
 
-          <button
-            type="button"
-            :class="`${rootClass}__clear`"
+          <MiraiCmsUiButton
+            tag="button"
+            :variant="['secondary', 'small']"
             @click="clearValue"
           >
-            Очистить
-          </button>
+            Clear
+          </MiraiCmsUiButton>
         </div>
       </div>
     </div>
@@ -928,21 +928,6 @@ $checker: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' v
     &:focus {
       outline: none;
       border-color: $color-accent;
-    }
-  }
-
-  &__clear {
-    height: 30px;
-    border: 1px solid $color-border;
-    border-radius: $border-radius-inter;
-    background: $color-bg;
-    color: $color-muted;
-    font-size: 12px;
-    cursor: pointer;
-
-    &:hover {
-      color: $color-danger;
-      border-color: $color-danger;
     }
   }
 }

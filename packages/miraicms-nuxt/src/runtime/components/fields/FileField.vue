@@ -317,14 +317,14 @@ onMounted(restoreFromModel)
           <div :class="`${rootClass}__actions`">
             <MiraiCmsUiButton
               tag="button"
-              :variant="['action', 'min']"
+              :variant="['secondary', 'small']"
               @click="openModal"
             >
               Replace
             </MiraiCmsUiButton>
             <MiraiCmsUiButton
               tag="button"
-              :variant="['remove', 'min']"
+              :variant="['red', 'small']"
               @click="remove"
             >
               Remove

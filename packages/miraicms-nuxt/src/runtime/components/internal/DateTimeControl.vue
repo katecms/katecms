@@ -516,20 +516,20 @@ onBeforeUnmount(() => {
         </div>
 
         <div :class="`${rootClass}__footer`">
-          <button
-            type="button"
-            :class="`${rootClass}__footer-btn`"
+          <MiraiCmsUiButton
+            tag="button"
+            :variant="['secondary', 'small']"
             @click="selectNow"
           >
-            Сейчас
-          </button>
-          <button
-            type="button"
-            :class="`${rootClass}__footer-btn`"
+            Now
+          </MiraiCmsUiButton>
+          <MiraiCmsUiButton
+            tag="button"
+            :variant="['secondary', 'small']"
             @click="clear"
           >
-            Очистить
-          </button>
+            Clear
+          </MiraiCmsUiButton>
         </div>
       </div>
     </div>
@@ -710,18 +710,6 @@ $root: '.miraicms-date-time-control';
     margin-top: 8px;
     padding-top: 8px;
     border-top: 1px solid $color-border;
-  }
-
-  &__footer-btn {
-    padding: 5px 10px;
-    border: 1px solid $color-border;
-    border-radius: 5px;
-    background-color: $color-surface;
-    cursor: pointer;
-
-    &:focus {
-      outline: none;
-    }
   }
 }
 </style>

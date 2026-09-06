@@ -712,28 +712,28 @@ function removeLink() {
               @keydown.enter.prevent="applyLink"
               @keydown.esc.prevent="linkOpen = false"
             >
-            <button
-              type="button"
-              :class="[`${rootClass}__btn`, `${rootClass}__btn--primary`]"
+            <MiraiCmsUiButton
+              tag="button"
+              variant="small"
               @click="applyLink"
             >
               Apply
-            </button>
-            <button
+            </MiraiCmsUiButton>
+            <MiraiCmsUiButton
               v-if="isLinkActive"
-              type="button"
-              :class="`${rootClass}__btn`"
+              tag="button"
+              :variant="['red', 'small']"
               @click="removeLink"
             >
               Unlink
-            </button>
-            <button
-              type="button"
-              :class="`${rootClass}__btn`"
+            </MiraiCmsUiButton>
+            <MiraiCmsUiButton
+              tag="button"
+              :variant="['secondary', 'small']"
               @click="linkOpen = false"
             >
               Cancel
-            </button>
+            </MiraiCmsUiButton>
           </div>
 
           <EditorContent
@@ -854,17 +854,6 @@ $root: '.miraicms-wysiwyg-field';
     line-height: 1;
     cursor: pointer;
     user-select: none;
-
-    &--primary {
-      background: $color-accent;
-      border-color: $color-accent;
-      color: $color-surface;
-
-      &:hover {
-        background: $color-accent-hover;
-        border-color: $color-accent-hover;
-      }
-    }
 
     &.is-active {
       background-color: $color-accent-wash;

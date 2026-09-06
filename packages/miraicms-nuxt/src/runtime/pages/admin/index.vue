@@ -6,6 +6,7 @@ import {
 } from '@miraicms/core'
 import type { Fields } from '@miraicms/core'
 import { resolveField } from '../../utils/helpers'
+import { provideMiraiCmsFieldValues } from '../../utils/field-values'
 
 const rootClass = 'miraicms-admin-demo'
 
@@ -279,6 +280,55 @@ const fields: Fields = {
     position: 'main',
     columnWidth: 100,
   },
+  accordion_test: {
+    type: 'accordion',
+    position: 'main',
+    columnWidth: 100,
+    open: 0,
+    multiExpand: false,
+    panels: [
+      {
+        label: 'Panel 1',
+        subFields: {
+          accordion_title: {
+            type: 'text',
+            label: 'Title',
+            required: true,
+            placeholder: 'Title',
+            defaultValue: '',
+            columnWidth: 50,
+          },
+          accordion_description: {
+            type: 'textarea',
+            label: 'Description',
+            placeholder: 'Description',
+            defaultValue: '',
+            columnWidth: 50,
+          },
+        },
+      },
+      {
+        label: 'Panel 2',
+        subFields: {
+          accordion_title_2: {
+            type: 'text',
+            label: 'Title 2',
+            required: true,
+            placeholder: 'Title',
+            defaultValue: '',
+            columnWidth: 50,
+          },
+          accordion_description_2: {
+            type: 'textarea',
+            label: 'Description 2',
+            placeholder: 'Description',
+            defaultValue: '',
+            columnWidth: 50,
+          },
+        },
+      },
+    ],
+  },
   text_sidebar: {
     type: 'text',
     label: 'Sidebar text',
@@ -290,6 +340,7 @@ const fields: Fields = {
 }
 
 const values = reactive<Record<string, unknown>>(buildFormValues(fields))
+provideMiraiCmsFieldValues(values)
 
 const visibleFields = computed(() =>
   Object.entries(fields).filter(([, field]) =>

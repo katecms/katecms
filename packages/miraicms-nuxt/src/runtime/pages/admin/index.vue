@@ -473,6 +473,64 @@ const fields: Fields = {
     returnFormat: 'array',
     columnWidth: 50,
   },
+  flexible_content_test: {
+    type: 'flexible_content',
+    label: 'Flexible Content',
+    instructions: 'Flexible Content instructions',
+    position: 'main',
+    max: 5,
+    buttonLabel: 'Add layout',
+    columnWidth: 100,
+    layouts: {
+      hero: {
+        label: 'Hero',
+        max: 2,
+        subFields: {
+          title: {
+            type: 'text',
+            label: 'Title',
+            required: true,
+            placeholder: 'Welcome',
+            defaultValue: 'Welcome',
+            columnWidth: 50,
+          },
+          description: {
+            type: 'textarea',
+            label: 'Description',
+            placeholder: 'Lorem ipsum…',
+            defaultValue: 'Lorem ipsum…',
+            columnWidth: 50,
+          },
+        },
+      },
+      faq: {
+        label: 'FAQ',
+        subFields: {
+          heading: {
+            type: 'text',
+            label: 'Heading',
+            required: true,
+            placeholder: 'About us',
+            defaultValue: 'About us',
+            columnWidth: 100,
+          },
+        },
+      },
+      card: {
+        label: 'Card',
+        subFields: {
+          heading: {
+            type: 'text',
+            label: 'Heading',
+            required: true,
+            placeholder: 'About us',
+            defaultValue: 'About us',
+            columnWidth: 100,
+          },
+        },
+      },
+    },
+  },
   text_sidebar: {
     type: 'text',
     label: 'Sidebar text',

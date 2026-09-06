@@ -2,6 +2,7 @@ export type {
   ImageDimensions,
   MediaItem,
   MediaVariant,
+  MediaVariantsStatus,
   StoredMediaVariant,
 } from './types'
 export {

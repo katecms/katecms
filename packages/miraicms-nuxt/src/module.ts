@@ -60,6 +60,10 @@ export default defineNuxtModule<MiraiCmsConfig>({
           resolved.database.sqliteFilename,
         ),
       },
+      media: {
+        ...resolved.media,
+        dir: join(nuxt.options.rootDir, 'public', 'uploads'),
+      },
     }
 
     addServerPlugin(resolver.resolve('./runtime/server/plugins/auto-migrate'))
@@ -68,6 +72,27 @@ export default defineNuxtModule<MiraiCmsConfig>({
       route: '/api/_miraicms/oembed',
       method: 'get',
       handler: resolver.resolve('./runtime/server/api/_miraicms/oembed.get'),
+    })
+
+    addServerHandler({
+      route: '/api/_miraicms/media',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/media/index.get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/media',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/media/index.post'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/media/:id',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/media/[id].get'),
+    })
+    addServerHandler({
+      route: '/uploads/**',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/uploads/[...key].get'),
     })
 
     addComponentsDir({

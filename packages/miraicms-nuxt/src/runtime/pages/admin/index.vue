@@ -453,6 +453,17 @@ const fields: Fields = {
       },
     },
   },
+  file_test: {
+    type: 'file',
+    label: 'File',
+    instructions: 'File instructions',
+    required: true,
+    position: 'main',
+    returnFormat: 'array',
+    library: 'all',
+    maxSize: 10,
+    columnWidth: 50,
+  },
   text_sidebar: {
     type: 'text',
     label: 'Sidebar text',

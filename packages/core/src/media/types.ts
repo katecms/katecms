@@ -1,4 +1,13 @@
-import type { MediaVariantsStatus } from '../database'
+/**
+ * Browser-safe media DTOs.
+ *
+ * Runtime media (storage, sharp, toMediaItem) stays on the Node entry.
+ * This file must not import `database`, `fs`, or other Node-only modules so
+ * it can be re-exported from `src/browser.ts`.
+ */
+
+/** State of asynchronous variant generation for a media item. */
+export type MediaVariantsStatus = 'none' | 'pending' | 'ready' | 'failed'
 
 /**
  * A generated derivative stored beside the original.

@@ -1,4 +1,7 @@
 import type { ColumnType, Generated } from 'kysely'
+import type { MediaVariantsStatus } from '../../media'
+
+export type { MediaVariantsStatus }
 
 /**
  * Kysely types for the CMS tables.
@@ -28,7 +31,6 @@ type Json<T = unknown> = ColumnType<T, T | undefined, T>
 
 export type UserStatus = 'active' | 'banned'
 export type CollectionStatus = 'published' | 'draft' | 'trash'
-export type MediaVariantsStatus = 'none' | 'pending' | 'ready' | 'failed'
 
 export interface UsersTable {
   id: Generated<number>

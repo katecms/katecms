@@ -7,7 +7,6 @@ export type {
   Database,
   DictionariesTable,
   MediaTable,
-  MediaVariantsStatus,
   MigrationsTable,
   OptionsTable,
   UsersTable,

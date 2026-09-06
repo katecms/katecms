@@ -30,6 +30,9 @@ dist
 # Local SQLite
 **/data/*.db
 
+# Uploaded media
+**/public/uploads/**
+
 # Testing
 reports
 coverage

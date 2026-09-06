@@ -142,14 +142,13 @@ onBeforeUnmount(() => {
           </button>
         </div>
 
-        <button
+        <MiraiCmsUiButton
           v-else
-          type="button"
-          :class="`${rootClass}__btn`"
+          tag="button"
           @click="openEditor"
         >
           Select link
-        </button>
+        </MiraiCmsUiButton>
       </div>
 
       <Teleport to="body">
@@ -224,20 +223,19 @@ onBeforeUnmount(() => {
             </div>
 
             <div :class="`${rootClass}__modal-footer`">
-              <button
-                type="button"
-                :class="`${rootClass}__btn`"
+              <MiraiCmsUiButton
+                tag="button"
+                variant="secondary"
                 @click="editing = false"
               >
                 Cancel
-              </button>
-              <button
-                type="button"
-                :class="[`${rootClass}__btn`, `${rootClass}__btn--primary`]"
+              </MiraiCmsUiButton>
+              <MiraiCmsUiButton
+                tag="button"
                 @click="save"
               >
                 Add link
-              </button>
+              </MiraiCmsUiButton>
             </div>
           </div>
         </div>
@@ -378,39 +376,6 @@ $root: '.miraicms-link-field';
 
     input {
       accent-color: $color-accent;
-    }
-  }
-
-  &__btn {
-    padding: math-rem(8) math-rem(14);
-    background-color: $color-surface;
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    color: $color-ink;
-    cursor: pointer;
-
-    &:hover {
-      border-color: $color-accent;
-    }
-
-    &--primary {
-      background-color: $color-accent;
-      border-color: $color-accent;
-      color: $color-surface;
-
-      &:hover {
-        background-color: $color-accent-hover;
-        border-color: $color-accent-hover;
-      }
-    }
-
-    &:focus {
-      outline: none;
-    }
-
-    &:focus-visible {
-      outline: 2px solid rgba($color-accent, 0.35);
-      outline-offset: 1px;
     }
   }
 

@@ -241,35 +241,30 @@ function confirmSelection() {
           v-if="!cropping && !processing"
           :class="`${rootClass}__dialog-foot`"
         >
-          <button
-            type="button"
-            :class="`${rootClass}__btn`"
+          <MiraiCmsUiButton
+            tag="button"
             :disabled="uploading"
             @click="emit('upload')"
           >
             {{ uploading ? 'Uploading…' : 'Upload file' }}
-          </button>
+          </MiraiCmsUiButton>
 
-          <button
+          <MiraiCmsUiButton
             v-if="multiple && pendingCount"
-            type="button"
-            :class="[`${rootClass}__btn`, `${rootClass}__btn--primary`]"
+            tag="button"
             :disabled="uploading"
             @click="confirmSelection"
           >
             {{ confirmLabel }}
-          </button>
+          </MiraiCmsUiButton>
 
-          <button
-            type="button"
-            :class="[
-              `${rootClass}__btn`,
-              { [`${rootClass}__btn--primary`]: !multiple },
-            ]"
+          <MiraiCmsUiButton
+            tag="button"
+            :variant="multiple ? 'secondary' : undefined"
             @click="emit('close')"
           >
             Close
-          </button>
+          </MiraiCmsUiButton>
         </div>
       </div>
     </div>
@@ -436,35 +431,6 @@ $root: '.miraicms-media-modal';
     gap: math-rem(8);
     padding: math-rem(14) math-rem(16);
     border-top: 1px solid $color-border;
-  }
-
-  &__btn {
-    padding: math-rem(8) math-rem(14);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background-color: $color-surface;
-    color: $color-ink;
-    cursor: pointer;
-
-    &:hover:not(:disabled) {
-      border-color: $color-accent;
-    }
-
-    &:disabled {
-      opacity: .6;
-      cursor: default;
-    }
-
-    &--primary {
-      background-color: $color-accent;
-      border-color: $color-accent;
-      color: $color-surface;
-
-      &:hover:not(:disabled) {
-        background-color: $color-accent-hover;
-        border-color: $color-accent-hover;
-      }
-    }
   }
 }
 

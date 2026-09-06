@@ -315,31 +315,30 @@ onMounted(restoreFromModel)
             </span>
           </div>
           <div :class="`${rootClass}__actions`">
-            <button
-              type="button"
-              :class="`${rootClass}__btn`"
+            <MiraiCmsUiButton
+              tag="button"
+              :variant="['action', 'min']"
               @click="openModal"
             >
               Replace
-            </button>
-            <button
-              type="button"
-              :class="[`${rootClass}__btn`, `${rootClass}__btn--danger`]"
+            </MiraiCmsUiButton>
+            <MiraiCmsUiButton
+              tag="button"
+              :variant="['remove', 'min']"
               @click="remove"
             >
               Remove
-            </button>
+            </MiraiCmsUiButton>
           </div>
         </div>
 
-        <button
+        <MiraiCmsUiButton
           v-else
-          type="button"
-          :class="`${rootClass}__btn`"
+          tag="button"
           @click="openModal"
         >
           Add File
-        </button>
+        </MiraiCmsUiButton>
       </div>
 
       <input
@@ -442,28 +441,6 @@ $root: '.miraicms-file-field';
   &__file-meta {
     font-size: math-rem(12);
     color: $color-muted;
-  }
-
-  &__btn {
-    padding: math-rem(8) math-rem(14);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background-color: $color-surface;
-    color: $color-ink;
-    cursor: pointer;
-
-    &:hover {
-      border-color: $color-accent;
-    }
-
-    &--danger {
-      color: $color-danger;
-
-      &:hover {
-        border-color: $color-danger;
-        background-color: $color-danger-bg;
-      }
-    }
   }
 
   &__actions {

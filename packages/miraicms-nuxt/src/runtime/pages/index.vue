@@ -78,7 +78,7 @@ body#miraicms-body {
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: $color-accent transparent;
+    scrollbar-color: $color-muted transparent;
     font-family: inherit;
   }
 

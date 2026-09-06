@@ -561,6 +561,246 @@ const sidebarFields = computed(() =>
 
 <template>
   <div :class="rootClass">
+    <section :class="[`${rootClass}__buttons`]">
+      <h2 :class="[`${rootClass}__buttons-title`]">
+        UiButton
+      </h2>
+
+      <div :class="[`${rootClass}__buttons-grid`]">
+        <span :class="[`${rootClass}__buttons-label`]">Default</span>
+        <MiraiCmsUiButton
+          tag="button"
+          variant="small"
+        >
+          Save
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton tag="button">
+          Save
+        </MiraiCmsUiButton>
+
+        <span :class="[`${rootClass}__buttons-label`]">Secondary</span>
+        <MiraiCmsUiButton
+          tag="button"
+          :variant="['secondary', 'small']"
+        >
+          Preview
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          tag="button"
+          variant="secondary"
+        >
+          Preview
+        </MiraiCmsUiButton>
+
+        <span :class="[`${rootClass}__buttons-label`]">Tertiary</span>
+        <MiraiCmsUiButton
+          tag="button"
+          :variant="['tertiary', 'small']"
+        >
+          Cancel
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          tag="button"
+          variant="tertiary"
+        >
+          Cancel
+        </MiraiCmsUiButton>
+
+        <span :class="[`${rootClass}__buttons-label`]">Red</span>
+        <MiraiCmsUiButton
+          tag="button"
+          :variant="['red', 'small']"
+        >
+          Remove
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          tag="button"
+          variant="red"
+        >
+          Remove
+        </MiraiCmsUiButton>
+
+        <span :class="[`${rootClass}__buttons-label`]">With icon</span>
+        <MiraiCmsUiButton
+          tag="button"
+          variant="small"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 5v14" />
+            <path d="M5 12h14" />
+          </svg>
+          Add
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton tag="button">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 5v14" />
+            <path d="M5 12h14" />
+          </svg>
+          Add
+        </MiraiCmsUiButton>
+
+        <span :class="[`${rootClass}__buttons-label`]">Secondary icon</span>
+        <MiraiCmsUiButton
+          tag="button"
+          :variant="['secondary', 'small']"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+            <circle
+              cx="12"
+              cy="12"
+              r="3"
+            />
+          </svg>
+          Preview
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          tag="button"
+          variant="secondary"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+            <circle
+              cx="12"
+              cy="12"
+              r="3"
+            />
+          </svg>
+          Preview
+        </MiraiCmsUiButton>
+
+        <span :class="[`${rootClass}__buttons-label`]">Red icon</span>
+        <MiraiCmsUiButton
+          tag="button"
+          :variant="['red', 'small']"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 6h18" />
+            <path d="M8 6V4h8v2" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+          </svg>
+          Remove
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          tag="button"
+          variant="red"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 6h18" />
+            <path d="M8 6V4h8v2" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+          </svg>
+          Remove
+        </MiraiCmsUiButton>
+
+        <span :class="[`${rootClass}__buttons-label`]">Icon only</span>
+        <MiraiCmsUiButton
+          tag="button"
+          :variant="['tertiary', 'small', 'icon']"
+          aria-label="Edit"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          tag="button"
+          :variant="['tertiary', 'icon']"
+          aria-label="Edit"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+        </MiraiCmsUiButton>
+
+        <span :class="[`${rootClass}__buttons-label`]">Disabled</span>
+        <MiraiCmsUiButton
+          tag="button"
+          variant="small"
+          disabled
+        >
+          Save
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          tag="button"
+          disabled
+        >
+          Save
+        </MiraiCmsUiButton>
+
+        <span :class="[`${rootClass}__buttons-label`]">Link</span>
+        <MiraiCmsUiButton
+          variant="small"
+          :link="{ url: 'https://example.com', title: 'Example', target: '_blank' }"
+        >
+          Example
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          :link="{ url: 'https://example.com', title: 'Example', target: '_blank' }"
+        >
+          Example
+        </MiraiCmsUiButton>
+      </div>
+    </section>
+
     <div :class="[`${rootClass}__layout`]">
       <div :class="[`${rootClass}__main`]">
         <div
@@ -606,6 +846,37 @@ $root: '.miraicms-admin-demo';
   display: flex;
   flex-direction: column;
   gap: math-rem(16);
+
+  &__buttons {
+    display: flex;
+    flex-direction: column;
+    gap: math-rem(12);
+    padding: math-rem(16);
+    background-color: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: $border-radius;
+  }
+
+  &__buttons-title {
+    margin: 0;
+    font-size: math-rem(16);
+    font-weight: 600;
+    color: $color-ink;
+  }
+
+  &__buttons-grid {
+    display: grid;
+    grid-template-columns: math-rem(140) auto auto;
+    align-items: center;
+    justify-content: start;
+    column-gap: math-rem(12);
+    row-gap: math-rem(10);
+  }
+
+  &__buttons-label {
+    font-size: math-rem(13);
+    color: $color-muted;
+  }
 
   &__layout {
     display: grid;

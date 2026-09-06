@@ -29,6 +29,8 @@ dist
 
 # Local SQLite
 **/data/*.db
+**/data/*.db-wal
+**/data/*.db-shm
 
 # Uploaded media
 **/public/uploads/**

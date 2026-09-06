@@ -464,6 +464,15 @@ const fields: Fields = {
     maxSize: 10,
     columnWidth: 50,
   },
+  link_test: {
+    type: 'link',
+    label: 'Link',
+    instructions: 'Link instructions',
+    required: true,
+    position: 'main',
+    returnFormat: 'array',
+    columnWidth: 50,
+  },
   text_sidebar: {
     type: 'text',
     label: 'Sidebar text',

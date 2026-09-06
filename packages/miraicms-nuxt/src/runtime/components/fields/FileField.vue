@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import type { Field, MediaItem } from '@miraicms/core'
+import { isImageMedia as isImage, isMediaItem } from '@miraicms/core'
 
 type FileFieldConfig = Extract<Field, { type: 'file' }>
 
@@ -33,10 +34,6 @@ const acceptAttr = computed(() => {
 
 const selected = ref<MediaItem | null>(null)
 const hasValue = computed(() => selected.value !== null)
-
-function isImage(item: MediaItem): boolean {
-  return item.mime_type?.startsWith('image/') ?? false
-}
 
 function thumbUrl(item: MediaItem) {
   const variant = item.variants?.find(v => v.size === 'thumbnail')
@@ -234,10 +231,6 @@ async function onFileChange(event: Event) {
 
 function remove() {
   applySelection(null)
-}
-
-function isMediaItem(value: unknown): value is MediaItem {
-  return typeof value === 'object' && value !== null && 'url' in value
 }
 
 async function restoreFromModel() {

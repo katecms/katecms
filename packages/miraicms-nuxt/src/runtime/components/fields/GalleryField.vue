@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import type { Field, MediaItem } from '@miraicms/core'
+import { isMediaItem } from '@miraicms/core'
 
 type GalleryFieldConfig = Extract<Field, { type: 'gallery' }>
 
@@ -398,10 +399,6 @@ function onDrop(index: number, event: DragEvent) {
 function onDragEnd() {
   dragIndex.value = null
   dropIndex.value = null
-}
-
-function isMediaItem(value: unknown): value is MediaItem {
-  return typeof value === 'object' && value !== null && 'url' in value
 }
 
 async function restoreFromModel() {

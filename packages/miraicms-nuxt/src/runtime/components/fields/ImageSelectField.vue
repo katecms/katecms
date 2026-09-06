@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import {
+  decodeChoiceValue,
+  encodeChoiceValue,
+  imageChoiceLookup,
+} from '@miraicms/core'
 import type { Field } from '@miraicms/core'
 
 type ImageSelectFieldConfig = Extract<Field, { type: 'image_select' }>
@@ -17,35 +22,14 @@ const rootClass = 'miraicms-image-select-field'
 const isMultiple = computed(() => Boolean(props.field?.multiple))
 const imgWidth = computed(() => props.field?.width ?? 140)
 const imgHeight = computed(() => props.field?.height ?? 110)
-
-function choiceLabel(raw: string): string {
-  return props.field?.choices?.[raw]?.label ?? raw
-}
+const lookup = computed(() => imageChoiceLookup(props.field?.choices ?? {}))
 
 function format(raw: string): unknown {
-  const label = choiceLabel(raw)
-  if (props.field?.returnFormat === 'label') {
-    return label
-  }
-  if (props.field?.returnFormat === 'array') {
-    return { value: raw, label }
-  }
-  return raw
+  return encodeChoiceValue(raw, lookup.value, props.field?.returnFormat)
 }
 
 function unformat(value: unknown): string {
-  if (value == null || value === '') {
-    return ''
-  }
-  if (props.field?.returnFormat === 'array' && typeof value === 'object') {
-    return String((value as { value?: unknown }).value ?? '')
-  }
-  if (props.field?.returnFormat === 'label') {
-    const choices = props.field?.choices ?? {}
-    const byLabel = Object.keys(choices).find(key => choices[key]?.label === value)
-    return byLabel ?? String(value)
-  }
-  return String(value)
+  return decodeChoiceValue(value, lookup.value, props.field?.returnFormat)
 }
 
 const selectedMultiple = computed<string[]>({

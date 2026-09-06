@@ -26,9 +26,12 @@ export * from './blocks'
 export * from './text'
 export * from './oembed'
 export type {
+  GalleryFieldValue,
   ImageDimensions,
+  MediaFieldValue,
   MediaItem,
   MediaVariant,
   MediaVariantsStatus,
   StoredMediaVariant,
 } from './media/types'
+export { isImageMedia, isMediaItem } from './media/types'

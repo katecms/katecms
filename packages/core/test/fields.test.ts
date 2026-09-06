@@ -4,11 +4,26 @@ import {
   buildFormValues,
   collectVisibleValueKeys,
   createFieldDefault,
+  DATE_FIELD_FORMATS,
+  choiceMapLookup,
+  decodeChoiceValue,
+  emptyOsmAddress,
+  encodeChoiceValue,
   evaluateCondition,
-  MAX_MATCHES_PATTERN_LENGTH,
+  FLEXIBLE_CONTENT_LAYOUT_KEY,
+  formatDate,
   isLayoutOnlyFieldType,
+  isOsmMarker,
+  isSelectChoiceGroup,
   isOperatorAllowed,
   isVisible,
+  MAX_MATCHES_PATTERN_LENGTH,
+  osmAddressFromNominatim,
+  parseDate,
+  ROW_COLLAPSED_KEY,
+  selectChoiceLookup,
+  selectChoiceValue,
+  walkSelectChoices,
 } from '../src'
 
 const text = (overrides: Partial<Extract<Field, { type: 'text' }>> = {}): Extract<Field, { type: 'text' }> => ({
@@ -107,5 +122,66 @@ describe('buildFormValues', () => {
       ['title', text()],
     ])
     expect([...keys].sort()).toEqual(['n', 'title'])
+  })
+})
+
+describe('choice encode/decode', () => {
+  it('round-trips mapped choices for each returnFormat', () => {
+    const lookup = choiceMapLookup({ a: 'Alpha', b: 'Beta' })
+    expect(encodeChoiceValue('a', lookup)).toBe('a')
+    expect(encodeChoiceValue('a', lookup, 'label')).toBe('Alpha')
+    expect(encodeChoiceValue('a', lookup, 'array')).toEqual({ value: 'a', label: 'Alpha' })
+    expect(decodeChoiceValue('a', lookup)).toBe('a')
+    expect(decodeChoiceValue('Alpha', lookup, 'label')).toBe('a')
+    expect(decodeChoiceValue({ value: 'b', label: 'Beta' }, lookup, 'array')).toBe('b')
+    expect(decodeChoiceValue(null, lookup, 'label')).toBe('')
+  })
+
+  it('walks select groups and resolves labels', () => {
+    const choices = [
+      { lbl: 'One', val: 1 },
+      { type: 'group' as const, title: 'More', childs: [{ lbl: 'Two', val: 'two' }] },
+    ]
+    expect(isSelectChoiceGroup(choices[1]!)).toBe(true)
+    const seen: string[] = []
+    walkSelectChoices(choices, opt => seen.push(String(selectChoiceValue(opt))))
+    expect(seen).toEqual(['1', 'two'])
+    const lookup = selectChoiceLookup(choices)
+    expect(encodeChoiceValue('two', lookup, 'label')).toBe('Two')
+    expect(decodeChoiceValue('Two', lookup, 'label')).toBe('two')
+  })
+})
+
+describe('date field formats', () => {
+  it('formats and parses returnFormat strings', () => {
+    const date = new Date(2024, 0, 5, 9, 7, 3)
+    expect(formatDate(date, DATE_FIELD_FORMATS.date.return)).toBe('2024-01-05')
+    expect(formatDate(date, DATE_FIELD_FORMATS.datetime.return)).toBe('2024-01-05 09:07')
+    expect(formatDate(date, DATE_FIELD_FORMATS.time.return)).toBe('09:07')
+    const parsed = parseDate('2024-01-05 09:07', DATE_FIELD_FORMATS.datetime.return)
+    expect(parsed?.getFullYear()).toBe(2024)
+    expect(parsed?.getMonth()).toBe(0)
+    expect(parsed?.getDate()).toBe(5)
+    expect(parsed?.getHours()).toBe(9)
+    expect(parseDate('nope', DATE_FIELD_FORMATS.date.return)).toBeNull()
+  })
+})
+
+describe('open street map helpers', () => {
+  it('builds empty addresses and recognizes markers', () => {
+    const address = emptyOsmAddress()
+    expect(address.city).toBe('')
+    expect(address['ISO3166-2-lvl4']).toBe('')
+    expect(isOsmMarker({ lat: 1, lng: 2 })).toBe(true)
+    expect(isOsmMarker({ lat: '1', lng: 2 })).toBe(false)
+    expect(osmAddressFromNominatim({ city: 'Hamburg', road: 1 as never }).city).toBe('Hamburg')
+    expect(osmAddressFromNominatim({ city: 'Hamburg', road: 1 as never }).road).toBe('')
+  })
+})
+
+describe('structure keys', () => {
+  it('keeps reserved row keys stable', () => {
+    expect(ROW_COLLAPSED_KEY).toBe('__miraicmsCollapsed')
+    expect(FLEXIBLE_CONTENT_LAYOUT_KEY).toBe('fc_layout')
   })
 })

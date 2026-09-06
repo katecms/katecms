@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { Field, MediaItem } from '@miraicms/core'
+import { isMediaItem } from '@miraicms/core'
 
 type ImageFieldConfig = Extract<Field, { type: 'image' }>
 type CropSource = { kind: 'library', item: MediaItem } | { kind: 'file', file: File }
@@ -387,10 +388,6 @@ async function onFileChange(event: Event) {
 
 function remove() {
   applySelection(null)
-}
-
-function isMediaItem(value: unknown): value is MediaItem {
-  return typeof value === 'object' && value !== null && 'url' in value
 }
 
 async function restoreFromModel() {

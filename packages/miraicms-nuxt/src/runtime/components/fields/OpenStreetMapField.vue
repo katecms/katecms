@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { Field, OsmAddress, OsmMarker, OsmMarkerValue } from '@miraicms/core'
+import type { Field, OsmMarker, OsmMarkerValue } from '@miraicms/core'
+import {
+  emptyOsmAddress,
+  isOsmMarker,
+  osmAddressFromNominatim,
+} from '@miraicms/core'
 import type {
   Control as LeafletControl,
   DivIcon as LeafletDivIcon,
@@ -25,23 +30,6 @@ type GeocodingResult = {
 }
 
 type LeafletModule = typeof import('leaflet')
-
-const OSM_ADDRESS_KEYS = [
-  'house_number',
-  'road',
-  'suburb',
-  'city_district',
-  'city',
-  'ISO3166-2-lvl4',
-  'postcode',
-  'country',
-  'country_code',
-  'building',
-  'town',
-  'village',
-  'hamlet',
-  'state',
-] as const satisfies ReadonlyArray<keyof OsmAddress>
 
 const props = withDefaults(defineProps<{
   fieldKey: string
@@ -117,47 +105,8 @@ const markersList = computed<OsmMarker[]>(() => {
 
 const hasMarker = computed(() => markersList.value.length > 0)
 
-function isOsmMarker(value: unknown): value is OsmMarker {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return false
-  }
-  const marker = value as Partial<OsmMarker>
-  return typeof marker.lat === 'number' && typeof marker.lng === 'number'
-}
-
-function emptyAddress(): OsmAddress {
-  return {
-    'house_number': '',
-    'road': '',
-    'suburb': '',
-    'city_district': '',
-    'city': '',
-    'ISO3166-2-lvl4': '',
-    'postcode': '',
-    'country': '',
-    'country_code': '',
-    'building': '',
-    'town': '',
-    'village': '',
-    'hamlet': '',
-    'state': '',
-  }
-}
-
-function addressFromNominatim(raw?: Record<string, string | undefined> | null): OsmAddress {
-  const address = emptyAddress()
-  if (!raw) {
-    return address
-  }
-  for (const key of OSM_ADDRESS_KEYS) {
-    const value = raw[key]
-    address[key] = typeof value === 'string' ? value : ''
-  }
-  return address
-}
-
-function addressFromResult(result?: GeocodingResult): OsmAddress {
-  return addressFromNominatim(result?.properties?.address)
+function addressFromResult(result?: GeocodingResult) {
+  return osmAddressFromNominatim(result?.properties?.address)
 }
 
 function interpolate(template: string, data: Record<string, string>): string {
@@ -166,7 +115,7 @@ function interpolate(template: string, data: Record<string, string>): string {
 
 function formatNominatimAddress(result: { address?: Record<string, string | undefined> }): string {
   const addr = {
-    ...emptyAddress(),
+    ...emptyOsmAddress(),
     ...Object.fromEntries(
       Object.entries(result.address ?? {}).filter(([, value]) => typeof value === 'string'),
     ),
@@ -210,7 +159,7 @@ function createMarkerData(lat: number, lng: number, zoom: number, partial?: Part
     lat,
     lng,
     zoom,
-    address: partial?.address ?? emptyAddress(),
+    address: partial?.address ?? emptyOsmAddress(),
     place_id: partial?.place_id ?? '',
   })
 }

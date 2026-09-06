@@ -9,6 +9,8 @@ import {
   buildPublicUrl,
   createLocalMediaStorage,
   generateVariants,
+  isImageMedia,
+  isMediaItem,
   isProcessableImage,
   prepareUploadKey,
   readImageSize,
@@ -56,6 +58,19 @@ function memoryStorage(): MediaStorage & { files: Map<string, Buffer> } {
     },
   }
 }
+
+describe('media value guards', () => {
+  it('detects media items and image MIME types', () => {
+    expect(isMediaItem({ url: '/uploads/a.jpg' })).toBe(true)
+    expect(isMediaItem({ url: 1 })).toBe(false)
+    expect(isMediaItem(['/uploads/a.jpg'])).toBe(false)
+    expect(isMediaItem(null)).toBe(false)
+    expect(isImageMedia({ mime_type: 'image/png' })).toBe(true)
+    expect(isImageMedia({ mime_type: 'application/pdf' })).toBe(false)
+    expect(isImageMedia({ mime_type: '' })).toBe(false)
+    expect(isImageMedia(null)).toBe(false)
+  })
+})
 
 describe('sanitizeFilename / uniqueFilename', () => {
   it('transliterates Cyrillic and strips directories', () => {

@@ -48,6 +48,23 @@ export interface MediaItem {
   created_at: string
 }
 
+/** Single image/file field value (`returnFormat` array / url / id). */
+export type MediaFieldValue = MediaItem | string | number
+
+/** Gallery field value (`returnFormat` array / url / id). */
+export type GalleryFieldValue = MediaItem[] | string[] | number[]
+
+export function isMediaItem(value: unknown): value is MediaItem {
+  return typeof value === 'object'
+    && value !== null
+    && !Array.isArray(value)
+    && typeof (value as { url?: unknown }).url === 'string'
+}
+
+export function isImageMedia(item?: Pick<MediaItem, 'mime_type'> | null): boolean {
+  return item?.mime_type?.startsWith('image/') ?? false
+}
+
 export interface ImageDimensions {
   width: number
   height: number

@@ -4,17 +4,16 @@ import { computed, onBeforeUnmount, onMounted, ref, toRaw, watch } from 'vue'
 import {
   createFieldDefault,
   ensureGroupDefaults,
+  FLEXIBLE_CONTENT_LAYOUT_KEY as LAYOUT_KEY,
   isLayoutOnlyFieldType,
   isVisible,
+  ROW_COLLAPSED_KEY,
 } from '@miraicms/core'
 import type { Field } from '@miraicms/core'
 import { resolveField } from '../../utils/helpers'
 
 type FlexibleContentFieldConfig = Extract<Field, { type: 'flexible_content' }>
 type FlexibleLayoutConfig = FlexibleContentFieldConfig['layouts'][string]
-
-const LAYOUT_KEY = 'fc_layout'
-const ROW_COLLAPSED_KEY = '__miraicmsCollapsed'
 
 const props = withDefaults(defineProps<{
   fieldKey: string

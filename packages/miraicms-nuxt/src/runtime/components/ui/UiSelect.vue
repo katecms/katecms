@@ -10,10 +10,14 @@ import {
 } from 'vue'
 import type {
   SelectChoice,
-  SelectChoiceGroup,
   SelectChoiceItem,
   SelectChoiceValue,
   SelectModelValue,
+} from '@miraicms/core'
+import {
+  isSelectChoiceGroup as isGroup,
+  selectChoiceValue as getValue,
+  walkSelectChoices as walkLeafOptions,
 } from '@miraicms/core'
 
 interface SelectChip {
@@ -95,30 +99,6 @@ const isIos = ref(false)
 
 function valuesEqual(a: unknown, b: unknown): boolean {
   return String(a ?? '') === String(b ?? '')
-}
-
-function isGroup(opt: SelectChoice): opt is SelectChoiceGroup {
-  return 'type' in opt && opt.type === 'group'
-}
-
-function getValue(opt: SelectChoiceItem): SelectChoiceValue {
-  return opt.val ?? opt.lbl
-}
-
-function walkLeafOptions(
-  options: SelectChoice[],
-  visit: (opt: SelectChoiceItem) => void,
-): void {
-  for (const opt of options) {
-    if (isGroup(opt)) {
-      for (const child of opt.childs ?? []) {
-        visit(child)
-      }
-    }
-    else {
-      visit(opt)
-    }
-  }
 }
 
 function flattenOptions(options: SelectChoice[]): SelectChoiceItem[] {

@@ -5,14 +5,12 @@ import {
   createFieldDefault,
   isLayoutOnlyFieldType,
   isVisible,
+  ROW_COLLAPSED_KEY,
 } from '@miraicms/core'
 import type { Field } from '@miraicms/core'
 import { resolveField } from '../../utils/helpers'
 
 type RepeaterFieldConfig = Extract<Field, { type: 'repeater' }>
-
-/** Reserved row key for collapsed state. Not a user-facing subfield. */
-const ROW_COLLAPSED_KEY = '__miraicmsCollapsed'
 
 const props = withDefaults(defineProps<{
   fieldKey: string

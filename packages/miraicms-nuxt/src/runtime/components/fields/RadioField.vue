@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import {
+  choiceMapLookup,
+  decodeChoiceValue,
+  encodeChoiceValue,
+} from '@miraicms/core'
 import type { Field } from '@miraicms/core'
 
 type RadioFieldConfig = Extract<Field, { type: 'radio' }>
@@ -14,31 +19,14 @@ const props = withDefaults(defineProps<{
 const model = defineModel<unknown>()
 
 const rootClass = 'miraicms-radio-field'
+const lookup = computed(() => choiceMapLookup(props.field?.choices ?? {}))
 
 function format(raw: string): unknown {
-  const label = props.field?.choices?.[raw] ?? raw
-  if (props.field?.returnFormat === 'label') {
-    return label
-  }
-  if (props.field?.returnFormat === 'array') {
-    return { value: raw, label }
-  }
-  return raw
+  return encodeChoiceValue(raw, lookup.value, props.field?.returnFormat)
 }
 
 function unformat(value: unknown): string {
-  if (value == null || value === '') {
-    return ''
-  }
-  if (props.field?.returnFormat === 'array' && typeof value === 'object') {
-    return String((value as { value?: unknown }).value ?? '')
-  }
-  if (props.field?.returnFormat === 'label') {
-    const choices = props.field?.choices ?? {}
-    const byLabel = Object.keys(choices).find(key => choices[key] === value)
-    return byLabel ?? String(value)
-  }
-  return String(value)
+  return decodeChoiceValue(value, lookup.value, props.field?.returnFormat)
 }
 
 const selected = computed<string>({

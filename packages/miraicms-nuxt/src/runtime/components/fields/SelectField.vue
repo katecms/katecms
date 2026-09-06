@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import type { Field } from '@miraicms/core'
+import {
+  decodeChoiceValue,
+  encodeChoiceValue,
+  selectChoiceLookup,
+  walkSelectChoices,
+} from '@miraicms/core'
+import type { Field, SelectChoiceValue } from '@miraicms/core'
 
 type SelectFieldConfig = Extract<Field, { type: 'select' }>
-type SelectChoice = SelectFieldConfig['choices'][number]
-type SelectChoiceItem = Exclude<SelectChoice, { type: 'group' }>
-type SelectChoiceValue = string | number
 
 const props = withDefaults(defineProps<{
   fieldKey: string
@@ -15,67 +18,14 @@ const props = withDefaults(defineProps<{
 })
 
 const model = defineModel<unknown>()
-
-function isGroup(opt: SelectChoice): opt is Extract<SelectChoice, { type: 'group' }> {
-  return 'type' in opt && opt.type === 'group'
-}
-
-function getValue(opt: SelectChoiceItem): SelectChoiceValue {
-  return opt.val ?? opt.lbl
-}
-
-function walkChoices(
-  choices: SelectChoice[],
-  visit: (opt: SelectChoiceItem) => void,
-): void {
-  for (const opt of choices) {
-    if (isGroup(opt)) {
-      for (const child of opt.childs ?? []) visit(child)
-    }
-    else {
-      visit(opt)
-    }
-  }
-}
-
-function findChoice(raw: string): SelectChoiceItem | undefined {
-  let found: SelectChoiceItem | undefined
-  walkChoices(props.field?.choices ?? [], (opt) => {
-    if (!found && String(getValue(opt)) === raw) found = opt
-  })
-  return found
-}
-
-function findLabel(raw: string): string {
-  return findChoice(raw)?.lbl ?? raw
-}
+const lookup = computed(() => selectChoiceLookup(props.field?.choices ?? []))
 
 function format(raw: string): unknown {
-  const label = findLabel(raw)
-  if (props.field?.returnFormat === 'label') {
-    return label
-  }
-  if (props.field?.returnFormat === 'array') {
-    return { value: raw, label }
-  }
-  return raw
+  return encodeChoiceValue(raw, lookup.value, props.field?.returnFormat)
 }
 
 function unformat(value: unknown): string {
-  if (value == null || value === '') {
-    return ''
-  }
-  if (props.field?.returnFormat === 'array' && typeof value === 'object') {
-    return String((value as { value?: unknown }).value ?? '')
-  }
-  if (props.field?.returnFormat === 'label') {
-    let found = ''
-    walkChoices(props.field?.choices ?? [], (opt) => {
-      if (!found && opt.lbl === value) found = String(getValue(opt))
-    })
-    return found || String(value)
-  }
-  return String(value)
+  return decodeChoiceValue(value, lookup.value, props.field?.returnFormat)
 }
 
 const selected = computed<SelectChoiceValue | SelectChoiceValue[] | ''>({
@@ -105,7 +55,7 @@ const placeholder = computed(() => {
 
 const showOptionImages = computed(() => {
   let hasImg = false
-  walkChoices(selectChoices.value, (opt) => {
+  walkSelectChoices(selectChoices.value, (opt) => {
     if (opt.img) hasImg = true
   })
   return hasImg

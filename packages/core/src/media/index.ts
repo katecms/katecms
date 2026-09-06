@@ -1,10 +1,13 @@
 export type {
+  GalleryFieldValue,
   ImageDimensions,
+  MediaFieldValue,
   MediaItem,
   MediaVariant,
   MediaVariantsStatus,
   StoredMediaVariant,
 } from './types'
+export { isImageMedia, isMediaItem } from './types'
 export {
   prepareUploadKey,
   readImageSize,

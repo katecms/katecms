@@ -1,12 +1,26 @@
 import type { ConditionalLogic } from './conditional-logic'
 
 /** Choice map: { value: label } */
-type Choices = Record<string, string>
+export type ChoiceMap = Record<string, string>
 
-type ImageChoices = Record<string, {
+export interface ImageChoice {
   label: string
   image: string
-}>
+}
+
+export type ImageChoiceMap = Record<string, ImageChoice>
+
+/** How choice fields serialize the selected key. */
+export type ChoiceReturnFormat = 'value' | 'label' | 'array'
+
+/** `returnFormat: 'array'` payload for choice fields. */
+export interface ChoiceArrayValue {
+  value: string
+  label: string
+}
+
+/** Stored choice (single item). Arrays of this are used by checkbox / multi-select. */
+export type ChoiceStoredValue = string | ChoiceArrayValue
 
 /** Select choice value */
 export type SelectChoiceValue = string | number
@@ -187,7 +201,7 @@ export interface SelectField extends BaseField {
   allowNull?: boolean
   multiple?: boolean
   placeholder?: string
-  returnFormat?: 'value' | 'label' | 'array'
+  returnFormat?: ChoiceReturnFormat
   allowCustomChoices?: boolean
   customChoiceButtonText?: string
   min?: number
@@ -200,44 +214,44 @@ export interface SelectField extends BaseField {
 
 interface CheckboxField extends BaseField {
   type: 'checkbox'
-  choices: Choices
+  choices: ChoiceMap
   defaultValue?: string | string[]
   layout?: 'vertical' | 'horizontal'
   allowCustomChoices?: boolean
   toggle?: boolean
-  returnFormat?: 'value' | 'label' | 'array'
+  returnFormat?: ChoiceReturnFormat
   customChoiceButtonText?: string
 }
 
 interface RadioField extends BaseField {
   type: 'radio'
-  choices: Choices
+  choices: ChoiceMap
   defaultValue?: string
   layout?: 'vertical' | 'horizontal'
   allowCustomChoices?: boolean
   allowNull?: boolean
-  returnFormat?: 'value' | 'label' | 'array'
+  returnFormat?: ChoiceReturnFormat
   indexed?: boolean
 }
 
 interface ImageSelectField extends BaseField {
   type: 'image_select'
-  choices: ImageChoices
+  choices: ImageChoiceMap
   defaultValue?: string | string[]
   layout?: 'vertical' | 'horizontal'
   multiple?: boolean
   allowNull?: boolean
-  returnFormat?: 'value' | 'label' | 'array'
+  returnFormat?: ChoiceReturnFormat
   width?: number
   height?: number
 }
 
 interface ButtonGroupField extends BaseField {
   type: 'button_group'
-  choices: Choices
+  choices: ChoiceMap
   defaultValue?: string
   allowNull?: boolean
-  returnFormat?: 'value' | 'label' | 'array'
+  returnFormat?: ChoiceReturnFormat
   layout?: 'horizontal' | 'vertical'
   indexed?: boolean
 }
@@ -255,6 +269,16 @@ interface TrueFalseField extends BaseField {
 /* ============================================================
  * Relationships
  * ============================================================ */
+
+/** Stored object for `link` when `returnFormat` is `'array'` (default). */
+export interface LinkValue {
+  url: string
+  title: string
+  target: string
+}
+
+/** Form value of a `link` field. */
+export type LinkFieldValue = LinkValue | string | null
 
 interface LinkField extends BaseField {
   type: 'link'
@@ -383,6 +407,19 @@ interface TimePickerField extends BaseField {
   returnFormat?: string
   indexed?: boolean
 }
+
+/** Stored object for `color_picker` when `returnFormat` is `'array'`. */
+export interface ColorArrayValue {
+  hex: string
+  rgba: string
+  r: number
+  g: number
+  b: number
+  a: number
+}
+
+/** Form value of a `color_picker` field. */
+export type ColorPickerValue = string | ColorArrayValue
 
 interface ColorPickerField extends BaseField {
   type: 'color_picker'

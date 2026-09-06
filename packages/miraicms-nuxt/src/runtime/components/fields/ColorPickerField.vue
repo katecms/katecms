@@ -1,19 +1,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { PropType } from 'vue'
-import type { Field } from '@miraicms/core'
+import type { Field, ColorArrayValue } from '@miraicms/core'
+import { isColorArrayValue } from '@miraicms/core'
 
 type ColorPickerFieldConfig = Extract<Field, { type: 'color_picker' }>
 type ColorFormat = 'hex' | 'rgba' | 'hsla'
-
-type ColorArrayValue = {
-  hex: string
-  rgba: string
-  r: number
-  g: number
-  b: number
-  a: number
-}
 
 type Hsva = { h: number, s: number, v: number, a: number }
 
@@ -219,10 +211,10 @@ function parseColor(value: unknown): Hsva | null {
   if (!value) return null
 
   if (typeof value === 'object') {
-    const obj = value as Partial<ColorArrayValue>
-    if (typeof obj.r === 'number' && typeof obj.g === 'number' && typeof obj.b === 'number') {
-      return rgbToHsva(obj.r, obj.g, obj.b, typeof obj.a === 'number' ? obj.a : 1)
+    if (isColorArrayValue(value)) {
+      return rgbToHsva(value.r, value.g, value.b, typeof value.a === 'number' ? value.a : 1)
     }
+    const obj = value as { hex?: string, rgba?: string }
     if (typeof obj.hex === 'string') return parseColor(obj.hex)
     if (typeof obj.rgba === 'string') return parseColor(obj.rgba)
     return null

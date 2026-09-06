@@ -1,14 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import type { Field } from '@miraicms/core'
+import { isLinkValue } from '@miraicms/core'
+import type { Field, LinkValue } from '@miraicms/core'
 
 type LinkFieldConfig = Extract<Field, { type: 'link' }>
-
-type LinkValue = {
-  url: string
-  title: string
-  target: string
-}
 
 const props = withDefaults(defineProps<{
   fieldKey: string
@@ -30,8 +25,10 @@ const current = computed<LinkValue | null>(() => {
   if (typeof value === 'string') {
     return value ? { url: value, title: '', target: '' } : null
   }
-  const obj = value as { url?: string, title?: string, target?: string }
-  return obj.url ? { url: obj.url, title: obj.title ?? '', target: obj.target ?? '' } : null
+  if (!isLinkValue(value) || !value.url) {
+    return null
+  }
+  return { url: value.url, title: value.title ?? '', target: value.target ?? '' }
 })
 
 const editing = ref(false)

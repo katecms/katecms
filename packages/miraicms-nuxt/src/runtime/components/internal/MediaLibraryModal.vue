@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { MediaItem } from '@miraicms/core'
+import { isImageMedia as isImage } from '@miraicms/core'
 
 const props = withDefaults(defineProps<{
   open?: boolean
@@ -67,10 +68,6 @@ const noLibraryHint = computed(() =>
 const pendingCount = computed(() => pendingIds.value.length)
 
 const confirmLabel = computed(() => `Add (${pendingCount.value})`)
-
-function isImage(item: MediaItem): boolean {
-  return item.mime_type?.startsWith('image/') ?? false
-}
 
 function thumbUrl(item: MediaItem) {
   const variant = item.variants?.find(v => v.size === 'thumbnail')

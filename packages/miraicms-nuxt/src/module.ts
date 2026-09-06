@@ -3,6 +3,7 @@ import {
   defineNuxtModule,
   createResolver,
   addServerPlugin,
+  addServerHandler,
   extendPages,
   addComponentsDir,
 } from '@nuxt/kit'
@@ -62,6 +63,12 @@ export default defineNuxtModule<MiraiCmsConfig>({
     }
 
     addServerPlugin(resolver.resolve('./runtime/server/plugins/auto-migrate'))
+
+    addServerHandler({
+      route: '/api/_miraicms/oembed',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/oembed.get'),
+    })
 
     addComponentsDir({
       path: resolver.resolve('./runtime/components'),

@@ -58,6 +58,17 @@ const fields: Fields = {
     defaultValue: 'https://example.com',
     columnWidth: 50,
   },
+  oembed_test: {
+    type: 'oembed',
+    label: 'Oembed',
+    instructions: 'Oembed instructions',
+    required: true,
+    defaultValue: 'https://youtu.be/AA4EADkgk4Q?si=iihiGODQHIS-tgR_',
+    position: 'main',
+    width: 560,
+    height: 315,
+    columnWidth: 50,
+  },
   password_test: {
     type: 'password',
     label: 'Password',

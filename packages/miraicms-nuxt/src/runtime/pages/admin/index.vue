@@ -69,6 +69,17 @@ const fields: Fields = {
     height: 315,
     columnWidth: 50,
   },
+  wysiwyg_test: {
+    type: 'wysiwyg',
+    label: 'Wysiwyg',
+    instructions: 'Wysiwyg instructions',
+    required: true,
+    position: 'main',
+    defaultValue: '<p>Wysiwyg <strong>default</strong> value</p>',
+    tabs: 'all',
+    toolbar: 'full',
+    columnWidth: 50,
+  },
   password_test: {
     type: 'password',
     label: 'Password',

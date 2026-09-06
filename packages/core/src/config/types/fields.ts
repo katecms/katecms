@@ -134,6 +134,7 @@ interface WysiwygField extends BaseField {
 
 interface OembedField extends BaseField {
   type: 'oembed'
+  defaultValue?: string
   width?: number
   height?: number
 }

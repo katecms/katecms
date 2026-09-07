@@ -1,5 +1,6 @@
 @use 'sass:math';
 @use 'functions' as *;
+@use 'variables' as *;
 
 @mixin placeholder($color: #555555, $opacity: 1) {
   &::-webkit-input-placeholder {
@@ -17,5 +18,156 @@
   &::placeholder {
     color: $color;
     opacity: $opacity;
+  }
+}
+
+@mixin miraicms-document {
+  body#miraicms-body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    font-family: system-ui, sans-serif;
+    font-size: math-rem(15);
+    font-weight: 400;
+    font-style: normal;
+    font-variant: normal;
+    font-stretch: normal;
+    line-height: 1.5;
+    letter-spacing: normal;
+    word-spacing: normal;
+    text-align: start;
+    text-indent: 0;
+    text-transform: none;
+    text-shadow: none;
+    text-rendering: optimizeLegibility;
+    color: $color-ink;
+    background-color: $color-surface;
+    background-image: none;
+    caret-color: $color-ink;
+    accent-color: $color-accent;
+    color-scheme: light;
+    tab-size: 4;
+    hyphens: none;
+    word-break: normal;
+    overflow-wrap: break-word;
+    direction: ltr;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-height: 100%;
+    overflow: hidden;
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: $color-muted transparent;
+      font-family: inherit;
+    }
+
+    img,
+    svg,
+    video,
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+  }
+
+  html:has(> body#miraicms-body) {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@mixin miraicms-auth {
+  .miraicms-auth {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: math-rem(24);
+    background: $color-bg;
+    color: $color-ink;
+
+    &__card {
+      width: 100%;
+      max-width: math-rem(400);
+      padding: math-rem(32);
+      background: $color-surface;
+      border: 1px solid $color-border;
+      border-radius: math-rem(10);
+      box-shadow: $shadow-md;
+    }
+
+    &__logo {
+      display: block;
+      width: math-rem(150);
+      height: auto;
+      margin: 0 auto math-rem(24);
+    }
+
+    &__title {
+      margin: 0 0 math-rem(8);
+      font-size: math-rem(22);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: $color-ink;
+    }
+
+    &__subtitle {
+      margin: 0 0 math-rem(24);
+      font-size: math-rem(14);
+      line-height: 1.5;
+      color: $color-muted;
+    }
+
+    &__form {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(14);
+    }
+
+    &__actions {
+      margin-top: math-rem(6);
+
+      :deep(.miraicms-btn) {
+        width: 100%;
+      }
+    }
+
+    &__error {
+      margin-top: math-rem(16);
+      padding: math-rem(12) math-rem(14);
+      border-radius: $border-radius;
+      background: $color-danger-bg;
+      color: $color-danger;
+      font-size: math-rem(14);
+      line-height: 1.5;
+    }
+
+    &__footer {
+      margin: math-rem(20) 0 0;
+      font-size: math-rem(13);
+      color: $color-muted;
+      text-align: center;
+
+      a {
+        color: $color-accent;
+        font-weight: 600;
+        text-decoration: none;
+
+        &:hover {
+          color: $color-accent-hover;
+          text-decoration: underline;
+        }
+      }
+    }
   }
 }

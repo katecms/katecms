@@ -19,8 +19,8 @@ useHead({
 const paths = useCmsPaths()
 const { remainingSec, locked, start: startCooldown } = useAuthCooldown()
 const emailField = { label: 'Email', required: true }
-const passwordField = { label: 'Пароль', required: true }
-const passwordConfirmField = { label: 'Повторите пароль', required: true }
+const passwordField = { type: 'password' as const, label: 'Пароль', required: true }
+const passwordConfirmField = { type: 'password' as const, label: 'Повторите пароль', required: true }
 const email = ref('')
 const password = ref('')
 const passwordConfirm = ref('')
@@ -67,7 +67,9 @@ async function submit() {
   catch (err) {
     const parsed = parseAuthError(err, 'Не удалось зарегистрироваться.')
     error.value = parsed.message
-    startCooldown(parsed.retryAfterMs)
+    startCooldown(parsed.retryAfterMs, () => {
+      error.value = null
+    })
   }
   finally {
     loading.value = false
@@ -112,32 +114,20 @@ async function submit() {
           />
         </MiraiCmsFieldWrapper>
 
-        <MiraiCmsFieldWrapper
+        <MiraiCmsPasswordField
+          v-model="password"
           field-key="cms-register-password"
           :field="passwordField"
-        >
-          <MiraiCmsInputControl
-            v-model="password"
-            type="password"
-            field-key="cms-register-password"
-            :field="passwordField"
-            autocomplete="new-password"
-            minlength="8"
-          />
-        </MiraiCmsFieldWrapper>
+          autocomplete="new-password"
+          minlength="8"
+        />
 
-        <MiraiCmsFieldWrapper
+        <MiraiCmsPasswordField
+          v-model="passwordConfirm"
           field-key="cms-register-password-confirm"
           :field="passwordConfirmField"
-        >
-          <MiraiCmsInputControl
-            v-model="passwordConfirm"
-            type="password"
-            field-key="cms-register-password-confirm"
-            :field="passwordConfirmField"
-            autocomplete="new-password"
-          />
-        </MiraiCmsFieldWrapper>
+          autocomplete="new-password"
+        />
 
         <div class="miraicms-auth__actions">
           <MiraiCmsUiButton
@@ -172,15 +162,13 @@ async function submit() {
 </template>
 
 <style lang="scss">
-@use "../assets/styles/auth" as auth;
+@use "../assets/styles" as *;
 
-@include auth.miraicms-auth-document;
+@include miraicms-document;
 </style>
 
 <style scoped lang="scss">
-@use "../assets/styles/auth" as auth;
+@use "../assets/styles" as *;
 
-.miraicms-auth {
-  @include auth.miraicms-auth;
-}
+@include miraicms-auth;
 </style>

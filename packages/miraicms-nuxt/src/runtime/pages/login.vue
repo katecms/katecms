@@ -15,7 +15,7 @@ useHead({
 const paths = useCmsPaths()
 const { remainingSec, locked, start: startCooldown } = useAuthCooldown()
 const emailField = { label: 'Email', required: true }
-const passwordField = { label: 'Пароль', required: true }
+const passwordField = { type: 'password' as const, label: 'Пароль', required: true }
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
@@ -59,7 +59,9 @@ async function submit() {
   catch (err) {
     const parsed = parseAuthError(err, 'Не удалось войти.')
     error.value = parsed.message
-    startCooldown(parsed.retryAfterMs)
+    startCooldown(parsed.retryAfterMs, () => {
+      error.value = null
+    })
   }
   finally {
     loading.value = false
@@ -99,18 +101,12 @@ async function submit() {
           />
         </MiraiCmsFieldWrapper>
 
-        <MiraiCmsFieldWrapper
+        <MiraiCmsPasswordField
+          v-model="password"
           field-key="cms-login-password"
           :field="passwordField"
-        >
-          <MiraiCmsInputControl
-            v-model="password"
-            type="password"
-            field-key="cms-login-password"
-            :field="passwordField"
-            autocomplete="current-password"
-          />
-        </MiraiCmsFieldWrapper>
+          autocomplete="current-password"
+        />
 
         <div class="miraicms-auth__actions">
           <MiraiCmsUiButton
@@ -142,15 +138,13 @@ async function submit() {
 </template>
 
 <style lang="scss">
-@use "../assets/styles/auth" as auth;
+@use "../assets/styles" as *;
 
-@include auth.miraicms-auth-document;
+@include miraicms-document;
 </style>
 
 <style scoped lang="scss">
-@use "../assets/styles/auth" as auth;
+@use "../assets/styles" as *;
 
-.miraicms-auth {
-  @include auth.miraicms-auth;
-}
+@include miraicms-auth;
 </style>

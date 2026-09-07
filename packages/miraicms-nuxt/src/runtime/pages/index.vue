@@ -19,7 +19,6 @@ const { user, logout, loggingOut } = useAuth()
       <button
         v-if="user"
         type="button"
-        :class="[`${rootClass}-header-logout`]"
         :disabled="loggingOut"
         @click="logout"
       >
@@ -44,68 +43,7 @@ const { user, logout, loggingOut } = useAuth()
 <style lang="scss">
 @use "../assets/styles" as *;
 
-body#miraicms-body {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
-  font-family: system-ui, sans-serif;
-  font-size: math-rem(15);
-  font-weight: 400;
-  font-style: normal;
-  font-variant: normal;
-  font-stretch: normal;
-  line-height: 1.5;
-  letter-spacing: normal;
-  word-spacing: normal;
-  text-align: start;
-  text-indent: 0;
-  text-transform: none;
-  text-shadow: none;
-  text-rendering: optimizeLegibility;
-  color: $color-ink;
-  background-color: $color-surface;
-  background-image: none;
-  caret-color: $color-ink;
-  accent-color: $color-accent;
-  color-scheme: light;
-  tab-size: 4;
-  hyphens: none;
-  word-break: normal;
-  overflow-wrap: break-word;
-  direction: ltr;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  min-height: 100%;
-  overflow: hidden;
-
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: $color-muted transparent;
-    font-family: inherit;
-  }
-
-  img,
-  svg,
-  video,
-  canvas {
-    max-width: 100%;
-    height: auto;
-  }
-}
-
-html:has(> body#miraicms-body) {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
+@include miraicms-document;
 </style>
 
 <style scoped lang="scss">
@@ -133,22 +71,6 @@ $root: '.miraicms';
     border-bottom: 1px solid $color-border;
     box-shadow: $shadow-sm;
     min-height: $topbar-h;
-
-    &-logout {
-      padding: math-rem(6) math-rem(12);
-      border: 1px solid $color-border;
-      border-radius: math-rem(6);
-      background: $color-bg;
-      color: $color-ink;
-      font: inherit;
-      font-size: math-rem(13);
-      cursor: pointer;
-
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-    }
   }
 
   &-sidebar {

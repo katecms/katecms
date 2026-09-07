@@ -125,6 +125,11 @@ export default defineNuxtModule<MiraiCmsConfig>({
       method: 'post',
       handler: resolver.resolve('./runtime/server/api/_miraicms/auth/logout.post'),
     })
+    addServerHandler({
+      route: '/api/_miraicms/users',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/users.get'),
+    })
 
     addRouteMiddleware({
       name: 'miraicms-auth-guard',

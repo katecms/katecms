@@ -13,9 +13,12 @@ import {
   FLEXIBLE_CONTENT_LAYOUT_KEY,
   formatDate,
   isLayoutOnlyFieldType,
+  encodeUserFieldValue,
+  filterUsersByRole,
   isOsmMarker,
   isSelectChoiceGroup,
   isOperatorAllowed,
+  isUserFieldValue,
   isVisible,
   MAX_MATCHES_PATTERN_LENGTH,
   osmAddressFromNominatim,
@@ -23,6 +26,8 @@ import {
   ROW_COLLAPSED_KEY,
   selectChoiceLookup,
   selectChoiceValue,
+  toUserFieldValue,
+  userFieldId,
   walkSelectChoices,
 } from '../src'
 
@@ -176,6 +181,57 @@ describe('open street map helpers', () => {
     expect(isOsmMarker({ lat: '1', lng: 2 })).toBe(false)
     expect(osmAddressFromNominatim({ city: 'Hamburg', road: 1 as never }).city).toBe('Hamburg')
     expect(osmAddressFromNominatim({ city: 'Hamburg', road: 1 as never }).road).toBe('')
+  })
+})
+
+describe('user field helpers', () => {
+  const ada = toUserFieldValue({
+    id: 1,
+    email: 'ada@example.com',
+    name: 'Ada',
+    avatar: null,
+    role: 'owner',
+    status: 'active',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+  })
+
+  it('strips extra keys and serializes created_at', () => {
+    expect(ada).toEqual({
+      id: 1,
+      email: 'ada@example.com',
+      name: 'Ada',
+      avatar: null,
+      role: 'owner',
+      status: 'active',
+      created_at: '2024-01-01T00:00:00.000Z',
+    })
+    expect(ada).not.toHaveProperty('password_hash')
+    expect(toUserFieldValue({
+      ...ada,
+      password_hash: 'secret',
+    } as typeof ada & { password_hash: string })).not.toHaveProperty('password_hash')
+    expect(isUserFieldValue(ada)).toBe(true)
+    expect(isUserFieldValue({ id: 1, email: 'a@b.c' })).toBe(false)
+  })
+
+  it('reads ids from stored values and encodes returnFormat', () => {
+    expect(userFieldId(ada)).toBe('1')
+    expect(userFieldId(7)).toBe('7')
+    expect(userFieldId(null)).toBe('')
+    expect(encodeUserFieldValue(ada, 'id')).toBe(1)
+    expect(encodeUserFieldValue(ada, 'array')).toEqual(ada)
+  })
+
+  it('filters by role', () => {
+    const editor = toUserFieldValue({
+      ...ada,
+      id: 2,
+      email: 'ed@example.com',
+      role: 'editor',
+    })
+    expect(filterUsersByRole([ada, editor], 'all')).toEqual([ada, editor])
+    expect(filterUsersByRole([ada, editor], 'editor')).toEqual([editor])
+    expect(filterUsersByRole([ada, editor], ['owner', 'editor'])).toEqual([ada, editor])
   })
 })
 

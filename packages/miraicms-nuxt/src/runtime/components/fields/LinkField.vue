@@ -107,7 +107,7 @@ onBeforeUnmount(() => {
           </span>
           <MiraiCmsUiButton
             tag="button"
-            :variant="['tertiary', 'small', 'icon']"
+            :variant="['secondary', 'small', 'icon']"
             aria-label="Change"
             title="Change"
             @click="openEditor"

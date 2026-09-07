@@ -12,6 +12,7 @@ const fieldComponents: Record<string, Component> = Object.fromEntries(
   }),
 )
 
+/** Maps field `type` to `TypeField` from the glob above. */
 function toPascalCase(str: string): string {
   return str
     .split(/[_\-\s]+/)

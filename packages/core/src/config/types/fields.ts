@@ -1,3 +1,4 @@
+import type { MediaItem } from '../../media'
 import type { ConditionalLogic } from './conditional-logic'
 
 /** Choice map: { value: label } */
@@ -336,6 +337,20 @@ interface UserField extends BaseField {
   multiple?: boolean
   allowNull?: boolean
   returnFormat?: 'array' | 'id'
+}
+
+/**
+ * Stored `user` field object when `returnFormat` is `array`.
+ * Never includes a password hash.
+ */
+export interface UserFieldValue {
+  id: number
+  email: string
+  name: string | null
+  avatar: MediaItem | null
+  role: string
+  status: 'active' | 'banned'
+  created_at: string
 }
 
 /* ============================================================

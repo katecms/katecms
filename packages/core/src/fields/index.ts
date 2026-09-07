@@ -27,6 +27,14 @@ export {
   isLinkValue,
 } from './values'
 export {
+  encodeUserFieldValue,
+  filterUsersByRole,
+  isUserFieldValue,
+  toUserFieldValue,
+  userFieldId,
+} from './user'
+export type { UserFieldSource } from './user'
+export {
   collectPanelDefaults,
   collectPanelKeys,
   collectVisibleValueKeys,

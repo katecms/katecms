@@ -511,279 +511,279 @@ onMounted(async () => {
 
 $root: '.miraicms-media';
 
-#{$root} {
-  display: flex;
-  flex-direction: column;
-  gap: math-rem(16);
-
-  &__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: math-rem(16);
-  }
-
-  &__title {
-    margin: 0;
-    font-size: math-rem(20);
-    font-weight: 600;
-    color: $color-ink;
-  }
-
-  &__actions {
-    display: flex;
-    gap: math-rem(8);
-  }
-
-  &__file {
-    display: none;
-  }
-
-  &__error {
-    padding: math-rem(12) math-rem(14);
-    border: 1px solid $color-danger;
-    border-radius: $border-radius;
-    background: $color-danger-bg;
-    color: $color-danger;
-    font-size: math-rem(14);
-  }
-
-  &__empty {
-    margin: 0;
-    color: $color-muted;
-    font-size: math-rem(14);
-  }
-
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(math-rem(160), 1fr));
-    gap: math-rem(16);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  &__card {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background: $color-surface;
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    box-shadow: $shadow-sm;
-
-    :deep(.miraicms-btn) {
-      width: calc(100% - #{math-rem(16)});
-      margin: 0 math-rem(8) math-rem(8);
-    }
-  }
-
-  &__thumb {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    aspect-ratio: 4 / 3;
-    padding: 0;
-    overflow: hidden;
-    border: none;
-    background: $color-bg;
-    cursor: pointer;
-
-    picture {
-      width: 100%;
-      height: 100%;
-    }
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  }
-
-  &__processing {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: math-rem(6);
-    background: rgba($color-ink, 0.55);
-    color: $color-surface;
-    font-size: math-rem(12);
-    font-weight: 600;
-  }
-
-  &__spinner {
-    width: math-rem(14);
-    height: math-rem(14);
-    border: 2px solid rgba($color-surface, 0.4);
-    border-top-color: $color-surface;
-    border-radius: 50%;
-    animation: miraicms-media-spin 0.7s linear infinite;
-  }
-
-  @keyframes miraicms-media-spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  &__ext {
-    padding: 0 math-rem(8);
-    color: $color-muted;
-    font-size: math-rem(12);
-    text-align: center;
-    word-break: break-all;
-  }
-
-  &__meta {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(2);
-    min-width: 0;
-    padding: math-rem(8) math-rem(10);
-  }
-
-  &__name {
-    overflow: hidden;
-    color: $color-ink;
-    font-size: math-rem(13);
-    font-weight: 600;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  &__sub {
-    color: $color-muted;
-    font-size: math-rem(12);
-  }
-
-  &__overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: math-rem(24);
-    background: rgba($color-ink, 0.45);
-  }
-
-  &__modal {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: math-rem(896);
-    max-height: 90vh;
-    overflow: hidden;
-    background: $color-surface;
-    border-radius: $border-radius;
-    box-shadow: $shadow-md;
-  }
-
-  &__modal-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: math-rem(14) math-rem(16);
-    border-bottom: 1px solid $color-border;
-  }
-
-  &__modal-title {
-    margin: 0;
-    font-size: math-rem(16);
-    font-weight: 600;
-    color: $color-ink;
-  }
-
-  &__modal-body {
-    display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    gap: math-rem(20);
-    padding: math-rem(16);
-    overflow: auto;
-  }
-
-  &__preview {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: math-rem(224);
-    overflow: hidden;
-    background: $color-bg;
-    border-radius: $border-radius;
-
-    img {
-      max-width: 100%;
-      max-height: 60vh;
-      object-fit: contain;
-    }
-  }
-
-  &__side {
+@include miraicms-wrapper {
+  #{$root} {
     display: flex;
     flex-direction: column;
     gap: math-rem(16);
-    min-width: 0;
-  }
 
-  &__details {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(6);
-    margin: 0;
-    font-size: math-rem(13);
-  }
-
-  &__variants {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(4);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-size: math-rem(12);
-  }
-
-  &__row {
-    display: grid;
-    grid-template-columns: math-rem(112) minmax(0, 1fr);
-    gap: math-rem(8);
-
-    dt {
-      color: $color-muted;
+    &__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: math-rem(16);
     }
 
-    dd {
+    &__title {
       margin: 0;
+      font-size: math-rem(20);
+      font-weight: 600;
       color: $color-ink;
-      word-break: break-word;
     }
 
-    a {
-      color: $color-accent;
-      text-decoration: none;
+    &__actions {
+      display: flex;
+      gap: math-rem(8);
+    }
 
-      &:hover {
-        text-decoration: underline;
+    &__file {
+      display: none;
+    }
+
+    &__error {
+      padding: math-rem(12) math-rem(14);
+      border: 1px solid $color-danger;
+      border-radius: $border-radius;
+      background: $color-danger-bg;
+      color: $color-danger;
+      font-size: math-rem(14);
+    }
+
+    &__empty {
+      margin: 0;
+      color: $color-muted;
+      font-size: math-rem(14);
+    }
+
+    &__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(math-rem(160), 1fr));
+      gap: math-rem(16);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    &__card {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: $color-surface;
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
+      box-shadow: $shadow-sm;
+
+      :deep(.miraicms-btn) {
+        width: calc(100% - #{math-rem(16)});
+        margin: 0 math-rem(8) math-rem(8);
       }
     }
-  }
 
-  &__form {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(12);
-    padding-top: math-rem(16);
-    border-top: 1px solid $color-border;
-  }
-}
+    &__thumb {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 4 / 3;
+      padding: 0;
+      overflow: hidden;
+      border: none;
+      background: $color-bg;
+      cursor: pointer;
 
-@media (max-width: 800px) {
-  #{$root}__modal-body {
-    grid-template-columns: 1fr;
+      picture {
+        width: 100%;
+        height: 100%;
+      }
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    &__processing {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: math-rem(6);
+      background: rgba($color-ink, 0.55);
+      color: $color-surface;
+      font-size: math-rem(12);
+      font-weight: 600;
+    }
+
+    &__spinner {
+      width: math-rem(14);
+      height: math-rem(14);
+      border: 2px solid rgba($color-surface, 0.4);
+      border-top-color: $color-surface;
+      border-radius: 50%;
+      animation: miraicms-media-spin 0.7s linear infinite;
+    }
+
+    @keyframes miraicms-media-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    &__ext {
+      padding: 0 math-rem(8);
+      color: $color-muted;
+      font-size: math-rem(12);
+      text-align: center;
+      word-break: break-all;
+    }
+
+    &__meta {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(2);
+      min-width: 0;
+      padding: math-rem(8) math-rem(10);
+    }
+
+    &__name {
+      overflow: hidden;
+      color: $color-ink;
+      font-size: math-rem(13);
+      font-weight: 600;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    &__sub {
+      color: $color-muted;
+      font-size: math-rem(12);
+    }
+
+    &__overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: math-rem(24);
+      background: rgba($color-ink, 0.45);
+    }
+
+    &__modal {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: math-rem(896);
+      max-height: 90vh;
+      overflow: hidden;
+      background: $color-surface;
+      border-radius: $border-radius;
+      box-shadow: $shadow-md;
+    }
+
+    &__modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: math-rem(14) math-rem(16);
+      border-bottom: 1px solid $color-border;
+    }
+
+    &__modal-title {
+      margin: 0;
+      font-size: math-rem(16);
+      font-weight: 600;
+      color: $color-ink;
+    }
+
+    &__modal-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: math-rem(20);
+      padding: math-rem(16);
+      overflow: auto;
+
+      @media (max-width: 800px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    &__preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: math-rem(224);
+      overflow: hidden;
+      background: $color-bg;
+      border-radius: $border-radius;
+
+      img {
+        max-width: 100%;
+        max-height: 60vh;
+        object-fit: contain;
+      }
+    }
+
+    &__side {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(16);
+      min-width: 0;
+    }
+
+    &__details {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(6);
+      margin: 0;
+      font-size: math-rem(13);
+    }
+
+    &__variants {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(4);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      font-size: math-rem(12);
+    }
+
+    &__row {
+      display: grid;
+      grid-template-columns: math-rem(112) minmax(0, 1fr);
+      gap: math-rem(8);
+
+      dt {
+        color: $color-muted;
+      }
+
+      dd {
+        margin: 0;
+        color: $color-ink;
+        word-break: break-word;
+      }
+
+      a {
+        color: $color-accent;
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+
+    &__form {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(12);
+      padding-top: math-rem(16);
+      border-top: 1px solid $color-border;
+    }
   }
 }
 </style>

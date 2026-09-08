@@ -15,7 +15,7 @@ export default defineNuxtConfig({
         'video/mp4',
       ],
       // avif: true, // или { quality: 100 } // default 80
-      // webp: { quality: 90 }, // или true // default 80
+      webp: { quality: 90 }, // или true // default 80
       imageSizes: [
         {
           name: 'medium',

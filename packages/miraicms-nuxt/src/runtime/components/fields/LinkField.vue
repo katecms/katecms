@@ -17,6 +17,21 @@ const model = defineModel<unknown>()
 const rootClass = 'miraicms-link-field'
 const isUrlOnly = computed(() => props.field?.returnFormat === 'url')
 
+const urlField = {
+  type: 'url' as const,
+  label: 'URL',
+  placeholder: 'https://example.com',
+}
+const titleField = {
+  type: 'text' as const,
+  label: 'Link text',
+}
+const targetField = {
+  type: 'true_false' as const,
+  message: 'Open in a new tab',
+  ui: true,
+}
+
 const current = computed<LinkValue | null>(() => {
   const value = model.value
   if (!value) {
@@ -188,38 +203,25 @@ onBeforeUnmount(() => {
             </div>
 
             <div :class="`${rootClass}__modal-body`">
-              <label :class="`${rootClass}__row`">
-                <span :class="`${rootClass}__row-label`">URL</span>
-                <input
-                  v-model="url"
-                  type="url"
-                  :class="`${rootClass}__input`"
-                  placeholder="https://example.com"
-                >
-              </label>
+              <MiraiCmsUrlField
+                v-model="url"
+                :field-key="`${fieldKey}-url`"
+                :field="urlField"
+              />
 
-              <label
+              <MiraiCmsTextField
                 v-if="!isUrlOnly"
-                :class="`${rootClass}__row`"
-              >
-                <span :class="`${rootClass}__row-label`">Link text</span>
-                <input
-                  v-model="title"
-                  type="text"
-                  :class="`${rootClass}__input`"
-                >
-              </label>
+                v-model="title"
+                :field-key="`${fieldKey}-title`"
+                :field="titleField"
+              />
 
-              <label
+              <MiraiCmsTrueFalseField
                 v-if="!isUrlOnly"
-                :class="`${rootClass}__checkbox`"
-              >
-                <input
-                  v-model="newTab"
-                  type="checkbox"
-                >
-                <span>Open in a new tab</span>
-              </label>
+                v-model="newTab"
+                :field-key="`${fieldKey}-target`"
+                :field="targetField"
+              />
             </div>
 
             <div :class="`${rootClass}__modal-footer`">
@@ -302,51 +304,6 @@ $root: '.miraicms-link-field';
     gap: math-rem(8);
     padding: math-rem(14) math-rem(18);
     border-top: 1px solid $color-border;
-  }
-
-  &__row {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(4);
-  }
-
-  &__row-label {
-    font-size: math-rem(13);
-    color: $color-muted;
-  }
-
-  &__input {
-    height: math-rem(38);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    padding: 0 math-rem(10);
-    color: $color-ink;
-    background-color: $color-surface;
-    font: inherit;
-    font-size: math-rem(14);
-
-    @include placeholder($color-muted);
-
-    &:focus {
-      outline: none;
-    }
-
-    &:focus-visible {
-      border-color: $color-accent;
-      box-shadow: 0 0 0 2px rgba($color-accent, 0.35);
-    }
-  }
-
-  &__checkbox {
-    display: inline-flex;
-    align-items: center;
-    gap: math-rem(6);
-    color: $color-ink;
-    cursor: pointer;
-
-    input {
-      accent-color: $color-accent;
-    }
   }
 
   &__chip {

@@ -171,3 +171,9 @@
     }
   }
 }
+
+@mixin miraicms-wrapper {
+  body#miraicms-body {
+    @content;
+  }
+}

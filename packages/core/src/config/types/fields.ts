@@ -51,7 +51,7 @@ export type SelectModelValue = SelectChoiceValue | SelectChoiceValue[] | '' | nu
 
 /** Base properties shared by all fields. `label` is required. */
 interface BaseField {
-  label: string
+  label?: string
   instructions?: string
   required?: boolean
   conditionalLogic?: ConditionalLogic

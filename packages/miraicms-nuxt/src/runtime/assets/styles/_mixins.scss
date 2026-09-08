@@ -87,7 +87,7 @@
 }
 
 @mixin miraicms-auth {
-  .miraicms-auth {
+  body#miraicms-body .miraicms-auth {
     display: flex;
     align-items: center;
     justify-content: center;

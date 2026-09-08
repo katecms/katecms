@@ -946,86 +946,88 @@ const sidebarFields = computed(() =>
 
 $root: '.miraicms-admin-demo';
 
-#{$root} {
-  display: flex;
-  flex-direction: column;
-  gap: math-rem(16);
-
-  &__buttons {
+@include miraicms-wrapper {
+  #{$root} {
     display: flex;
     flex-direction: column;
-    gap: math-rem(12);
-    padding: math-rem(16);
-    background-color: $color-surface;
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-  }
-
-  &__buttons-title {
-    margin: 0;
-    font-size: math-rem(16);
-    font-weight: 600;
-    color: $color-ink;
-  }
-
-  &__buttons-grid {
-    display: grid;
-    grid-template-columns: math-rem(140) auto auto;
-    align-items: center;
-    justify-content: start;
-    column-gap: math-rem(12);
-    row-gap: math-rem(10);
-  }
-
-  &__buttons-label {
-    font-size: math-rem(13);
-    color: $color-muted;
-  }
-
-  &__layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) math-rem(280);
     gap: math-rem(16);
-    align-items: start;
 
-    @media (max-width: 1100px) {
-      grid-template-columns: 1fr;
+    &__buttons {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(12);
+      padding: math-rem(16);
+      background-color: $color-surface;
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
     }
-  }
 
-  &__main {
-    display: flex;
-    flex-wrap: wrap;
-    row-gap: math-rem(16);
-    margin-left: math-rem(-8);
-    margin-right: math-rem(-8);
-  }
+    &__buttons-title {
+      margin: 0;
+      font-size: math-rem(16);
+      font-weight: 600;
+      color: $color-ink;
+    }
 
-  &__field {
-    padding-left: math-rem(8);
-    padding-right: math-rem(8);
-    width: 100%;
-  }
+    &__buttons-grid {
+      display: grid;
+      grid-template-columns: math-rem(140) auto auto;
+      align-items: center;
+      justify-content: start;
+      column-gap: math-rem(12);
+      row-gap: math-rem(10);
+    }
 
-  &__sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(16);
-    padding: math-rem(16);
-    background-color: $color-bg;
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-  }
+    &__buttons-label {
+      font-size: math-rem(13);
+      color: $color-muted;
+    }
 
-  &__values {
-    margin: 0;
-    padding: math-rem(12);
-    overflow: auto;
-    background-color: $color-bg;
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    color: $color-ink;
-    font-size: math-rem(13);
+    &__layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) math-rem(280);
+      gap: math-rem(16);
+      align-items: start;
+
+      @media (max-width: 1100px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    &__main {
+      display: flex;
+      flex-wrap: wrap;
+      row-gap: math-rem(16);
+      margin-left: math-rem(-8);
+      margin-right: math-rem(-8);
+    }
+
+    &__field {
+      padding-left: math-rem(8);
+      padding-right: math-rem(8);
+      width: 100%;
+    }
+
+    &__sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(16);
+      padding: math-rem(16);
+      background-color: $color-bg;
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
+    }
+
+    &__values {
+      margin: 0;
+      padding: math-rem(12);
+      overflow: auto;
+      background-color: $color-bg;
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
+      color: $color-ink;
+      font-size: math-rem(13);
+    }
   }
 }
 </style>

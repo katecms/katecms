@@ -61,9 +61,7 @@ export function isMediaItem(value: unknown): value is MediaItem {
     && typeof (value as { url?: unknown }).url === 'string'
 }
 
-export function isImageMedia<T extends Pick<MediaItem, 'mime_type'> = Pick<MediaItem, 'mime_type'>>(
-  item?: T | null,
-): item is T {
+export function isImageMedia(item?: Pick<MediaItem, 'mime_type'> | null): boolean {
   return item?.mime_type?.startsWith('image/') ?? false
 }
 

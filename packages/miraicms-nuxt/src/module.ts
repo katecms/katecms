@@ -100,6 +100,26 @@ export default defineNuxtModule<MiraiCmsConfig>({
       handler: resolver.resolve('./runtime/server/api/_miraicms/media/[id].get'),
     })
     addServerHandler({
+      route: '/api/_miraicms/media/:id',
+      method: 'patch',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/media/[id].patch'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/media/:id',
+      method: 'delete',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/media/[id].delete'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/media/:id/regenerate',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/media/[id]/regenerate.post'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/media/regenerate',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/media/regenerate.post'),
+    })
+    addServerHandler({
       route: '/uploads/**',
       method: 'get',
       handler: resolver.resolve('./runtime/server/api/uploads/[...key].get'),
@@ -170,11 +190,11 @@ export default defineNuxtModule<MiraiCmsConfig>({
               path: '',
               file: resolver.resolve('./runtime/pages/admin/index.vue'),
             },
-            // {
-            //   name: 'admin-media',
-            //   path: 'media',
-            //   file: resolver.resolve('./runtime/pages/admin/media.vue'),
-            // },
+            {
+              name: 'admin-media',
+              path: 'media',
+              file: resolver.resolve('./runtime/pages/admin/media.vue'),
+            },
             // // Users
             // {
             //   name: 'admin-users',

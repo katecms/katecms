@@ -11,7 +11,8 @@ import {
 } from '@miraicms/core'
 import type { MediaItem } from '@miraicms/core'
 import { getDb } from '../../../utils/db'
-import { getMediaConfig, getMediaStorage, toClientMedia } from '../../../utils/media'
+import { getMediaConfig, getMediaStorage, scheduleBackground, toClientMediaRow } from '../../../utils/media'
+import { getCurrentUser } from '../../../utils/session'
 
 /**
  * Upload a single file to `public/uploads` and record its metadata.
@@ -48,6 +49,8 @@ export default defineEventHandler(async (event): Promise<{ media: MediaItem }> =
   const dimensions = mimeType.startsWith('image/') ? readImageSize(data) : null
   const willGenerate = isProcessableImage(mimeType) && hasImageWork(config)
 
+  const actor = await getCurrentUser(event)
+
   let row
   try {
     row = await createMedia(getDb(), {
@@ -58,7 +61,7 @@ export default defineEventHandler(async (event): Promise<{ media: MediaItem }> =
       height: dimensions?.height ?? null,
       alt: textPart(parts, 'alt'),
       caption: textPart(parts, 'caption'),
-      uploaded_by: null,
+      uploaded_by: actor?.id ?? null,
       variants_status: willGenerate ? 'pending' : 'none',
     })
   }
@@ -81,13 +84,10 @@ export default defineEventHandler(async (event): Promise<{ media: MediaItem }> =
         await updateMedia(getDb(), mediaId, { variants_status: 'failed' }).catch(() => {})
       })
 
-    const waitUntil = (event as { waitUntil?: (promise: Promise<unknown>) => void }).waitUntil
-    if (typeof waitUntil === 'function') {
-      waitUntil(task)
-    }
+    scheduleBackground(event, task)
   }
 
-  return { media: toClientMedia(row) }
+  return { media: await toClientMediaRow(row) }
 })
 
 function textPart(

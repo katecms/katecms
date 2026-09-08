@@ -39,7 +39,8 @@ function userLabel(user: UserFieldValue): string {
 }
 
 function avatarUrl(user: UserFieldValue): string | undefined {
-  return isImageMedia(user.avatar) ? user.avatar.url : undefined
+  const avatar = user.avatar
+  return avatar && isImageMedia(avatar) ? avatar.url : undefined
 }
 
 const selectChoices = computed<SelectChoice[]>(() => filteredUsers.value.map(user => ({

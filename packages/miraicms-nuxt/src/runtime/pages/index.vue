@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { useHead } from '#imports'
+import { useHead, useRoute } from '#imports'
+import { computed } from 'vue'
 import { useAuth } from '../composables/useAuth'
+import { useCmsPaths } from '../composables/useCmsPaths'
 
 useHead({
   bodyAttrs: {
@@ -10,20 +12,40 @@ useHead({
 })
 
 const rootClass = 'miraicms'
+const route = useRoute()
+const paths = useCmsPaths()
 const { user, logout, loggingOut } = useAuth()
+
+const isFields = computed(() => route.path === paths.admin)
+const isMedia = computed(() => route.path === paths.media || route.path.startsWith(`${paths.media}/`))
 </script>
 
 <template>
   <div :class="[rootClass]">
     <div :class="[`${rootClass}-header`]">
-      <button
+      <nav :class="[`${rootClass}-nav`]">
+        <NuxtLink
+          :to="paths.admin"
+          :class="[`${rootClass}-nav__link`, { 'is-active': isFields }]"
+        >
+          Fields
+        </NuxtLink>
+        <NuxtLink
+          :to="paths.media"
+          :class="[`${rootClass}-nav__link`, { 'is-active': isMedia }]"
+        >
+          Media
+        </NuxtLink>
+      </nav>
+      <MiraiCmsUiButton
         v-if="user"
-        type="button"
+        tag="button"
+        variant="secondary"
         :disabled="loggingOut"
         @click="logout"
       >
         {{ loggingOut ? 'Signing out…' : 'Sign out' }}
-      </button>
+      </MiraiCmsUiButton>
     </div>
 
     <div :class="[`${rootClass}-sidebar`]">
@@ -66,11 +88,37 @@ $root: '.miraicms';
     grid-area: header;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-between;
+    gap: math-rem(12);
     padding: 0 math-rem(12);
     border-bottom: 1px solid $color-border;
     box-shadow: $shadow-sm;
     min-height: $topbar-h;
+  }
+
+  &-nav {
+    display: flex;
+    align-items: center;
+    gap: math-rem(4);
+
+    &__link {
+      padding: math-rem(6) math-rem(10);
+      border-radius: $border-radius-inter;
+      color: $color-muted;
+      font-size: math-rem(14);
+      font-weight: 500;
+      text-decoration: none;
+
+      &:hover {
+        background: $color-bg;
+        color: $color-ink;
+      }
+
+      &.is-active {
+        background: $color-accent-wash;
+        color: $color-accent;
+      }
+    }
   }
 
   &-sidebar {

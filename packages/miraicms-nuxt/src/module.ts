@@ -150,6 +150,16 @@ export default defineNuxtModule<MiraiCmsConfig>({
       method: 'get',
       handler: resolver.resolve('./runtime/server/api/_miraicms/users.get'),
     })
+    addServerHandler({
+      route: '/api/_miraicms/users',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/users.post'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/users/:id',
+      method: 'patch',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/users/[id].patch'),
+    })
 
     addRouteMiddleware({
       name: 'miraicms-auth-guard',
@@ -195,22 +205,21 @@ export default defineNuxtModule<MiraiCmsConfig>({
               path: 'media',
               file: resolver.resolve('./runtime/pages/admin/media.vue'),
             },
-            // // Users
-            // {
-            //   name: 'admin-users',
-            //   path: 'users',
-            //   file: resolver.resolve('./runtime/pages/admin/users/index.vue'),
-            // },
-            // {
-            //   name: 'admin-users-create',
-            //   path: 'users/create',
-            //   file: resolver.resolve('./runtime/pages/admin/users/create.vue'),
-            // },
-            // {
-            //   name: 'admin-users-id',
-            //   path: 'users/:id',
-            //   file: resolver.resolve('./runtime/pages/admin/users/[id].vue'),
-            // },
+            {
+              name: 'admin-users',
+              path: 'users',
+              file: resolver.resolve('./runtime/pages/admin/users/index.vue'),
+            },
+            {
+              name: 'admin-users-create',
+              path: 'users/create',
+              file: resolver.resolve('./runtime/pages/admin/users/create.vue'),
+            },
+            {
+              name: 'admin-users-id',
+              path: 'users/:id',
+              file: resolver.resolve('./runtime/pages/admin/users/[id].vue'),
+            },
             // // Collections (slug from nuxtcms.config.ts)
             // {
             //   name: 'admin-collections',

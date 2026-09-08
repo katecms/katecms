@@ -18,6 +18,7 @@ const { user, logout, loggingOut } = useAuth()
 
 const isFields = computed(() => route.path === paths.admin)
 const isMedia = computed(() => route.path === paths.media || route.path.startsWith(`${paths.media}/`))
+const isUsers = computed(() => route.path === paths.users || route.path.startsWith(`${paths.users}/`))
 </script>
 
 <template>
@@ -35,6 +36,12 @@ const isMedia = computed(() => route.path === paths.media || route.path.startsWi
           :class="[`${rootClass}-nav__link`, { 'is-active': isMedia }]"
         >
           Media
+        </NuxtLink>
+        <NuxtLink
+          :to="paths.users"
+          :class="[`${rootClass}-nav__link`, { 'is-active': isUsers }]"
+        >
+          Users
         </NuxtLink>
       </nav>
       <MiraiCmsUiButton

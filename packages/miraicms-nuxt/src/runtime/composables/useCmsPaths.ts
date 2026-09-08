@@ -7,6 +7,7 @@ export function useCmsPaths() {
   return {
     admin,
     media: `${admin}/media`,
+    users: `${admin}/users`,
     login: cmsRoutePath(config?.loginPath || 'login'),
     register: cmsRoutePath(config?.registerPath || 'register'),
   }

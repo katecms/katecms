@@ -693,7 +693,7 @@ onBeforeUnmount(() => {
           <MiraiCmsUiButton
             v-if="showCollapseAll"
             tag="button"
-            variant="secondary"
+            :variant="['secondary', 'small']"
             @click="collapseAllRows"
           >
             Collapse all
@@ -701,7 +701,7 @@ onBeforeUnmount(() => {
           <MiraiCmsUiButton
             v-if="showExpandAll"
             tag="button"
-            variant="secondary"
+            :variant="['secondary', 'small']"
             @click="expandAllRows"
           >
             Expand all
@@ -710,6 +710,7 @@ onBeforeUnmount(() => {
         <div :class="`${rootClass}__add-wrap`">
           <MiraiCmsUiButton
             tag="button"
+            variant="small"
             :disabled="!canAdd"
             @click="openLayoutPicker(0)"
           >
@@ -914,7 +915,7 @@ onBeforeUnmount(() => {
           <MiraiCmsUiButton
             v-if="showCollapseAll"
             tag="button"
-            variant="secondary"
+            :variant="['secondary', 'small']"
             @click="collapseAllRows"
           >
             Collapse all
@@ -922,7 +923,7 @@ onBeforeUnmount(() => {
           <MiraiCmsUiButton
             v-if="showExpandAll"
             tag="button"
-            variant="secondary"
+            :variant="['secondary', 'small']"
             @click="expandAllRows"
           >
             Expand all

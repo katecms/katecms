@@ -9,13 +9,13 @@ useHead({
   bodyAttrs: {
     id: 'miraicms-body',
   },
-  title: 'Вход',
+  title: 'Sign in',
 })
 
 const paths = useCmsPaths()
 const { remainingSec, locked, start: startCooldown } = useAuthCooldown()
 const emailField = { label: 'Email', required: true }
-const passwordField = { type: 'password' as const, label: 'Пароль', required: true }
+const passwordField = { type: 'password' as const, label: 'Password', required: true }
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
@@ -30,12 +30,12 @@ const canSubmit = computed(() =>
 
 const submitLabel = computed(() => {
   if (loading.value) {
-    return 'Вхожу…'
+    return 'Signing in…'
   }
   if (locked.value) {
-    return `Подождите ${remainingSec.value} сек.`
+    return `Wait ${remainingSec.value} sec.`
   }
-  return 'Войти'
+  return 'Sign in'
 })
 
 async function submit() {
@@ -57,7 +57,7 @@ async function submit() {
     await navigateTo(paths.admin)
   }
   catch (err) {
-    const parsed = parseAuthError(err, 'Не удалось войти.')
+    const parsed = parseAuthError(err, 'Could not sign in.')
     error.value = parsed.message
     startCooldown(parsed.retryAfterMs, () => {
       error.value = null
@@ -78,10 +78,10 @@ async function submit() {
         alt="MiraiCMS"
       >
       <h1 class="miraicms-auth__title">
-        Вход
+        Sign in
       </h1>
       <p class="miraicms-auth__subtitle">
-        Войдите в панель управления CMS.
+        Sign in to the CMS admin.
       </p>
 
       <form
@@ -124,13 +124,13 @@ async function submit() {
         v-if="error"
         class="miraicms-auth__error"
       >
-        <strong>Ошибка:</strong> {{ error }}
+        <strong>Error:</strong> {{ error }}
       </div>
 
       <p class="miraicms-auth__footer">
-        Нет аккаунта?
+        No account?
         <NuxtLink :to="paths.register">
-          Зарегистрироваться
+          Register
         </NuxtLink>
       </p>
     </div>

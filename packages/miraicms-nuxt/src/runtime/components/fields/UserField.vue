@@ -92,10 +92,10 @@ const selected = computed<SelectModelValue>({
 
 const placeholder = computed(() => {
   if (props.field?.multiple) {
-    return ''
+    return 'Select users'
   }
   if (props.field?.allowNull || !props.field?.required) {
-    return '— Select —'
+    return 'Select user'
   }
   return ''
 })
@@ -159,12 +159,12 @@ onMounted(async () => {
     :field-key="fieldKey"
     :field="field"
   >
-    <p
+    <div
       v-if="loadError"
       :class="`${rootClass}__error`"
     >
       {{ loadError }}
-    </p>
+    </div>
     <MiraiCmsUiSelect
       :id="fieldKey"
       v-model="selected"

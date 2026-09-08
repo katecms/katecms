@@ -22,7 +22,7 @@ const { user, logout, loggingOut } = useAuth()
         :disabled="loggingOut"
         @click="logout"
       >
-        {{ loggingOut ? 'Выхожу…' : 'Выйти' }}
+        {{ loggingOut ? 'Signing out…' : 'Sign out' }}
       </button>
     </div>
 

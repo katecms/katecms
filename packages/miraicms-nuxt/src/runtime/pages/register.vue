@@ -13,14 +13,14 @@ useHead({
   bodyAttrs: {
     id: 'miraicms-body',
   },
-  title: () => isFirstUser.value ? 'Создание владельца' : 'Регистрация',
+  title: () => isFirstUser.value ? 'Create owner' : 'Register',
 })
 
 const paths = useCmsPaths()
 const { remainingSec, locked, start: startCooldown } = useAuthCooldown()
 const emailField = { label: 'Email', required: true }
-const passwordField = { type: 'password' as const, label: 'Пароль', required: true }
-const passwordConfirmField = { type: 'password' as const, label: 'Повторите пароль', required: true }
+const passwordField = { type: 'password' as const, label: 'Password', required: true }
+const passwordConfirmField = { type: 'password' as const, label: 'Confirm password', required: true }
 const email = ref('')
 const password = ref('')
 const passwordConfirm = ref('')
@@ -37,12 +37,12 @@ const canSubmit = computed(() =>
 
 const submitLabel = computed(() => {
   if (loading.value) {
-    return 'Создаю…'
+    return 'Creating…'
   }
   if (locked.value) {
-    return `Подождите ${remainingSec.value} сек.`
+    return `Wait ${remainingSec.value} sec.`
   }
-  return 'Зарегистрироваться'
+  return 'Register'
 })
 
 async function submit() {
@@ -65,7 +65,7 @@ async function submit() {
     await navigateTo(paths.admin)
   }
   catch (err) {
-    const parsed = parseAuthError(err, 'Не удалось зарегистрироваться.')
+    const parsed = parseAuthError(err, 'Could not register.')
     error.value = parsed.message
     startCooldown(parsed.retryAfterMs, () => {
       error.value = null
@@ -86,14 +86,14 @@ async function submit() {
         alt="MiraiCMS"
       >
       <h1 class="miraicms-auth__title">
-        {{ isFirstUser ? 'Создание владельца' : 'Регистрация' }}
+        {{ isFirstUser ? 'Create owner' : 'Register' }}
       </h1>
       <p class="miraicms-auth__subtitle">
         <template v-if="isFirstUser">
-          Это первый аккаунт — он автоматически получит роль владельца (owner).
+          This is the first account — it will automatically receive the owner role.
         </template>
         <template v-else>
-          Заполните форму, чтобы создать аккаунт. Новым пользователям назначается роль subscriber.
+          Fill in the form to create an account. New users are assigned the subscriber role.
         </template>
       </p>
 
@@ -145,16 +145,16 @@ async function submit() {
         v-if="error"
         class="miraicms-auth__error"
       >
-        <strong>Ошибка:</strong> {{ error }}
+        <strong>Error:</strong> {{ error }}
       </div>
 
       <p
         v-if="!isFirstUser"
         class="miraicms-auth__footer"
       >
-        Уже есть аккаунт?
+        Already have an account?
         <NuxtLink :to="paths.login">
-          Войти
+          Sign in
         </NuxtLink>
       </p>
     </div>

@@ -96,7 +96,7 @@ export async function getCurrentUser(event: H3Event): Promise<SafeUser | null> {
 export async function requireUser(event: H3Event): Promise<SafeUser> {
   const user = await getCurrentUser(event)
   if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized', message: 'Требуется авторизация.' })
+    throw createError({ statusCode: 401, statusMessage: 'Unauthorized', message: 'Authentication required.' })
   }
   return user
 }

@@ -34,7 +34,7 @@ export function throwTooManyAttempts(event: H3Event, retryAfterMs: number): neve
   throw createError({
     statusCode: 429,
     statusMessage: 'Too Many Requests',
-    message: `Слишком много попыток. Повторите через ${retryAfterSec} сек.`,
+    message: `Too many attempts. Try again in ${retryAfterSec} sec.`,
     data: { retryAfterMs },
   })
 }
@@ -43,7 +43,7 @@ export function invalidCredentialsError(retryAfterMs = 0) {
   return createError({
     statusCode: 401,
     statusMessage: 'Unauthorized',
-    message: 'Неверный email или пароль.',
+    message: 'Invalid email or password.',
     data: { retryAfterMs },
   })
 }

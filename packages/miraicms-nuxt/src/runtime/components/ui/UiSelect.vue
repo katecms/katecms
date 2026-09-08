@@ -292,7 +292,7 @@ const displayValue = computed<string | SelectChip[]>(() => {
         }
       })
     }
-    return defaultLabel.value
+    return props.placeholder || ''
   }
 
   if (value === '' || value === null || value === undefined) {

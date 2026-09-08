@@ -1,7 +1,5 @@
 import { createError, defineEventHandler, readBody } from 'h3'
 import {
-  MIN_PASSWORD_LENGTH,
-  MAX_PASSWORD_LENGTH,
   OWNER_ROLE,
   SUBSCRIBER_ROLE,
   createUser,
@@ -54,18 +52,16 @@ export default defineEventHandler(async (event): Promise<{ user: SafeUser }> => 
     throw createError({ statusCode: 422, statusMessage: 'Unprocessable Entity', message: statusMessage })
   }
 
-  if (!validateEmail(email).ok) {
-    failValidation('Введите корректный email.')
+  const emailCheck = validateEmail(email)
+  if (!emailCheck.ok) {
+    failValidation(emailCheck.error)
   }
   const passwordCheck = validatePassword(password)
   if (!passwordCheck.ok) {
-    const statusMessage = password.length < MIN_PASSWORD_LENGTH
-      ? `Пароль должен содержать минимум ${MIN_PASSWORD_LENGTH} символов.`
-      : `Пароль не должен превышать ${MAX_PASSWORD_LENGTH} символов.`
-    failValidation(statusMessage)
+    failValidation(passwordCheck.error)
   }
   if (password !== passwordConfirm) {
-    failValidation('Пароли не совпадают.')
+    failValidation('Passwords do not match.')
   }
 
   const passwordHash = await hashPassword(password)
@@ -90,7 +86,7 @@ export default defineEventHandler(async (event): Promise<{ user: SafeUser }> => 
       if (retryAfterMs > 0) {
         throwTooManyAttempts(event, retryAfterMs)
       }
-      throw createError({ statusCode: 409, statusMessage: 'Conflict', message: 'Пользователь с таким email уже существует.' })
+      throw createError({ statusCode: 409, statusMessage: 'Conflict', message: 'A user with this email already exists.' })
     }
     throw error
   }

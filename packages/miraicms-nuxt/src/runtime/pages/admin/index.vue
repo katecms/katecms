@@ -588,6 +588,7 @@ const fields: Fields = {
       hero: {
         label: 'Hero',
         max: 2,
+        preview: 'https://picsum.photos/800/600',
         subFields: {
           title: {
             type: 'text',

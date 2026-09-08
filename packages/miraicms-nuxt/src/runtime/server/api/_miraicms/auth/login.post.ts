@@ -27,7 +27,7 @@ export default defineEventHandler(async (event): Promise<{ user: SafeUser }> => 
   const password = typeof body?.password === 'string' ? body.password : ''
 
   if (!email || !password) {
-    throw createError({ statusCode: 422, statusMessage: 'Unprocessable Entity', message: 'Укажите email и пароль.' })
+    throw createError({ statusCode: 422, statusMessage: 'Unprocessable Entity', message: 'Enter email and password.' })
   }
 
   const attemptKey = getAuthAttemptKey(event, 'login', email)

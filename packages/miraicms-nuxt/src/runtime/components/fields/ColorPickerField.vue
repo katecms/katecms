@@ -75,7 +75,7 @@ const previewColor = computed(() => {
 })
 
 const displayText = computed(() => {
-  if (!hasValue.value) return 'Выберите цвет'
+  if (!hasValue.value) return 'Select a color'
   return formatColorString(format.value)
 })
 
@@ -300,7 +300,7 @@ function writeModel(next: unknown) {
 
   syncingFromModel = true
   model.value = next
-  // Parent может обновить model асинхронно — держим флаг до nextTick.
+  // The parent may update the model asynchronously — keep the flag until the next tick.
   queueMicrotask(() => {
     syncingFromModel = false
   })
@@ -358,7 +358,7 @@ function syncFromModel() {
   const nextRgb = hsvaToRgb(parsed.h, parsed.s, parsed.v)
   const curRgb = hsvaToRgb(hsva.value.h, hsva.value.s, hsva.value.v)
 
-  // RGB→HSV на чёрном/белом теряет hue — не перетираем локальный HSV, если цвет тот же.
+  // RGB→HSV loses hue on black/white — do not overwrite local HSV if the color is unchanged.
   if (
     hasValue.value
     && colorsMatchRgb(
@@ -448,7 +448,7 @@ function pointerRatio(event: PointerEvent, rect: DOMRect, vertical = false) {
 }
 
 function onPalettePointer(event: PointerEvent, rect: DOMRect) {
-  // Только локальный HSV — без записи в model (иначе RGB→HSV сбивает hue).
+  // Local HSV only — do not write the model (RGB→HSV would shift hue).
   hsva.value = {
     ...hsva.value,
     s: clamp((event.clientX - rect.left) / rect.width, 0, 1),
@@ -531,7 +531,7 @@ function endDrag() {
   dragRect = null
   dragPointerId = null
 
-  // Один commit в конце драга — без промежуточных RGB↔HSV циклов.
+  // One commit at the end of the drag — no intermediate RGB↔HSV cycles.
   commit()
 }
 

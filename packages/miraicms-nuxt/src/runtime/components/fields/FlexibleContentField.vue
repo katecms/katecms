@@ -127,13 +127,26 @@ function canDuplicateRow(index: number): boolean {
   return canAddLayout(getLayoutId(row))
 }
 
+function isAbsolutePreviewSrc(preview: string): boolean {
+  return /^(https?:)?\/\//i.test(preview)
+    || preview.startsWith('data:')
+    || preview.startsWith('blob:')
+}
+
 function layoutPreviewSrc(layout: FlexibleLayoutConfig): string | undefined {
+  const preview = layout.preview?.trim()
+  if (!preview) {
+    return undefined
+  }
+  if (isAbsolutePreviewSrc(preview) || preview.startsWith('/')) {
+    return preview
+  }
   const previewPath = props.field?.previewPath
-  if (!previewPath || !layout.preview) {
+  if (!previewPath) {
     return undefined
   }
   const base = previewPath.replace(/\/+$/, '')
-  const file = layout.preview.replace(/^\/+/, '')
+  const file = preview.replace(/^\/+/, '')
   return `${base}/${file}`
 }
 

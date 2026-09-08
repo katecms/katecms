@@ -469,7 +469,7 @@ interface RepeaterField extends BaseField {
 /** Flexible content layout. The record key is the layout name. */
 export interface FlexibleLayout {
   label: string
-  preview?: string // Preview image (Example: img_block.png)
+  preview?: string // Filename under `previewPath` (`hero.png`) or an absolute / root-relative URL
   /** Soft limit — future save validation only (no auto-add / no block remove in UI). */
   min?: number
   max?: number // Maximum number of block additions

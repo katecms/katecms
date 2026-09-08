@@ -6,7 +6,7 @@ import { DATE_FIELD_FORMATS, formatDate, parseDate } from '@miraicms/core'
 type PickerMode = 'date' | 'datetime' | 'time'
 
 const props = defineProps({
-  // Что выбираем: дату, дату+время или только время.
+  // What to pick: date, date+time, or time only.
   mode: {
     type: String as PropType<PickerMode>,
     default: 'date',
@@ -41,7 +41,7 @@ const props = defineProps({
   },
 })
 
-// В model лежит значение строкой в returnFormat.
+// The model stores the value as a string in returnFormat.
 const model = defineModel<string>()
 
 const rootClass = 'miraicms-date-time-control'
@@ -55,28 +55,28 @@ const showCalendar = computed(() => props.mode !== 'time')
 const showTime = computed(() => props.mode !== 'date')
 const hasSeconds = computed(() => /s/.test(RETURN_FORMAT.value) || /s/.test(DISPLAY_FORMAT.value))
 
-const WEEKDAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 const MONTHS = [
-  'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
-  'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-// Выбранное значение, разобранное из model.
+// Selected value parsed from the model.
 const selectedDate = computed(() => (model.value ? parseDate(model.value, RETURN_FORMAT.value) : null))
 
-// То, что показываем в поле.
+// Text shown in the input.
 const displayValue = computed(() => (selectedDate.value ? formatDate(selectedDate.value, DISPLAY_FORMAT.value) : ''))
 
 const open = ref(false)
 const today = new Date()
 
-// Месяц, показанный в календаре.
+// Month currently shown in the calendar.
 const viewYear = ref((selectedDate.value ?? today).getFullYear())
 const viewMonth = ref((selectedDate.value ?? today).getMonth())
 
-// Выбранное время.
+// Selected time.
 const viewHour = ref((selectedDate.value ?? today).getHours())
 const viewMinute = ref((selectedDate.value ?? today).getMinutes())
 const viewSecond = ref((selectedDate.value ?? today).getSeconds())
@@ -85,12 +85,12 @@ const hoursList = Array.from({ length: 24 }, (_, i) => i)
 const minutesList = Array.from({ length: 60 }, (_, i) => i)
 const secondsList = Array.from({ length: 60 }, (_, i) => i)
 
-// Порядок подписей дней недели с учётом firstDay.
+// Weekday labels rotated so they start at firstDay.
 const weekdayLabels = computed(() =>
   Array.from({ length: 7 }, (_, i) => WEEKDAYS[(props.firstDay + i) % 7]),
 )
 
-// Ячейки календаря: ведущие пустоты + дни месяца.
+// Calendar cells: leading blanks plus the days of the month.
 const cells = computed<(number | null)[]>(() => {
   const daysInMonth = new Date(viewYear.value, viewMonth.value + 1, 0).getDate()
   const firstWeekday = new Date(viewYear.value, viewMonth.value, 1).getDay()
@@ -142,12 +142,12 @@ function commit(year: number, month: number, day: number) {
 }
 
 function selectDay(day: number) {
-  // Выбор дня применяет выбранное время и закрывает попап.
+  // Picking a day applies the selected time and closes the popup.
   commit(viewYear.value, viewMonth.value, day)
   open.value = false
 }
 
-// Изменение времени пересобирает model на основе уже выбранной даты.
+// Changing time rebuilds the model from the already selected date.
 function applyTime() {
   const base = selectedDate.value ?? today
   commit(base.getFullYear(), base.getMonth(), base.getDate())
@@ -168,7 +168,7 @@ function onSecondChange(event: Event) {
   applyTime()
 }
 
-// Список годов для выбора: текущий ± диапазон.
+// Year picker list: current year ± range.
 const years = computed(() => {
   const base = today.getFullYear()
   const start = base - 100
@@ -192,7 +192,7 @@ function selectNow() {
   viewMinute.value = now.getMinutes()
   viewSecond.value = now.getSeconds()
   commit(now.getFullYear(), now.getMonth(), now.getDate())
-  // В режиме только времени выбор «сейчас» сразу закрывает попап.
+  // In time-only mode, "Now" closes the popup immediately.
   if (!showCalendar.value) {
     open.value = false
   }
@@ -203,7 +203,7 @@ function clear() {
   open.value = false
 }
 
-// Примерная высота попапа для расчёта направления раскрытия.
+// Approximate popup height used to choose open direction.
 const POPUP_HEIGHT = computed(() => {
   if (props.mode === 'time') {
     return 140
@@ -214,7 +214,7 @@ const POPUP_HEIGHT = computed(() => {
 const control = ref<HTMLElement>()
 const dropUp = ref(false)
 
-// Раскрывать вверх, если снизу не хватает места, а сверху его больше.
+// Open upward when there is not enough room below and more room above.
 function updateDropDirection() {
   if (typeof window === 'undefined' || !control.value) {
     return
@@ -226,7 +226,7 @@ function updateDropDirection() {
 }
 
 function toggle() {
-  // При открытии показываем месяц/время выбранного значения.
+  // When opening, show the month/time of the selected value.
   if (!open.value && selectedDate.value) {
     viewYear.value = selectedDate.value.getFullYear()
     viewMonth.value = selectedDate.value.getMonth()
@@ -240,14 +240,14 @@ function toggle() {
   open.value = !open.value
 }
 
-// defaultToCurrentDate: если значения нет — подставляем текущее.
+// defaultToCurrentDate: if there is no value, seed it with now.
 onMounted(() => {
   if (!model.value && props.defaultToCurrentDate) {
     model.value = formatDate(today, RETURN_FORMAT.value)
   }
 })
 
-// Закрытие по Escape и клику вне поля.
+// Close on Escape and click outside the field.
 const root = ref<HTMLElement>()
 
 function onDocEvent(event: Event) {
@@ -401,7 +401,7 @@ onBeforeUnmount(() => {
           <span
             v-if="showCalendar"
             :class="`${rootClass}__time-label`"
-          >Время</span>
+          >Time</span>
           <select
             :class="`${rootClass}__select`"
             :value="viewHour"

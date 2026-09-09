@@ -905,6 +905,72 @@ const sidebarFields = computed(() =>
       </div>
     </section>
 
+    <section :class="[`${rootClass}__notices`]">
+      <h2 :class="[`${rootClass}__notices-title`]">
+        UiNotice
+      </h2>
+
+      <p :class="[`${rootClass}__notices-label`]">
+        Static, one line
+      </p>
+      <div :class="[`${rootClass}__notices-stack`]">
+        <MiraiCmsUiNotice
+          placement="static"
+          variant="success"
+          message="Changes saved."
+        />
+        <MiraiCmsUiNotice
+          placement="static"
+          variant="info"
+          message="A new version of the CMS is available."
+        />
+        <MiraiCmsUiNotice
+          placement="static"
+          variant="warning"
+          message="This account has no password set."
+        />
+        <MiraiCmsUiNotice
+          placement="static"
+          variant="danger"
+          message="Could not save changes."
+        />
+      </div>
+
+      <p :class="[`${rootClass}__notices-label`]">
+        Static, two–three lines
+      </p>
+      <div :class="[`${rootClass}__notices-stack`]">
+        <MiraiCmsUiNotice
+          placement="static"
+          variant="success"
+        >
+          <p>The user was updated.</p>
+          <p>Email, display name and role are stored. You can keep editing this account without leaving the page.</p>
+        </MiraiCmsUiNotice>
+        <MiraiCmsUiNotice
+          placement="static"
+          variant="info"
+        >
+          <p>Media variants are generated in the background.</p>
+          <p>Large uploads may take a minute. Refresh the library if a thumbnail is still missing.</p>
+        </MiraiCmsUiNotice>
+        <MiraiCmsUiNotice
+          placement="static"
+          variant="warning"
+        >
+          <p>You are editing your own account.</p>
+          <p>Role and status cannot be changed here. Ask another administrator if those fields need an update.</p>
+        </MiraiCmsUiNotice>
+        <MiraiCmsUiNotice
+          placement="static"
+          variant="danger"
+        >
+          <p>The form could not be saved.</p>
+          <p>A user with this email already exists. Change the address and try again, or open the existing account instead.</p>
+        </MiraiCmsUiNotice>
+      </div>
+    </section>
+
     <div :class="[`${rootClass}__layout`]">
       <div :class="[`${rootClass}__main`]">
         <div
@@ -962,7 +1028,8 @@ $root: '.miraicms-admin-demo';
       border-radius: $border-radius;
     }
 
-    &__buttons-title {
+    &__buttons-title,
+    &__notices-title {
       margin: 0;
       font-size: math-rem(16);
       font-weight: 600;
@@ -978,9 +1045,30 @@ $root: '.miraicms-admin-demo';
       row-gap: math-rem(10);
     }
 
-    &__buttons-label {
+    &__buttons-label,
+    &__notices-label {
       font-size: math-rem(13);
       color: $color-muted;
+    }
+
+    &__notices {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(12);
+      padding: math-rem(16);
+      background-color: $color-surface;
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
+    }
+
+    &__notices-label {
+      margin: math-rem(4) 0 0;
+    }
+
+    &__notices-stack {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(8);
     }
 
     &__layout {

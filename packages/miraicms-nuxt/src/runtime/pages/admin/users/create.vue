@@ -14,12 +14,17 @@ import { useCmsPaths } from '../../../composables/useCmsPaths'
 useHead({ title: 'New user' })
 
 const rootClass = 'miraicms-user-form'
+const formId = 'cms-user-create-form'
 const paths = useCmsPaths()
 
 const roles = ref<RoleOption[]>([])
 const loading = ref(true)
 const saving = ref(false)
-const error = ref<string | null>(null)
+const ready = ref(false)
+const notice = ref<{
+  variant: 'success' | 'info' | 'warning' | 'danger'
+  message: string
+} | null>(null)
 
 const form = reactive({
   email: '',
@@ -50,14 +55,15 @@ const roleField = computed(() => ({
 }))
 
 const canSubmit = computed(() =>
-  !saving.value
+  ready.value
+  && !saving.value
   && form.email.trim().length > 0
   && form.password.length >= MIN_PASSWORD_LENGTH,
 )
 
 async function load() {
   loading.value = true
-  error.value = null
+  notice.value = null
   try {
     const res = await $fetch<UsersResponse>('/api/_miraicms/users')
     if (!res.canCreate) {
@@ -68,9 +74,13 @@ async function load() {
     if (!assignableRoles.value.some(role => role.slug === form.role)) {
       form.role = assignableRoles.value[0]?.slug ?? SUBSCRIBER_ROLE
     }
+    ready.value = true
   }
   catch (err) {
-    error.value = parseAuthError(err, 'Could not load the form.').message
+    notice.value = {
+      variant: 'danger',
+      message: parseAuthError(err, 'Could not load the form.').message,
+    }
   }
   finally {
     loading.value = false
@@ -82,7 +92,7 @@ async function submit() {
     return
   }
   saving.value = true
-  error.value = null
+  notice.value = null
   try {
     const created = await $fetch<{ user: AdminUser }>('/api/_miraicms/users' as string, {
       method: 'POST',
@@ -97,7 +107,10 @@ async function submit() {
     await navigateTo(`${paths.users}/${created.user.id}`)
   }
   catch (err) {
-    error.value = parseAuthError(err, 'Could not create the user.').message
+    notice.value = {
+      variant: 'danger',
+      message: parseAuthError(err, 'Could not create the user.').message,
+    }
   }
   finally {
     saving.value = false
@@ -109,27 +122,51 @@ onMounted(load)
 
 <template>
   <div :class="rootClass">
-    <header :class="`${rootClass}__head`">
-      <NuxtLink
-        :to="paths.users"
-        :class="`${rootClass}__back`"
+    <div :class="`${rootClass}__head`">
+      <MiraiCmsUiButton
+        tag="a"
+        :variant="['secondary', 'icon']"
+        :link="{ url: paths.users, title: 'Users' }"
       >
-        ← Users
-      </NuxtLink>
-      <h1 :class="`${rootClass}__title`">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 640 640"
+        ><path
+          d="M73 297a32 32 0 0 0 0 46l160 160a32 32 0 0 0 46-46L173 352h371a32 32 0 1 0 0-64H173l106-105a32 32 0 0 0-46-46z"
+          fill="currentColor"
+        /></svg>
+      </MiraiCmsUiButton>
+      <div :class="`${rootClass}__head-title`">
         New user
-      </h1>
-    </header>
+      </div>
+      <MiraiCmsUiButton
+        tag="button"
+        type="submit"
+        :form="formId"
+        :disabled="!canSubmit"
+      >
+        {{ saving ? 'Creating…' : 'Create' }}
+      </MiraiCmsUiButton>
+    </div>
 
-    <p
+    <MiraiCmsUiNotice
       v-if="loading"
-      :class="`${rootClass}__empty`"
-    >
-      Loading…
-    </p>
+      placement="static"
+      variant="info"
+      message="Loading…"
+      :closable="false"
+    />
+    <MiraiCmsUiNotice
+      v-else-if="notice"
+      placement="fixed"
+      :variant="notice.variant"
+      :message="notice.message"
+      @close="notice = null"
+    />
 
     <form
-      v-else
+      v-if="ready"
+      :id="formId"
       :class="`${rootClass}__form`"
       @submit.prevent="submit"
     >
@@ -178,21 +215,6 @@ onMounted(load)
         field-key="cms-user-role"
         :field="roleField"
       />
-
-      <div
-        v-if="error"
-        :class="`${rootClass}__error`"
-      >
-        <strong>Error:</strong> {{ error }}
-      </div>
-
-      <MiraiCmsUiButton
-        tag="button"
-        type="submit"
-        :disabled="!canSubmit"
-      >
-        {{ saving ? 'Creating…' : 'Create' }}
-      </MiraiCmsUiButton>
     </form>
   </div>
 </template>
@@ -207,57 +229,30 @@ $root: '.miraicms-user-form';
     display: flex;
     flex-direction: column;
     gap: math-rem(16);
-    max-width: math-rem(512);
 
     &__head {
       display: flex;
-      flex-direction: column;
-      gap: math-rem(6);
-    }
+      align-items: center;
+      gap: math-rem(16);
 
-    &__back {
-      width: fit-content;
-      font-size: math-rem(13);
-      font-weight: 600;
-      color: $color-accent;
-      text-decoration: none;
-
-      &:hover {
-        color: $color-accent-hover;
-        text-decoration: underline;
+      &-title {
+        font-size: math-rem(18);
+        font-weight: 600;
       }
-    }
 
-    &__title {
-      margin: 0;
-      font-size: math-rem(20);
-      font-weight: 600;
-      color: $color-ink;
-    }
-
-    &__empty {
-      margin: 0;
-      color: $color-muted;
-      font-size: math-rem(14);
+      :deep([type="submit"]) {
+        margin-left: auto;
+      }
     }
 
     &__form {
       display: flex;
       flex-direction: column;
       gap: math-rem(14);
-      padding: math-rem(18);
+      padding: math-rem(12);
       background: $color-surface;
       border: 1px solid $color-border;
       border-radius: $border-radius;
-    }
-
-    &__error {
-      padding: math-rem(12) math-rem(14);
-      border: 1px solid $color-danger;
-      border-radius: $border-radius;
-      background: $color-danger-bg;
-      color: $color-danger;
-      font-size: math-rem(14);
     }
   }
 }

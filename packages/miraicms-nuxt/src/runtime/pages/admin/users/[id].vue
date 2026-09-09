@@ -13,6 +13,7 @@ import { useAuth } from '../../../composables/useAuth'
 import { useCmsPaths } from '../../../composables/useCmsPaths'
 
 const rootClass = 'miraicms-user-form'
+const formId = 'cms-user-edit-form'
 const route = useRoute()
 const paths = useCmsPaths()
 const { refresh: refreshAuth } = useAuth()
@@ -25,9 +26,9 @@ const found = ref(false)
 
 const loading = ref(true)
 const saving = ref(false)
-const error = ref<string | null>(null)
+const showSelfNotice = ref(true)
 const notice = ref<{
-  variant: 'success' | 'warning' | 'danger'
+  variant: 'success' | 'info' | 'warning' | 'danger'
   message: string
 } | null>(null)
 
@@ -89,7 +90,7 @@ const isSelf = computed(() => currentUserId.value === userId)
  */
 const canEditRoleStatus = computed(() => canUpdate.value && !isSelf.value)
 
-const canSubmit = computed(() => !saving.value && form.email.trim().length > 0)
+const canSubmit = computed(() => found.value && !saving.value && form.email.trim().length > 0)
 
 async function load() {
   if (!Number.isInteger(userId) || userId <= 0) {
@@ -98,7 +99,7 @@ async function load() {
   }
 
   loading.value = true
-  error.value = null
+  notice.value = null
   try {
     const res = await $fetch<UsersResponse>('/api/_miraicms/users')
     roles.value = res.roles
@@ -107,7 +108,10 @@ async function load() {
 
     const user = res.users.find(entry => entry.id === userId)
     if (!user) {
-      error.value = 'User not found or no access.'
+      notice.value = {
+        variant: 'danger',
+        message: 'User not found or no access.',
+      }
       return
     }
 
@@ -125,7 +129,10 @@ async function load() {
     found.value = true
   }
   catch (err) {
-    error.value = parseAuthError(err, 'Could not load the user.').message
+    notice.value = {
+      variant: 'danger',
+      message: parseAuthError(err, 'Could not load the user.').message,
+    }
   }
   finally {
     loading.value = false
@@ -137,7 +144,6 @@ async function submit() {
     return
   }
   saving.value = true
-  error.value = null
   notice.value = null
 
   const body: Record<string, unknown> = {
@@ -183,40 +189,61 @@ onMounted(load)
 
 <template>
   <div :class="rootClass">
+    <div :class="`${rootClass}__head`">
+      <MiraiCmsUiButton
+        tag="a"
+        :variant="['secondary', 'icon']"
+        :link="{ url: paths.users, title: 'Users' }"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 640 640"
+        ><path
+          d="M73 297a32 32 0 0 0 0 46l160 160a32 32 0 0 0 46-46L173 352h371a32 32 0 1 0 0-64H173l106-105a32 32 0 0 0-46-46z"
+          fill="currentColor"
+        /></svg>
+      </MiraiCmsUiButton>
+      <div :class="`${rootClass}__head-title`">
+        {{ `Edit user: ${form.name || form.email || 'Unknown'}` }}
+      </div>
+      <MiraiCmsUiButton
+        tag="button"
+        type="submit"
+        :form="formId"
+        :disabled="!canSubmit"
+      >
+        {{ saving ? 'Saving…' : 'Save' }}
+      </MiraiCmsUiButton>
+    </div>
+
     <MiraiCmsUiNotice
-      v-if="notice"
+      v-if="loading"
+      placement="static"
+      variant="info"
+      message="Loading…"
+      :closable="false"
+    />
+    <MiraiCmsUiNotice
+      v-else-if="notice"
+      placement="fixed"
       :variant="notice.variant"
       :message="notice.message"
       @close="notice = null"
     />
-    <header :class="`${rootClass}__head`">
-      <NuxtLink
-        :to="paths.users"
-        :class="`${rootClass}__back`"
-      >
-        ← Users
-      </NuxtLink>
-      <h1 :class="`${rootClass}__title`">
-        Edit user
-      </h1>
-    </header>
-
-    <p
-      v-if="loading"
-      :class="`${rootClass}__empty`"
+    <MiraiCmsUiNotice
+      v-if="found && isSelf && showSelfNotice"
+      placement="fixed"
+      variant="warning"
+      :timeout="7000"
+      @close="showSelfNotice = false"
     >
-      Loading…
-    </p>
-
-    <div
-      v-else-if="!found"
-      :class="`${rootClass}__error`"
-    >
-      <strong>Error:</strong> {{ error || 'User not found.' }}
-    </div>
+      <p>You are editing your own account.</p>
+      <p>Role and status cannot be changed here. Ask another administrator if those fields need an update.</p>
+    </MiraiCmsUiNotice>
 
     <form
-      v-else
+      v-if="found"
+      :id="formId"
       :class="`${rootClass}__form`"
       @submit.prevent="submit"
     >
@@ -273,21 +300,6 @@ onMounted(load)
           :field="statusField"
         />
       </template>
-
-      <div
-        v-if="error"
-        :class="`${rootClass}__error`"
-      >
-        <strong>Error:</strong> {{ error }}
-      </div>
-
-      <MiraiCmsUiButton
-        tag="button"
-        type="submit"
-        :disabled="!canSubmit"
-      >
-        {{ saving ? 'Saving…' : 'Save' }}
-      </MiraiCmsUiButton>
     </form>
   </div>
 </template>
@@ -302,57 +314,30 @@ $root: '.miraicms-user-form';
     display: flex;
     flex-direction: column;
     gap: math-rem(16);
-    max-width: math-rem(512);
 
     &__head {
       display: flex;
-      flex-direction: column;
-      gap: math-rem(6);
-    }
+      align-items: center;
+      gap: math-rem(16);
 
-    &__back {
-      width: fit-content;
-      font-size: math-rem(13);
-      font-weight: 600;
-      color: $color-accent;
-      text-decoration: none;
-
-      &:hover {
-        color: $color-accent-hover;
-        text-decoration: underline;
+      &-title {
+        font-size: math-rem(18);
+        font-weight: 600;
       }
-    }
 
-    &__title {
-      margin: 0;
-      font-size: math-rem(20);
-      font-weight: 600;
-      color: $color-ink;
-    }
-
-    &__empty {
-      margin: 0;
-      color: $color-muted;
-      font-size: math-rem(14);
+      :deep([type="submit"]) {
+        margin-left: auto;
+      }
     }
 
     &__form {
       display: flex;
       flex-direction: column;
       gap: math-rem(14);
-      padding: math-rem(18);
+      padding: math-rem(12);
       background: $color-surface;
       border: 1px solid $color-border;
       border-radius: $border-radius;
-    }
-
-    &__error {
-      padding: math-rem(12) math-rem(14);
-      border: 1px solid $color-danger;
-      border-radius: $border-radius;
-      background: $color-danger-bg;
-      color: $color-danger;
-      font-size: math-rem(14);
     }
   }
 }

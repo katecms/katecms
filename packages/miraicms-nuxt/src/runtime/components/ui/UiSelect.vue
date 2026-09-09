@@ -1070,12 +1070,14 @@ $root: ".miraicms-select";
   &.below {
     #{$root}__dropdown {
       top: calc(100% + 5px);
+      box-shadow: 0 8px 15px rgba(20, 26, 42, 0.1);
     }
   }
 
   &.above {
     #{$root}__dropdown {
       bottom: calc(100% + 5px);
+      box-shadow: 0 -8px 15px rgba(20, 26, 42, 0.1);
     }
   }
 
@@ -1104,9 +1106,10 @@ $root: ".miraicms-select";
     img {
       display: block;
       width: 100%;
-      height: 17px;
+      height: 17px !important;
       object-fit: contain;
       border-radius: 3px;
+      background-color: $color-border;
 
       &.no-img {
         background-color: $color-border;
@@ -1147,10 +1150,11 @@ $root: ".miraicms-select";
     font-size: math-rem(13);
 
     img {
-      width: 15px;
-      height: 15px;
+      width: 25px;
+      height: 17px !important;
       object-fit: contain;
       object-position: center;
+      background-color: $color-border;
 
       &.no-img {
         background-color: $color-border;
@@ -1349,7 +1353,7 @@ $root: ".miraicms-select";
     img {
       display: block;
       width: 25px;
-      height: 25px;
+      height: 25px !important;
       object-fit: contain;
       border-radius: 3px;
 

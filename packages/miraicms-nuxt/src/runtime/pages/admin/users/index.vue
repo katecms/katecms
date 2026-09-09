@@ -70,37 +70,39 @@ onMounted(load)
 <template>
   <div :class="rootClass">
     <header :class="`${rootClass}__head`">
-      <h1 :class="`${rootClass}__title`">
+      <div :class="`${rootClass}__head-title`">
         Users
-      </h1>
+      </div>
       <MiraiCmsUiButton
-        v-if="canCreate"
         tag="a"
+        :disabled="!canCreate"
         :link="{ url: `${paths.users}/create`, title: 'Add user' }"
       >
         Add user
       </MiraiCmsUiButton>
     </header>
 
-    <div
-      v-if="error"
-      :class="`${rootClass}__error`"
-    >
-      <strong>Error:</strong> {{ error }}
-    </div>
-
-    <p
+    <MiraiCmsUiNotice
       v-if="loading"
-      :class="`${rootClass}__empty`"
-    >
-      Loading…
-    </p>
-    <p
+      placement="static"
+      variant="info"
+      message="Loading…"
+      :closable="false"
+    />
+    <MiraiCmsUiNotice
+      v-else-if="error"
+      placement="static"
+      variant="danger"
+      :message="error"
+      @close="error = null"
+    />
+    <MiraiCmsUiNotice
       v-else-if="!users.length"
-      :class="`${rootClass}__empty`"
-    >
-      No users yet.
-    </p>
+      placement="static"
+      variant="info"
+      message="No users yet."
+      :closable="false"
+    />
 
     <div
       v-else
@@ -190,28 +192,11 @@ $root: '.miraicms-users';
       align-items: center;
       justify-content: space-between;
       gap: math-rem(16);
-    }
 
-    &__title {
-      margin: 0;
-      font-size: math-rem(20);
-      font-weight: 600;
-      color: $color-ink;
-    }
-
-    &__error {
-      padding: math-rem(12) math-rem(14);
-      border: 1px solid $color-danger;
-      border-radius: $border-radius;
-      background: $color-danger-bg;
-      color: $color-danger;
-      font-size: math-rem(14);
-    }
-
-    &__empty {
-      margin: 0;
-      color: $color-muted;
-      font-size: math-rem(14);
+      &-title {
+        font-size: math-rem(18);
+        font-weight: 600;
+      }
     }
 
     &__table-wrap {

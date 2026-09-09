@@ -27,10 +27,17 @@ const variants = computed(() => {
   return list.filter(v => typeof v === 'string' && v.trim().length > 0)
 })
 
+function attrDisabled(value: unknown): boolean {
+  return value !== undefined && value !== false && value !== null && value !== 'false'
+}
+
+const isDisabled = computed(() => attrDisabled(attrs.disabled))
+
 const classBtn = computed(() => [
   'miraicms-btn',
   ...variants.value.map(v => `miraicms-btn--${v}`),
-])
+  props.tag === 'a' && isDisabled.value ? 'miraicms-btn--disabled' : '',
+].filter(Boolean))
 
 const linkObj = computed<ButtonLink>(() => {
   if (typeof props.link === 'string') {
@@ -45,8 +52,13 @@ const finalAttrs = computed(() => {
   const next: Record<string, unknown> = { ...attrs }
 
   if (props.tag === 'a') {
+    delete next.disabled
     next.to = linkObj.value.url || ''
     next.target = linkObj.value.target === '_blank' ? '_blank' : null
+    if (isDisabled.value) {
+      next['aria-disabled'] = 'true'
+      next.tabindex = -1
+    }
   }
   else if (props.tag === 'button') {
     next.type = attrs.type ?? 'button'
@@ -68,6 +80,14 @@ const finalAttrs = computed(() => {
 
 const hasLink = computed(() => props.tag === 'a' && !!linkObj.value.url)
 
+function onLinkClick(event: MouseEvent) {
+  if (!isDisabled.value) {
+    return
+  }
+  event.preventDefault()
+  event.stopImmediatePropagation()
+}
+
 const buttonEl = useTemplateRef<HTMLElement>('buttonEl')
 
 defineExpose({ buttonEl })
@@ -78,6 +98,7 @@ defineExpose({ buttonEl })
     v-if="hasLink"
     ref="buttonEl"
     v-bind="finalAttrs"
+    @click="onLinkClick"
   >
     <slot>{{ title }}</slot>
   </NuxtLink>

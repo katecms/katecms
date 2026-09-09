@@ -222,10 +222,10 @@ onMounted(async () => {
 <template>
   <div :class="rootClass">
     <header :class="`${rootClass}__head`">
-      <h1 :class="`${rootClass}__title`">
+      <div :class="`${rootClass}__head-title`">
         Media library
-      </h1>
-      <div :class="`${rootClass}__actions`">
+      </div>
+      <div :class="`${rootClass}__head-actions`">
         <input
           ref="fileInput"
           type="file"
@@ -522,18 +522,16 @@ $root: '.miraicms-media';
       align-items: center;
       justify-content: space-between;
       gap: math-rem(16);
-    }
 
-    &__title {
-      margin: 0;
-      font-size: math-rem(20);
-      font-weight: 600;
-      color: $color-ink;
-    }
+      &-title {
+        font-size: math-rem(18);
+        font-weight: 600;
+      }
 
-    &__actions {
-      display: flex;
-      gap: math-rem(8);
+      &-actions {
+        display: flex;
+        gap: math-rem(8);
+      }
     }
 
     &__file {

@@ -13,6 +13,8 @@ export type { NewUser, User, UserUpdate } from './users'
 export { isUniqueConstraintError } from './errors'
 
 export {
+  countCollections,
+  countCollectionStatuses,
   createCollection,
   deleteCollection,
   findCollectionById,
@@ -25,8 +27,11 @@ export {
 } from './collections'
 export type {
   Collection,
+  CollectionListStatus,
   CollectionParentOption,
+  CollectionStatusCounts,
   CollectionUpdate,
+  ListCollectionsOptions,
   NewCollection,
   ValidateCollectionParentResult,
 } from './collections'

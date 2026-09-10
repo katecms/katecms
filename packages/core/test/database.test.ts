@@ -5,6 +5,8 @@ import { join } from 'node:path'
 import { sql } from 'kysely'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  countCollections,
+  countCollectionStatuses,
   createCollection,
   createDictionary,
   createSqliteDb,
@@ -18,6 +20,7 @@ import {
   toSafeUser,
   linkCollectionDictionary,
   listCollectionParentOptions,
+  listCollections,
   listCollectionsByDictionary,
   loadCollectionSlugPath,
   migrateSqlite,
@@ -290,6 +293,59 @@ describe('database layer', () => {
     }
     finally {
       await db.destroy()
+    }
+  })
+
+  it('filters, searches and pages collection lists', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      const user = await createUser(db, {
+        email: 'ada@example.com',
+        password_hash: 'hash',
+      })
+      await createCollection(db, {
+        type: 'page',
+        slug: 'about',
+        title: 'About us',
+        status: 'published',
+        author_id: user.id,
+      })
+      await createCollection(db, {
+        type: 'page',
+        slug: 'draft-notes',
+        title: 'Notes',
+        status: 'draft',
+        author_id: user.id,
+      })
+      const trashed = await createCollection(db, {
+        type: 'page',
+        slug: 'old',
+        title: 'Old page',
+        status: 'draft',
+        author_id: user.id,
+      })
+      await updateCollection(db, trashed.id, { status: 'trash' })
+
+      const active = await listCollections(db, 'page')
+      expect(active.map(row => row.slug).sort()).toEqual(['about', 'draft-notes'])
+      expect(await countCollections(db, 'page')).toBe(2)
+      expect(await countCollections(db, 'page', { status: 'trash' })).toBe(1)
+      expect(await countCollectionStatuses(db, 'page')).toEqual({
+        all: 2,
+        published: 1,
+        draft: 1,
+        trash: 1,
+      })
+
+      const found = await listCollections(db, 'page', { search: 'ABOUT' })
+      expect(found).toHaveLength(1)
+      expect(found[0]?.slug).toBe('about')
+
+      const page = await listCollections(db, 'page', { limit: 1, offset: 1 })
+      expect(page).toHaveLength(1)
+    }
+    finally {
+      await close()
     }
   })
 

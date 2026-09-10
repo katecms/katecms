@@ -59,7 +59,6 @@ export default defineNuxtConfig({
           name: 'Pages', // основное название для типа записи // required
           singularName: 'Page', // название для одной записи этого типа, default: labels.singularName = labels.name
         },
-        icon: '<svg width="433" height="340" viewBox="0 0 433 340" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M72.4294 339.995L258.446 340C312.173 340 349.689 324.538 383.014 293.613C416.338 262.349 433 221.229 433 170.255C433 119.28 416.168 78.1609 382.504 46.8965C349.179 15.6322 311.833 0 258.446 0L144 0.000978818V171.999L216 258V63.7181H258.446C292.111 63.7181 318.294 73.7431 336.996 93.7931C355.699 113.503 365.05 138.991 365.05 170.255C365.05 200.16 355.359 225.307 335.976 245.697C316.934 266.087 291.09 276.282 258.446 276.282H72V85.9973L0 0V340L72.4294 339.995Z" fill="#05083E"/></svg>',
         hierarchical: false, // default: false
         autosave: true, // уход со страницы без «Сохранить» → черновик
         rewrite: '/inf/%name%', // нужно добавить чтобы можно было определить ЧПУ
@@ -91,6 +90,21 @@ export default defineNuxtConfig({
             position: 'sidebar',
             required: true,
             defaultValue: 'SEO Description',
+          },
+        },
+      },
+      products: {
+        labels: {
+          name: 'Product',
+        },
+        fields: {
+          description: {
+            type: 'wysiwyg',
+            label: 'Description',
+            required: true,
+            tabs: 'all',
+            toolbar: 'full',
+            columnWidth: 100,
           },
         },
       },

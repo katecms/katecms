@@ -1,4 +1,5 @@
-import type { Insertable, Kysely, Selectable, Updateable } from 'kysely'
+import type { Insertable, Kysely, Selectable, SelectQueryBuilder, SqlBool, Updateable } from 'kysely'
+import { sql } from 'kysely'
 import type { CollectionStatus, Database, CollectionsTable } from '../client'
 import { buildSlugPathMap } from '../../rewrite'
 import { applyListPaging } from './paging'
@@ -38,19 +39,109 @@ export async function findCollectionById(
     .executeTakeFirst()
 }
 
+/**
+ * `active` (default) is published + draft. `all` includes trash.
+ * A concrete {@link CollectionStatus} lists only that status.
+ */
+export type CollectionListStatus = CollectionStatus | 'active' | 'all'
+
+export interface ListCollectionsOptions extends ListPaging {
+  status?: CollectionListStatus
+  /** Case-insensitive match on title or slug (max 200 chars; `%`/`_` stripped). */
+  search?: string
+}
+
+export interface CollectionStatusCounts {
+  /** Published + draft (excludes trash). */
+  all: number
+  published: number
+  draft: number
+  trash: number
+}
+
+function searchPattern(search: string | undefined): string | null {
+  const trimmed = search?.trim().slice(0, 200) ?? ''
+  if (!trimmed) {
+    return null
+  }
+  const escaped = trimmed.replace(/[%_]/g, '').toLowerCase()
+  return escaped ? `%${escaped}%` : null
+}
+
+function withCollectionListFilters<O>(
+  query: SelectQueryBuilder<Database, 'collections', O>,
+  type: string,
+  options?: ListCollectionsOptions,
+): SelectQueryBuilder<Database, 'collections', O> {
+  let next = query.where('type', '=', type)
+  const status = options?.status ?? 'active'
+  if (status === 'active') {
+    next = next.where('status', '!=', 'trash')
+  }
+  else if (status !== 'all') {
+    next = next.where('status', '=', status)
+  }
+  const pattern = searchPattern(options?.search)
+  if (pattern) {
+    next = next.where(sql<SqlBool>`(lower(title) like ${pattern} or lower(slug) like ${pattern})`)
+  }
+  return next
+}
+
 export async function listCollections(
   db: Kysely<Database>,
   type: string,
-  paging?: ListPaging,
+  options?: ListCollectionsOptions,
 ): Promise<Collection[]> {
-  const query = db
-    .selectFrom('collections')
-    .selectAll()
-    .where('type', '=', type)
-    .where('status', '!=', 'trash')
+  const query = withCollectionListFilters(
+    db.selectFrom('collections').selectAll(),
+    type,
+    options,
+  )
     .orderBy('menu_order', 'asc')
     .orderBy('created_at', 'desc')
-  return applyListPaging(query, paging).execute()
+  return applyListPaging(query, options).execute()
+}
+
+export async function countCollections(
+  db: Kysely<Database>,
+  type: string,
+  options?: Omit<ListCollectionsOptions, keyof ListPaging>,
+): Promise<number> {
+  const row = await withCollectionListFilters(
+    db.selectFrom('collections').select(eb => eb.fn.countAll<number>().as('n')),
+    type,
+    options,
+  ).executeTakeFirstOrThrow()
+  return Number(row.n)
+}
+
+/** Tab counts for the admin list. Search is not applied so numbers stay stable. */
+export async function countCollectionStatuses(
+  db: Kysely<Database>,
+  type: string,
+): Promise<CollectionStatusCounts> {
+  const rows = await db
+    .selectFrom('collections')
+    .select(['status', eb => eb.fn.countAll<number>().as('n')])
+    .where('type', '=', type)
+    .groupBy('status')
+    .execute()
+
+  const counts: CollectionStatusCounts = {
+    all: 0,
+    published: 0,
+    draft: 0,
+    trash: 0,
+  }
+  for (const row of rows) {
+    const n = Number(row.n)
+    if (row.status === 'published' || row.status === 'draft' || row.status === 'trash') {
+      counts[row.status] = n
+    }
+  }
+  counts.all = counts.published + counts.draft
+  return counts
 }
 
 export async function createCollection(

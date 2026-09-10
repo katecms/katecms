@@ -26,6 +26,21 @@ function resolveModuleSqliteFilename(rootDir: string, filename: string): string 
   return join(rootDir, value)
 }
 
+function toPublicCollections(collections: ResolvedMiraiCmsConfig['collections']) {
+  return Object.fromEntries(
+    Object.entries(collections).map(([slug, def]) => [
+      slug,
+      {
+        labels: {
+          name: def.labels.name,
+          singularName: def.labels.singularName ?? def.labels.name,
+        },
+        ...(typeof def.icon === 'string' && def.icon.trim() ? { icon: def.icon } : {}),
+      },
+    ]),
+  )
+}
+
 export default defineNuxtModule<MiraiCmsConfig>({
   meta: {
     name: 'miraicms-nuxt',
@@ -74,6 +89,7 @@ export default defineNuxtModule<MiraiCmsConfig>({
       adminPath: resolved.adminPath,
       loginPath: resolved.loginPath,
       registerPath: resolved.registerPath,
+      collections: toPublicCollections(resolved.collections),
     }
 
     addServerPlugin(resolver.resolve('./runtime/server/plugins/auto-migrate'))
@@ -161,6 +177,37 @@ export default defineNuxtModule<MiraiCmsConfig>({
       handler: resolver.resolve('./runtime/server/api/_miraicms/users/[id].patch'),
     })
 
+    addServerHandler({
+      route: '/api/_miraicms/collections/:collection',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/collections/[collection].get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/collections/:collection',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/collections/[collection].post'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/collections/:collection/:id',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/collections/[collection]/[id].get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/collections/:collection/:id',
+      method: 'patch',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/collections/[collection]/[id].patch'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/collections/:collection/:id',
+      method: 'delete',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/collections/[collection]/[id].delete'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/resolve',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/resolve.get'),
+    })
+
     addRouteMiddleware({
       name: 'miraicms-auth-guard',
       path: resolver.resolve('./runtime/middleware/auth-guard'),
@@ -175,6 +222,10 @@ export default defineNuxtModule<MiraiCmsConfig>({
       {
         name: 'useCmsPaths',
         from: resolver.resolve('./runtime/composables/useCmsPaths'),
+      },
+      {
+        name: 'getCollection',
+        from: resolver.resolve('./runtime/composables/getCollection'),
       },
     ])
 
@@ -220,27 +271,27 @@ export default defineNuxtModule<MiraiCmsConfig>({
               path: 'users/:id',
               file: resolver.resolve('./runtime/pages/admin/users/[id].vue'),
             },
-            // // Collections (slug from nuxtcms.config.ts)
-            // {
-            //   name: 'admin-collections',
-            //   path: 'collections/:collection',
-            //   file: resolver.resolve('./runtime/pages/admin/collections/index.vue'),
-            // },
-            // {
-            //   name: 'admin-collections-create',
-            //   path: 'collections/:collection/create',
-            //   file: resolver.resolve('./runtime/pages/admin/collections/create.vue'),
-            // },
-            // {
-            //   name: 'admin-collections-id',
-            //   path: 'collections/:collection/:id',
-            //   file: resolver.resolve('./runtime/pages/admin/collections/[id].vue'),
-            // },
-            // {
-            //   name: 'admin-taxonomy',
-            //   path: 'taxonomies/:taxonomy',
-            //   file: resolver.resolve('./runtime/pages/admin/[taxonomy].vue'),
-            // },
+            {
+              name: 'admin-collections',
+              path: 'collections/:collection',
+              file: resolver.resolve('./runtime/pages/admin/collections/index.vue'),
+            },
+            {
+              name: 'admin-collections-create',
+              path: 'collections/:collection/create',
+              file: resolver.resolve('./runtime/pages/admin/collections/create.vue'),
+            },
+            {
+              name: 'admin-collections-id',
+              path: 'collections/:collection/:id',
+              file: resolver.resolve('./runtime/pages/admin/collections/[id].vue'),
+            },
+            // DEMO FIELDS
+            {
+              name: 'admin-demo-fields',
+              path: 'demo-fields',
+              file: resolver.resolve('./runtime/pages/admin/demo-fields.vue'),
+            },
           ],
         },
         {
@@ -276,6 +327,10 @@ declare module '@nuxt/schema' {
       adminPath: string
       loginPath: string
       registerPath: string
+      collections: Record<string, {
+        labels: { name: string, singularName: string }
+        icon?: string
+      }>
     }
   }
 }
@@ -292,6 +347,10 @@ declare module 'nuxt/schema' {
       adminPath: string
       loginPath: string
       registerPath: string
+      collections: Record<string, {
+        labels: { name: string, singularName: string }
+        icon?: string
+      }>
     }
   }
 }

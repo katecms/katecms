@@ -8,12 +8,19 @@ useHead({ title: 'Media library' })
 
 const rootClass = 'miraicms-media'
 
+const POLL_MAX_ATTEMPTS = 60
+const POLL_INTERVAL_MS = 2000
+
 const items = ref<MediaItem[]>([])
 const loading = ref(false)
 const uploading = ref(false)
 const saving = ref(false)
 const regenerating = ref(false)
 const error = ref<string | null>(null)
+const notice = ref<{
+  variant: 'success' | 'info' | 'warning' | 'danger'
+  message: string
+} | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 
 const selected = ref<MediaItem | null>(null)
@@ -65,33 +72,92 @@ function replaceItem(next: MediaItem) {
   }
 }
 
-async function load() {
-  loading.value = true
-  error.value = null
+async function load(options?: { silent?: boolean }) {
+  if (!options?.silent) {
+    loading.value = true
+    error.value = null
+  }
   try {
     const res = await $fetch<{ media: MediaItem[] }>('/api/_miraicms/media')
     items.value = res.media
+    if (selected.value) {
+      selected.value = items.value.find(entry => entry.id === selected.value?.id) ?? selected.value
+    }
   }
   catch (err) {
     error.value = errMessage(err, 'Could not load the media library.')
   }
   finally {
-    loading.value = false
+    if (!options?.silent) {
+      loading.value = false
+    }
   }
 }
 
-function pollVariants(ids: number[], attempt = 0): void {
-  if (!ids.length || attempt >= 6) {
+function failedCount(ids: number[]): number {
+  return ids.filter((id) => {
+    return items.value.find(entry => entry.id === id)?.variants_status === 'failed'
+  }).length
+}
+
+function showRegenNotice(ids: number[]) {
+  const failed = failedCount(ids)
+  if (failed && failed === ids.length) {
+    notice.value = {
+      variant: 'danger',
+      message: ids.length === 1
+        ? 'Could not regenerate this image.'
+        : 'Could not regenerate image variants.',
+    }
     return
   }
-  setTimeout(async () => {
-    await load()
-    const remaining = ids.filter((id) => {
-      const item = items.value.find(entry => entry.id === id)
-      return item?.variants_status === 'pending'
-    })
-    pollVariants(remaining, attempt + 1)
-  }, 2000 + attempt * 2000)
+  if (failed) {
+    notice.value = {
+      variant: 'warning',
+      message: failed === 1
+        ? 'Regeneration finished. 1 image failed.'
+        : `Regeneration finished. ${failed} images failed.`,
+    }
+    return
+  }
+  notice.value = {
+    variant: 'success',
+    message: 'Image variants regenerated.',
+  }
+}
+
+function pollVariants(
+  ids: number[],
+  options: {
+    onComplete?: (trackedIds: number[]) => void
+    onTimeout?: () => void
+    /** `0` keeps polling until nothing is pending. */
+    maxAttempts?: number
+  } = {},
+): void {
+  const tracked = ids.slice()
+  const maxAttempts = options.maxAttempts ?? POLL_MAX_ATTEMPTS
+
+  const tick = (remaining: number[], attempt: number) => {
+    if (!remaining.length) {
+      options.onComplete?.(tracked)
+      return
+    }
+    if (maxAttempts > 0 && attempt >= maxAttempts) {
+      options.onTimeout?.()
+      return
+    }
+    setTimeout(async () => {
+      await load({ silent: true })
+      const next = remaining.filter((id) => {
+        const item = items.value.find(entry => entry.id === id)
+        return item?.variants_status === 'pending'
+      })
+      tick(next, attempt + 1)
+    }, POLL_INTERVAL_MS)
+  }
+
+  tick(tracked, 0)
 }
 
 async function onFilesSelected(event: Event) {
@@ -184,29 +250,51 @@ async function regenerateAll() {
   }
   regenerating.value = true
   error.value = null
+  notice.value = null
   try {
-    await $fetch('/api/_miraicms/media/regenerate', { method: 'POST' })
-    await load()
-    pollVariants(items.value.filter(item => item.variants_status === 'pending').map(item => item.id))
+    const res = await $fetch<{ count: number }>('/api/_miraicms/media/regenerate', { method: 'POST' })
+    await load({ silent: true })
+    const pendingIds = items.value
+      .filter(item => item.variants_status === 'pending')
+      .map(item => item.id)
+    if (!pendingIds.length) {
+      notice.value = {
+        variant: 'success',
+        message: res.count ? 'Image variants regenerated.' : 'No images to regenerate.',
+      }
+      regenerating.value = false
+      return
+    }
+    pollVariants(pendingIds, {
+      maxAttempts: 0,
+      onComplete: (ids) => {
+        showRegenNotice(ids)
+        regenerating.value = false
+      },
+    })
   }
   catch (err) {
     error.value = errMessage(err, 'Could not start regeneration.')
-  }
-  finally {
     regenerating.value = false
   }
 }
 
 async function regenerateOne(item: MediaItem) {
   error.value = null
+  notice.value = null
   try {
     const res = await $fetch<{ media: MediaItem }>(`/api/_miraicms/media/${item.id}/regenerate`, {
       method: 'POST',
     })
     replaceItem(res.media)
-    if (res.media.variants_status === 'pending') {
-      pollVariants([res.media.id])
+    if (res.media.variants_status !== 'pending') {
+      showRegenNotice([res.media.id])
+      return
     }
+    pollVariants([res.media.id], {
+      maxAttempts: 0,
+      onComplete: ids => showRegenNotice(ids),
+    })
   }
   catch (err) {
     error.value = errMessage(err, 'Could not regenerate this image.')
@@ -240,7 +328,7 @@ onMounted(async () => {
           title="Regenerate image variants from the current media config"
           @click="regenerateAll"
         >
-          {{ regenerating ? 'Starting…' : 'Regenerate' }}
+          {{ regenerating ? 'Regenerating…' : 'Regenerate' }}
         </MiraiCmsUiButton>
         <MiraiCmsUiButton
           tag="button"
@@ -252,31 +340,40 @@ onMounted(async () => {
       </div>
     </header>
 
-    <div
+    <MiraiCmsUiNotice
+      v-if="notice"
+      placement="fixed"
+      :variant="notice.variant"
+      :message="notice.message"
+      @close="notice = null"
+    />
+    <MiraiCmsUiNotice
       v-if="error"
-      :class="`${rootClass}__error`"
-    >
-      <strong>Error:</strong> {{ error }}
-    </div>
-
-    <p
+      placement="static"
+      variant="danger"
+      :message="error"
+      @close="error = null"
+    />
+    <MiraiCmsUiNotice
       v-if="loading"
-      :class="`${rootClass}__empty`"
-    >
-      Loading…
-    </p>
-    <p
-      v-else-if="!items.length"
-      :class="`${rootClass}__empty`"
-    >
-      No files yet. Upload the first one.
-    </p>
+      placement="static"
+      variant="info"
+      message="Loading…"
+      :closable="false"
+    />
+    <MiraiCmsUiNotice
+      v-else-if="!items.length && !error"
+      placement="static"
+      variant="info"
+      message="No files yet. Upload the first one."
+      :closable="false"
+    />
 
-    <ul
-      v-else
+    <div
+      v-else-if="items.length"
       :class="`${rootClass}__grid`"
     >
-      <li
+      <div
         v-for="item in items"
         :key="item.id"
         :class="`${rootClass}__card`"
@@ -344,8 +441,8 @@ onMounted(async () => {
           </svg>
           Delete
         </MiraiCmsUiButton>
-      </li>
-    </ul>
+      </div>
+    </div>
 
     <div
       v-if="selected"
@@ -538,28 +635,10 @@ $root: '.miraicms-media';
       display: none;
     }
 
-    &__error {
-      padding: math-rem(12) math-rem(14);
-      border: 1px solid $color-danger;
-      border-radius: $border-radius;
-      background: $color-danger-bg;
-      color: $color-danger;
-      font-size: math-rem(14);
-    }
-
-    &__empty {
-      margin: 0;
-      color: $color-muted;
-      font-size: math-rem(14);
-    }
-
     &__grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(math-rem(160), 1fr));
       gap: math-rem(16);
-      margin: 0;
-      padding: 0;
-      list-style: none;
     }
 
     &__card {

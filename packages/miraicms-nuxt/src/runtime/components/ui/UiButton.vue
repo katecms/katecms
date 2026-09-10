@@ -241,5 +241,10 @@ $root: '.miraicms-btn';
       width: math-rem(32);
     }
   }
+
+  &--full {
+    display: flex;
+    width: 100%;
+  }
 }
 </style>

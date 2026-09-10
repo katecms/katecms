@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRuntimeConfig } from '#imports'
-import { useCmsPaths } from '../composables/useCmsPaths'
-import type { PublicCollectionNav } from '../utils/collections'
+import { useCmsPaths } from '../../composables/useCmsPaths'
+import type { PublicCollectionNav } from '../../utils/collections'
 
 const rootClass = 'miraicms-menu'
 const route = useRoute()
@@ -83,7 +83,7 @@ const items = computed<MenuItem[]>(() => {
       :to="paths.admin"
     >
       <img
-        src="../assets/img/miraicms-logo.svg"
+        src="../../assets/img/miraicms-logo.svg"
         alt="MiraiCMS"
       >
     </NuxtLink> -->
@@ -107,7 +107,7 @@ const items = computed<MenuItem[]>(() => {
 </template>
 
 <style scoped lang="scss">
-@use "../assets/styles" as *;
+@use "../../assets/styles" as *;
 
 $root: '.miraicms-menu';
 

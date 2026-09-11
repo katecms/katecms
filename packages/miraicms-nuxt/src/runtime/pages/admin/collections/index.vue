@@ -394,53 +394,55 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
                 <span :class="`${rootClass}__date-value`">{{ entryDateDisplay(entry).value }}</span>
               </div>
             </td>
-            <td :class="`${rootClass}__actions`">
-              <MiraiCmsUiButton
-                v-if="entry.status !== 'trash'"
-                tag="a"
-                :variant="['secondary', 'small']"
-                :link="{ url: viewUrl(entry), title: 'View', target: '_blank' }"
-              >
-                View
-              </MiraiCmsUiButton>
-              <MiraiCmsUiButton
-                v-if="entry.canUpdate || entry.status === 'trash'"
-                tag="a"
-                :variant="['secondary', 'small']"
-                :link="{
-                  url: paths.collectionEntry(collectionSlug, entry.id),
-                  title: 'Edit',
-                }"
-              >
-                {{ entry.canUpdate ? 'Edit' : 'View' }}
-              </MiraiCmsUiButton>
-              <MiraiCmsUiButton
-                v-if="entry.status !== 'trash' && entry.canUpdate"
-                tag="button"
-                :variant="['red', 'small']"
-                :disabled="pendingId === entry.id || emptyingTrash"
-                @click="moveToTrash(entry)"
-              >
-                Trash
-              </MiraiCmsUiButton>
-              <MiraiCmsUiButton
-                v-if="entry.status === 'trash' && entry.canUpdate"
-                tag="button"
-                :variant="['secondary', 'small']"
-                :disabled="pendingId === entry.id || emptyingTrash"
-                @click="restore(entry)"
-              >
-                Restore
-              </MiraiCmsUiButton>
-              <MiraiCmsUiButton
-                v-if="entry.status === 'trash' && entry.canDelete"
-                tag="button"
-                :variant="['red', 'small']"
-                :disabled="pendingId === entry.id || emptyingTrash"
-                @click="removePermanent(entry)"
-              >
-                Delete
-              </MiraiCmsUiButton>
+            <td>
+              <div :class="`${rootClass}__actions`">
+                <MiraiCmsUiButton
+                  v-if="entry.status !== 'trash'"
+                  tag="a"
+                  :variant="['secondary', 'small']"
+                  :link="{ url: viewUrl(entry), title: 'View', target: '_blank' }"
+                >
+                  View
+                </MiraiCmsUiButton>
+                <MiraiCmsUiButton
+                  v-if="entry.canUpdate || entry.status === 'trash'"
+                  tag="a"
+                  :variant="['secondary', 'small']"
+                  :link="{
+                    url: paths.collectionEntry(collectionSlug, entry.id),
+                    title: 'Edit',
+                  }"
+                >
+                  {{ entry.canUpdate ? 'Edit' : 'View' }}
+                </MiraiCmsUiButton>
+                <MiraiCmsUiButton
+                  v-if="entry.status !== 'trash' && entry.canUpdate"
+                  tag="button"
+                  :variant="['red', 'small']"
+                  :disabled="pendingId === entry.id || emptyingTrash"
+                  @click="moveToTrash(entry)"
+                >
+                  Trash
+                </MiraiCmsUiButton>
+                <MiraiCmsUiButton
+                  v-if="entry.status === 'trash' && entry.canUpdate"
+                  tag="button"
+                  :variant="['secondary', 'small']"
+                  :disabled="pendingId === entry.id || emptyingTrash"
+                  @click="restore(entry)"
+                >
+                  Restore
+                </MiraiCmsUiButton>
+                <MiraiCmsUiButton
+                  v-if="entry.status === 'trash' && entry.canDelete"
+                  tag="button"
+                  :variant="['red', 'small']"
+                  :disabled="pendingId === entry.id || emptyingTrash"
+                  @click="removePermanent(entry)"
+                >
+                  Delete
+                </MiraiCmsUiButton>
+              </div>
             </td>
           </tr>
         </tbody>

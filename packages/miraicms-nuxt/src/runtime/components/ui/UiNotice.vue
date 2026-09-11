@@ -249,10 +249,17 @@ $root: '.miraicms-notice';
 
     &__text {
       flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(4);
       margin: 0;
       min-width: 0;
       font-weight: 600;
       align-self: center;
+
+      :deep(div) {
+        margin: 0;
+      }
     }
 
     &__close {

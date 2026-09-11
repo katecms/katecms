@@ -59,7 +59,7 @@ export default defineNuxtConfig({
           name: 'Pages', // основное название для типа записи // required
           singularName: 'Page', // название для одной записи этого типа, default: labels.singularName = labels.name
         },
-        hierarchical: false, // default: false
+        hierarchical: true, // default: false
         autosave: true, // уход со страницы без «Сохранить» → черновик
         rewrite: '/inf/%name%', // нужно добавить чтобы можно было определить ЧПУ
         fields: {

@@ -88,7 +88,7 @@ const items = computed<MenuItem[]>(() => {
       >
     </NuxtLink> -->
 
-    <nav :class="`${rootClass}__wrap`">
+    <div :class="`${rootClass}__wrap`">
       <NuxtLink
         v-for="item in items"
         :key="item.key"
@@ -102,7 +102,7 @@ const items = computed<MenuItem[]>(() => {
         />
         <span :class="`${rootClass}__label`">{{ item.label }}</span>
       </NuxtLink>
-    </nav>
+    </div>
   </div>
 </template>
 

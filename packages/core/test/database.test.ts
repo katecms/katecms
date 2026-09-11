@@ -11,6 +11,7 @@ import {
   createDictionary,
   createSqliteDb,
   createUser,
+  deleteTrashedCollections,
   deleteUser,
   findCollectionBySlugPath,
   findDictionaryByTypeAndSlug,
@@ -19,6 +20,7 @@ import {
   listUsers,
   toSafeUser,
   linkCollectionDictionary,
+  flattenCollectionTree,
   listCollectionParentOptions,
   listCollections,
   listCollectionsByDictionary,
@@ -343,10 +345,31 @@ describe('database layer', () => {
 
       const page = await listCollections(db, 'page', { limit: 1, offset: 1 })
       expect(page).toHaveLength(1)
+
+      expect(await deleteTrashedCollections(db, 'page')).toBe(1)
+      expect(await countCollections(db, 'page', { status: 'trash' })).toBe(0)
+      expect(await countCollections(db, 'page')).toBe(2)
     }
     finally {
       await close()
     }
+  })
+
+  it('flattens collection rows as a parent/child tree', () => {
+    const rows = [
+      { id: 3, parent_id: 1 },
+      { id: 1, parent_id: null },
+      { id: 2, parent_id: 1 },
+      { id: 4, parent_id: 2 },
+      { id: 5, parent_id: 99 },
+    ]
+    expect(flattenCollectionTree(rows).map(node => [node.row.id, node.depth])).toEqual([
+      [1, 0],
+      [3, 1],
+      [2, 1],
+      [4, 2],
+      [5, 0],
+    ])
   })
 
   it('resolves hierarchical slug paths and parent options', async () => {
@@ -384,6 +407,13 @@ describe('database layer', () => {
       expect(await findCollectionBySlugPath(db, 'page', ['about', 'team'])).toMatchObject({ id: child.id })
       expect(await findCollectionBySlugPath(db, 'page', ['about', 'secret'], ['published'])).toBeUndefined()
       expect(await findCollectionBySlugPath(db, 'page', ['about', 'secret'])).toMatchObject({ id: draft.id })
+
+      const listed = flattenCollectionTree(await listCollections(db, 'page'))
+      expect(listed.map(node => [node.row.slug, node.depth])).toEqual([
+        ['about', 0],
+        ['secret', 1],
+        ['team', 1],
+      ])
 
       const options = await listCollectionParentOptions(db, 'page', child.id)
       expect(options.map(option => option.slugPath).sort()).toEqual(['about', 'about/secret'])

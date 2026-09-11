@@ -237,8 +237,8 @@ onMounted(load)
       :timeout="7000"
       @close="showSelfNotice = false"
     >
-      <p>You are editing your own account.</p>
-      <p>Role and status cannot be changed here. Ask another administrator if those fields need an update.</p>
+      <div>You are editing your own account.</div>
+      <div>Role and status cannot be changed here. Ask another administrator if those fields need an update.</div>
     </MiraiCmsUiNotice>
 
     <form

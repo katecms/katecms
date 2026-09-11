@@ -35,15 +35,17 @@ const collection = ref<AdminCollectionMeta | null>(null)
 const entries = ref<AdminEntry[]>([])
 const counts = ref({ all: 0, published: 0, draft: 0, trash: 0 })
 const total = ref(0)
-const perPage = ref(20)
+const perPage = ref(10)
 const canCreate = ref(false)
+const canDelete = ref(false)
 
 const loading = ref(true)
 const error = ref<string | null>(null)
 const pendingId = ref<number | null>(null)
+const emptyingTrash = ref(false)
 const searchInput = ref('')
 
-const title = computed(() => collection.value?.labels.name || collectionSlug.value)
+const title = computed(() => collection.value?.labels.name || '')
 useHead({ title })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / perPage.value)))
@@ -77,20 +79,47 @@ function viewUrl(entry: AdminEntry): string {
   return entry.status === 'draft' ? `${path}?preview=1` : path
 }
 
-async function setQuery(patch: Record<string, string | null>) {
-  const query: Record<string, string> = {}
-  for (const key of ['status', 'q', 'page'] as const) {
-    const next = key in patch ? patch[key] : route.query[key]
-    const value = Array.isArray(next) ? next[0] : next
-    if (
-      typeof value === 'string'
-      && value
-      && !(key === 'status' && value === 'all')
-      && !(key === 'page' && value === '1')
-    ) {
-      query[key] = value
-    }
+function entryListTitle(entry: AdminEntry): string {
+  const depth = collection.value?.hierarchical ? (entry.depth ?? 0) : 0
+  if (depth < 1) {
+    return entry.title
   }
+  return `${'- '.repeat(depth)}${entry.title}`
+}
+
+function formatListDate(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) {
+    return iso
+  }
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
+function entryDateDisplay(entry: AdminEntry): { label: 'Published' | 'Last Modified', value: string } {
+  const publishedMs = entry.publishedAt ? Date.parse(entry.publishedAt) : Number.NaN
+  const updatedMs = Date.parse(entry.updatedAt)
+  const hasPublished = !Number.isNaN(publishedMs)
+  const hasUpdated = !Number.isNaN(updatedMs)
+  const modified = entry.status !== 'published'
+    || !hasPublished
+    || (hasUpdated && updatedMs - publishedMs > 2000)
+
+  if (!modified && entry.publishedAt) {
+    return { label: 'Published', value: formatListDate(entry.publishedAt) }
+  }
+  return {
+    label: 'Last Modified',
+    value: formatListDate(hasUpdated ? entry.updatedAt : (entry.publishedAt ?? entry.createdAt)),
+  }
+}
+
+async function navigateQuery(query: Record<string, string> = {}) {
   await navigateTo({
     path: paths.collection(collectionSlug.value),
     query,
@@ -98,18 +127,26 @@ async function setQuery(patch: Record<string, string | null>) {
 }
 
 function setStatus(status: CollectionListFilter) {
-  return setQuery({ status: status === 'all' ? null : status, page: null })
+  return navigateQuery(status === 'all' ? {} : { status })
 }
 
 function applySearch() {
-  return setQuery({
-    q: searchInput.value.trim() || null,
-    page: null,
-  })
+  const q = searchInput.value.trim()
+  return navigateQuery(q ? { q } : {})
 }
 
 function setPage(next: number) {
-  return setQuery({ page: next > 1 ? String(next) : null })
+  const query: Record<string, string> = {}
+  if (searchQuery.value) {
+    query.q = searchQuery.value
+  }
+  else if (statusFilter.value !== 'all') {
+    query.status = statusFilter.value
+  }
+  if (next > 1) {
+    query.page = String(next)
+  }
+  return navigateQuery(query)
 }
 
 async function load() {
@@ -121,9 +158,10 @@ async function load() {
   try {
     const res = await $fetch<CollectionListResponse>(collectionApi(collectionSlug.value), {
       query: {
-        status: statusFilter.value,
+        status: searchQuery.value ? undefined : statusFilter.value,
         q: searchQuery.value || undefined,
         page: page.value,
+        perPage: perPage.value,
       },
     })
     collection.value = res.collection
@@ -132,10 +170,12 @@ async function load() {
     total.value = res.total
     perPage.value = res.perPage
     canCreate.value = res.canCreate
+    canDelete.value = res.canDelete
   }
   catch (err) {
     collection.value = null
     entries.value = []
+    canDelete.value = false
     error.value = parseAuthError(err, 'Could not load entries.').message
   }
   finally {
@@ -209,28 +249,61 @@ async function removePermanent(entry: AdminEntry) {
   }
 }
 
+async function emptyTrash() {
+  if (!canDelete.value || emptyingTrash.value || pendingId.value !== null || counts.value.trash <= 0) {
+    return
+  }
+  if (!window.confirm('Permanently delete all items in the trash? This cannot be undone.')) {
+    return
+  }
+  emptyingTrash.value = true
+  error.value = null
+  try {
+    await $fetch(collectionApi(collectionSlug.value, 'trash'), { method: 'DELETE' })
+    await load()
+  }
+  catch (err) {
+    error.value = parseAuthError(err, 'Could not empty the trash.').message
+  }
+  finally {
+    emptyingTrash.value = false
+  }
+}
+
 onMounted(load)
 watch([collectionSlug, statusFilter, searchQuery, page], load)
 </script>
 
 <template>
   <div :class="rootClass">
-    <header :class="`${rootClass}__head`">
+    <div :class="`${rootClass}__head`">
       <div :class="`${rootClass}__head-title`">
         {{ title }}
       </div>
-      <MiraiCmsUiButton
-        v-if="canCreate && collection"
-        tag="a"
-        :link="{ url: paths.collectionCreate(collectionSlug), title: 'Add' }"
-      >
-        Add {{ collection.labels.singularName || collection.labels.name }}
-      </MiraiCmsUiButton>
-    </header>
+      <div :class="`${rootClass}__head-actions`">
+        <MiraiCmsUiButton
+          v-if="canCreate && collection"
+          tag="a"
+          :link="{ url: paths.collectionCreate(collectionSlug), title: 'Add' }"
+        >
+          Add {{ collection.labels.singularName || collection.labels.name }}
+        </MiraiCmsUiButton>
+
+        <MiraiCmsUiButton
+          v-if="statusFilter === 'trash' && canDelete && counts.trash > 0"
+          tag="button"
+          variant="red"
+          :disabled="emptyingTrash || pendingId !== null || loading"
+          @click="emptyTrash"
+        >
+          {{ emptyingTrash ? 'Emptying…' : 'Empty Trash' }}
+        </MiraiCmsUiButton>
+      </div>
+    </div>
 
     <div :class="`${rootClass}__toolbar`">
-      <nav :class="`${rootClass}__tabs`">
-        <button
+      <div :class="`${rootClass}__tabs`">
+        <MiraiCmsUiButton
           v-for="tab in [
             { id: 'all' as const, label: 'All', count: counts.all },
             { id: 'published' as const, label: 'Published', count: counts.published },
@@ -238,14 +311,15 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
             { id: 'trash' as const, label: 'Trash', count: counts.trash },
           ]"
           :key="tab.id"
-          type="button"
-          :class="[`${rootClass}__tab`, { 'is-active': statusFilter === tab.id }]"
+          tag="button"
+          variant="tertiary"
+          :active="!searchQuery && statusFilter === tab.id"
           @click="setStatus(tab.id)"
         >
           {{ tab.label }}
-          <span :class="`${rootClass}__tab-count`">{{ tab.count }}</span>
-        </button>
-      </nav>
+          {{ tab.count }}
+        </MiraiCmsUiButton>
+      </div>
 
       <form
         :class="`${rootClass}__search`"
@@ -259,7 +333,7 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
         <MiraiCmsUiButton
           tag="button"
           type="submit"
-          :variant="['secondary', 'small']"
+          variant="secondary"
         >
           Search
         </MiraiCmsUiButton>
@@ -296,8 +370,8 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
         <thead>
           <tr>
             <th>Title</th>
-            <th>Slug</th>
             <th>Status</th>
+            <th>Date</th>
             <th aria-label="Actions" />
           </tr>
         </thead>
@@ -306,14 +380,19 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
             v-for="entry in entries"
             :key="entry.id"
           >
-            <td>{{ entry.title }}</td>
-            <td>{{ entry.slugPath || entry.slug }}</td>
+            <td>{{ entryListTitle(entry) }}</td>
             <td>
               <span
                 :class="[`${rootClass}__status`, `${rootClass}__status--${entry.status}`]"
               >
                 {{ collectionStatusLabel(entry.status) }}
               </span>
+            </td>
+            <td>
+              <div :class="`${rootClass}__date`">
+                <span :class="`${rootClass}__date-label`">{{ entryDateDisplay(entry).label }}</span>
+                <span :class="`${rootClass}__date-value`">{{ entryDateDisplay(entry).value }}</span>
+              </div>
             </td>
             <td :class="`${rootClass}__actions`">
               <MiraiCmsUiButton
@@ -339,7 +418,7 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
                 v-if="entry.status !== 'trash' && entry.canUpdate"
                 tag="button"
                 :variant="['red', 'small']"
-                :disabled="pendingId === entry.id"
+                :disabled="pendingId === entry.id || emptyingTrash"
                 @click="moveToTrash(entry)"
               >
                 Trash
@@ -348,7 +427,7 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
                 v-if="entry.status === 'trash' && entry.canUpdate"
                 tag="button"
                 :variant="['secondary', 'small']"
-                :disabled="pendingId === entry.id"
+                :disabled="pendingId === entry.id || emptyingTrash"
                 @click="restore(entry)"
               >
                 Restore
@@ -357,7 +436,7 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
                 v-if="entry.status === 'trash' && entry.canDelete"
                 tag="button"
                 :variant="['red', 'small']"
-                :disabled="pendingId === entry.id"
+                :disabled="pendingId === entry.id || emptyingTrash"
                 @click="removePermanent(entry)"
               >
                 Delete
@@ -368,7 +447,7 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
       </table>
     </div>
 
-    <nav
+    <div
       v-if="totalPages > 1"
       :class="`${rootClass}__pager`"
     >
@@ -391,7 +470,7 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
       >
         Next
       </MiraiCmsUiButton>
-    </nav>
+    </div>
   </div>
 </template>
 
@@ -409,12 +488,17 @@ $root: '.miraicms-collection-list';
     &__head {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: math-rem(16);
 
       &-title {
         font-size: math-rem(18);
         font-weight: 600;
+      }
+
+      &-actions {
+        display: flex;
+        align-items: center;
+        gap: math-rem(16);
       }
     }
 
@@ -527,6 +611,22 @@ $root: '.miraicms-collection-list';
         background: $color-danger-bg;
         color: $color-danger;
       }
+    }
+
+    &__date {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(2);
+      white-space: nowrap;
+    }
+
+    &__date-label {
+      font-size: math-rem(12);
+      color: $color-muted;
+    }
+
+    &__date-value {
+      font-size: math-rem(13);
     }
 
     &__actions {

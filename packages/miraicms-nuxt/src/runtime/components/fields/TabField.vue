@@ -70,12 +70,12 @@ function selectTab(index: number) {
   <div
     :class="[rootClass, `${rootClass}--${placement}`]"
   >
-    <p
+    <div
       v-if="!panels.length"
       :class="`${rootClass}__hint`"
     >
       No tabs defined.
-    </p>
+    </div>
 
     <template v-else>
       <div

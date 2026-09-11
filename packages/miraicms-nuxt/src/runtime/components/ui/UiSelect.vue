@@ -1309,7 +1309,7 @@ $root: ".miraicms-select";
 
   &__no-results {
     text-align: center;
-    padding: 0 8px 10px 8px;
+    padding: math-rem(10) math-rem(8);
     font-size: math-rem(14);
     color: $color-muted;
   }

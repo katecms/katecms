@@ -668,10 +668,10 @@ const sidebarFields = computed(() =>
 
 <template>
   <div :class="rootClass">
-    <section :class="[`${rootClass}__buttons`]">
-      <h2 :class="[`${rootClass}__buttons-title`]">
+    <div :class="[`${rootClass}__buttons`]">
+      <div :class="[`${rootClass}__buttons-title`]">
         UiButton
-      </h2>
+      </div>
 
       <div :class="[`${rootClass}__buttons-grid`]">
         <span :class="[`${rootClass}__buttons-label`]">Default</span>
@@ -723,6 +723,69 @@ const sidebarFields = computed(() =>
         <MiraiCmsUiButton
           tag="button"
           variant="red"
+        >
+          Remove
+        </MiraiCmsUiButton>
+
+        <span :class="[`${rootClass}__buttons-label`]">Active</span>
+        <MiraiCmsUiButton
+          tag="button"
+          variant="small"
+          active
+        >
+          Save
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          tag="button"
+          active
+        >
+          Save
+        </MiraiCmsUiButton>
+
+        <span :class="[`${rootClass}__buttons-label`]">Active secondary</span>
+        <MiraiCmsUiButton
+          tag="button"
+          :variant="['secondary', 'small']"
+          active
+        >
+          Preview
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          tag="button"
+          variant="secondary"
+          active
+        >
+          Preview
+        </MiraiCmsUiButton>
+
+        <span :class="[`${rootClass}__buttons-label`]">Active tertiary</span>
+        <MiraiCmsUiButton
+          tag="button"
+          :variant="['tertiary', 'small']"
+          active
+        >
+          Cancel
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          tag="button"
+          variant="tertiary"
+          active
+        >
+          Cancel
+        </MiraiCmsUiButton>
+
+        <span :class="[`${rootClass}__buttons-label`]">Active red</span>
+        <MiraiCmsUiButton
+          tag="button"
+          :variant="['red', 'small']"
+          active
+        >
+          Remove
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          tag="button"
+          variant="red"
+          active
         >
           Remove
         </MiraiCmsUiButton>
@@ -878,6 +941,44 @@ const sidebarFields = computed(() =>
           </svg>
         </MiraiCmsUiButton>
 
+        <span :class="[`${rootClass}__buttons-label`]">Active icon</span>
+        <MiraiCmsUiButton
+          tag="button"
+          :variant="['tertiary', 'small', 'icon']"
+          aria-label="Edit"
+          active
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          tag="button"
+          :variant="['tertiary', 'icon']"
+          aria-label="Edit"
+          active
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+        </MiraiCmsUiButton>
+
         <span :class="[`${rootClass}__buttons-label`]">Disabled</span>
         <MiraiCmsUiButton
           tag="button"
@@ -906,16 +1007,16 @@ const sidebarFields = computed(() =>
           Example
         </MiraiCmsUiButton>
       </div>
-    </section>
+    </div>
 
-    <section :class="[`${rootClass}__notices`]">
-      <h2 :class="[`${rootClass}__notices-title`]">
+    <div :class="[`${rootClass}__notices`]">
+      <div :class="[`${rootClass}__notices-title`]">
         UiNotice
-      </h2>
+      </div>
 
-      <p :class="[`${rootClass}__notices-label`]">
+      <div :class="[`${rootClass}__notices-label`]">
         Static, one line
-      </p>
+      </div>
       <div :class="[`${rootClass}__notices-stack`]">
         <MiraiCmsUiNotice
           placement="static"
@@ -939,40 +1040,40 @@ const sidebarFields = computed(() =>
         />
       </div>
 
-      <p :class="[`${rootClass}__notices-label`]">
-        Static, twoтАУthree lines
-      </p>
+      <div :class="[`${rootClass}__notices-label`]">
+        Static, two–three lines
+      </div>
       <div :class="[`${rootClass}__notices-stack`]">
         <MiraiCmsUiNotice
           placement="static"
           variant="success"
         >
-          <p>The user was updated.</p>
-          <p>Email, display name and role are stored. You can keep editing this account without leaving the page.</p>
+          <div>The user was updated.</div>
+          <div>Email, display name and role are stored. You can keep editing this account without leaving the page.</div>
         </MiraiCmsUiNotice>
         <MiraiCmsUiNotice
           placement="static"
           variant="info"
         >
-          <p>Media variants are generated in the background.</p>
-          <p>Large uploads may take a minute. Refresh the library if a thumbnail is still missing.</p>
+          <div>Media variants are generated in the background.</div>
+          <div>Large uploads may take a minute. Refresh the library if a thumbnail is still missing.</div>
         </MiraiCmsUiNotice>
         <MiraiCmsUiNotice
           placement="static"
           variant="warning"
         >
-          <p>You are editing your own account.</p>
-          <p>Role and status cannot be changed here. Ask another administrator if those fields need an update.</p>
+          <div>You are editing your own account.</div>
+          <div>Role and status cannot be changed here. Ask another administrator if those fields need an update.</div>
         </MiraiCmsUiNotice>
         <MiraiCmsUiNotice
           placement="static"
           variant="danger"
         >
-          <p>The form could not be saved.</p>
-          <p>A user with this email already exists. Change the address and try again, or open the existing account instead.</p>
+          <div>The form could not be saved.</div>
+          <div>A user with this email already exists. Change the address and try again, or open the existing account instead.</div>
         </MiraiCmsUiNotice>
       </div>
-    </section>
+    </div>
 
     <div :class="[`${rootClass}__layout`]">
       <div :class="[`${rootClass}__main`]">
@@ -1006,7 +1107,7 @@ const sidebarFields = computed(() =>
       </div>
     </div>
 
-    <pre :class="[`${rootClass}__values`]">{{ values }}</pre>
+    <div :class="[`${rootClass}__values`]">{{ values }}</div>
   </div>
 </template>
 
@@ -1117,7 +1218,9 @@ $root: '.miraicms-admin-demo';
       border: 1px solid $color-border;
       border-radius: $border-radius;
       color: $color-ink;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: math-rem(13);
+      white-space: pre-wrap;
     }
   }
 }

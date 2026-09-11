@@ -69,7 +69,7 @@ onMounted(load)
 
 <template>
   <div :class="rootClass">
-    <header :class="`${rootClass}__head`">
+    <div :class="`${rootClass}__head`">
       <div :class="`${rootClass}__head-title`">
         Users
       </div>
@@ -80,7 +80,7 @@ onMounted(load)
       >
         Add user
       </MiraiCmsUiButton>
-    </header>
+    </div>
 
     <MiraiCmsUiNotice
       v-if="loading"

@@ -73,12 +73,12 @@ function updateSubField(key: string, value: unknown) {
     label-tag="div"
   >
     <div :class="rootClass">
-      <p
+      <div
         v-if="!Object.keys(subFields).length"
         :class="`${rootClass}__hint`"
       >
         No subfields defined.
-      </p>
+      </div>
 
       <div
         v-else

@@ -719,12 +719,12 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <p
+      <div
         v-if="!hasLayouts"
         :class="`${rootClass}__hint`"
       >
         No layouts are specified.
-      </p>
+      </div>
 
       <div
         v-else-if="rows.length"
@@ -953,9 +953,9 @@ onBeforeUnmount(() => {
       >
         <div :class="`${rootClass}__picker-dialog`">
           <div :class="`${rootClass}__picker-head`">
-            <h2 :class="`${rootClass}__picker-title`">
+            <div :class="`${rootClass}__picker-title`">
               Choose a block
-            </h2>
+            </div>
             <MiraiCmsUiButton
               tag="button"
               :variant="['tertiary', 'small', 'icon']"

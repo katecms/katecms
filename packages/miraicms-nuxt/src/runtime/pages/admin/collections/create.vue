@@ -31,7 +31,7 @@ const skipAutosave = ref(false)
 const form = reactive<CollectionEntryFormModel>({
   title: '',
   slug: '',
-  status: 'draft',
+  status: 'published',
   parentId: null,
   publishedAt: null,
   fields: {},
@@ -144,7 +144,7 @@ watch(collectionSlug, load)
 
 <template>
   <div class="miraicms-collection-entry">
-    <header class="miraicms-collection-entry__head">
+    <div class="miraicms-collection-entry__head">
       <MiraiCmsUiButton
         tag="a"
         :variant="['secondary', 'icon']"
@@ -162,7 +162,7 @@ watch(collectionSlug, load)
         New
         {{ collection?.labels.singularName || collection?.labels.name || 'entry' }}
       </div>
-    </header>
+    </div>
 
     <MiraiCmsUiNotice
       v-if="loading"

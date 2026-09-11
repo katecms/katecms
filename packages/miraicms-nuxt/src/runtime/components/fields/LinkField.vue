@@ -113,7 +113,10 @@ onBeforeUnmount(() => {
           :class="`${rootClass}__chip`"
         >
           <span :class="`${rootClass}__chip-text`">
-            <strong v-if="current.title">{{ current.title }}</strong>
+            <span
+              v-if="current.title"
+              :class="`${rootClass}__chip-title`"
+            >{{ current.title }}</span>
             <a
               :href="current.url"
               :target="current.target || undefined"
@@ -178,12 +181,12 @@ onBeforeUnmount(() => {
             :aria-labelledby="`${fieldKey}-link-title`"
           >
             <div :class="`${rootClass}__modal-header`">
-              <h3
+              <div
                 :id="`${fieldKey}-link-title`"
                 :class="`${rootClass}__modal-title`"
               >
                 Insert / edit link
-              </h3>
+              </div>
               <MiraiCmsUiButton
                 tag="button"
                 :variant="['tertiary', 'small', 'icon']"
@@ -326,6 +329,10 @@ $root: '.miraicms-link-field';
       color: $color-accent;
       text-decoration: underline;
     }
+  }
+
+  &__chip-title {
+    font-weight: 700;
   }
 }
 </style>

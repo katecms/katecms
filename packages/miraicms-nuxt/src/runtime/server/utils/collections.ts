@@ -88,7 +88,7 @@ function toIso(value: Date | string | null | undefined): string | null {
 export function toAdminEntry(
   row: Collection,
   slugPath: string,
-  flags?: { canUpdate?: boolean, canDelete?: boolean },
+  flags?: { canUpdate?: boolean, canDelete?: boolean, depth?: number },
 ): AdminEntry {
   return {
     id: row.id,

@@ -23,6 +23,8 @@ export interface AdminEntry {
   title: string
   fields: Record<string, unknown>
   parentId: number | null
+  /** Nesting level in a hierarchical list (0 = top-level). */
+  depth?: number
   menuOrder: number
   authorId: number | null
   createdAt: string
@@ -79,9 +81,12 @@ export interface CollectionEntryFormModel {
 
 export type CollectionListFilter = 'all' | CollectionStatus
 
-export function collectionApi(slug: string, id?: number): string {
+export function collectionApi(slug: string, id?: number | 'trash'): string {
   const base = `/api/_miraicms/collections/${encodeURIComponent(slug)}`
-  return id == null ? base : `${base}/${id}`
+  if (id == null) {
+    return base
+  }
+  return `${base}/${id}`
 }
 
 export function collectionStatusLabel(status: CollectionStatus): string {

@@ -309,7 +309,7 @@ onMounted(async () => {
 
 <template>
   <div :class="rootClass">
-    <header :class="`${rootClass}__head`">
+    <div :class="`${rootClass}__head`">
       <div :class="`${rootClass}__head-title`">
         Media library
       </div>
@@ -338,7 +338,7 @@ onMounted(async () => {
           {{ uploading ? 'Uploading…' : 'Upload files' }}
         </MiraiCmsUiButton>
       </div>
-    </header>
+    </div>
 
     <MiraiCmsUiNotice
       v-if="notice"
@@ -450,10 +450,10 @@ onMounted(async () => {
       @click.self="closeEditor"
     >
       <div :class="`${rootClass}__modal`">
-        <header :class="`${rootClass}__modal-head`">
-          <h2 :class="`${rootClass}__modal-title`">
+        <div :class="`${rootClass}__modal-head`">
+          <div :class="`${rootClass}__modal-title`">
             File details
-          </h2>
+          </div>
           <MiraiCmsUiButton
             tag="button"
             :variant="['tertiary', 'small', 'icon']"
@@ -470,7 +470,7 @@ onMounted(async () => {
               />
             </svg>
           </MiraiCmsUiButton>
-        </header>
+        </div>
 
         <div :class="`${rootClass}__modal-body`">
           <div :class="`${rootClass}__preview`">
@@ -493,52 +493,52 @@ onMounted(async () => {
           </div>
 
           <div :class="`${rootClass}__side`">
-            <dl :class="`${rootClass}__details`">
+            <div :class="`${rootClass}__details`">
               <div :class="`${rootClass}__row`">
-                <dt>Uploaded</dt>
-                <dd>{{ formatDate(selected.created_at) }}</dd>
+                <div :class="`${rootClass}__term`">Uploaded</div>
+                <div :class="`${rootClass}__def`">{{ formatDate(selected.created_at) }}</div>
               </div>
               <div :class="`${rootClass}__row`">
-                <dt>Author</dt>
-                <dd>{{ selected.uploaded_by_name || '—' }}</dd>
+                <div :class="`${rootClass}__term`">Author</div>
+                <div :class="`${rootClass}__def`">{{ selected.uploaded_by_name || '—' }}</div>
               </div>
               <div :class="`${rootClass}__row`">
-                <dt>File name</dt>
-                <dd>{{ selected.filename }}</dd>
+                <div :class="`${rootClass}__term`">File name</div>
+                <div :class="`${rootClass}__def`">{{ selected.filename }}</div>
               </div>
               <div :class="`${rootClass}__row`">
-                <dt>Type</dt>
-                <dd>{{ selected.mime_type }}</dd>
+                <div :class="`${rootClass}__term`">Type</div>
+                <div :class="`${rootClass}__def`">{{ selected.mime_type }}</div>
               </div>
               <div :class="`${rootClass}__row`">
-                <dt>Size</dt>
-                <dd>{{ formatSize(selected.filesize) }}</dd>
+                <div :class="`${rootClass}__term`">Size</div>
+                <div :class="`${rootClass}__def`">{{ formatSize(selected.filesize) }}</div>
               </div>
               <div
                 v-if="selected.width && selected.height"
                 :class="`${rootClass}__row`"
               >
-                <dt>Dimensions</dt>
-                <dd>{{ selected.width }} × {{ selected.height }} px</dd>
+                <div :class="`${rootClass}__term`">Dimensions</div>
+                <div :class="`${rootClass}__def`">{{ selected.width }} × {{ selected.height }} px</div>
               </div>
               <div :class="`${rootClass}__row`">
-                <dt>URL</dt>
-                <dd>
+                <div :class="`${rootClass}__term`">URL</div>
+                <div :class="`${rootClass}__def`">
                   <a
                     :href="selected.url"
                     target="_blank"
                     rel="noopener"
                   >{{ selected.url }}</a>
-                </dd>
+                </div>
               </div>
               <div
                 v-if="isImageMedia(selected) && selected.variants.length"
                 :class="`${rootClass}__row`"
               >
-                <dt>Variants</dt>
-                <dd>
-                  <ul :class="`${rootClass}__variants`">
-                    <li
+                <div :class="`${rootClass}__term`">Variants</div>
+                <div :class="`${rootClass}__def`">
+                  <div :class="`${rootClass}__variants`">
+                    <div
                       v-for="variant in selected.variants"
                       :key="variant.filename"
                     >
@@ -552,11 +552,11 @@ onMounted(async () => {
                         · {{ variant.width }}×{{ variant.height }}
                         · {{ formatSize(variant.filesize) }}
                       </a>
-                    </li>
-                  </ul>
-                </dd>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </dl>
+            </div>
 
             <form
               :class="`${rootClass}__form`"
@@ -830,20 +830,20 @@ $root: '.miraicms-media';
       font-size: math-rem(12);
     }
 
+    &__term {
+      color: $color-muted;
+    }
+
+    &__def {
+      margin: 0;
+      color: $color-ink;
+      word-break: break-word;
+    }
+
     &__row {
       display: grid;
       grid-template-columns: math-rem(112) minmax(0, 1fr);
       gap: math-rem(8);
-
-      dt {
-        color: $color-muted;
-      }
-
-      dd {
-        margin: 0;
-        color: $color-ink;
-        word-break: break-word;
-      }
 
       a {
         color: $color-accent;

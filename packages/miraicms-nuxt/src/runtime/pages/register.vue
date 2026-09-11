@@ -85,17 +85,17 @@ async function submit() {
         src="../assets/img/miraicms-logo.svg"
         alt="MiraiCMS"
       >
-      <h1 class="miraicms-auth__title">
+      <div class="miraicms-auth__title">
         {{ isFirstUser ? 'Create owner' : 'Register' }}
-      </h1>
-      <p class="miraicms-auth__subtitle">
+      </div>
+      <div class="miraicms-auth__subtitle">
         <template v-if="isFirstUser">
           This is the first account — it will automatically receive the owner role.
         </template>
         <template v-else>
           Fill in the form to create an account. New users are assigned the subscriber role.
         </template>
-      </p>
+      </div>
 
       <form
         class="miraicms-auth__form"
@@ -145,10 +145,10 @@ async function submit() {
         v-if="error"
         class="miraicms-auth__error"
       >
-        <strong>Error:</strong> {{ error }}
+        Error: {{ error }}
       </div>
 
-      <p
+      <div
         v-if="!isFirstUser"
         class="miraicms-auth__footer"
       >
@@ -156,7 +156,7 @@ async function submit() {
         <NuxtLink :to="paths.login">
           Sign in
         </NuxtLink>
-      </p>
+      </div>
     </div>
   </div>
 </template>

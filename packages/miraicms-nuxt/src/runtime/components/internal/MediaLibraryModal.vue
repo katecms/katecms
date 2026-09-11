@@ -146,12 +146,12 @@ function confirmSelection() {
         </div>
 
         <div :class="`${rootClass}__dialog-body`">
-          <p
+          <div
             v-if="error"
             :class="`${rootClass}__error`"
           >
             {{ error }}
-          </p>
+          </div>
 
           <div
             v-if="processing"
@@ -166,26 +166,26 @@ function confirmSelection() {
           </template>
 
           <template v-else>
-            <p
+            <div
               v-if="uploading"
               :class="`${rootClass}__hint`"
             >
               Uploading…
-            </p>
+            </div>
 
             <template v-if="libraryEnabled">
-              <p
+              <div
                 v-if="loading"
                 :class="`${rootClass}__hint`"
               >
                 Loading…
-              </p>
-              <p
+              </div>
+              <div
                 v-else-if="!library.length"
                 :class="`${rootClass}__hint`"
               >
                 The library is empty. Upload the first file.
-              </p>
+              </div>
               <div
                 v-else
                 :class="`${rootClass}__grid`"
@@ -233,12 +233,12 @@ function confirmSelection() {
               </div>
             </template>
 
-            <p
+            <div
               v-else
               :class="`${rootClass}__hint`"
             >
               {{ noLibraryHint }}
-            </p>
+            </div>
           </template>
         </div>
 

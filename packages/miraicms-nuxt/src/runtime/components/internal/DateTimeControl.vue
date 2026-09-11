@@ -211,11 +211,15 @@ const POPUP_HEIGHT = computed(() => {
   return props.mode === 'datetime' ? 420 : 360
 })
 
+const POPUP_WIDTH = computed(() => (props.mode === 'time' ? 200 : 280))
+
 const control = ref<HTMLElement>()
 const dropUp = ref(false)
+const alignRight = ref(false)
 
 // Open upward when there is not enough room below and more room above.
-function updateDropDirection() {
+// Pin to the right when the popup would overflow the viewport.
+function updatePopupPlacement() {
   if (typeof window === 'undefined' || !control.value) {
     return
   }
@@ -223,6 +227,7 @@ function updateDropDirection() {
   const spaceBelow = window.innerHeight - rect.bottom
   const spaceAbove = rect.top
   dropUp.value = spaceBelow < POPUP_HEIGHT.value && spaceAbove > spaceBelow
+  alignRight.value = rect.left + POPUP_WIDTH.value > window.innerWidth
 }
 
 function toggle() {
@@ -235,7 +240,7 @@ function toggle() {
     viewSecond.value = selectedDate.value.getSeconds()
   }
   if (!open.value) {
-    updateDropDirection()
+    updatePopupPlacement()
   }
   open.value = !open.value
 }
@@ -307,7 +312,7 @@ onBeforeUnmount(() => {
 
       <div
         v-if="open"
-        :class="[`${rootClass}__popup`, { 'is-drop-up': dropUp, 'is-time-only': !showCalendar }]"
+        :class="[`${rootClass}__popup`, { 'is-drop-up': dropUp, 'is-align-right': alignRight, 'is-time-only': !showCalendar }]"
       >
         <template v-if="showCalendar">
           <div :class="`${rootClass}__nav`">
@@ -516,6 +521,11 @@ $root: '.miraicms-date-time-control';
     &.is-drop-up {
       top: auto;
       bottom: calc(100% + 4px);
+    }
+
+    &.is-align-right {
+      left: auto;
+      right: 0;
     }
   }
 

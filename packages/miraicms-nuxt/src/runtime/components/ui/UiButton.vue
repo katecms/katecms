@@ -11,10 +11,12 @@ const props = withDefaults(defineProps<{
   link?: ButtonLink | string
   variant?: string | string[]
   tag?: string
+  active?: boolean
 }>(), {
   link: () => ({}),
   variant: '',
   tag: 'a',
+  active: false,
 })
 
 defineOptions({ inheritAttrs: false })
@@ -37,6 +39,7 @@ const classBtn = computed(() => [
   'miraicms-btn',
   ...variants.value.map(v => `miraicms-btn--${v}`),
   props.tag === 'a' && isDisabled.value ? 'miraicms-btn--disabled' : '',
+  props.active ? 'miraicms-btn--active' : '',
 ].filter(Boolean))
 
 const linkObj = computed<ButtonLink>(() => {
@@ -128,7 +131,7 @@ $root: '.miraicms-btn';
   font-family: inherit;
   font-weight: 500;
   line-height: 1;
-  height: math-rem(40);
+  height: math-rem(38);
   padding: 0 math-rem(16);
   font-size: math-rem(14);
   text-decoration: none;
@@ -195,7 +198,8 @@ $root: '.miraicms-btn';
     color: $color-surface;
     box-shadow: $shadow-sm, 0 4px 12px rgba(47, 111, 237, .18);
 
-    &:hover:not(:disabled):not(#{$root}--disabled) {
+    &:hover:not(:disabled):not(#{$root}--disabled),
+    &#{$root}--active:not(:disabled):not(#{$root}--disabled) {
       background: $color-accent-hover;
     }
   }
@@ -208,14 +212,26 @@ $root: '.miraicms-btn';
     &:hover:not(:disabled):not(#{$root}--disabled) {
       background: $color-bg;
     }
+
+    &#{$root}--active:not(:disabled):not(#{$root}--disabled) {
+      background: $color-accent-wash;
+      border-color: $color-accent;
+      color: $color-accent;
+    }
   }
 
   &--tertiary {
     background: transparent;
     color: $color-muted;
+    padding: 0 math-rem(10);
 
     &:hover:not(:disabled):not(#{$root}--disabled) {
       background: $color-accent-wash;
+    }
+
+    &#{$root}--active:not(:disabled):not(#{$root}--disabled) {
+      background: $color-accent-wash;
+      color: $color-accent;
     }
   }
 
@@ -224,7 +240,8 @@ $root: '.miraicms-btn';
     color: $color-danger;
     border-color: $color-danger;
 
-    &:hover:not(:disabled):not(#{$root}--disabled) {
+    &:hover:not(:disabled):not(#{$root}--disabled),
+    &#{$root}--active:not(:disabled):not(#{$root}--disabled) {
       background: $color-danger-bg;
     }
 

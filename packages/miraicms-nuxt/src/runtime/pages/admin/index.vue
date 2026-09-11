@@ -20,24 +20,24 @@ const collections = computed(() => {
 
 <template>
   <div :class="rootClass">
-    <header :class="`${rootClass}__head`">
+    <div :class="`${rootClass}__head`">
       <div :class="`${rootClass}__head-title`">
         Dashboard
       </div>
-    </header>
+    </div>
 
-    <p
+    <div
       v-if="!collections.length"
       :class="`${rootClass}__empty`"
     >
       No collections are defined in the CMS config.
-    </p>
+    </div>
 
-    <ul
+    <div
       v-else
       :class="`${rootClass}__list`"
     >
-      <li
+      <div
         v-for="item in collections"
         :key="item.slug"
       >
@@ -48,8 +48,8 @@ const collections = computed(() => {
           <span :class="`${rootClass}__card-title`">{{ item.label }}</span>
           <span :class="`${rootClass}__card-meta`">{{ item.slug }}</span>
         </NuxtLink>
-      </li>
-    </ul>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -78,9 +78,6 @@ $root: '.miraicms-dashboard';
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(math-rem(220), 1fr));
       gap: math-rem(12);
-      margin: 0;
-      padding: 0;
-      list-style: none;
     }
 
     &__card {

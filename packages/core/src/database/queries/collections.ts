@@ -218,6 +218,29 @@ export async function deleteCollection(
     .executeTakeFirst()
 }
 
+/**
+ * Permanently delete trashed entries of `type`.
+ * Pass `ids` to limit the batch (e.g. only rows the actor may delete).
+ */
+export async function deleteTrashedCollections(
+  db: Kysely<Database>,
+  type: string,
+  ids?: readonly number[],
+): Promise<number> {
+  if (ids && ids.length === 0) {
+    return 0
+  }
+  let query = db
+    .deleteFrom('collections')
+    .where('type', '=', type)
+    .where('status', '=', 'trash')
+  if (ids) {
+    query = query.where('id', 'in', [...ids])
+  }
+  const result = await query.executeTakeFirst()
+  return Number(result.numDeletedRows ?? 0)
+}
+
 const DEFAULT_SLUG_PATH_STATUSES: CollectionStatus[] = ['published', 'draft']
 
 /**
@@ -291,6 +314,53 @@ export interface CollectionParentOption {
   slug: string
   parentId: number | null
   slugPath: string
+}
+
+/**
+ * Depth-first admin order: each parent, then its children, keeping sibling
+ * order from `rows`. Entries whose parent is missing from the set are roots.
+ */
+export function flattenCollectionTree<T extends { id: number, parent_id: number | null }>(
+  rows: T[],
+): Array<{ row: T, depth: number }> {
+  const ids = new Set(rows.map(row => row.id))
+  const children = new Map<number | null, T[]>()
+
+  for (const row of rows) {
+    const parentKey = row.parent_id != null && ids.has(row.parent_id)
+      ? row.parent_id
+      : null
+    const list = children.get(parentKey) ?? []
+    list.push(row)
+    children.set(parentKey, list)
+  }
+
+  const out: Array<{ row: T, depth: number }> = []
+  const seen = new Set<number>()
+
+  const walk = (parentId: number | null, depth: number) => {
+    for (const row of children.get(parentId) ?? []) {
+      if (seen.has(row.id)) {
+        continue
+      }
+      seen.add(row.id)
+      out.push({ row, depth })
+      walk(row.id, depth + 1)
+    }
+  }
+
+  walk(null, 0)
+
+  for (const row of rows) {
+    if (seen.has(row.id)) {
+      continue
+    }
+    seen.add(row.id)
+    out.push({ row, depth: 0 })
+    walk(row.id, 1)
+  }
+
+  return out
 }
 
 /**

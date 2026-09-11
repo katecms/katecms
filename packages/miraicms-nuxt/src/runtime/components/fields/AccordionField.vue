@@ -97,12 +97,12 @@ function updateSubField(key: string, value: unknown) {
 
 <template>
   <div :class="rootClass">
-    <p
+    <div
       v-if="!panels.length"
       :class="`${rootClass}__hint`"
     >
       No panels defined.
-    </p>
+    </div>
 
     <template v-else>
       <div

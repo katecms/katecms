@@ -5,6 +5,7 @@ import {
   can,
   countCollections,
   countCollectionStatuses,
+  flattenCollectionTree,
   listCollectionParentOptions,
   listCollections,
 } from '@miraicms/core'
@@ -42,13 +43,16 @@ export default defineEventHandler(async (event): Promise<CollectionListResponse>
   const page = readPage(query.page)
   const perPage = readPerPage(query.perPage)
   const db = getDb()
+  const meta = toCollectionMeta(collectionSlug, def)
+  const paging = meta.hierarchical
+    ? {}
+    : { limit: perPage, offset: (page - 1) * perPage }
 
   const [rows, total, counts, pathRows] = await Promise.all([
     listCollections(db, collectionSlug, {
       status: listStatus,
       search,
-      limit: perPage,
-      offset: (page - 1) * perPage,
+      ...paging,
     }),
     countCollections(db, collectionSlug, { status: listStatus, search }),
     countCollectionStatuses(db, collectionSlug),
@@ -59,13 +63,16 @@ export default defineEventHandler(async (event): Promise<CollectionListResponse>
   ])
 
   const paths = buildSlugPathMap(pathRows)
-  const meta = toCollectionMeta(collectionSlug, def)
+  const listed = meta.hierarchical
+    ? flattenCollectionTree(rows).slice((page - 1) * perPage, page * perPage)
+    : rows.map(row => ({ row, depth: 0 }))
+
   const response: CollectionListResponse = {
     collection: meta,
-    entries: rows.map(row => toAdminEntry(
+    entries: listed.map(({ row, depth }) => toAdminEntry(
       row,
       paths.get(row.id) ?? row.slug,
-      entryFlags(actor, row, roles),
+      { ...entryFlags(actor, row, roles), ...(meta.hierarchical ? { depth } : {}) },
     )),
     counts,
     page,

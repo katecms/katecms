@@ -30,10 +30,10 @@ const rootClass = 'miraicms-separator-field'
         aria-hidden="true"
       />
     </template>
-    <hr
+    <span
       v-else
       :class="`${rootClass}__hr`"
-    >
+    />
   </div>
 </template>
 
@@ -66,11 +66,12 @@ $root: '.miraicms-separator-field';
   }
 
   &__hr {
+    display: block;
     flex: 1 1 auto;
     width: 100%;
+    height: 4px;
     margin: 0;
-    border: 0;
-    border-top: 4px solid $color-accent;
+    background-color: $color-accent;
   }
 }
 </style>

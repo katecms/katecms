@@ -77,12 +77,12 @@ async function submit() {
         src="../assets/img/miraicms-logo.svg"
         alt="MiraiCMS"
       >
-      <h1 class="miraicms-auth__title">
+      <div class="miraicms-auth__title">
         Sign in
-      </h1>
-      <p class="miraicms-auth__subtitle">
+      </div>
+      <div class="miraicms-auth__subtitle">
         Sign in to the CMS admin.
-      </p>
+      </div>
 
       <form
         class="miraicms-auth__form"
@@ -124,15 +124,15 @@ async function submit() {
         v-if="error"
         class="miraicms-auth__error"
       >
-        <strong>Error:</strong> {{ error }}
+        Error: {{ error }}
       </div>
 
-      <p class="miraicms-auth__footer">
+      <div class="miraicms-auth__footer">
         No account?
         <NuxtLink :to="paths.register">
           Register
         </NuxtLink>
-      </p>
+      </div>
     </div>
   </div>
 </template>

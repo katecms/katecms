@@ -43,7 +43,7 @@ export default defineEventHandler(async (event): Promise<CollectionEntryResponse
   const body = await readBody<CreateBody>(event)
   const title = readTitle(body?.title)
   const slug = readSlug(body?.slug)
-  const status = readStatus(body?.status, 'draft')
+  const status = readStatus(body?.status, 'published')
   const fields = readFields(body?.fields)
   const parentId = def.hierarchical === true ? readParentId(body?.parentId) : null
   const menuOrder = readMenuOrder(body?.menuOrder, 0)

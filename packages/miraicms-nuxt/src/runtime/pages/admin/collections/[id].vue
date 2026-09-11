@@ -245,7 +245,7 @@ watch([collectionSlug, entryId], load)
 
 <template>
   <div class="miraicms-collection-entry">
-    <header class="miraicms-collection-entry__head">
+    <div class="miraicms-collection-entry__head">
       <MiraiCmsUiButton
         tag="a"
         :variant="['secondary', 'icon']"
@@ -262,7 +262,7 @@ watch([collectionSlug, entryId], load)
       <div class="miraicms-collection-entry__head-title">
         {{ pageTitle }}
       </div>
-    </header>
+    </div>
 
     <MiraiCmsUiNotice
       v-if="loading"

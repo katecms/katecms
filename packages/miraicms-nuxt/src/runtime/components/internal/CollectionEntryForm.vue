@@ -48,12 +48,12 @@ const fieldDefs = computed(() => props.collection.fields ?? {})
 const values = reactive<Record<string, unknown>>({})
 provideMiraiCmsFieldValues(values)
 
-const readOnly = computed(() => props.canUpdate === false)
+const readOnly = computed(() => !props.canUpdate)
 const isTrash = computed(() => (props.savedStatus ?? props.modelValue.status) === 'trash')
 
 const statusChoices: SelectChoice[] = [
-  { val: 'draft', lbl: 'Draft' },
   { val: 'published', lbl: 'Published' },
+  { val: 'draft', lbl: 'Draft' },
 ]
 
 const statusField = {
@@ -313,11 +313,11 @@ function onSubmit() {
         </div>
       </div>
 
-      <aside :class="`${rootClass}__sidebar`">
-        <section :class="`${rootClass}__publish`">
-          <h2 :class="`${rootClass}__publish-title`">
+      <div :class="`${rootClass}__sidebar`">
+        <div :class="`${rootClass}__publish`">
+          <div :class="`${rootClass}__publish-title`">
             Publish
-          </h2>
+          </div>
 
           <MiraiCmsUiNotice
             v-if="isTrash"
@@ -344,9 +344,10 @@ function onSubmit() {
 
           <div :class="`${rootClass}__publish-actions`">
             <MiraiCmsUiButton
-              v-if="!isTrash && canUpdate !== false"
+              v-if="!isTrash && canUpdate"
               tag="button"
               type="submit"
+              variant="full"
               :disabled="!canSubmit"
             >
               {{ submitLabel }}
@@ -355,28 +356,28 @@ function onSubmit() {
             <MiraiCmsUiButton
               v-if="viewUrl && !isTrash"
               tag="a"
-              :variant="['secondary', 'small']"
+              :variant="['secondary', 'small', 'full']"
               :link="{ url: viewUrl, title: 'View', target: '_blank' }"
             >
               View
             </MiraiCmsUiButton>
 
             <MiraiCmsUiButton
-              v-if="!isTrash && canUpdate !== false"
+              v-if="!isTrash && canUpdate"
               tag="button"
               type="button"
-              :variant="['red', 'small']"
-              :disabled="!!saving"
+              :variant="['red', 'small', 'full']"
+              :disabled="saving"
               @click="emit('trash')"
             >
               Move to trash
             </MiraiCmsUiButton>
 
             <MiraiCmsUiButton
-              v-if="isTrash && canUpdate !== false"
+              v-if="isTrash && canUpdate"
               tag="button"
               type="button"
-              :disabled="!!saving"
+              :disabled="saving"
               @click="emit('restore')"
             >
               Restore
@@ -387,13 +388,13 @@ function onSubmit() {
               tag="button"
               type="button"
               :variant="['red', 'small']"
-              :disabled="!!saving"
+              :disabled="saving"
               @click="emit('delete')"
             >
               Delete permanently
             </MiraiCmsUiButton>
           </div>
-        </section>
+        </div>
 
         <div
           v-if="sidebarFields.length"
@@ -408,7 +409,7 @@ function onSubmit() {
             :field="field"
           />
         </div>
-      </aside>
+      </div>
     </div>
 
     <MiraiCmsUiNotice
@@ -429,7 +430,7 @@ $root: '.miraicms-collection-form';
   #{$root} {
     display: flex;
     flex-direction: column;
-    gap: math-rem(16);
+    gap: math-rem(8);
 
     &__layout {
       display: grid;

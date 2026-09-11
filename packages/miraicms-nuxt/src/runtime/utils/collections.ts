@@ -27,6 +27,8 @@ export interface AdminEntry {
   depth?: number
   menuOrder: number
   authorId: number | null
+  /** Display name for the list (name, else email). Null when unknown. */
+  authorName?: string | null
   createdAt: string
   updatedAt: string
   publishedAt: string | null

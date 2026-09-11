@@ -15,11 +15,14 @@ import {
   isLayoutOnlyFieldType,
   encodeUserFieldValue,
   filterUsersByRole,
+  formatRequiredFieldsError,
+  isFieldValueEmpty,
   isOsmMarker,
   isSelectChoiceGroup,
   isOperatorAllowed,
   isUserFieldValue,
   isVisible,
+  validateRequiredFields,
   MAX_MATCHES_PATTERN_LENGTH,
   osmAddressFromNominatim,
   parseDate,
@@ -239,5 +242,78 @@ describe('structure keys', () => {
   it('keeps reserved row keys stable', () => {
     expect(ROW_COLLAPSED_KEY).toBe('__miraicmsCollapsed')
     expect(FLEXIBLE_CONTENT_LAYOUT_KEY).toBe('fc_layout')
+  })
+})
+
+describe('validateRequiredFields', () => {
+  it('flags empty required values and skips hidden / filled fields', () => {
+    const fields: Fields = {
+      title: text({ required: true }),
+      optional: text(),
+      hidden: text({
+        required: true,
+        conditionalLogic: [[{ field: 'title', operator: 'equal', value: 'show' }]],
+      }),
+      body: { type: 'wysiwyg', label: 'Body', required: true },
+      agree: { type: 'true_false', label: 'Agree', required: true },
+      count: { type: 'number', label: 'Count', required: true },
+    }
+
+    const issues = validateRequiredFields(fields, {
+      title: '  ',
+      optional: '',
+      hidden: '',
+      body: '<p><br></p>',
+      agree: false,
+      count: 0,
+    })
+    expect(issues.map(issue => issue.key)).toEqual(['title', 'body', 'agree'])
+    expect(isFieldValueEmpty(fields.count!, 0)).toBe(false)
+    expect(formatRequiredFieldsError(issues)).toBe(
+      'Please fill in the required fields: Title, Body, Agree.',
+    )
+  })
+
+  it('walks groups, tabs, and repeater rows with admin field-keys', () => {
+    const fields: Fields = {
+      meta: {
+        type: 'group',
+        label: 'Meta',
+        subFields: {
+          seo: text({ required: true, label: 'SEO' }),
+        },
+      },
+      tabs: {
+        type: 'tab',
+        panels: [
+          {
+            label: 'Main',
+            subFields: {
+              excerpt: text({ required: true, label: 'Excerpt' }),
+            },
+          },
+        ],
+      },
+      items: {
+        type: 'repeater',
+        label: 'Items',
+        required: true,
+        subFields: {
+          name: text({ required: true, label: 'Name' }),
+        },
+      },
+    }
+
+    expect(validateRequiredFields(fields, {}).map(issue => issue.key)).toEqual([
+      'meta_seo',
+      'tabs_excerpt',
+      'items',
+    ])
+
+    expect(validateRequiredFields(fields, {
+      meta: { seo: 'ok' },
+      excerpt: 'ok',
+      items: [{ name: '' }],
+    }).map(issue => issue.key)).toEqual(['items_0_name'])
   })
 })

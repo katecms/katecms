@@ -2,8 +2,10 @@ import { createError } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import {
   canOnEntry,
+  formatRequiredFieldsError,
   isUniqueConstraintError,
   parseDate,
+  validateRequiredFields,
 } from '@miraicms/core'
 import type {
   Collection,
@@ -88,7 +90,7 @@ function toIso(value: Date | string | null | undefined): string | null {
 export function toAdminEntry(
   row: Collection,
   slugPath: string,
-  flags?: { canUpdate?: boolean, canDelete?: boolean, depth?: number },
+  flags?: { canUpdate?: boolean, canDelete?: boolean, depth?: number, authorName?: string | null },
 ): AdminEntry {
   return {
     id: row.id,
@@ -190,6 +192,21 @@ export function readFields(value: unknown): Record<string, unknown> {
     fail(422, 'Invalid field values.')
   }
   return value as Record<string, unknown>
+}
+
+/** Reject published entries that are missing visible required fields. */
+export function requirePublishedFields(
+  def: CollectionDefinition,
+  status: CollectionStatus,
+  fields: Record<string, unknown>,
+): void {
+  if (status !== 'published') {
+    return
+  }
+  const issues = validateRequiredFields(def.fields ?? {}, fields)
+  if (issues.length > 0) {
+    fail(422, formatRequiredFieldsError(issues))
+  }
 }
 
 export function readParentId(value: unknown): number | null {

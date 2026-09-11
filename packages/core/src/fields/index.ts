@@ -44,6 +44,12 @@ export {
   buildFormValues,
 } from './defaults'
 export {
+  formatRequiredFieldsError,
+  isFieldValueEmpty,
+  validateRequiredFields,
+} from './required'
+export type { RequiredFieldIssue } from './required'
+export {
   evaluateCondition,
   FIELD_OPERATORS,
   MAX_MATCHES_PATTERN_LENGTH,

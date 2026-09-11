@@ -84,7 +84,7 @@ function entryListTitle(entry: AdminEntry): string {
   if (depth < 1) {
     return entry.title
   }
-  return `${'- '.repeat(depth)}${entry.title}`
+  return `${'— '.repeat(depth)}${entry.title}`
 }
 
 function formatListDate(iso: string): string {
@@ -99,6 +99,10 @@ function formatListDate(iso: string): string {
     hour: 'numeric',
     minute: '2-digit',
   })
+}
+
+function entryAuthor(entry: AdminEntry): string {
+  return entry.authorName?.trim() || '—'
 }
 
 function entryDateDisplay(entry: AdminEntry): { label: 'Published' | 'Last Modified', value: string } {
@@ -371,6 +375,7 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
           <tr>
             <th>Title</th>
             <th>Status</th>
+            <th>Author</th>
             <th>Date</th>
             <th aria-label="Actions" />
           </tr>
@@ -380,7 +385,11 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
             v-for="entry in entries"
             :key="entry.id"
           >
-            <td>{{ entryListTitle(entry) }}</td>
+            <td>
+              <div :class="`${rootClass}__title`">
+                {{ entryListTitle(entry) }}
+              </div>
+            </td>
             <td>
               <span
                 :class="[`${rootClass}__status`, `${rootClass}__status--${entry.status}`]"
@@ -388,6 +397,7 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
                 {{ collectionStatusLabel(entry.status) }}
               </span>
             </td>
+            <td>{{ entryAuthor(entry) }}</td>
             <td>
               <div :class="`${rootClass}__date`">
                 <span :class="`${rootClass}__date-label`">{{ entryDateDisplay(entry).label }}</span>
@@ -590,6 +600,10 @@ $root: '.miraicms-collection-list';
       tbody tr:last-child td {
         border-bottom: none;
       }
+    }
+
+    &__title {
+      font-weight: 600;
     }
 
     &__status {

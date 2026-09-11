@@ -18,6 +18,7 @@ import {
   readStatus,
   readTitle,
   requireCollection,
+  requirePublishedFields,
   rethrowCollectionWriteError,
   toAdminEntry,
   toCollectionMeta,
@@ -88,6 +89,12 @@ export default defineEventHandler(async (event): Promise<CollectionEntryResponse
     else {
       patch.published_at = publishedAt
     }
+  }
+
+  const nextStatus = patch.status ?? existing.status
+  if (nextStatus === 'published') {
+    const nextFields = (patch.fields ?? existing.fields ?? {}) as Record<string, unknown>
+    requirePublishedFields(def, nextStatus, nextFields)
   }
 
   try {

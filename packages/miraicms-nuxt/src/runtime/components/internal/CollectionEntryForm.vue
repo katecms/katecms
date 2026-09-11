@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import {
   buildFormValues,
   collectPanelDefaults,
@@ -9,10 +9,13 @@ import {
   isLayoutOnlyFieldType,
   isVisible,
   parseDate,
+  validateRequiredFields,
 } from '@miraicms/core'
 import type { CollectionStatus, Field, SelectChoice } from '@miraicms/core'
 import { resolveField } from '../../utils/helpers'
 import { provideMiraiCmsFieldValues } from '../../utils/field-values'
+import { provideMiraiCmsFieldErrors } from '../../utils/field-errors'
+import { slugify } from '../../utils/slugify'
 import type {
   AdminCollectionMeta,
   CollectionEntryFormModel,
@@ -47,6 +50,10 @@ const PUBLISH_FORMAT = DATE_FIELD_FORMATS.datetime.return
 const fieldDefs = computed(() => props.collection.fields ?? {})
 const values = reactive<Record<string, unknown>>({})
 provideMiraiCmsFieldValues(values)
+
+const fieldErrors = ref<Record<string, string>>({})
+const attemptedSubmit = ref(false)
+provideMiraiCmsFieldErrors(fieldErrors)
 
 const readOnly = computed(() => !props.canUpdate)
 const isTrash = computed(() => (props.savedStatus ?? props.modelValue.status) === 'trash')
@@ -236,9 +243,7 @@ const parentModel = computed({
 const canSubmit = computed(() =>
   !readOnly.value
   && !isTrash.value
-  && !props.saving
-  && props.modelValue.title.trim().length > 0
-  && props.modelValue.slug.trim().length > 0,
+  && !props.saving,
 )
 
 const submitLabel = computed(() => {
@@ -248,19 +253,94 @@ const submitLabel = computed(() => {
   return props.modelValue.status === 'published' ? 'Publish' : 'Save draft'
 })
 
+const requiredNotice = computed(() => {
+  const messages = Object.values(fieldErrors.value)
+  if (messages.length === 0) {
+    return ''
+  }
+  if (messages.length === 1) {
+    return messages[0]
+  }
+  return 'Please fill in the required fields.'
+})
+
+function collectFieldErrors(slug = props.modelValue.slug): Record<string, string> {
+  const next: Record<string, string> = {}
+  if (!props.modelValue.title.trim()) {
+    next['cms-entry-title'] = 'Title is required.'
+  }
+  if (!slug.trim()) {
+    next['cms-entry-slug'] = 'Slug is required.'
+  }
+  if (props.modelValue.status === 'published') {
+    for (const issue of validateRequiredFields(fieldDefs.value, values)) {
+      next[issue.key] = issue.message
+    }
+  }
+  return next
+}
+
+function scrollToFirstError(errors: Record<string, string>) {
+  const key = Object.keys(errors)[0]
+  if (!key || typeof document === 'undefined') {
+    return
+  }
+  const target = document.querySelector(`[data-field-key="${CSS.escape(key)}"]`)
+  if (target instanceof HTMLElement) {
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }
+}
+
 function onSubmit() {
   if (!canSubmit.value) {
     return
   }
+  let slug = props.modelValue.slug.trim()
+  if (!slug && props.modelValue.title.trim()) {
+    slug = slugify(props.modelValue.title) || 'entry'
+    updateCore('slug', slug)
+  }
+  attemptedSubmit.value = true
+  const errors = collectFieldErrors(slug)
+  fieldErrors.value = errors
+  if (Object.keys(errors).length > 0) {
+    nextTick(() => scrollToFirstError(errors))
+    return
+  }
   emit('submit')
 }
+
+watch(
+  [values, () => props.modelValue.title, () => props.modelValue.slug, () => props.modelValue.status],
+  () => {
+    if (!attemptedSubmit.value) {
+      return
+    }
+    fieldErrors.value = collectFieldErrors()
+  },
+  { deep: true },
+)
 </script>
 
 <template>
   <form
     :class="rootClass"
+    novalidate
     @submit.prevent="onSubmit"
   >
+    <MiraiCmsUiNotice
+      v-if="requiredNotice"
+      placement="static"
+      variant="danger"
+      :message="requiredNotice"
+      :closable="false"
+    />
+    <MiraiCmsUiNotice
+      v-if="error"
+      placement="static"
+      variant="danger"
+      :message="error"
+    />
     <div :class="`${rootClass}__layout`">
       <div :class="`${rootClass}__main`">
         <MiraiCmsFieldWrapper
@@ -271,7 +351,6 @@ function onSubmit() {
             :model-value="modelValue.title"
             field-key="cms-entry-title"
             :field="titleField"
-            required
             @update:model-value="updateCore('title', String($event ?? ''))"
           />
         </MiraiCmsFieldWrapper>
@@ -284,7 +363,6 @@ function onSubmit() {
             :model-value="modelValue.slug"
             field-key="cms-entry-slug"
             :field="slugField"
-            required
             @update:model-value="updateCore('slug', String($event ?? ''))"
           />
         </MiraiCmsFieldWrapper>
@@ -411,13 +489,6 @@ function onSubmit() {
         </div>
       </div>
     </div>
-
-    <MiraiCmsUiNotice
-      v-if="error"
-      placement="static"
-      variant="danger"
-      :message="error"
-    />
   </form>
 </template>
 

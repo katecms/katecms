@@ -16,6 +16,7 @@ import {
   readStatus,
   readTitle,
   requireCollection,
+  requirePublishedFields,
   rethrowCollectionWriteError,
   toAdminEntry,
   toCollectionMeta,
@@ -52,6 +53,8 @@ export default defineEventHandler(async (event): Promise<CollectionEntryResponse
   if (status === 'trash') {
     fail(422, 'New entries cannot be created in the trash.')
   }
+
+  requirePublishedFields(def, status, fields)
 
   const db = getDb()
   try {

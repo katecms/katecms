@@ -67,12 +67,32 @@ export default defineEventHandler(async (event): Promise<CollectionListResponse>
     ? flattenCollectionTree(rows).slice((page - 1) * perPage, page * perPage)
     : rows.map(row => ({ row, depth: 0 }))
 
+  const authorIds = [...new Set(
+    listed
+      .map(({ row }) => row.author_id)
+      .filter((id): id is number => id != null),
+  )]
+  const authors = authorIds.length > 0
+    ? await db
+      .selectFrom('users')
+      .select(['id', 'name', 'email'])
+      .where('id', 'in', authorIds)
+      .execute()
+    : []
+  const authorNameById = new Map(
+    authors.map(user => [user.id, user.name?.trim() || user.email]),
+  )
+
   const response: CollectionListResponse = {
     collection: meta,
     entries: listed.map(({ row, depth }) => toAdminEntry(
       row,
       paths.get(row.id) ?? row.slug,
-      { ...entryFlags(actor, row, roles), ...(meta.hierarchical ? { depth } : {}) },
+      {
+        ...entryFlags(actor, row, roles),
+        authorName: row.author_id != null ? (authorNameById.get(row.author_id) ?? null) : null,
+        ...(meta.hierarchical ? { depth } : {}),
+      },
     )),
     counts,
     page,

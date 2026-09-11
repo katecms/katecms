@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { $fetch, navigateTo, onBeforeRouteLeave, useHead, useRoute } from '#imports'
-import { buildPublicPath } from '@miraicms/core'
+import { buildPublicPath, validateRequiredFields } from '@miraicms/core'
 import { parseAuthError } from '../../../utils/auth-error'
 import { collectionApi } from '../../../utils/collections'
 import type {
@@ -114,6 +114,12 @@ async function autosave() {
     return
   }
   if (!form.title.trim() || !form.slug.trim()) {
+    return
+  }
+  if (
+    form.status === 'published'
+    && validateRequiredFields(collection.value.fields ?? {}, form.fields).length > 0
+  ) {
     return
   }
   saving.value = true

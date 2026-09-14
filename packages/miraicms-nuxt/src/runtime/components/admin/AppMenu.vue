@@ -18,6 +18,12 @@ type MenuItem = {
   active: boolean
 }
 
+type MenuGroup = {
+  key: string
+  label?: string
+  items: MenuItem[]
+}
+
 const DASHBOARD_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M4 4h7v7H4V4Zm9 0h7v5h-7V4ZM4 13h7v7H4v-7Zm9 7v-9h7v9h-7Z" stroke="currentColor" stroke-width="1.6"/></svg>'
 const COLLECTION_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6"/><path d="M14 3v5h5" stroke="currentColor" stroke-width="1.6"/></svg>'
 const DICTIONARY_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M7 4h10a2 2 0 0 1 2 2v14l-7-3-7 3V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6"/><path d="M9 8h6M9 12h6" stroke="currentColor" stroke-width="1.6"/></svg>'
@@ -38,7 +44,7 @@ function isActive(to: string, exact = false) {
   return !exact && path.startsWith(`${target}/`)
 }
 
-const items = computed<MenuItem[]>(() => {
+const groups = computed<MenuGroup[]>(() => {
   const collections = (runtimeConfig.public.miraicms?.collections ?? {}) as Record<string, PublicCollectionNav>
   const collectionItems = Object.entries(collections).map(([slug, def]) => {
     const to = paths.collection(slug)
@@ -63,31 +69,59 @@ const items = computed<MenuItem[]>(() => {
     }
   })
 
-  return [
+  const result: MenuGroup[] = [
     {
-      key: 'dashboard',
-      label: 'Dashboard',
-      to: paths.admin,
-      icon: DASHBOARD_ICON,
-      active: isActive(paths.admin, true),
-    },
-    {
-      key: 'media',
-      label: 'Media',
-      to: paths.media,
-      icon: MEDIA_ICON,
-      active: isActive(paths.media),
-    },
-    ...collectionItems,
-    ...dictionaryItems,
-    {
-      key: 'users',
-      label: 'Users',
-      to: paths.users,
-      icon: USERS_ICON,
-      active: isActive(paths.users),
+      key: 'overview',
+      items: [
+        {
+          key: 'dashboard',
+          label: 'Dashboard',
+          to: paths.admin,
+          icon: DASHBOARD_ICON,
+          active: isActive(paths.admin, true),
+        },
+      ],
     },
   ]
+
+  if (collectionItems.length) {
+    result.push({
+      key: 'collections',
+      label: 'Collections',
+      items: collectionItems,
+    })
+  }
+
+  if (dictionaryItems.length) {
+    result.push({
+      key: 'dictionaries',
+      label: 'Dictionaries',
+      items: dictionaryItems,
+    })
+  }
+
+  result.push({
+    key: 'manage',
+    label: 'Manage',
+    items: [
+      {
+        key: 'media',
+        label: 'Media',
+        to: paths.media,
+        icon: MEDIA_ICON,
+        active: isActive(paths.media),
+      },
+      {
+        key: 'users',
+        label: 'Users',
+        to: paths.users,
+        icon: USERS_ICON,
+        active: isActive(paths.users),
+      },
+    ],
+  })
+
+  return result
 })
 </script>
 
@@ -104,19 +138,31 @@ const items = computed<MenuItem[]>(() => {
     </NuxtLink> -->
 
     <div :class="`${rootClass}__wrap`">
-      <NuxtLink
-        v-for="item in items"
-        :key="item.key"
-        :to="item.to"
-        :class="[`${rootClass}__link`, { 'is-active': item.active }]"
+      <div
+        v-for="group in groups"
+        :key="group.key"
+        :class="`${rootClass}__group`"
       >
-        <span
-          :class="`${rootClass}__icon`"
-          aria-hidden="true"
-          v-html="item.icon"
-        />
-        <span :class="`${rootClass}__label`">{{ item.label }}</span>
-      </NuxtLink>
+        <div
+          v-if="group.label"
+          :class="`${rootClass}__heading`"
+        >
+          {{ group.label }}
+        </div>
+        <NuxtLink
+          v-for="item in group.items"
+          :key="item.key"
+          :to="item.to"
+          :class="[`${rootClass}__link`, { 'is-active': item.active }]"
+        >
+          <span
+            :class="`${rootClass}__icon`"
+            aria-hidden="true"
+            v-html="item.icon"
+          />
+          <span :class="`${rootClass}__label`">{{ item.label }}</span>
+        </NuxtLink>
+      </div>
     </div>
   </div>
 </template>
@@ -139,7 +185,22 @@ $root: '.miraicms-menu';
       display: flex;
       flex-direction: column;
       padding: math-rem(8);
+      gap: math-rem(12);
+    }
+
+    &__group {
+      display: flex;
+      flex-direction: column;
       gap: math-rem(2);
+    }
+
+    &__heading {
+      padding: math-rem(4) math-rem(10);
+      font-size: math-rem(11);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: $color-muted;
     }
 
     &__link {

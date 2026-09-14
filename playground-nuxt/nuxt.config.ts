@@ -60,7 +60,7 @@ export default defineNuxtConfig({
           singularName: 'Page', // название для одной записи этого типа, default: labels.singularName = labels.name
         },
         hierarchical: true, // default: false
-        autosave: true, // уход со страницы без «Сохранить» → черновик
+        autosave: true, // новая запись: уход → черновик; сохранённая: подтверждение
         rewrite: '/inf/%name%', // нужно добавить чтобы можно было определить ЧПУ
         fields: {
           wysiwyg_test: {
@@ -82,7 +82,7 @@ export default defineNuxtConfig({
             type: 'image',
             cropType: [16, 9],
             position: 'sidebar',
-            required: true,
+            // required: true,
           },
           text_label: {
             label: 'Text Label',

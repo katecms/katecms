@@ -1338,7 +1338,7 @@ $root: ".miraicms-select";
 
   &__option {
     width: 100%;
-    height: math-rem(34);
+    min-height: math-rem(34);
     border: none;
     background-color: transparent;
     text-align: left;

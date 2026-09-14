@@ -137,6 +137,7 @@ export function toParentOption(row: CollectionParentOption): ParentOption {
     slug: row.slug,
     parentId: row.parentId,
     slugPath: row.slugPath,
+    depth: row.depth,
   }
 }
 

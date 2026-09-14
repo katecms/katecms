@@ -1,6 +1,6 @@
 import { defineEventHandler, getRouterParam, readBody } from 'h3'
 import { useRuntimeConfig } from '#imports'
-import { createCollection, loadCollectionSlugPath } from '@miraicms/core'
+import { createCollection, listCollectionParentOptions, loadCollectionSlugPath } from '@miraicms/core'
 import { getDb } from '../../../utils/db'
 import { requireUser } from '../../../utils/session'
 import { requirePermission } from '../../../utils/permissions'
@@ -20,6 +20,7 @@ import {
   rethrowCollectionWriteError,
   toAdminEntry,
   toCollectionMeta,
+  toParentOption,
 } from '../../../utils/collections'
 import type { CollectionEntryResponse } from '../../../../utils/collections'
 
@@ -71,12 +72,18 @@ export default defineEventHandler(async (event): Promise<CollectionEntryResponse
     })
     const slugPath = (await loadCollectionSlugPath(db, collectionSlug, row.id)) || row.slug
     const flags = entryFlags(actor, row, roles)
-    return {
-      collection: toCollectionMeta(collectionSlug, def),
+    const meta = toCollectionMeta(collectionSlug, def)
+    const response: CollectionEntryResponse = {
+      collection: meta,
       entry: toAdminEntry(row, slugPath, flags),
       canUpdate: flags.canUpdate,
       canDelete: flags.canDelete,
     }
+    if (meta.hierarchical) {
+      const parents = await listCollectionParentOptions(db, collectionSlug, row.id)
+      response.parents = parents.map(toParentOption)
+    }
+    return response
   }
   catch (error) {
     rethrowCollectionWriteError(error)

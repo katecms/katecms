@@ -42,6 +42,7 @@ export interface ParentOption {
   slug: string
   parentId: number | null
   slugPath: string
+  depth: number
 }
 
 export interface CollectionListResponse {

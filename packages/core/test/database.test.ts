@@ -416,7 +416,10 @@ describe('database layer', () => {
       ])
 
       const options = await listCollectionParentOptions(db, 'page', child.id)
-      expect(options.map(option => option.slugPath).sort()).toEqual(['about', 'about/secret'])
+      expect(options.map(option => [option.slugPath, option.depth])).toEqual([
+        ['about', 0],
+        ['about/secret', 1],
+      ])
 
       expect(await validateCollectionParent(db, 'page', parent.id, parent.id)).toEqual({
         ok: false,

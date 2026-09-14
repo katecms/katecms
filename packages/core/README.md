@@ -114,7 +114,7 @@ const resolved = resolveMiraiCmsConfig(config)
 |---|---|
 | `labels.name` / `singularName` | Подписи в админке |
 | `hierarchical` | Дерево через `parent_id`. По умолчанию `false` |
-| `autosave` | Черновик при уходе с формы. По умолчанию `false` |
+| `autosave` | Черновик при уходе с **новой** несохранённой записи. Уже сохранённые — подтверждение. По умолчанию `false` |
 | `rewrite` | Публичный URL, плейсхолдер `%name%`. Нет паттерна → `/{slug}/%name%` |
 | `fields` | Карта полей записи |
 | `blocks` | `string[]` разрешённых блоков, `true` — все, иначе выкл |

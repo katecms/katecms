@@ -314,6 +314,7 @@ export interface CollectionParentOption {
   slug: string
   parentId: number | null
   slugPath: string
+  depth: number
 }
 
 /**
@@ -404,7 +405,7 @@ export async function listCollectionParentOptions(
     .where('type', '=', type)
     .where('status', '!=', 'trash')
     .orderBy('menu_order', 'asc')
-    .orderBy('title', 'asc')
+    .orderBy('created_at', 'desc')
     .execute()
 
   const blocked = excludeId === undefined
@@ -416,12 +417,13 @@ export async function listCollectionParentOptions(
 
   const visible = rows.filter(row => !blocked.has(row.id))
   const paths = buildSlugPathMap(visible)
-  return visible.map(row => ({
+  return flattenCollectionTree(visible).map(({ row, depth }) => ({
     id: row.id,
     title: row.title,
     slug: row.slug,
     parentId: row.parent_id,
     slugPath: paths.get(row.id) ?? row.slug,
+    depth,
   }))
 }
 

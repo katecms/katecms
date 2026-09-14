@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { $fetch, navigateTo, onBeforeRouteLeave, useHead, useRoute } from '#imports'
-import { buildPublicPath, validateRequiredFields } from '@miraicms/core'
+import { buildPublicPath } from '@miraicms/core'
 import { parseAuthError } from '../../../utils/auth-error'
 import { collectionApi } from '../../../utils/collections'
 import type {
@@ -24,7 +24,10 @@ const loading = ref(true)
 const saving = ref(false)
 const error = ref<string | null>(null)
 const dirty = ref(false)
-const skipAutosave = ref(false)
+const skipLeaveConfirm = ref(false)
+const leaveOpen = ref(false)
+const pendingLeaveTo = ref<string | null>(null)
+const entryForm = ref<{ validateForSubmit: () => boolean } | null>(null)
 const canUpdate = ref(false)
 const canDelete = ref(false)
 const savedStatus = ref<CollectionEntryFormModel['status']>('draft')
@@ -62,7 +65,9 @@ const viewUrl = computed(() => {
 
 function applyEntry(res: CollectionEntryResponse) {
   collection.value = res.collection
-  parents.value = res.parents ?? []
+  if (res.parents !== undefined) {
+    parents.value = res.parents
+  }
   form.title = res.entry.title
   form.slug = res.entry.slug
   form.status = res.entry.status === 'trash' ? 'draft' : res.entry.status
@@ -108,52 +113,79 @@ async function persist(patch: Record<string, unknown>): Promise<CollectionEntryR
   )
 }
 
-async function autosave() {
-  if (!collection.value?.autosave || skipAutosave.value || saving.value || !dirty.value || !found.value) {
+function shouldConfirmLeave(): boolean {
+  return Boolean(collection.value?.autosave)
+    && dirty.value
+    && found.value
+    && canUpdate.value
+    && savedStatus.value !== 'trash'
+    && !skipLeaveConfirm.value
+}
+
+function onBeforeUnload(event: BeforeUnloadEvent) {
+  if (!shouldConfirmLeave()) {
     return
   }
-  if (!canUpdate.value || savedStatus.value === 'trash') {
+  event.preventDefault()
+  event.returnValue = ''
+}
+
+onBeforeRouteLeave((to) => {
+  if (!shouldConfirmLeave()) {
+    return true
+  }
+  pendingLeaveTo.value = to.fullPath
+  leaveOpen.value = true
+  return false
+})
+
+function cancelLeave() {
+  if (saving.value) {
     return
   }
-  if (!form.title.trim() || !form.slug.trim()) {
-    return
-  }
-  if (
-    form.status === 'published'
-    && validateRequiredFields(collection.value.fields ?? {}, form.fields).length > 0
-  ) {
-    return
-  }
-  saving.value = true
-  try {
-    await persist({
-      title: form.title.trim(),
-      slug: form.slug.trim(),
-      status: form.status,
-      fields: form.fields,
-      parentId: form.parentId,
-      menuOrder: form.menuOrder,
-      publishedAt: form.publishedAt,
-    })
-    dirty.value = false
-  }
-  finally {
-    saving.value = false
+  leaveOpen.value = false
+  pendingLeaveTo.value = null
+}
+
+async function finishLeave() {
+  const to = pendingLeaveTo.value
+  skipLeaveConfirm.value = true
+  leaveOpen.value = false
+  pendingLeaveTo.value = null
+  dirty.value = false
+  if (to) {
+    await navigateTo(to)
   }
 }
 
-onBeforeRouteLeave(async () => {
-  try {
-    await autosave()
+async function discardLeave() {
+  if (saving.value) {
+    return
   }
-  catch {
-    // Best-effort: don't block navigation if autosave fails.
-  }
-})
+  await finishLeave()
+}
 
-async function submit() {
+async function saveAndLeave() {
   if (saving.value || !collection.value || !canUpdate.value) {
     return
+  }
+  if (!entryForm.value?.validateForSubmit()) {
+    leaveOpen.value = false
+    pendingLeaveTo.value = null
+    return
+  }
+  const ok = await submit()
+  if (ok) {
+    await finishLeave()
+    return
+  }
+  leaveOpen.value = false
+  pendingLeaveTo.value = null
+}
+
+async function submit(): Promise<boolean> {
+  if (saving.value || !collection.value || !canUpdate.value) {
+    return false
   }
   saving.value = true
   error.value = null
@@ -168,10 +200,13 @@ async function submit() {
       publishedAt: form.publishedAt,
     })
     applyEntry(res)
+    await nextTick()
     dirty.value = false
+    return true
   }
   catch (err) {
     error.value = parseAuthError(err, 'Could not save the entry.').message
+    return false
   }
   finally {
     saving.value = false
@@ -187,7 +222,7 @@ async function moveToTrash() {
   }
   saving.value = true
   error.value = null
-  skipAutosave.value = true
+  skipLeaveConfirm.value = true
   try {
     await persist({ status: 'trash' })
     await navigateTo({
@@ -196,7 +231,7 @@ async function moveToTrash() {
     })
   }
   catch (err) {
-    skipAutosave.value = false
+    skipLeaveConfirm.value = false
     error.value = parseAuthError(err, 'Could not move the entry to trash.').message
   }
   finally {
@@ -213,6 +248,7 @@ async function restore() {
   try {
     const res = await persist({ status: 'draft' })
     applyEntry(res)
+    await nextTick()
     dirty.value = false
   }
   catch (err) {
@@ -232,7 +268,7 @@ async function removePermanent() {
   }
   saving.value = true
   error.value = null
-  skipAutosave.value = true
+  skipLeaveConfirm.value = true
   try {
     await $fetch(collectionApi(collectionSlug.value, entryId.value), { method: 'DELETE' })
     await navigateTo({
@@ -241,7 +277,7 @@ async function removePermanent() {
     })
   }
   catch (err) {
-    skipAutosave.value = false
+    skipLeaveConfirm.value = false
     error.value = parseAuthError(err, 'Could not delete the entry.').message
   }
   finally {
@@ -249,7 +285,13 @@ async function removePermanent() {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  window.addEventListener('beforeunload', onBeforeUnload)
+  load()
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', onBeforeUnload)
+})
 watch([collectionSlug, entryId], load)
 </script>
 
@@ -291,6 +333,7 @@ watch([collectionSlug, entryId], load)
 
     <MiraiCmsCollectionEntryForm
       v-else-if="collection"
+      ref="entryForm"
       :model-value="form"
       :collection="collection"
       :entry-key="entryId"
@@ -306,6 +349,15 @@ watch([collectionSlug, entryId], load)
       @trash="moveToTrash"
       @restore="restore"
       @delete="removePermanent"
+    />
+
+    <MiraiCmsConfirmDialog
+      :open="leaveOpen"
+      :busy="saving"
+      :save-label="form.status === 'published' ? 'Publish' : 'Save draft'"
+      @save="saveAndLeave"
+      @discard="discardLeave"
+      @cancel="cancelLeave"
     />
   </div>
 </template>

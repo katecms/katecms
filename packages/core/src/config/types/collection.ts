@@ -17,8 +17,8 @@ export interface CollectionDefinition {
   /** Enable parent/child nesting (uses the `parent_id` column). Default: false. */
   hierarchical?: boolean
   /**
-   * When `true`, leaving the create/edit screen with unsaved changes
-   * automatically persists the entry as a `draft`. Default: false.
+   * When `true`, leaving a **new** unsaved entry persists it as a `draft`.
+   * Already saved draft/published entries prompt instead. Default: `false`.
    */
   autosave?: boolean
   /**

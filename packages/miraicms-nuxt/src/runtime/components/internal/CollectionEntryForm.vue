@@ -70,10 +70,14 @@ const statusField = {
 }
 
 const parentChoices = computed<SelectChoice[]>(() =>
-  (props.parents ?? []).map(parent => ({
-    val: parent.id,
-    lbl: parent.slugPath ? `${parent.title} (${parent.slugPath})` : parent.title,
-  })),
+  (props.parents ?? []).map((parent) => {
+    const depth = parent.depth ?? 0
+    const title = depth < 1 ? parent.title : `${'— '.repeat(depth)}${parent.title}`
+    return {
+      val: parent.id,
+      lbl: title,
+    }
+  }),
 )
 
 const parentField = computed(() => ({
@@ -317,8 +321,15 @@ function scrollToFirstError(errors: Record<string, string>) {
 }
 
 function onSubmit() {
-  if (!canSubmit.value) {
+  if (!validateForSubmit()) {
     return
+  }
+  emit('submit')
+}
+
+function validateForSubmit(): boolean {
+  if (!canSubmit.value) {
+    return false
   }
   let slug = props.modelValue.slug.trim()
   if (!slug && props.modelValue.title.trim()) {
@@ -330,10 +341,12 @@ function onSubmit() {
   fieldErrors.value = errors
   if (Object.keys(errors).length > 0) {
     nextTick(() => scrollToFirstError(errors))
-    return
+    return false
   }
-  emit('submit')
+  return true
 }
+
+defineExpose({ validateForSubmit })
 
 watch(
   [values, () => props.modelValue.title, () => props.modelValue.slug, () => props.modelValue.status],
@@ -392,13 +405,6 @@ watch(
           />
         </MiraiCmsFieldWrapper>
 
-        <MiraiCmsSelectField
-          v-if="collection.hierarchical"
-          v-model="parentModel"
-          field-key="cms-entry-parent"
-          :field="parentField"
-        />
-
         <div :class="`${rootClass}__fields`">
           <div
             v-for="[key, field] in mainFields"
@@ -448,6 +454,13 @@ watch(
               v-model="menuOrderModel"
               field-key="cms-entry-menu-order"
               :field="menuOrderField"
+            />
+
+            <MiraiCmsSelectField
+              v-if="collection.hierarchical"
+              v-model="parentModel"
+              field-key="cms-entry-parent"
+              :field="parentField"
             />
           </template>
 

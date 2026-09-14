@@ -129,7 +129,7 @@ export default defineNuxtConfig({
           name: 'Categories', // required
           singularName: 'Category', // default: labels.singularName = labels.name
         },
-        collections: ['pages'],
+        collections: ['pages', 'products'],
       },
     },
   },

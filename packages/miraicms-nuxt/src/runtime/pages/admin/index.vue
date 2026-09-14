@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRuntimeConfig, useHead } from '#imports'
 import { useCmsPaths } from '../../composables/useCmsPaths'
 import type { PublicCollectionNav } from '../../utils/collections'
+import type { PublicDictionaryNav } from '../../utils/dictionaries'
 
 useHead({ title: 'Dashboard' })
 
@@ -10,6 +11,14 @@ const rootClass = 'miraicms-dashboard'
 const paths = useCmsPaths()
 const collections = computed(() => {
   const map = (useRuntimeConfig().public.miraicms?.collections ?? {}) as Record<string, PublicCollectionNav>
+  return Object.entries(map).map(([slug, def]) => ({
+    slug,
+    label: def.labels?.name || slug,
+    singular: def.labels?.singularName || def.labels?.name || slug,
+  }))
+})
+const dictionaries = computed(() => {
+  const map = (useRuntimeConfig().public.miraicms?.dictionaries ?? {}) as Record<string, PublicDictionaryNav>
   return Object.entries(map).map(([slug, def]) => ({
     slug,
     label: def.labels?.name || slug,
@@ -50,6 +59,28 @@ const collections = computed(() => {
         </NuxtLink>
       </div>
     </div>
+
+    <template v-if="dictionaries.length">
+      <div :class="`${rootClass}__head`">
+        <div :class="`${rootClass}__head-title`">
+          Dictionaries
+        </div>
+      </div>
+      <div :class="`${rootClass}__list`">
+        <div
+          v-for="item in dictionaries"
+          :key="item.slug"
+        >
+          <NuxtLink
+            :class="`${rootClass}__card`"
+            :to="paths.dictionary(item.slug)"
+          >
+            <span :class="`${rootClass}__card-title`">{{ item.label }}</span>
+            <span :class="`${rootClass}__card-meta`">{{ item.slug }}</span>
+          </NuxtLink>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 

@@ -13,6 +13,9 @@ export function useCmsPaths() {
     collectionCreate: (slug: string) => `${admin}/collections/${encodeURIComponent(slug)}/create`,
     collectionEntry: (slug: string, id: number | string) =>
       `${admin}/collections/${encodeURIComponent(slug)}/${id}`,
+    dictionary: (slug: string) => `${admin}/dictionaries/${encodeURIComponent(slug)}`,
+    dictionaryTerm: (slug: string, id: number | string) =>
+      `${admin}/dictionaries/${encodeURIComponent(slug)}/${id}`,
     login: cmsRoutePath(config?.loginPath || 'login'),
     register: cmsRoutePath(config?.registerPath || 'register'),
   }

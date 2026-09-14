@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRoute, useRuntimeConfig } from '#imports'
 import { useCmsPaths } from '../../composables/useCmsPaths'
 import type { PublicCollectionNav } from '../../utils/collections'
+import type { PublicDictionaryNav } from '../../utils/dictionaries'
 
 const rootClass = 'miraicms-menu'
 const route = useRoute()
@@ -19,6 +20,7 @@ type MenuItem = {
 
 const DASHBOARD_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M4 4h7v7H4V4Zm9 0h7v5h-7V4ZM4 13h7v7H4v-7Zm9 7v-9h7v9h-7Z" stroke="currentColor" stroke-width="1.6"/></svg>'
 const COLLECTION_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6"/><path d="M14 3v5h5" stroke="currentColor" stroke-width="1.6"/></svg>'
+const DICTIONARY_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M7 4h10a2 2 0 0 1 2 2v14l-7-3-7 3V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6"/><path d="M9 8h6M9 12h6" stroke="currentColor" stroke-width="1.6"/></svg>'
 const MEDIA_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="m3 16 5-5 4 4 3-3 6 6" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="9" r="1.4" fill="currentColor"/></svg>'
 const USERS_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M4 19c0-2.8 2.2-5 5-5h0c2.8 0 5 2.2 5 5" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="9" r="2.2" stroke="currentColor" stroke-width="1.6"/><path d="M16.2 14.2c2.2.4 3.8 2.3 3.8 4.8" stroke="currentColor" stroke-width="1.6"/></svg>'
 
@@ -49,6 +51,18 @@ const items = computed<MenuItem[]>(() => {
     }
   })
 
+  const dictionaries = (runtimeConfig.public.miraicms?.dictionaries ?? {}) as Record<string, PublicDictionaryNav>
+  const dictionaryItems = Object.entries(dictionaries).map(([slug, def]) => {
+    const to = paths.dictionary(slug)
+    return {
+      key: `dictionary:${slug}`,
+      label: def.labels?.name || slug,
+      to,
+      icon: DICTIONARY_ICON,
+      active: isActive(to),
+    }
+  })
+
   return [
     {
       key: 'dashboard',
@@ -65,6 +79,7 @@ const items = computed<MenuItem[]>(() => {
       active: isActive(paths.media),
     },
     ...collectionItems,
+    ...dictionaryItems,
     {
       key: 'users',
       label: 'Users',

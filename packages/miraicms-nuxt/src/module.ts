@@ -41,6 +41,20 @@ function toPublicCollections(collections: ResolvedMiraiCmsConfig['collections'])
   )
 }
 
+function toPublicDictionaries(dictionaries: ResolvedMiraiCmsConfig['dictionaries']) {
+  return Object.fromEntries(
+    Object.entries(dictionaries).map(([slug, def]) => [
+      slug,
+      {
+        labels: {
+          name: def.labels.name,
+          singularName: def.labels.singularName ?? def.labels.name,
+        },
+      },
+    ]),
+  )
+}
+
 export default defineNuxtModule<MiraiCmsConfig>({
   meta: {
     name: 'miraicms-nuxt',
@@ -90,6 +104,7 @@ export default defineNuxtModule<MiraiCmsConfig>({
       loginPath: resolved.loginPath,
       registerPath: resolved.registerPath,
       collections: toPublicCollections(resolved.collections),
+      dictionaries: toPublicDictionaries(resolved.dictionaries),
     }
 
     addServerPlugin(resolver.resolve('./runtime/server/plugins/auto-migrate'))
@@ -203,6 +218,32 @@ export default defineNuxtModule<MiraiCmsConfig>({
       handler: resolver.resolve('./runtime/server/api/_miraicms/collections/[collection]/[id].delete'),
     })
     addServerHandler({
+      route: '/api/_miraicms/dictionaries/:dictionary',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/dictionaries/[dictionary].get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/dictionaries/:dictionary',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/dictionaries/[dictionary].post'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/dictionaries/:dictionary/:id',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/dictionaries/[dictionary]/[id].get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/dictionaries/:dictionary/:id',
+      method: 'patch',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/dictionaries/[dictionary]/[id].patch'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/dictionaries/:dictionary/:id',
+      method: 'delete',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/dictionaries/[dictionary]/[id].delete'),
+    })
+
+    addServerHandler({
       route: '/api/_miraicms/resolve',
       method: 'get',
       handler: resolver.resolve('./runtime/server/api/_miraicms/resolve.get'),
@@ -286,6 +327,16 @@ export default defineNuxtModule<MiraiCmsConfig>({
               path: 'collections/:collection/:id',
               file: resolver.resolve('./runtime/pages/admin/collections/[id].vue'),
             },
+            {
+              name: 'admin-dictionaries',
+              path: 'dictionaries/:dictionary',
+              file: resolver.resolve('./runtime/pages/admin/dictionaries/index.vue'),
+            },
+            {
+              name: 'admin-dictionaries-id',
+              path: 'dictionaries/:dictionary/:id',
+              file: resolver.resolve('./runtime/pages/admin/dictionaries/[id].vue'),
+            },
             // DEMO FIELDS
             {
               name: 'admin-demo-fields',
@@ -331,6 +382,9 @@ declare module '@nuxt/schema' {
         labels: { name: string, singularName: string }
         icon?: string
       }>
+      dictionaries: Record<string, {
+        labels: { name: string, singularName: string }
+      }>
     }
   }
 }
@@ -350,6 +404,9 @@ declare module 'nuxt/schema' {
       collections: Record<string, {
         labels: { name: string, singularName: string }
         icon?: string
+      }>
+      dictionaries: Record<string, {
+        labels: { name: string, singularName: string }
       }>
     }
   }

@@ -33,6 +33,7 @@ const form = reactive<CollectionEntryFormModel>({
   slug: '',
   status: 'published',
   parentId: null,
+  menuOrder: 0,
   publishedAt: null,
   fields: {},
 })
@@ -82,6 +83,7 @@ async function persist(status = form.status): Promise<CollectionEntryResponse> {
       status,
       fields: form.fields,
       parentId: form.parentId,
+      menuOrder: form.menuOrder,
       publishedAt: form.publishedAt,
     },
   })

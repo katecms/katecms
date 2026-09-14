@@ -77,6 +77,7 @@ export interface CollectionEntryFormModel {
   slug: string
   status: CollectionStatus
   parentId: number | null
+  menuOrder: number
   publishedAt: string | null
   fields: Record<string, unknown>
 }

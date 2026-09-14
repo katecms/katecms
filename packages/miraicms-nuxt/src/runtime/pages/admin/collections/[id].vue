@@ -34,6 +34,7 @@ const form = reactive<CollectionEntryFormModel>({
   slug: '',
   status: 'draft',
   parentId: null,
+  menuOrder: 0,
   publishedAt: null,
   fields: {},
 })
@@ -66,6 +67,7 @@ function applyEntry(res: CollectionEntryResponse) {
   form.slug = res.entry.slug
   form.status = res.entry.status === 'trash' ? 'draft' : res.entry.status
   form.parentId = res.entry.parentId
+  form.menuOrder = res.entry.menuOrder
   form.publishedAt = res.entry.publishedAt
   form.fields = { ...(res.entry.fields ?? {}) }
   savedStatus.value = res.entry.status
@@ -130,6 +132,7 @@ async function autosave() {
       status: form.status,
       fields: form.fields,
       parentId: form.parentId,
+      menuOrder: form.menuOrder,
       publishedAt: form.publishedAt,
     })
     dirty.value = false
@@ -161,6 +164,7 @@ async function submit() {
       status: form.status,
       fields: form.fields,
       parentId: form.parentId,
+      menuOrder: form.menuOrder,
       publishedAt: form.publishedAt,
     })
     applyEntry(res)

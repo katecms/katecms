@@ -16,6 +16,6 @@ const { entry, link, preview } = await getCollection()
         {{ link }}
       </NuxtLink>
     </p>
-    <pre>{{ entry?.fields }}</pre>
+    <pre>{{ entry }}</pre>
   </div>
 </template>

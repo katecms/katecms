@@ -90,6 +90,13 @@ const publishedField = {
   returnFormat: PUBLISH_FORMAT,
 }
 
+const menuOrderField = {
+  type: 'number' as const,
+  label: 'Order',
+  step: 1,
+  instructions: 'Lower numbers appear first in lists.',
+}
+
 const titleField = { type: 'text' as const, label: 'Title', required: true }
 const slugField = { type: 'text' as const, label: 'Slug', required: true }
 
@@ -237,6 +244,24 @@ const parentModel = computed({
     }
     const id = Number(value)
     updateCore('parentId', Number.isInteger(id) && id > 0 ? id : null)
+  },
+})
+
+const menuOrderModel = computed({
+  get() {
+    return props.modelValue.menuOrder
+  },
+  set(value: unknown) {
+    if (value === '' || value === null || value === undefined) {
+      updateCore('menuOrder', 0)
+      return
+    }
+    const n = typeof value === 'number' ? value : Number(value)
+    if (!Number.isFinite(n)) {
+      updateCore('menuOrder', 0)
+      return
+    }
+    updateCore('menuOrder', Math.trunc(n))
   },
 })
 
@@ -417,6 +442,12 @@ watch(
               v-model="publishedLocal"
               field-key="cms-entry-published"
               :field="publishedField"
+            />
+
+            <MiraiCmsNumberField
+              v-model="menuOrderModel"
+              field-key="cms-entry-menu-order"
+              :field="menuOrderField"
             />
           </template>
 

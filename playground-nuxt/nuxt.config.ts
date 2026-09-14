@@ -129,6 +129,7 @@ export default defineNuxtConfig({
           name: 'Categories', // required
           singularName: 'Category', // default: labels.singularName = labels.name
         },
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M4 7h7l2 2h7v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7Z" stroke="currentColor" stroke-width="1.6"/><path d="M4 7V6a1 1 0 0 1 1-1h5l2 2" stroke="currentColor" stroke-width="1.6"/></svg>',
         multiple: true, // несколько терминов на запись; default: false
         collections: ['pages', 'products'],
       },

@@ -58,7 +58,7 @@ const items = computed<MenuItem[]>(() => {
       key: `dictionary:${slug}`,
       label: def.labels?.name || slug,
       to,
-      icon: DICTIONARY_ICON,
+      icon: isSvgIcon(def.icon) ? def.icon! : DICTIONARY_ICON,
       active: isActive(to),
     }
   })

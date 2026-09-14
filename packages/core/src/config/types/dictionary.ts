@@ -13,6 +13,8 @@ export interface DictionaryLabels {
  */
 export interface DictionaryDefinition {
   labels: DictionaryLabels
+  /** Inline SVG for the admin menu. Invalid or empty values use the default icon. */
+  icon?: string
   fields?: Fields
   /** Collection slug(s) this dictionary is attached to. */
   collections: string[]

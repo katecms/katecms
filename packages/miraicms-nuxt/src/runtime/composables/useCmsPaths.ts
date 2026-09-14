@@ -8,6 +8,7 @@ export function useCmsPaths() {
     admin,
     media: `${admin}/media`,
     users: `${admin}/users`,
+    user: (id: number | string) => `${admin}/users/${id}`,
     demoFields: `${admin}/demo-fields`,
     collection: (slug: string) => `${admin}/collections/${encodeURIComponent(slug)}`,
     collectionCreate: (slug: string) => `${admin}/collections/${encodeURIComponent(slug)}/create`,

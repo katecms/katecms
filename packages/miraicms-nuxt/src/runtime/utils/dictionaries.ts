@@ -62,6 +62,7 @@ export interface PublicDictionaryNav {
     name: string
     singularName: string
   }
+  icon?: string
 }
 
 export function dictionaryApi(slug: string, id?: number): string {

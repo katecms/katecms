@@ -4,7 +4,7 @@ import type { AuthState, SafeUser } from '@miraicms/core'
 import { useCmsPaths } from './useCmsPaths'
 
 /**
- * Shared auth snapshot for admin UI (sidebar profile, logout, etc.).
+ * Shared auth snapshot for admin UI (header profile, logout, etc.).
  * Uses a stable fetch key so multiple consumers share one request.
  */
 export function useAuth() {

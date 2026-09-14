@@ -26,6 +26,10 @@ function resolveModuleSqliteFilename(rootDir: string, filename: string): string 
   return join(rootDir, value)
 }
 
+function toPublicNavIcon(icon: unknown): string {
+  return typeof icon === 'string' ? icon.trim() : ''
+}
+
 function toPublicCollections(collections: ResolvedMiraiCmsConfig['collections']) {
   return Object.fromEntries(
     Object.entries(collections).map(([slug, def]) => [
@@ -35,7 +39,7 @@ function toPublicCollections(collections: ResolvedMiraiCmsConfig['collections'])
           name: def.labels.name,
           singularName: def.labels.singularName ?? def.labels.name,
         },
-        ...(typeof def.icon === 'string' && def.icon.trim() ? { icon: def.icon } : {}),
+        icon: toPublicNavIcon(def.icon),
       },
     ]),
   )
@@ -50,6 +54,7 @@ function toPublicDictionaries(dictionaries: ResolvedMiraiCmsConfig['dictionaries
           name: def.labels.name,
           singularName: def.labels.singularName ?? def.labels.name,
         },
+        icon: toPublicNavIcon(def.icon),
       },
     ]),
   )
@@ -380,10 +385,11 @@ declare module '@nuxt/schema' {
       registerPath: string
       collections: Record<string, {
         labels: { name: string, singularName: string }
-        icon?: string
+        icon: string
       }>
       dictionaries: Record<string, {
         labels: { name: string, singularName: string }
+        icon: string
       }>
     }
   }
@@ -403,10 +409,11 @@ declare module 'nuxt/schema' {
       registerPath: string
       collections: Record<string, {
         labels: { name: string, singularName: string }
-        icon?: string
+        icon: string
       }>
       dictionaries: Record<string, {
         labels: { name: string, singularName: string }
+        icon: string
       }>
     }
   }

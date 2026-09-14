@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useHead } from '#imports'
-import { useAuth } from '../composables/useAuth'
 
 useHead({
   bodyAttrs: {
@@ -10,21 +9,12 @@ useHead({
 })
 
 const rootClass = 'miraicms'
-const { user, logout, loggingOut } = useAuth()
 </script>
 
 <template>
   <div :class="[rootClass]">
     <div :class="[`${rootClass}-header`]">
-      <MiraiCmsUiButton
-        v-if="user"
-        tag="button"
-        variant="secondary"
-        :disabled="loggingOut"
-        @click="logout"
-      >
-        {{ loggingOut ? 'Signing out…' : 'Sign out' }}
-      </MiraiCmsUiButton>
+      <MiraiCmsAppUser />
     </div>
 
     <div :class="[`${rootClass}-sidebar`]">

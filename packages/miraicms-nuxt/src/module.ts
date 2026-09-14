@@ -247,6 +247,16 @@ export default defineNuxtModule<MiraiCmsConfig>({
       method: 'delete',
       handler: resolver.resolve('./runtime/server/api/_miraicms/dictionaries/[dictionary]/[id].delete'),
     })
+    addServerHandler({
+      route: '/api/_miraicms/relation/entries',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/relation/entries.get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/relation/terms',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/relation/terms.get'),
+    })
 
     addServerHandler({
       route: '/api/_miraicms/resolve',

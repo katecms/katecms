@@ -14,23 +14,33 @@ import {
   formatDate,
   isLayoutOnlyFieldType,
   encodeUserFieldValue,
+  encodeRelationEntryValue,
+  encodeRelationTermValue,
   filterUsersByRole,
   formatRequiredFieldsError,
   isFieldValueEmpty,
   isOsmMarker,
+  isRelationEntryValue,
+  isRelationTermValue,
   isSelectChoiceGroup,
   isOperatorAllowed,
   isUserFieldValue,
   isVisible,
-  validateRequiredFields,
   MAX_MATCHES_PATTERN_LENGTH,
   osmAddressFromNominatim,
+  pageLinkUrl,
+  pageLinkUrls,
   parseDate,
+  relationFieldId,
+  relationFieldIds,
   ROW_COLLAPSED_KEY,
   selectChoiceLookup,
   selectChoiceValue,
+  toRelationEntryValue,
+  toRelationTermValue,
   toUserFieldValue,
   userFieldId,
+  validateRequiredFields,
   walkSelectChoices,
 } from '../src'
 
@@ -237,6 +247,44 @@ describe('user field helpers', () => {
     expect(filterUsersByRole([ada, editor], ['owner', 'editor'])).toEqual([ada, editor])
   })
 })
+
+describe('relation field helpers', () => {
+  const page = toRelationEntryValue({
+    id: 12,
+    type: 'pages',
+    title: 'About',
+    slug: 'about',
+    slugPath: 'about',
+    url: '/inf/about',
+  })
+  const term = toRelationTermValue({
+    id: 4,
+    type: 'categories',
+    title: 'News',
+    slug: 'news',
+    slugPath: 'news',
+    parentId: null,
+    depth: 0,
+  })
+
+  it('reads ids and encodes returnFormat', () => {
+    expect(isRelationEntryValue(page)).toBe(true)
+    expect(isRelationTermValue(term)).toBe(true)
+    expect(relationFieldId(page)).toBe('12')
+    expect(relationFieldId(12)).toBe('12')
+    expect(relationFieldIds([page, 7])).toEqual(['12', '7'])
+    expect(encodeRelationEntryValue(page, 'id')).toBe(12)
+    expect(encodeRelationEntryValue(page, 'object')).toEqual(page)
+    expect(encodeRelationTermValue(term, 'id')).toBe(4)
+  })
+
+  it('reads page_link URLs', () => {
+    expect(pageLinkUrl('/inf/about')).toBe('/inf/about')
+    expect(pageLinkUrl(page)).toBe('/inf/about')
+    expect(pageLinkUrls([page, '/posts/hello'])).toEqual(['/inf/about', '/posts/hello'])
+  })
+})
+
 
 describe('structure keys', () => {
   it('keeps reserved row keys stable', () => {

@@ -353,6 +353,28 @@ export interface UserFieldValue {
   created_at: string
 }
 
+/** Stored collection entry for `post_object` / `relationship` when `returnFormat` is `'object'`. */
+export interface RelationEntryValue {
+  id: number
+  type: string
+  title: string
+  slug: string
+  slugPath: string
+  url: string
+  featuredImage?: MediaItem | null
+}
+
+/** Stored dictionary term for `dictionary` when `returnFormat` is `'object'`. */
+export interface RelationTermValue {
+  id: number
+  type: string
+  title: string
+  slug: string
+  slugPath: string
+  parentId: number | null
+  depth?: number
+}
+
 /* ============================================================
  * Advanced
  * ============================================================ */

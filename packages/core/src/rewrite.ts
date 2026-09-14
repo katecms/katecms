@@ -92,6 +92,15 @@ export function buildPublicPath(
   return pattern.replace(/%name%/g, slugPath)
 }
 
+/** Collection archive path: rewrite with `%name%` removed (`/inf/%name%` → `/inf`). */
+export function buildArchivePath(
+  rewrite: string | undefined,
+  collectionSlug: string,
+): string {
+  const pattern = normalizePublicPath(rewrite?.trim() || defaultRewrite(collectionSlug))
+  return normalizePublicPath(pattern.replace(/%name%/g, '').replace(/\/{2,}/g, '/'))
+}
+
 /**
  * Build `id → slugPath` for entries that include `parent_id` links.
  * Cycle-safe: a loop falls back to the entry's own slug.

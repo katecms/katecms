@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildPublicPath,
+  buildArchivePath,
   buildSlugPathMap,
   matchCollectionPath,
   normalizePublicPath,
@@ -44,6 +45,14 @@ describe('buildPublicPath', () => {
   it('fills %name% from rewrite or the default pattern', () => {
     expect(buildPublicPath('/info/%name%', 'pages', 'about/team')).toBe('/info/about/team')
     expect(buildPublicPath(undefined, 'posts', 'hello')).toBe('/posts/hello')
+  })
+})
+
+describe('buildArchivePath', () => {
+  it('strips %name% from rewrite', () => {
+    expect(buildArchivePath('/info/%name%', 'pages')).toBe('/info')
+    expect(buildArchivePath(undefined, 'posts')).toBe('/posts')
+    expect(buildArchivePath('/%name%', 'pages')).toBe('/')
   })
 })
 

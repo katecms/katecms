@@ -32,6 +32,8 @@ export type {
   OsmAddress,
   OsmMarker,
   OsmMarkerValue,
+  RelationEntryValue,
+  RelationTermValue,
   UserFieldValue,
   SelectChoice,
   SelectChoiceGroup,

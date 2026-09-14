@@ -35,6 +35,19 @@ export {
 } from './user'
 export type { UserFieldSource } from './user'
 export {
+  encodeRelationEntryValue,
+  encodeRelationTermValue,
+  isRelationEntryValue,
+  isRelationTermValue,
+  pageLinkUrl,
+  pageLinkUrls,
+  relationFieldId,
+  relationFieldIds,
+  toRelationEntryValue,
+  toRelationTermValue,
+} from './relation'
+export type { RelationEntrySource, RelationTermSource } from './relation'
+export {
   collectPanelDefaults,
   collectPanelKeys,
   collectVisibleValueKeys,

@@ -77,6 +77,7 @@ export {
   linkCollectionDictionary,
   listCollectionsByDictionary,
   listDictionariesByCollection,
+  setCollectionDictionaries,
   unlinkCollectionDictionary,
 } from './collection-dictionaries'
 export type { CollectionDictionary, ListCollectionsByDictionaryOptions } from './collection-dictionaries'

@@ -22,6 +22,7 @@ import type {
   AdminCollectionMeta,
   AdminEntry,
   ParentOption,
+  PublicDictionaryTerm,
 } from '../../utils/collections'
 
 const ENTRY_STATUSES: readonly CollectionStatus[] = ['published', 'draft', 'trash']
@@ -90,7 +91,14 @@ function toIso(value: Date | string | null | undefined): string | null {
 export function toAdminEntry(
   row: Collection,
   slugPath: string,
-  flags?: { canUpdate?: boolean, canDelete?: boolean, depth?: number, authorName?: string | null },
+  flags?: {
+    canUpdate?: boolean
+    canDelete?: boolean
+    depth?: number
+    authorName?: string | null
+    dictionaryIds?: Record<string, number[]>
+    dictionaries?: Record<string, PublicDictionaryTerm[]>
+  },
 ): AdminEntry {
   return {
     id: row.id,

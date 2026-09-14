@@ -16,6 +16,12 @@ export interface DictionaryDefinition {
   fields?: Fields
   /** Collection slug(s) this dictionary is attached to. */
   collections: string[]
+  /**
+   * When `true`, an entry may have several terms of this dictionary.
+   * When omitted / `false`, at most one term. The join table already allows
+   * many rows per entry; this flag is enforced in the adapter. Default: `false`.
+   */
+  multiple?: boolean
 }
 
 /**

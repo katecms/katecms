@@ -24,8 +24,10 @@ import {
   listCollectionParentOptions,
   listCollections,
   listCollectionsByDictionary,
+  listDictionariesByCollection,
   loadCollectionSlugPath,
   migrateSqlite,
+  setCollectionDictionaries,
   setOption,
   unlinkCollectionDictionary,
   updateCollection,
@@ -169,6 +171,45 @@ describe('database layer', () => {
       expect(await listCollectionsByDictionary(db, category.id, { includeTrash: true })).toHaveLength(1)
       expect(await unlinkCollectionDictionary(db, page.id, category.id)).toBe(true)
       expect(await unlinkCollectionDictionary(db, page.id, category.id)).toBe(false)
+    }
+    finally {
+      await close()
+    }
+  })
+
+  it('allows several terms of the same dictionary type on one entry', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      const page = await createCollection(db, {
+        type: 'page',
+        slug: 'about',
+        title: 'About',
+      })
+      const news = await createDictionary(db, {
+        type: 'category',
+        slug: 'news',
+        title: 'News',
+      })
+      const sport = await createDictionary(db, {
+        type: 'category',
+        slug: 'sport',
+        title: 'Sport',
+      })
+      const region = await createDictionary(db, {
+        type: 'region',
+        slug: 'eu',
+        title: 'Europe',
+      })
+
+      await setCollectionDictionaries(db, page.id, [news.id, sport.id, region.id, news.id])
+      const linked = await listDictionariesByCollection(db, page.id)
+      expect(linked.map(term => term.slug).sort()).toEqual(['eu', 'news', 'sport'])
+
+      await setCollectionDictionaries(db, page.id, [sport.id])
+      expect((await listDictionariesByCollection(db, page.id)).map(term => term.slug)).toEqual(['sport'])
+
+      await setCollectionDictionaries(db, page.id, [])
+      expect(await listDictionariesByCollection(db, page.id)).toEqual([])
     }
     finally {
       await close()

@@ -4,14 +4,20 @@ import {
   flattenCollectionTree,
   formatRequiredFieldsError,
   isUniqueConstraintError,
+  listDictionaries,
+  listDictionariesByCollection,
+  setCollectionDictionaries,
   validateRequiredFields,
 } from '@miraicms/core'
 import type {
+  Database,
   Dictionaries,
   Dictionary,
   DictionaryDefinition,
   Fields,
 } from '@miraicms/core'
+import type { Kysely } from 'kysely'
+import type { CollectionDictionaryPicker, PublicDictionaryTerm } from '../../utils/collections'
 import type {
   AdminDictionaryMeta,
   AdminDictionaryTerm,
@@ -53,6 +59,7 @@ export function toDictionaryMeta(slug: string, def: DictionaryDefinition): Admin
     },
     fields: (def.fields ?? {}) as Fields,
     collections: [...def.collections],
+    multiple: def.multiple === true,
   }
 }
 
@@ -65,6 +72,18 @@ function toIso(value: Date | string | null | undefined): string {
   }
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? new Date(0).toISOString() : date.toISOString()
+}
+
+export function toPublicTerm(row: Dictionary, slugPath: string): PublicDictionaryTerm {
+  return {
+    id: row.id,
+    type: row.type,
+    slug: row.slug,
+    slugPath: slugPath || row.slug,
+    title: row.title,
+    fields: (row.fields ?? {}) as Record<string, unknown>,
+    parentId: row.parent_id,
+  }
 }
 
 export function toAdminTerm(
@@ -215,4 +234,161 @@ export function rethrowDictionaryWriteError(error: unknown): never {
     fail(422, message.startsWith('dictionaries:') ? 'Invalid parent.' : message)
   }
   throw error
+}
+
+export function dictionariesForCollection(collectionSlug: string): Array<{ slug: string, def: DictionaryDefinition }> {
+  return Object.entries(getDictionaries())
+    .filter(([, def]) => def.collections.includes(collectionSlug))
+    .map(([slug, def]) => ({ slug, def }))
+}
+
+export async function loadCollectionDictionaryPickers(
+  db: Kysely<Database>,
+  collectionSlug: string,
+): Promise<CollectionDictionaryPicker[]> {
+  const attached = dictionariesForCollection(collectionSlug)
+  const pickers: CollectionDictionaryPicker[] = []
+  for (const { slug, def } of attached) {
+    const rows = await listDictionaries(db, slug)
+    pickers.push({
+      slug,
+      labels: {
+        name: def.labels.name,
+        singularName: def.labels.singularName ?? def.labels.name,
+      },
+      multiple: def.multiple === true,
+      terms: listDictionaryParentOptions(rows),
+    })
+  }
+  return pickers
+}
+
+/** Assigned terms for a public entry, keyed by dictionary slug (empty arrays when none). */
+export async function loadAssignedEntryDictionaries(
+  db: Kysely<Database>,
+  collectionId: number,
+  collectionSlug: string,
+): Promise<Record<string, PublicDictionaryTerm[]>> {
+  const attached = dictionariesForCollection(collectionSlug)
+  const grouped: Record<string, PublicDictionaryTerm[]> = Object.fromEntries(
+    attached.map(({ slug }) => [slug, [] as PublicDictionaryTerm[]]),
+  )
+  if (attached.length === 0) {
+    return grouped
+  }
+
+  const allowed = new Set(attached.map(({ slug }) => slug))
+  const linked = (await listDictionariesByCollection(db, collectionId))
+    .filter(term => allowed.has(term.type))
+  if (linked.length === 0) {
+    return grouped
+  }
+
+  const typesNeeded = [...new Set(linked.map(term => term.type))]
+  const typeRows = await Promise.all(typesNeeded.map(type => listDictionaries(db, type)))
+  const pathMaps = new Map(typesNeeded.map((type, index) => [
+    type,
+    buildSlugPathMap(typeRows[index]),
+  ]))
+
+  for (const term of linked) {
+    grouped[term.type].push(toPublicTerm(term, pathMaps.get(term.type)?.get(term.id) ?? term.slug))
+  }
+  return grouped
+}
+
+export async function selectedDictionaryIds(
+  db: Kysely<Database>,
+  collectionId: number,
+  pickers: CollectionDictionaryPicker[],
+): Promise<Record<string, number[]>> {
+  const ids: Record<string, number[]> = Object.fromEntries(
+    pickers.map(picker => [picker.slug, [] as number[]]),
+  )
+  if (pickers.length === 0) {
+    return ids
+  }
+  const allowed = new Set(pickers.map(picker => picker.slug))
+  const linked = await listDictionariesByCollection(db, collectionId)
+  for (const term of linked) {
+    if (!allowed.has(term.type)) {
+      continue
+    }
+    ids[term.type].push(term.id)
+  }
+  return ids
+}
+
+function readTermIdList(value: unknown): number[] {
+  if (value === undefined || value === null || value === '') {
+    return []
+  }
+  const raw = Array.isArray(value) ? value : [value]
+  const ids: number[] = []
+  const seen = new Set<number>()
+  for (const item of raw) {
+    const id = typeof item === 'number' ? item : Number(item)
+    if (!Number.isInteger(id) || id <= 0) {
+      fail(422, 'Invalid dictionary term.')
+    }
+    if (seen.has(id)) {
+      continue
+    }
+    seen.add(id)
+    ids.push(id)
+  }
+  return ids
+}
+
+export function readDictionaryAssignments(
+  value: unknown,
+  pickers: CollectionDictionaryPicker[],
+): Record<string, number[]> {
+  if (value === undefined || value === null) {
+    return Object.fromEntries(pickers.map(picker => [picker.slug, [] as number[]]))
+  }
+  if (typeof value !== 'object' || Array.isArray(value)) {
+    fail(422, 'Invalid dictionary selection.')
+  }
+  const raw = value as Record<string, unknown>
+  const allowed = new Set(pickers.map(picker => picker.slug))
+  for (const slug of Object.keys(raw)) {
+    if (!allowed.has(slug)) {
+      fail(422, 'Unknown dictionary.')
+    }
+  }
+  const assigned: Record<string, number[]> = {}
+  for (const picker of pickers) {
+    const termIds = new Set(picker.terms.map(term => term.id))
+    const selected = readTermIdList(raw[picker.slug])
+    for (const id of selected) {
+      if (!termIds.has(id)) {
+        fail(422, 'Invalid dictionary term.')
+      }
+    }
+    if (!picker.multiple && selected.length > 1) {
+      fail(422, `Only one ${picker.labels.singularName.toLowerCase()} can be selected.`)
+    }
+    assigned[picker.slug] = selected
+  }
+  return assigned
+}
+
+export async function applyDictionaryAssignments(
+  db: Kysely<Database>,
+  collectionId: number,
+  collectionSlug: string,
+  value: unknown,
+): Promise<Record<string, number[]>> {
+  const pickers = await loadCollectionDictionaryPickers(db, collectionSlug)
+  if (pickers.length === 0) {
+    return {}
+  }
+  const assigned = readDictionaryAssignments(value, pickers)
+  const linked = await listDictionariesByCollection(db, collectionId)
+  const replaceTypes = new Set(pickers.map(picker => picker.slug))
+  const keep = linked.filter(term => !replaceTypes.has(term.type)).map(term => term.id)
+  const next = [...keep, ...Object.values(assigned).flat()]
+  await setCollectionDictionaries(db, collectionId, next)
+  return assigned
 }

@@ -3,9 +3,13 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { $fetch, navigateTo, onBeforeRouteLeave, useHead, useRoute } from '#imports'
 import { buildPublicPath } from '@miraicms/core'
 import { parseAuthError } from '../../../utils/auth-error'
-import { collectionApi } from '../../../utils/collections'
+import {
+  collectionApi,
+  formDictionarySelection,
+} from '../../../utils/collections'
 import type {
   AdminCollectionMeta,
+  CollectionDictionaryPicker,
   CollectionEntryFormModel,
   CollectionEntryResponse,
   ParentOption,
@@ -19,11 +23,13 @@ const entryId = computed(() => Number(route.params.id))
 
 const collection = ref<AdminCollectionMeta | null>(null)
 const parents = ref<ParentOption[]>([])
+const dictionaryPickers = ref<CollectionDictionaryPicker[]>([])
 const found = ref(false)
 const loading = ref(true)
 const saving = ref(false)
 const error = ref<string | null>(null)
 const dirty = ref(false)
+const formBaseline = ref('')
 const skipLeaveConfirm = ref(false)
 const leaveOpen = ref(false)
 const pendingLeaveTo = ref<string | null>(null)
@@ -40,15 +46,35 @@ const form = reactive<CollectionEntryFormModel>({
   menuOrder: 0,
   publishedAt: null,
   fields: {},
+  dictionaryIds: {},
 })
 
 const pageTitle = computed(() => form.title.trim() || 'Edit entry')
 useHead({ title: pageTitle })
 
+function serializeForm(value: CollectionEntryFormModel): string {
+  return JSON.stringify({
+    title: value.title,
+    slug: value.slug,
+    status: value.status,
+    parentId: value.parentId,
+    menuOrder: value.menuOrder,
+    publishedAt: value.publishedAt,
+    fields: value.fields,
+    dictionaryIds: value.dictionaryIds,
+  })
+}
+
+function markFormClean() {
+  formBaseline.value = serializeForm(form)
+  dirty.value = false
+}
+
 watch(form, () => {
-  if (!loading.value && found.value) {
-    dirty.value = true
+  if (loading.value || !found.value || !formBaseline.value) {
+    return
   }
+  dirty.value = serializeForm(form) !== formBaseline.value
 }, { deep: true })
 
 const viewUrl = computed(() => {
@@ -68,6 +94,9 @@ function applyEntry(res: CollectionEntryResponse) {
   if (res.parents !== undefined) {
     parents.value = res.parents
   }
+  if (res.dictionaries !== undefined) {
+    dictionaryPickers.value = res.dictionaries
+  }
   form.title = res.entry.title
   form.slug = res.entry.slug
   form.status = res.entry.status === 'trash' ? 'draft' : res.entry.status
@@ -75,6 +104,7 @@ function applyEntry(res: CollectionEntryResponse) {
   form.menuOrder = res.entry.menuOrder
   form.publishedAt = res.entry.publishedAt
   form.fields = { ...(res.entry.fields ?? {}) }
+  form.dictionaryIds = formDictionarySelection(dictionaryPickers.value, res.entry.dictionaryIds)
   savedStatus.value = res.entry.status
   canUpdate.value = res.canUpdate
   canDelete.value = res.canDelete
@@ -90,19 +120,24 @@ async function load() {
   loading.value = true
   error.value = null
   found.value = false
+  formBaseline.value = ''
+  dirty.value = false
   try {
     const res = await $fetch<CollectionEntryResponse>(
       collectionApi(collectionSlug.value, entryId.value),
     )
     applyEntry(res)
-    await nextTick()
-    dirty.value = false
   }
   catch (err) {
     error.value = parseAuthError(err, 'Could not load the entry.').message
   }
   finally {
     loading.value = false
+  }
+  await nextTick()
+  await nextTick()
+  if (found.value) {
+    markFormClean()
   }
 }
 
@@ -198,10 +233,11 @@ async function submit(): Promise<boolean> {
       parentId: form.parentId,
       menuOrder: form.menuOrder,
       publishedAt: form.publishedAt,
+      dictionaries: form.dictionaryIds,
     })
     applyEntry(res)
     await nextTick()
-    dirty.value = false
+    markFormClean()
     return true
   }
   catch (err) {
@@ -249,7 +285,7 @@ async function restore() {
     const res = await persist({ status: 'draft' })
     applyEntry(res)
     await nextTick()
-    dirty.value = false
+    markFormClean()
   }
   catch (err) {
     error.value = parseAuthError(err, 'Could not restore the entry.').message
@@ -338,6 +374,7 @@ watch([collectionSlug, entryId], load)
       :collection="collection"
       :entry-key="entryId"
       :parents="parents"
+      :dictionary-pickers="dictionaryPickers"
       :saving="saving"
       :error="error"
       :view-url="viewUrl"

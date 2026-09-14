@@ -14,6 +14,7 @@ import {
   toAdminEntry,
   toCollectionMeta,
 } from '../../utils/collections'
+import { loadAssignedEntryDictionaries } from '../../utils/dictionaries'
 import {
   isTruthyQueryParam,
   parsePublicStatusParam,
@@ -64,8 +65,9 @@ export default defineEventHandler(async (event): Promise<ResolveResponse> => {
     requested: parsePublicStatusParam(query.status),
   })
 
+  const db = getDb()
   const row = await findCollectionBySlugPath(
-    getDb(),
+    db,
     matched.collectionSlug,
     matched.segments,
     statuses,
@@ -74,9 +76,11 @@ export default defineEventHandler(async (event): Promise<ResolveResponse> => {
     fail(404, 'Page not found.')
   }
 
+  const dictionaries = await loadAssignedEntryDictionaries(db, row.id, matched.collectionSlug)
+
   return {
     collection: toCollectionMeta(matched.collectionSlug, def),
-    entry: toAdminEntry(row, matched.slugPath),
+    entry: toAdminEntry(row, matched.slugPath, { dictionaries }),
     preview,
   }
 })

@@ -129,6 +129,7 @@ export default defineNuxtConfig({
           name: 'Categories', // required
           singularName: 'Category', // default: labels.singularName = labels.name
         },
+        multiple: true, // несколько терминов на запись; default: false
         collections: ['pages', 'products'],
       },
     },

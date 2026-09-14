@@ -70,6 +70,7 @@ export {
   linkCollectionDictionary,
   listCollectionsByDictionary,
   listDictionariesByCollection,
+  setCollectionDictionaries,
   unlinkCollectionDictionary,
   deleteOption,
   findOption,

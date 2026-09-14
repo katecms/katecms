@@ -3,9 +3,10 @@ import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { $fetch, navigateTo, onBeforeRouteLeave, useHead, useRoute } from '#imports'
 import { buildFormValues } from '@miraicms/core'
 import { parseAuthError } from '../../../utils/auth-error'
-import { collectionApi } from '../../../utils/collections'
+import { collectionApi, emptyDictionarySelection } from '../../../utils/collections'
 import type {
   AdminCollectionMeta,
+  CollectionDictionaryPicker,
   CollectionEntryFormModel,
   CollectionEntryResponse,
   CollectionListResponse,
@@ -22,6 +23,7 @@ useHead({ title: 'New entry' })
 
 const collection = ref<AdminCollectionMeta | null>(null)
 const parents = ref<ParentOption[]>([])
+const dictionaryPickers = ref<CollectionDictionaryPicker[]>([])
 const loading = ref(true)
 const saving = ref(false)
 const error = ref<string | null>(null)
@@ -36,6 +38,7 @@ const form = reactive<CollectionEntryFormModel>({
   menuOrder: 0,
   publishedAt: null,
   fields: {},
+  dictionaryIds: {},
 })
 
 watch(form, () => {
@@ -61,7 +64,9 @@ async function load() {
     }
     collection.value = res.collection
     parents.value = res.parents ?? []
+    dictionaryPickers.value = res.dictionaries ?? []
     form.fields = buildFormValues(res.collection.fields ?? {})
+    form.dictionaryIds = emptyDictionarySelection(dictionaryPickers.value)
     await nextTick()
     dirty.value = false
   }
@@ -85,6 +90,7 @@ async function persist(status = form.status): Promise<CollectionEntryResponse> {
       parentId: form.parentId,
       menuOrder: form.menuOrder,
       publishedAt: form.publishedAt,
+      dictionaries: form.dictionaryIds,
     },
   })
 }
@@ -190,6 +196,7 @@ watch(collectionSlug, load)
         :collection="collection"
         entry-key="new"
         :parents="parents"
+        :dictionary-pickers="dictionaryPickers"
         :saving="saving"
         :error="error"
         :can-update="true"

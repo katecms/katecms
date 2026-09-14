@@ -15,6 +15,10 @@ import {
   toParentOption,
 } from '../../../../utils/collections'
 import type { CollectionEntryResponse } from '../../../../../utils/collections'
+import {
+  loadCollectionDictionaryPickers,
+  selectedDictionaryIds,
+} from '../../../../utils/dictionaries'
 
 /** Fetch a single collection entry (including trash). */
 export default defineEventHandler(async (event): Promise<CollectionEntryResponse> => {
@@ -34,11 +38,14 @@ export default defineEventHandler(async (event): Promise<CollectionEntryResponse
   const slugPath = (await loadCollectionSlugPath(db, collectionSlug, id)) || row.slug
   const flags = entryFlags(actor, row, roles)
   const meta = toCollectionMeta(collectionSlug, def)
+  const pickers = await loadCollectionDictionaryPickers(db, collectionSlug)
+  const dictionaryIds = await selectedDictionaryIds(db, id, pickers)
   const response: CollectionEntryResponse = {
     collection: meta,
-    entry: toAdminEntry(row, slugPath, flags),
+    entry: toAdminEntry(row, slugPath, { ...flags, dictionaryIds }),
     canUpdate: flags.canUpdate,
     canDelete: flags.canDelete,
+    dictionaries: pickers,
   }
 
   if (meta.hierarchical) {

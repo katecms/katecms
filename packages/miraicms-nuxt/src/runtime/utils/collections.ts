@@ -13,6 +13,17 @@ export interface AdminCollectionMeta {
   fields: Fields
 }
 
+/** Assigned dictionary term on a public collection entry. */
+export interface PublicDictionaryTerm {
+  id: number
+  type: string
+  slug: string
+  slugPath: string
+  title: string
+  fields: Record<string, unknown>
+  parentId: number | null
+}
+
 /** A collection entry as shown in the admin UI and public resolve. */
 export interface AdminEntry {
   id: number
@@ -34,6 +45,10 @@ export interface AdminEntry {
   publishedAt: string | null
   canUpdate?: boolean
   canDelete?: boolean
+  /** Selected term ids keyed by dictionary slug. */
+  dictionaryIds?: Record<string, number[]>
+  /** Assigned terms keyed by dictionary slug (public resolve). */
+  dictionaries?: Record<string, PublicDictionaryTerm[]>
 }
 
 export interface ParentOption {
@@ -43,6 +58,17 @@ export interface ParentOption {
   parentId: number | null
   slugPath: string
   depth: number
+}
+
+/** Dictionary attached to a collection, with terms for the entry sidebar picker. */
+export interface CollectionDictionaryPicker {
+  slug: string
+  labels: {
+    name: string
+    singularName: string
+  }
+  multiple: boolean
+  terms: ParentOption[]
 }
 
 export interface CollectionListResponse {
@@ -56,6 +82,7 @@ export interface CollectionListResponse {
   canUpdate: boolean
   canDelete: boolean
   parents?: ParentOption[]
+  dictionaries?: CollectionDictionaryPicker[]
 }
 
 export interface CollectionEntryResponse {
@@ -64,6 +91,7 @@ export interface CollectionEntryResponse {
   canUpdate: boolean
   canDelete: boolean
   parents?: ParentOption[]
+  dictionaries?: CollectionDictionaryPicker[]
 }
 
 export interface ResolveResponse {
@@ -81,6 +109,8 @@ export interface CollectionEntryFormModel {
   menuOrder: number
   publishedAt: string | null
   fields: Record<string, unknown>
+  /** Single: `number | null`. Multiple: `number[]`. */
+  dictionaryIds: Record<string, number | number[] | null>
 }
 
 export type CollectionListFilter = 'all' | CollectionStatus
@@ -101,6 +131,27 @@ export function collectionStatusLabel(status: CollectionStatus): string {
     return 'Draft'
   }
   return 'Trash'
+}
+
+export function emptyDictionarySelection(
+  pickers: CollectionDictionaryPicker[],
+): Record<string, number | number[] | null> {
+  return Object.fromEntries(
+    pickers.map(picker => [picker.slug, picker.multiple ? [] : null]),
+  )
+}
+
+export function formDictionarySelection(
+  pickers: CollectionDictionaryPicker[],
+  ids: Record<string, number[]> | undefined,
+): Record<string, number | number[] | null> {
+  const selected = ids ?? {}
+  return Object.fromEntries(
+    pickers.map((picker) => {
+      const values = selected[picker.slug] ?? []
+      return [picker.slug, picker.multiple ? values : (values[0] ?? null)]
+    }),
+  )
 }
 
 /** Slim collection descriptors sent on `public.miraicms.collections` (sidebar). */

@@ -18,6 +18,7 @@ import { provideMiraiCmsFieldErrors } from '../../utils/field-errors'
 import { slugify } from '../../utils/slugify'
 import type {
   AdminCollectionMeta,
+  CollectionDictionaryPicker,
   CollectionEntryFormModel,
   ParentOption,
 } from '../../utils/collections'
@@ -34,6 +35,7 @@ const props = defineProps<{
   canDelete?: boolean
   /** Saved status from the server (trash vs live form status). */
   savedStatus?: CollectionStatus
+  dictionaryPickers?: CollectionDictionaryPicker[]
 }>()
 
 const emit = defineEmits<{
@@ -87,6 +89,82 @@ const parentField = computed(() => ({
   placeholder: '— None —',
   choices: parentChoices.value,
 }))
+
+const dictionaryPickers = computed(() => props.dictionaryPickers ?? [])
+
+function dictionaryChoices(picker: CollectionDictionaryPicker): SelectChoice[] {
+  return picker.terms.map((term) => {
+    const depth = term.depth ?? 0
+    const title = depth < 1 ? term.title : `${'— '.repeat(depth)}${term.title}`
+    return {
+      val: term.id,
+      lbl: title,
+    }
+  })
+}
+
+function dictionaryField(picker: CollectionDictionaryPicker) {
+  return {
+    type: 'select' as const,
+    label: picker.labels.name,
+    multiple: picker.multiple,
+    allowNull: !picker.multiple,
+    placeholder: picker.multiple ? undefined : '— None —',
+    search: picker.terms.length > 6,
+    choices: dictionaryChoices(picker),
+  }
+}
+
+function dictionaryValue(picker: CollectionDictionaryPicker) {
+  const raw = props.modelValue.dictionaryIds?.[picker.slug]
+  if (picker.multiple) {
+    return Array.isArray(raw) ? raw : []
+  }
+  if (Array.isArray(raw)) {
+    return raw[0] ?? null
+  }
+  return raw ?? null
+}
+
+function sameDictionaryValue(
+  current: unknown,
+  next: number | number[] | null,
+  multiple: boolean,
+): boolean {
+  if (multiple) {
+    const left = Array.isArray(current) ? current : []
+    const right = Array.isArray(next) ? next : []
+    return left.length === right.length && left.every((id, i) => id === right[i])
+  }
+  return (current ?? null) === next
+}
+
+function setDictionaryValue(picker: CollectionDictionaryPicker, value: unknown) {
+  let next: number | number[] | null
+  if (picker.multiple) {
+    const raw = Array.isArray(value) ? value : []
+    next = raw
+      .map(item => Number(item))
+      .filter(id => Number.isInteger(id) && id > 0)
+  }
+  else if (value === '' || value === null || value === undefined) {
+    next = null
+  }
+  else {
+    const id = Number(value)
+    next = Number.isInteger(id) && id > 0 ? id : null
+  }
+  if (sameDictionaryValue(dictionaryValue(picker), next, picker.multiple)) {
+    return
+  }
+  emit('update:modelValue', {
+    ...props.modelValue,
+    dictionaryIds: {
+      ...props.modelValue.dictionaryIds,
+      [picker.slug]: next,
+    },
+  })
+}
 
 const publishedField = {
   type: 'date_time_picker' as const,
@@ -519,6 +597,23 @@ watch(
         </div>
 
         <div
+          v-if="!isTrash && dictionaryPickers.length"
+          :class="`${rootClass}__dictionaries`"
+        >
+          <div :class="`${rootClass}__dictionaries-title`">
+            Dictionaries
+          </div>
+          <MiraiCmsSelectField
+            v-for="picker in dictionaryPickers"
+            :key="picker.slug"
+            :model-value="dictionaryValue(picker)"
+            :field-key="`cms-entry-dictionary-${picker.slug}`"
+            :field="dictionaryField(picker)"
+            @update:model-value="setDictionaryValue(picker, $event)"
+          />
+        </div>
+
+        <div
           v-if="sidebarFields.length"
           :class="`${rootClass}__sidebar-fields`"
         >
@@ -593,6 +688,7 @@ $root: '.miraicms-collection-form';
     }
 
     &__publish,
+    &__dictionaries,
     &__sidebar-fields {
       display: flex;
       flex-direction: column;
@@ -603,7 +699,8 @@ $root: '.miraicms-collection-form';
       border-radius: $border-radius;
     }
 
-    &__publish-title {
+    &__publish-title,
+    &__dictionaries-title {
       margin: 0;
       font-size: math-rem(14);
       font-weight: 600;

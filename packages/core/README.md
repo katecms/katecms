@@ -90,6 +90,7 @@ const config = defineMiraiCmsConfig({
     category: {
       labels: { name: 'Categories', singularName: 'Category' },
       collections: ['pages'],
+      multiple: true,
     },
   },
   database: {
@@ -126,7 +127,7 @@ const resolved = resolveMiraiCmsConfig(config)
 
 Ключ карты — slug типа (`category`), он же `dictionaries.type`. Конфиг-тип — `DictionaryDefinition`, строка БД — `Dictionary`.
 
-`collections` — к каким типам записей привязан словарь. Термины живут в `dictionaries`, связи — в `collection_dictionaries`.
+`collections` — к каким типам записей привязан словарь. `multiple: true` — у записи может быть несколько терминов этого типа (иначе не больше одного). Термины живут в `dictionaries`, связи — в `collection_dictionaries` (PK `(collection_id, dictionary_id)`: несколько терминов на запись в БД уже разрешены; `multiple: false` режет адаптер).
 
 <a id="blocks-config"></a>
 ### Блоки в конфиге
@@ -718,7 +719,7 @@ await deleteDictionary(db, category.id)
 <a id="queries-collection-dictionaries"></a>
 ### Запросы: collection_dictionaries
 
-Many-to-many запись ↔ термин. Повторный `link` не дублирует строку. `listCollectionsByDictionary` скрывает `trash`, как `listCollections`; `{ includeTrash: true }` — и корзину.
+Many-to-many запись ↔ термин. Повторный `link` не дублирует строку. Несколько терминов на одну запись — норма: PK `(collection_id, dictionary_id)`, без уникальности по `type`. `setCollectionDictionaries` полностью заменяет набор связей. `listCollectionsByDictionary` скрывает `trash`, как `listCollections`; `{ includeTrash: true }` — и корзину.
 
 ```ts
 await linkCollectionDictionary(db, page.id, category.id)
@@ -726,6 +727,9 @@ const terms = await listDictionariesByCollection(db, page.id)
 const posts = await listCollectionsByDictionary(db, category.id)
 const withTrash = await listCollectionsByDictionary(db, category.id, { includeTrash: true })
 await unlinkCollectionDictionary(db, page.id, category.id) // true, если связь была
+
+await setCollectionDictionaries(db, page.id, [news.id, sport.id])
+await setCollectionDictionaries(db, page.id, []) // снять все
 ```
 
 <a id="queries-options"></a>

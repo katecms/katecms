@@ -23,6 +23,11 @@ import {
   toParentOption,
 } from '../../../utils/collections'
 import type { CollectionEntryResponse } from '../../../../utils/collections'
+import {
+  applyDictionaryAssignments,
+  loadCollectionDictionaryPickers,
+  selectedDictionaryIds,
+} from '../../../utils/dictionaries'
 
 interface CreateBody {
   title?: unknown
@@ -32,6 +37,7 @@ interface CreateBody {
   parentId?: unknown
   menuOrder?: unknown
   publishedAt?: unknown
+  dictionaries?: unknown
 }
 
 /** Create an entry in the given collection. */
@@ -70,14 +76,20 @@ export default defineEventHandler(async (event): Promise<CollectionEntryResponse
       author_id: actor.id,
       ...(publishedAt !== undefined ? { published_at: publishedAt } : {}),
     })
+    if (body?.dictionaries !== undefined) {
+      await applyDictionaryAssignments(db, row.id, collectionSlug, body.dictionaries)
+    }
     const slugPath = (await loadCollectionSlugPath(db, collectionSlug, row.id)) || row.slug
     const flags = entryFlags(actor, row, roles)
     const meta = toCollectionMeta(collectionSlug, def)
+    const pickers = await loadCollectionDictionaryPickers(db, collectionSlug)
+    const dictionaryIds = await selectedDictionaryIds(db, row.id, pickers)
     const response: CollectionEntryResponse = {
       collection: meta,
-      entry: toAdminEntry(row, slugPath, flags),
+      entry: toAdminEntry(row, slugPath, { ...flags, dictionaryIds }),
       canUpdate: flags.canUpdate,
       canDelete: flags.canDelete,
+      dictionaries: pickers,
     }
     if (meta.hierarchical) {
       const parents = await listCollectionParentOptions(db, collectionSlug, row.id)

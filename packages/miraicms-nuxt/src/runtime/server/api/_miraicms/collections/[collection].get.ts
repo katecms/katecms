@@ -25,6 +25,7 @@ import {
   toParentOption,
 } from '../../../utils/collections'
 import type { CollectionListResponse } from '../../../../utils/collections'
+import { loadCollectionDictionaryPickers } from '../../../utils/dictionaries'
 
 /**
  * List collection entries. Query: `status` (all|published|draft|trash),
@@ -102,6 +103,8 @@ export default defineEventHandler(async (event): Promise<CollectionListResponse>
     canUpdate: can(actor, 'collections', 'update', { roles, scope: collectionSlug }),
     canDelete: can(actor, 'collections', 'delete', { roles, scope: collectionSlug }),
   }
+
+  response.dictionaries = await loadCollectionDictionaryPickers(db, collectionSlug)
 
   if (meta.hierarchical) {
     const parents = await listCollectionParentOptions(db, collectionSlug)

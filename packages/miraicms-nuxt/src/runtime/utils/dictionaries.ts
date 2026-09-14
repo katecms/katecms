@@ -12,6 +12,7 @@ export interface AdminDictionaryMeta {
   }
   fields: Fields
   collections: string[]
+  multiple: boolean
 }
 
 /** A dictionary term as shown in the admin UI. */

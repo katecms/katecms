@@ -107,3 +107,64 @@ export async function unlinkCollectionDictionary(
     .executeTakeFirst()
   return (result.numDeletedRows ?? 0n) > 0n
 }
+
+function uniquePositiveIds(ids: number[]): number[] {
+  const seen = new Set<number>()
+  const out: number[] = []
+  for (const id of ids) {
+    if (!Number.isInteger(id) || id <= 0 || seen.has(id)) {
+      continue
+    }
+    seen.add(id)
+    out.push(id)
+  }
+  return out
+}
+
+async function setLinksIn(
+  executor: Kysely<Database> | Transaction<Database>,
+  collectionId: number,
+  dictionaryIds: number[],
+): Promise<void> {
+  await executor
+    .deleteFrom('collection_dictionaries')
+    .where('collection_id', '=', collectionId)
+    .execute()
+  if (dictionaryIds.length === 0) {
+    return
+  }
+  await executor
+    .insertInto('collection_dictionaries')
+    .values(dictionaryIds.map(dictionaryId => ({
+      collection_id: collectionId,
+      dictionary_id: dictionaryId,
+    })))
+    .execute()
+}
+
+/**
+ * Replace every term linked to `collectionId`. Duplicate ids are ignored.
+ * The table PK is `(collection_id, dictionary_id)`, so several terms — including
+ * several of the same `type` — are allowed.
+ */
+export async function setCollectionDictionaries(
+  db: Kysely<Database>,
+  collectionId: number,
+  dictionaryIds: number[],
+): Promise<void> {
+  const ids = uniquePositiveIds(dictionaryIds)
+  if (db.isTransaction) {
+    await setLinksIn(db, collectionId, ids)
+    return
+  }
+  try {
+    await db.transaction().execute(trx => setLinksIn(trx, collectionId, ids))
+  }
+  catch (error) {
+    if (isUnsupportedKyselyTransaction(error)) {
+      await setLinksIn(db, collectionId, ids)
+      return
+    }
+    throw error
+  }
+}

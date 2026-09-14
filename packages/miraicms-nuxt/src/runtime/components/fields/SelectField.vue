@@ -28,6 +28,26 @@ function unformat(value: unknown): string {
   return decodeChoiceValue(value, lookup.value, props.field?.returnFormat)
 }
 
+function formattedFromSelected(): unknown {
+  const raw = selected.value
+  if (props.field?.multiple) {
+    return Array.isArray(raw) ? raw.map(v => format(String(v))) : []
+  }
+  return raw === '' ? '' : format(String(raw))
+}
+
+function sameSelectModel(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) || Array.isArray(b)) {
+    const left = Array.isArray(a) ? a : []
+    const right = Array.isArray(b) ? b : []
+    return left.length === right.length && left.every((item, i) => String(item) === String(right[i]))
+  }
+  if ((a == null || a === '') && (b == null || b === '')) {
+    return true
+  }
+  return String(a ?? '') === String(b ?? '')
+}
+
 const selected = computed<SelectChoiceValue | SelectChoiceValue[] | ''>({
   get() {
     if (props.field?.multiple) {
@@ -62,12 +82,9 @@ const showOptionImages = computed(() => {
 })
 
 onMounted(() => {
-  const raw = selected.value
-  if (props.field?.multiple) {
-    model.value = Array.isArray(raw) ? raw.map(v => format(String(v))) : []
-  }
-  else {
-    model.value = raw === '' ? '' : format(String(raw))
+  const next = formattedFromSelected()
+  if (!sameSelectModel(model.value, next)) {
+    model.value = next
   }
 })
 </script>

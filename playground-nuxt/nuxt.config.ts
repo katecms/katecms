@@ -3,6 +3,10 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   compatibilityDate: 'latest',
   miraicms: {
+    database: {
+      driver: 'postgres',
+      url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
+    },
     media: {
       maxFileSize: 10,
       allowedMimeTypes: [
@@ -90,6 +94,7 @@ export default defineNuxtConfig({
             position: 'sidebar',
             required: true,
             defaultValue: 'SEO Description',
+            indexed: true,
           },
         },
       },

@@ -306,20 +306,20 @@ onMounted(() => {
         </div>
       </div>
 
-      <p
+      <div
         v-if="belowMin"
         :class="`${rootClass}__hint`"
       >
         Select at least {{ field?.min }}.
-      </p>
+      </div>
 
       <div :class="`${rootClass}__columns`">
         <div :class="`${rootClass}__column`">
           <div :class="`${rootClass}__column-title`">
             Available
           </div>
-          <ul :class="`${rootClass}__list`">
-            <li
+          <div :class="`${rootClass}__list`">
+            <div
               v-for="entry in availableEntries"
               :key="entry.id"
             >
@@ -340,22 +340,22 @@ onMounted(() => {
                   <span :class="`${rootClass}__item-meta`">{{ collectionLabel(entry.type) }}</span>
                 </span>
               </button>
-            </li>
-            <li
+            </div>
+            <div
               v-if="!availableEntries.length"
               :class="`${rootClass}__empty`"
             >
               {{ loading ? 'Loading…' : 'No entries' }}
-            </li>
-          </ul>
+            </div>
+          </div>
         </div>
 
         <div :class="`${rootClass}__column`">
           <div :class="`${rootClass}__column-title`">
             Selected
           </div>
-          <ul :class="`${rootClass}__list`">
-            <li
+          <div :class="`${rootClass}__list`">
+            <div
               v-for="(entry, index) in selectedEntries"
               :key="entry.id"
               :class="`${rootClass}__selected`"
@@ -427,14 +427,14 @@ onMounted(() => {
                   </svg>
                 </MiraiCmsUiButton>
               </div>
-            </li>
-            <li
+            </div>
+            <div
               v-if="!selectedEntries.length"
               :class="`${rootClass}__empty`"
             >
               Nothing selected
-            </li>
-          </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -523,7 +523,6 @@ $root: '.miraicms-relationship-field';
   &__list {
     margin: 0;
     padding: math-rem(6);
-    list-style: none;
     max-height: math-rem(280);
     overflow: auto;
   }

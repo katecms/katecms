@@ -77,6 +77,16 @@
       max-width: 100%;
       height: auto;
     }
+
+    form {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      font: inherit;
+      min-width: 0;
+    }
   }
 
   html:has(> body#miraicms-body) {

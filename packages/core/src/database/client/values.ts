@@ -107,9 +107,6 @@ function serializeSqliteValue(column: string, value: unknown): unknown {
   if (TIMESTAMP_COLUMNS.has(column) && value instanceof Date) {
     return value.toISOString()
   }
-  if (column === 'autoload' && typeof value === 'boolean') {
-    return value ? 1 : 0
-  }
   return value
 }
 
@@ -129,9 +126,6 @@ function parseSqliteValue(column: string, value: unknown): unknown {
     const date = new Date(value)
     return Number.isNaN(date.getTime()) ? value : date
   }
-  if (column === 'autoload') {
-    return value === true || value === 1 || value === '1'
-  }
   return value
 }
 
@@ -143,7 +137,7 @@ function parseSqliteRow(row: UnknownRow): UnknownRow {
   return parsed
 }
 
-/** JSON text, ISO dates, and 0/1 booleans ↔ the shared Kysely `Database` types. */
+/** JSON text and ISO dates ↔ the shared Kysely `Database` types. */
 export class SqliteValuePlugin implements KyselyPlugin {
   readonly #transformer = new ColumnValueTransformer(serializeSqliteValue)
 

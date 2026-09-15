@@ -17,6 +17,7 @@ export function useCmsPaths() {
     dictionary: (slug: string) => `${admin}/dictionaries/${encodeURIComponent(slug)}`,
     dictionaryTerm: (slug: string, id: number | string) =>
       `${admin}/dictionaries/${encodeURIComponent(slug)}/${id}`,
+    option: (slug: string) => `${admin}/options/${encodeURIComponent(slug)}`,
     login: cmsRoutePath(config?.loginPath || 'login'),
     register: cmsRoutePath(config?.registerPath || 'register'),
   }

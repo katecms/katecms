@@ -152,8 +152,22 @@ describe('resolveMiraiCmsConfig', () => {
     expect(resolved.adminPath).toBe('backoffice')
     expect(resolved.loginPath).toBe('login')
     expect(resolved.dictionaries).toEqual({})
+    expect(resolved.options).toEqual({})
     expect(resolved.roles.owner?.superuser).toBe(true)
     expect(resolved.warnings.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('keeps option pages from config', () => {
+    const resolved = resolveMiraiCmsConfig({
+      options: {
+        site: {
+          labels: { name: 'Site' },
+          fields: { title: { type: 'text', label: 'Title' } },
+        },
+      },
+    })
+    expect(resolved.options.site?.labels.name).toBe('Site')
+    expect(resolved.options.site?.fields?.title).toMatchObject({ type: 'text' })
   })
 
   it('fills database defaults and accepts Postgres', () => {
@@ -182,6 +196,7 @@ describe('can', () => {
       rights: {
         collections: { pages: ['read', 'update'] },
         media: ['read'],
+        options: { site: ['read', 'update'] },
       },
     },
   })
@@ -208,6 +223,14 @@ describe('can', () => {
     expect(can({ role: 'intern' }, 'collections', 'read', { roles, scope: 'pages' })).toBe(true)
     expect(can({ role: 'intern' }, 'collections', 'read', { roles, scope: 'posts' })).toBe(false)
     expect(can({ role: 'intern' }, 'collections', 'read', { roles })).toBe(false)
+  })
+
+  it('scopes option page rights by slug', () => {
+    expect(can({ role: 'intern' }, 'options', 'update', { roles, scope: 'site' })).toBe(true)
+    expect(can({ role: 'intern' }, 'options', 'read', { roles, scope: 'seo' })).toBe(false)
+    expect(can({ role: 'intern' }, 'options', 'read', { roles })).toBe(false)
+    expect(can({ role: 'admin' }, 'options', 'update', { roles, scope: 'site' })).toBe(true)
+    expect(can({ role: 'editor' }, 'options', 'read', { roles, scope: 'site' })).toBe(false)
   })
 
   it('detects owner', () => {

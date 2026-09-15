@@ -4,6 +4,7 @@ import { useRuntimeConfig, useHead } from '#imports'
 import { useCmsPaths } from '../../composables/useCmsPaths'
 import type { PublicCollectionNav } from '../../utils/collections'
 import type { PublicDictionaryNav } from '../../utils/dictionaries'
+import type { PublicOptionNav } from '../../utils/options'
 
 useHead({ title: 'Dashboard' })
 
@@ -23,6 +24,13 @@ const dictionaries = computed(() => {
     slug,
     label: def.labels?.name || slug,
     singular: def.labels?.singularName || def.labels?.name || slug,
+  }))
+})
+const optionPages = computed(() => {
+  const map = (useRuntimeConfig().public.miraicms?.options ?? {}) as Record<string, PublicOptionNav>
+  return Object.entries(map).map(([slug, def]) => ({
+    slug,
+    label: def.labels?.name || slug,
   }))
 })
 </script>
@@ -74,6 +82,28 @@ const dictionaries = computed(() => {
           <NuxtLink
             :class="`${rootClass}__card`"
             :to="paths.dictionary(item.slug)"
+          >
+            <span :class="`${rootClass}__card-title`">{{ item.label }}</span>
+            <span :class="`${rootClass}__card-meta`">{{ item.slug }}</span>
+          </NuxtLink>
+        </div>
+      </div>
+    </template>
+
+    <template v-if="optionPages.length">
+      <div :class="`${rootClass}__head`">
+        <div :class="`${rootClass}__head-title`">
+          Options
+        </div>
+      </div>
+      <div :class="`${rootClass}__list`">
+        <div
+          v-for="item in optionPages"
+          :key="item.slug"
+        >
+          <NuxtLink
+            :class="`${rootClass}__card`"
+            :to="paths.option(item.slug)"
           >
             <span :class="`${rootClass}__card-title`">{{ item.label }}</span>
             <span :class="`${rootClass}__card-meta`">{{ item.slug }}</span>

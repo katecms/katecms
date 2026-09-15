@@ -60,6 +60,20 @@ function toPublicDictionaries(dictionaries: ResolvedMiraiCmsConfig['dictionaries
   )
 }
 
+function toPublicOptions(options: ResolvedMiraiCmsConfig['options']) {
+  return Object.fromEntries(
+    Object.entries(options).map(([slug, def]) => [
+      slug,
+      {
+        labels: {
+          name: def.labels.name,
+        },
+        icon: toPublicNavIcon(def.icon),
+      },
+    ]),
+  )
+}
+
 export default defineNuxtModule<MiraiCmsConfig>({
   meta: {
     name: 'miraicms-nuxt',
@@ -110,6 +124,7 @@ export default defineNuxtModule<MiraiCmsConfig>({
       registerPath: resolved.registerPath,
       collections: toPublicCollections(resolved.collections),
       dictionaries: toPublicDictionaries(resolved.dictionaries),
+      options: toPublicOptions(resolved.options),
     }
 
     addServerPlugin(resolver.resolve('./runtime/server/plugins/auto-migrate'))
@@ -248,6 +263,16 @@ export default defineNuxtModule<MiraiCmsConfig>({
       handler: resolver.resolve('./runtime/server/api/_miraicms/dictionaries/[dictionary]/[id].delete'),
     })
     addServerHandler({
+      route: '/api/_miraicms/options/:page',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/options/[page].get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/options/:page',
+      method: 'patch',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/options/[page].patch'),
+    })
+    addServerHandler({
       route: '/api/_miraicms/relation/entries',
       method: 'get',
       handler: resolver.resolve('./runtime/server/api/_miraicms/relation/entries.get'),
@@ -282,6 +307,10 @@ export default defineNuxtModule<MiraiCmsConfig>({
       {
         name: 'getCollection',
         from: resolver.resolve('./runtime/composables/getCollection'),
+      },
+      {
+        name: 'getOptions',
+        from: resolver.resolve('./runtime/composables/getOptions'),
       },
     ])
 
@@ -352,6 +381,11 @@ export default defineNuxtModule<MiraiCmsConfig>({
               path: 'dictionaries/:dictionary/:id',
               file: resolver.resolve('./runtime/pages/admin/dictionaries/[id].vue'),
             },
+            {
+              name: 'admin-options',
+              path: 'options/:page',
+              file: resolver.resolve('./runtime/pages/admin/options/[page].vue'),
+            },
             // DEMO FIELDS
             {
               name: 'admin-demo-fields',
@@ -401,6 +435,10 @@ declare module '@nuxt/schema' {
         labels: { name: string, singularName: string }
         icon: string
       }>
+      options: Record<string, {
+        labels: { name: string }
+        icon: string
+      }>
     }
   }
 }
@@ -423,6 +461,10 @@ declare module 'nuxt/schema' {
       }>
       dictionaries: Record<string, {
         labels: { name: string, singularName: string }
+        icon: string
+      }>
+      options: Record<string, {
+        labels: { name: string }
         icon: string
       }>
     }

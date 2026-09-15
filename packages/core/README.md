@@ -21,6 +21,7 @@ import {
 - [Конфиг](#config)
   - [Коллекции](#collections-config)
   - [Словари](#dictionaries-config)
+  - [Опции](#options-config)
   - [Блоки в конфиге](#blocks-config)
   - [База в конфиге](#database-config)
   - [Медиа в конфиге](#media-config)
@@ -93,6 +94,14 @@ const config = defineMiraiCmsConfig({
       multiple: true,
     },
   },
+  options: {
+    site: {
+      labels: { name: 'Site' },
+      fields: {
+        title: { type: 'text', label: 'Title' },
+      },
+    },
+  },
   database: {
     driver: 'postgres',
     url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
@@ -128,6 +137,19 @@ const resolved = resolveMiraiCmsConfig(config)
 Ключ карты — slug типа (`category`), он же `dictionaries.type`. Конфиг-тип — `DictionaryDefinition`, строка БД — `Dictionary`.
 
 `collections` — к каким типам записей привязан словарь. `multiple: true` — у записи может быть несколько терминов этого типа (иначе не больше одного). Термины живут в `dictionaries`, связи — в `collection_dictionaries` (PK `(collection_id, dictionary_id)`: несколько терминов на запись в БД уже разрешены; `multiple: false` режет адаптер).
+
+<a id="options-config"></a>
+### Опции
+
+Ключ карты — slug страницы (`site`), он же `options.key`. Это синглтон: схема полей в конфиге, значения — JSON в `options.value`.
+
+| Поле | Смысл |
+|---|---|
+| `labels.name` | Подпись в админке |
+| `icon` | SVG в меню. Пустое / не SVG — дефолтная иконка |
+| `fields` | Карта полей страницы |
+
+Страницы не имеют status/slug/parent и не используют `position` у полей (нет колонки sidebar). Права `options` скоупятся по slug страницы, как коллекции.
 
 <a id="blocks-config"></a>
 ### Блоки в конфиге
@@ -177,14 +199,14 @@ Postgres без URL и SQLite без имени файла — ошибка. Н�
 
 Встроенные: `owner`, `admin`, `editor`, `author`, `subscriber`. Карта `roles` добавляет роль, полностью заменяет встроенную или прячет её (`author: false`). Slug `owner` зарезервирован: запись в конфиге игнорируется (warning).
 
-Права на ресурс: `true` (все CRUD), `false` / нет ключа (ничего), список `['read', 'create']`, либо для коллекций и словарей карта по slug. `update` / `delete` чужой записи — только при blanket `true` на ресурс/scope.
+Права на ресурс: `true` (все CRUD), `false` / нет ключа (ничего), список `['read', 'create']`, либо для коллекций, словарей и опций карта по slug. `update` / `delete` чужой записи — только при blanket `true` на ресурс/scope.
 
 <a id="permissions"></a>
 ## Права
 
 Ресурсы: `collections` | `dictionaries` | `media` | `users` | `options`. Действия: `read` | `create` | `update` | `delete`.
 
-Для `collections` и `dictionaries` в `can` передавайте `scope` (slug типа).
+Для `collections`, `dictionaries` и `options` в `can` передавайте `scope` (slug типа / страницы).
 
 ```ts
 can({ role: 'editor' }, 'collections', 'update', { roles, scope: 'pages' })
@@ -441,7 +463,7 @@ else {
 
 Фабрики возвращают `Kysely<Database>`.
 
-SQLite и D1 хранят даты как ISO-текст, JSON как текст, `autoload` как `0`/`1`. Клиент приводит к `Date`, объекту, `boolean`. Postgres отдаёт `timestamptz` / `jsonb` / `boolean`.
+SQLite и D1 хранят даты как ISO-текст, JSON как текст. Клиент приводит к `Date`, объекту, `boolean`. Postgres отдаёт `timestamptz` / `jsonb` / `boolean`.
 
 Парсер `bigint` → `number` ставится **только** на пул, который создал `createPostgresDb()`. Чужой `pool` не трогаем.
 
@@ -730,16 +752,15 @@ await setCollectionDictionaries(db, page.id, []) // снять все
 <a id="queries-options"></a>
 ### Запросы: options
 
-Ключ-значение сайта. `value` — любой JSON, включая примитивы. Схема полей админки в БД не хранится.
+Ключ-значение сайта. `value` — любой JSON, включая примитивы. Схема полей админки в БД не хранится: ключ страницы — slug из конфига.
 
-`setOption` — upsert. `autoload` по умолчанию `true`; при обновлении без третьего аргумента флаг не меняется.
+`setOption` — upsert.
 
 ```ts
 await setOption(db, 'site', { title: 'Mirai', description: 'CMS' })
-await setOption(db, 'maintenance', false, false)
+await setOption(db, 'maintenance', false)
 
 const site = await findOption(db, 'site')
-const boot = await listAutoloadOptions(db)
 const all = await listOptions(db)
 await deleteOption(db, 'maintenance')
 ```

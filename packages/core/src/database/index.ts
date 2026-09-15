@@ -74,7 +74,6 @@ export {
   unlinkCollectionDictionary,
   deleteOption,
   findOption,
-  listAutoloadOptions,
   listOptions,
   setOption,
 } from './queries'

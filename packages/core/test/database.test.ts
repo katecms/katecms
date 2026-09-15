@@ -11,12 +11,15 @@ import {
   createDictionary,
   createSqliteDb,
   createUser,
+  deleteOption,
   deleteTrashedCollections,
   deleteUser,
   findCollectionBySlugPath,
   findDictionaryByTypeAndSlug,
+  findOption,
   findUserByEmail,
   hasAnyUser,
+  listOptions,
   listUsers,
   toSafeUser,
   linkCollectionDictionary,
@@ -90,6 +93,12 @@ describe('database layer', () => {
       expect(await setOption(db, 'count', 42)).toMatchObject({ value: 42 })
       expect(await setOption(db, 'title', 'Mirai')).toMatchObject({ value: 'Mirai' })
       expect(await setOption(db, 'site', { name: 'Mirai' })).toMatchObject({ value: { name: 'Mirai' } })
+      expect(await findOption(db, 'site')).toMatchObject({ key: 'site', value: { name: 'Mirai' } })
+      expect(await setOption(db, 'site', { name: 'CMS' })).toMatchObject({ value: { name: 'CMS' } })
+      const listed = await listOptions(db)
+      expect(listed.map(row => row.key)).toEqual(['count', 'flag', 'site', 'title'])
+      expect(await deleteOption(db, 'title')).toBe(true)
+      expect(await findOption(db, 'title')).toBeUndefined()
     }
     finally {
       await close()

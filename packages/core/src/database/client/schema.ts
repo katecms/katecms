@@ -11,8 +11,8 @@ export type { MediaVariantsStatus }
  * when the schema changes: schema.ts (source), the `.sql` copy, and this file.
  *
  * Select types describe the shared JS shape: `Date`, parsed JSON, `boolean`.
- * SQLite/D1 store dates as ISO text, JSON as text, and `autoload` as 0/1;
- * `createSqliteDb()` maps those to this shape.
+ * SQLite/D1 store dates as ISO text and JSON as text; `createSqliteDb()` maps
+ * those to this shape.
  */
 
 /** timestamptz / ISO text: read as `Date`, written as `Date` or string. Insert may omit (DB default). */
@@ -110,7 +110,6 @@ export interface CollectionDictionariesTable {
 export interface OptionsTable {
   key: string
   value: Json | null
-  autoload: Generated<boolean>
 }
 
 export interface MigrationsTable {

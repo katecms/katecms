@@ -11,15 +11,6 @@ export async function listOptions(db: Kysely<Database>): Promise<Option[]> {
     .execute()
 }
 
-export async function listAutoloadOptions(db: Kysely<Database>): Promise<Option[]> {
-  return db
-    .selectFrom('options')
-    .selectAll()
-    .where('autoload', '=', true)
-    .orderBy('key', 'asc')
-    .execute()
-}
-
 export async function findOption(
   db: Kysely<Database>,
   key: string,
@@ -39,7 +30,6 @@ export async function setOption(
   db: Kysely<Database>,
   key: string,
   value: unknown | null,
-  autoload?: boolean,
 ): Promise<Option> {
   const normalized = key.trim()
   if (!normalized) {
@@ -50,13 +40,10 @@ export async function setOption(
     .values({
       key: normalized,
       value,
-      autoload: autoload ?? true,
     })
     .onConflict(oc => oc
       .columns(['key'])
-      .doUpdateSet(autoload !== undefined
-        ? { value, autoload }
-        : { value }),
+      .doUpdateSet({ value }),
     )
     .returningAll()
     .executeTakeFirstOrThrow()

@@ -85,7 +85,6 @@ export type { CollectionDictionary, ListCollectionsByDictionaryOptions } from '.
 export {
   deleteOption,
   findOption,
-  listAutoloadOptions,
   listOptions,
   setOption,
 } from './options'

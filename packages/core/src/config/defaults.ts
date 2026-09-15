@@ -1,4 +1,4 @@
-import type { Blocks, Collections, Dictionaries, ImageSize, MiraiCmsConfig, Roles } from './types'
+import type { Blocks, Collections, Dictionaries, ImageSize, MiraiCmsConfig, OptionPages, Roles } from './types'
 
 /**
  * Built-in CMS defaults.
@@ -12,6 +12,7 @@ export const defaults = {
   registerPath: 'register',
   collections: {} as Collections,
   dictionaries: {} as Dictionaries,
+  options: {} as OptionPages,
   blocks: {} as Blocks,
   roles: {} as Roles,
   database: {

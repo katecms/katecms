@@ -3,10 +3,9 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   compatibilityDate: 'latest',
   miraicms: {
-    database: {
-      driver: 'postgres',
-      // url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
-    },
+    // database: {
+    //   driver: 'postgres',
+    // },
     media: {
       maxFileSize: 10,
       allowedMimeTypes: [
@@ -48,7 +47,7 @@ export default defineNuxtConfig({
             posts: ['read', 'create'],
           },
           media: ['read', 'create'],
-          options: false, // или true / список действий; false — нет доступа
+          options: false, // или true / ['read', 'update'] / { site: ['read', 'update'] }
         },
       },
       // Скрыть встроенную роль.
@@ -137,6 +136,34 @@ export default defineNuxtConfig({
         icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M4 7h7l2 2h7v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7Z" stroke="currentColor" stroke-width="1.6"/><path d="M4 7V6a1 1 0 0 1 1-1h5l2 2" stroke="currentColor" stroke-width="1.6"/></svg>',
         multiple: true, // несколько терминов на запись; default: false
         collections: ['pages', 'products'],
+      },
+    },
+    options: {
+      site: {
+        labels: {
+          name: 'Site', // название страницы в меню
+        },
+        // icon: '<svg …>',
+        fields: {
+          title: {
+            type: 'text',
+            label: 'Site title',
+            required: true,
+          },
+          tagline: {
+            type: 'text',
+            label: 'Tagline',
+          },
+          description: {
+            type: 'textarea',
+            label: 'Description',
+            rows: 10,
+          },
+          logo: {
+            type: 'image',
+            label: 'Logo',
+          },
+        },
       },
     },
   },

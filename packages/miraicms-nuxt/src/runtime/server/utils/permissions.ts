@@ -4,7 +4,7 @@ import type { Resource, RoleAction, RoleHolder, RoleMap, SafeUser } from '@mirai
 
 /**
  * Like {@link can} but throws 403 when the actor lacks the permission.
- * Pass `scope` for keyed resources (`collections`, `dictionaries`).
+ * Pass `scope` for keyed resources (`collections`, `dictionaries`, `options`).
  */
 export function requirePermission(
   user: RoleHolder,

@@ -2,6 +2,7 @@ import type { Blocks } from './block'
 import type { Collections } from './collection'
 import type { DatabaseConfig, ResolvedDatabaseConfig } from './database'
 import type { MediaConfig, ResolvedMediaConfig } from './media'
+import type { OptionPages } from './option'
 import type { ResolvedRole, Roles } from './roles'
 import type { Dictionaries } from './dictionary'
 
@@ -12,6 +13,8 @@ export interface MiraiCmsConfig {
   registerPath?: string
   collections?: Collections
   dictionaries?: Dictionaries
+  /** Singleton settings pages, keyed by slug (`site` → `options.key`). */
+  options?: OptionPages
   blocks?: Blocks
   /**
    * Database connection. Default is SQLite at `data/miraicms.db`.
@@ -37,6 +40,7 @@ export interface ResolvedMiraiCmsConfig {
   registerPath: string
   collections: Collections
   dictionaries: Dictionaries
+  options: OptionPages
   blocks: Blocks
   database: ResolvedDatabaseConfig
   media: ResolvedMediaConfig

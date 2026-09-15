@@ -4,6 +4,7 @@ import { useRoute, useRuntimeConfig } from '#imports'
 import { useCmsPaths } from '../../composables/useCmsPaths'
 import type { PublicCollectionNav } from '../../utils/collections'
 import type { PublicDictionaryNav } from '../../utils/dictionaries'
+import type { PublicOptionNav } from '../../utils/options'
 
 const rootClass = 'miraicms-menu'
 const route = useRoute()
@@ -29,6 +30,7 @@ const COLLECTION_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24
 const DICTIONARY_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M7 4h10a2 2 0 0 1 2 2v14l-7-3-7 3V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6"/><path d="M9 8h6M9 12h6" stroke="currentColor" stroke-width="1.6"/></svg>'
 const MEDIA_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="m3 16 5-5 4 4 3-3 6 6" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="9" r="1.4" fill="currentColor"/></svg>'
 const USERS_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M4 19c0-2.8 2.2-5 5-5h0c2.8 0 5 2.2 5 5" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="9" r="2.2" stroke="currentColor" stroke-width="1.6"/><path d="M16.2 14.2c2.2.4 3.8 2.3 3.8 4.8" stroke="currentColor" stroke-width="1.6"/></svg>'
+const OPTIONS_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M12 3.5v2.2M12 18.3v2.2M4.9 6.5l1.6 1.6M17.5 16.9l1.6 1.6M3.5 12h2.2M18.3 12h2.2M4.9 17.5l1.6-1.6M17.5 7.1l1.6-1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'
 
 function isSvgIcon(value?: string): boolean {
   return typeof value === 'string' && /^\s*<svg[\s>]/i.test(value)
@@ -69,6 +71,18 @@ const groups = computed<MenuGroup[]>(() => {
     }
   })
 
+  const optionPages = (runtimeConfig.public.miraicms?.options ?? {}) as Record<string, PublicOptionNav>
+  const optionItems = Object.entries(optionPages).map(([slug, def]) => {
+    const to = paths.option(slug)
+    return {
+      key: `option:${slug}`,
+      label: def.labels?.name || slug,
+      to,
+      icon: isSvgIcon(def.icon) ? def.icon! : OPTIONS_ICON,
+      active: isActive(to),
+    }
+  })
+
   const result: MenuGroup[] = [
     {
       key: 'overview',
@@ -97,6 +111,14 @@ const groups = computed<MenuGroup[]>(() => {
       key: 'dictionaries',
       label: 'Dictionaries',
       items: dictionaryItems,
+    })
+  }
+
+  if (optionItems.length) {
+    result.push({
+      key: 'options',
+      label: 'Options',
+      items: optionItems,
     })
   }
 

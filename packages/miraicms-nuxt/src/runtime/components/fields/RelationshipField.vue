@@ -49,7 +49,10 @@ const showPostType = computed(() => (
 const showDictionary = computed(() => (
   filters.value.includes('dictionary') && dictionarySlugs.value.length > 0
 ))
-const showFeatured = computed(() => (props.field?.elements ?? []).includes('featured_image'))
+const imageFieldKeys = computed(() => (
+  (props.field?.elements ?? []).map(key => key.trim()).filter(Boolean)
+))
+const showFeatured = computed(() => imageFieldKeys.value.length > 0)
 
 const collectionChoices = computed<SelectChoice[]>(() => {
   const slugs = props.field?.postType?.length
@@ -201,7 +204,7 @@ async function load() {
   try {
     const res = await $fetch<RelationEntriesResponse>(relationEntriesApi({
       postType: props.field?.postType,
-      featured: showFeatured.value,
+      elements: imageFieldKeys.value,
     }))
     const byId = new Map(res.entries.map(entry => [entry.id, entry]))
     for (const existing of entries.value) {

@@ -1,7 +1,8 @@
-import type { RelationEntryValue, RelationTermValue } from '@miraicms/core'
+import type { MediaItem, RelationEntryValue, RelationTermValue } from '@miraicms/core'
 
 export type RelationPickerEntry = RelationEntryValue & {
   termIds?: number[]
+  featuredImage?: MediaItem | null
 }
 
 export interface RelationArchiveOption {
@@ -30,7 +31,7 @@ export interface RelationTermsResponse {
 export function relationEntriesApi(options?: {
   postType?: string[]
   dictionary?: string[]
-  featured?: boolean
+  elements?: string[]
   archives?: boolean
   q?: string
 }): string {
@@ -41,8 +42,8 @@ export function relationEntriesApi(options?: {
   if (options?.dictionary?.length) {
     params.set('dictionary', options.dictionary.join(','))
   }
-  if (options?.featured) {
-    params.set('featured', '1')
+  if (options?.elements?.length) {
+    params.set('elements', options.elements.join(','))
   }
   if (options?.archives) {
     params.set('archives', '1')

@@ -1,5 +1,6 @@
-import type { MediaItem } from '../media/types'
 import type { RelationEntryValue, RelationTermValue } from '../config'
+
+const ENTRY_STATUSES = new Set<RelationEntryValue['status']>(['published', 'draft', 'trash'])
 
 /** Row / object accepted by {@link toRelationEntryValue}. Extra keys are dropped. */
 export interface RelationEntrySource {
@@ -9,7 +10,14 @@ export interface RelationEntrySource {
   slug: string
   slugPath: string
   url: string
-  featuredImage?: MediaItem | null
+  status?: string
+  fields?: unknown
+  parentId?: number | null
+  menuOrder?: number
+  authorId?: number | null
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
+  publishedAt?: Date | string | null
 }
 
 /** Row / object accepted by {@link toRelationTermValue}. Extra keys are dropped. */
@@ -20,7 +28,34 @@ export interface RelationTermSource {
   slug: string
   slugPath: string
   parentId: number | null
+  fields?: unknown
   depth?: number
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
+}
+
+function toIso(value: Date | string | null | undefined): string | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value.toISOString()
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed || null
+  }
+  return null
+}
+
+function asFields(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {}
+  }
+  return { ...(value as Record<string, unknown>) }
+}
+
+function asStatus(value: unknown): RelationEntryValue['status'] {
+  return typeof value === 'string' && ENTRY_STATUSES.has(value as RelationEntryValue['status'])
+    ? value as RelationEntryValue['status']
+    : 'draft'
 }
 
 export function isRelationEntryValue(value: unknown): value is RelationEntryValue {
@@ -59,7 +94,7 @@ export function relationFieldId(value: unknown): string {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return String(value)
   }
-  if (typeof value === 'object' && !Array.isArray(value) && 'id' in value) {
+  if (value && typeof value === 'object' && !Array.isArray(value) && 'id' in value) {
     const id = (value as { id: unknown }).id
     return typeof id === 'number' || typeof id === 'string' ? String(id) : ''
   }
@@ -98,18 +133,24 @@ export function pageLinkUrls(value: unknown): string[] {
 }
 
 export function toRelationEntryValue(entry: RelationEntrySource): RelationEntryValue {
-  const next: RelationEntryValue = {
+  return {
     id: entry.id,
     type: entry.type,
+    status: asStatus(entry.status),
     title: entry.title,
     slug: entry.slug,
     slugPath: entry.slugPath,
     url: entry.url,
+    fields: asFields(entry.fields),
+    parentId: entry.parentId ?? null,
+    menuOrder: typeof entry.menuOrder === 'number' && Number.isFinite(entry.menuOrder)
+      ? entry.menuOrder
+      : 0,
+    authorId: entry.authorId ?? null,
+    createdAt: toIso(entry.createdAt) ?? new Date(0).toISOString(),
+    updatedAt: toIso(entry.updatedAt) ?? new Date(0).toISOString(),
+    publishedAt: toIso(entry.publishedAt),
   }
-  if (entry.featuredImage !== undefined) {
-    next.featuredImage = entry.featuredImage
-  }
-  return next
 }
 
 export function toRelationTermValue(term: RelationTermSource): RelationTermValue {
@@ -119,7 +160,10 @@ export function toRelationTermValue(term: RelationTermSource): RelationTermValue
     title: term.title,
     slug: term.slug,
     slugPath: term.slugPath,
+    fields: asFields(term.fields),
     parentId: term.parentId,
+    createdAt: toIso(term.createdAt) ?? new Date(0).toISOString(),
+    updatedAt: toIso(term.updatedAt) ?? new Date(0).toISOString(),
   }
   if (term.depth !== undefined) {
     next.depth = term.depth

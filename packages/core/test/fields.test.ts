@@ -252,10 +252,18 @@ describe('relation field helpers', () => {
   const page = toRelationEntryValue({
     id: 12,
     type: 'pages',
+    status: 'published',
     title: 'About',
     slug: 'about',
     slugPath: 'about',
     url: '/inf/about',
+    fields: { thumbnail: { url: '/media/about.jpg' }, color: '#112233' },
+    parentId: null,
+    menuOrder: 2,
+    authorId: 1,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-02-01T00:00:00.000Z',
+    publishedAt: '2024-01-01T00:00:00.000Z',
   })
   const term = toRelationTermValue({
     id: 4,
@@ -263,8 +271,11 @@ describe('relation field helpers', () => {
     title: 'News',
     slug: 'news',
     slugPath: 'news',
+    fields: { description: 'Press' },
     parentId: null,
     depth: 0,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-02T00:00:00.000Z',
   })
 
   it('reads ids and encodes returnFormat', () => {
@@ -276,6 +287,19 @@ describe('relation field helpers', () => {
     expect(encodeRelationEntryValue(page, 'id')).toBe(12)
     expect(encodeRelationEntryValue(page, 'object')).toEqual(page)
     expect(encodeRelationTermValue(term, 'id')).toBe(4)
+    expect(encodeRelationTermValue(term, 'object')).toEqual(term)
+    expect(page.fields).toEqual({ thumbnail: { url: '/media/about.jpg' }, color: '#112233' })
+    expect(term.fields).toEqual({ description: 'Press' })
+  })
+
+  it('drops picker-only extras from stored objects', () => {
+    const encoded = toRelationEntryValue({
+      ...page,
+      featuredImage: { url: '/tmp.jpg' },
+      termIds: [1, 2],
+    } as typeof page & { featuredImage: { url: string }, termIds: number[] })
+    expect(encoded).toEqual(page)
+    expect('featuredImage' in encoded).toBe(false)
   })
 
   it('reads page_link URLs', () => {

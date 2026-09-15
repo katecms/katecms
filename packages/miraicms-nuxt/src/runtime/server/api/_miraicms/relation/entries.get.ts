@@ -17,8 +17,8 @@ import {
 } from '../../../utils/relation'
 
 /**
- * Slim collection entries for `post_object`, `page_link`, and `relationship`.
- * Query: `postType` (comma-separated slugs), `q`, `featured=1`, `archives=1`.
+ * Collection entries for `post_object`, `page_link`, and `relationship`.
+ * Query: `postType` (comma-separated slugs), `q`, `elements` (image field keys), `archives=1`.
  * Lists published and draft entries (not trash).
  */
 export default defineEventHandler(async (event) => {
@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
 
   const readable = wanted.filter(slug => can(actor, 'collections', 'read', { roles, scope: slug }))
   const search = typeof query.q === 'string' ? query.q.trim() : ''
-  const featured = query.featured === '1' || query.featured === 'true'
+  const imageFields = readStringList(query.elements)
   const db = getDb()
   const entries = []
 
@@ -80,7 +80,7 @@ export default defineEventHandler(async (event) => {
     const paths = pathMapForRows(rows)
     for (const row of filtered) {
       entries.push(toPickerEntry(row, def, paths.get(row.id) ?? row.slug, {
-        featuredImage: featured ? pickFeaturedImage(row.fields) : undefined,
+        featuredImage: imageFields.length ? pickFeaturedImage(row.fields, imageFields) : undefined,
         termIds: termIdsByEntry.get(row.id) ?? [],
       }))
     }

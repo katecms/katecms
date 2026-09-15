@@ -80,7 +80,7 @@ export default defineNuxtConfig({
           thumbnail: {
             label: 'Thumbnail',
             type: 'image',
-            cropType: [16, 9],
+            // cropType: [16, 9],
             position: 'sidebar',
             // required: true,
           },

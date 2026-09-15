@@ -4,10 +4,10 @@ import {
   buildSlugPathMap,
   isImageMedia,
   isMediaItem,
+  toRelationEntryValue,
 } from '@miraicms/core'
 import type { Collection, CollectionDefinition, MediaItem, RelationEntryValue } from '@miraicms/core'
 
-const FEATURED_FIELD_KEYS = ['thumbnail', 'featured_image', 'image'] as const
 export const RELATION_PICKER_LIMIT = 500
 
 export function readStringList(raw: unknown): string[] {
@@ -15,18 +15,22 @@ export function readStringList(raw: unknown): string[] {
   return [...new Set(parts.map(item => String(item).trim()).filter(Boolean))]
 }
 
-export function pickFeaturedImage(fields: unknown): MediaItem | null {
-  if (!fields || typeof fields !== 'object' || Array.isArray(fields)) {
+/** First image found in `fields` for the given field keys (`image` or `gallery`). */
+export function pickFeaturedImage(fields: unknown, keys: string[]): MediaItem | null {
+  if (!keys.length || !fields || typeof fields !== 'object' || Array.isArray(fields)) {
     return null
   }
   const record = fields as Record<string, unknown>
-  for (const key of FEATURED_FIELD_KEYS) {
+  for (const key of keys) {
     const value = record[key]
     if (isMediaItem(value) && isImageMedia(value)) {
       return value
     }
-    if (Array.isArray(value) && isMediaItem(value[0]) && isImageMedia(value[0])) {
-      return value[0]
+    if (Array.isArray(value)) {
+      const image = value.find(item => isMediaItem(item) && isImageMedia(item))
+      if (image) {
+        return image
+      }
     }
   }
   return null
@@ -40,16 +44,24 @@ export function toPickerEntry(
     featuredImage?: MediaItem | null
     termIds?: number[]
   },
-): RelationEntryValue & { termIds?: number[] } {
+): RelationEntryValue & { termIds?: number[], featuredImage?: MediaItem | null } {
   const path = slugPath || row.slug
-  const entry: RelationEntryValue & { termIds?: number[] } = {
+  const entry: RelationEntryValue & { termIds?: number[], featuredImage?: MediaItem | null } = toRelationEntryValue({
     id: row.id,
     type: row.type,
+    status: row.status,
     title: row.title,
     slug: row.slug,
     slugPath: path,
     url: buildPublicPath(def.rewrite, row.type, path),
-  }
+    fields: row.fields ?? {},
+    parentId: row.parent_id,
+    menuOrder: row.menu_order,
+    authorId: row.author_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    publishedAt: row.published_at,
+  })
   if (extras?.featuredImage !== undefined) {
     entry.featuredImage = extras.featuredImage
   }

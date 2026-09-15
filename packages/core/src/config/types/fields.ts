@@ -313,7 +313,12 @@ interface RelationshipField extends BaseField {
   min?: number
   max?: number
   filters?: Array<'search' | 'post_type' | 'dictionary'>
-  elements?: Array<'featured_image'>
+  /**
+   * Image field keys shown as thumbnails in the picker.
+   * There is no built-in featured image — use a collection `image` / `gallery`
+   * field, e.g. `['thumbnail']` on `pages`.
+   */
+  elements?: string[]
   returnFormat?: 'object' | 'id'
   bidirectionalTarget?: string[]
 }
@@ -357,11 +362,18 @@ export interface UserFieldValue {
 export interface RelationEntryValue {
   id: number
   type: string
+  status: 'published' | 'draft' | 'trash'
   title: string
   slug: string
   slugPath: string
   url: string
-  featuredImage?: MediaItem | null
+  fields: Record<string, unknown>
+  parentId: number | null
+  menuOrder: number
+  authorId: number | null
+  createdAt: string
+  updatedAt: string
+  publishedAt: string | null
 }
 
 /** Stored dictionary term for `dictionary` when `returnFormat` is `'object'`. */
@@ -371,8 +383,11 @@ export interface RelationTermValue {
   title: string
   slug: string
   slugPath: string
+  fields: Record<string, unknown>
   parentId: number | null
   depth?: number
+  createdAt: string
+  updatedAt: string
 }
 
 /* ============================================================

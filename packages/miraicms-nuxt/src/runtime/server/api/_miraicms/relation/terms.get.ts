@@ -1,6 +1,7 @@
 import { defineEventHandler, getQuery } from 'h3'
 import { useRuntimeConfig } from '#imports'
-import { can, listDictionaries } from '@miraicms/core'
+import { can, listDictionaries, toRelationTermValue } from '@miraicms/core'
+import type { RelationTermValue } from '@miraicms/core'
 import { getDb } from '../../../utils/db'
 import { requireUser } from '../../../utils/session'
 import {
@@ -9,7 +10,6 @@ import {
   requireDictionary,
 } from '../../../utils/dictionaries'
 import { fail } from '../../../utils/collections'
-import type { RelationTermValue } from '@miraicms/core'
 
 /**
  * Dictionary terms for the `dictionary` field and relationship filters.
@@ -34,14 +34,17 @@ export default defineEventHandler(async (event) => {
   const db = getDb()
   const rows = await listDictionaries(db, dictionarySlug)
   const listed = flattenDictionaryTerms(rows)
-  const terms: RelationTermValue[] = listed.map(({ row, depth, slugPath }) => ({
+  const terms: RelationTermValue[] = listed.map(({ row, depth, slugPath }) => toRelationTermValue({
     id: row.id,
     type: row.type,
     title: row.title,
     slug: row.slug,
     slugPath,
+    fields: row.fields ?? {},
     parentId: row.parent_id,
     depth,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   }))
 
   return {

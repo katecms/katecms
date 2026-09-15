@@ -579,6 +579,12 @@ const fields: Fields = {
     returnFormat: 'id',
     columnWidth: 50,
   },
+  separator_test_2: {
+    type: 'separator',
+    label: 'Test Fields',
+    position: 'main',
+    columnWidth: 100,
+  },
   post_object_test: {
     type: 'post_object',
     label: 'Post Object',
@@ -588,7 +594,6 @@ const fields: Fields = {
     multiple: true,
     allowNull: true,
     returnFormat: 'object',
-    columnWidth: 50,
   },
   post_object_id_test: {
     type: 'post_object',
@@ -598,7 +603,6 @@ const fields: Fields = {
     postType: ['pages'],
     allowNull: true,
     returnFormat: 'id',
-    columnWidth: 50,
   },
   page_link_test: {
     type: 'page_link',
@@ -609,20 +613,18 @@ const fields: Fields = {
     multiple: true,
     allowArchives: true,
     allowNull: true,
-    columnWidth: 100,
   },
   relationship_test: {
     type: 'relationship',
     label: 'Relationship',
-    instructions: 'Pick and reorder entries. Thumbnails come from the featured image.',
+    instructions: 'Pick and reorder entries. Thumbnails come from the page `thumbnail` field.',
     position: 'main',
     postType: ['pages', 'products'],
     dictionary: ['categories', 'services'],
     filters: ['search', 'post_type', 'dictionary'],
-    elements: ['featured_image'],
+    elements: ['thumbnail'],
     max: 4,
     returnFormat: 'object',
-    columnWidth: 100,
   },
   dictionary_test: {
     type: 'dictionary',
@@ -632,7 +634,6 @@ const fields: Fields = {
     dictionary: 'categories',
     fieldType: 'checkbox',
     returnFormat: 'object',
-    columnWidth: 50,
   },
   dictionary_select_test: {
     type: 'dictionary',
@@ -644,7 +645,6 @@ const fields: Fields = {
     allowNull: true,
     addTerm: true,
     returnFormat: 'object',
-    columnWidth: 50,
   },
   flexible_content_test: {
     type: 'flexible_content',
@@ -1174,7 +1174,9 @@ const sidebarFields = computed(() =>
       </div>
     </div>
 
-    <div :class="[`${rootClass}__values`]">{{ values }}</div>
+    <div :class="[`${rootClass}__values`]">
+      {{ values }}
+    </div>
   </div>
 </template>
 
@@ -1292,4 +1294,3 @@ $root: '.miraicms-admin-demo';
   }
 }
 </style>
-

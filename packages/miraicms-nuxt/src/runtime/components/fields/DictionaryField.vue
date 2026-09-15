@@ -4,6 +4,7 @@ import {
   encodeRelationTermValue,
   isRelationTermValue,
   relationFieldId,
+  toRelationTermValue,
 } from '@miraicms/core'
 import type { Field, RelationTermValue, SelectChoice, SelectModelValue } from '@miraicms/core'
 import { dictionaryApi } from '../../utils/dictionaries'
@@ -214,15 +215,18 @@ async function addTerm() {
         fields: {},
       },
     })
-    mergeTerms([{
+    mergeTerms([toRelationTermValue({
       id: res.term.id,
       type: res.term.type,
       title: res.term.title,
       slug: res.term.slug,
       slugPath: res.term.slugPath,
+      fields: res.term.fields ?? {},
       parentId: res.term.parentId ?? null,
       depth: res.term.depth,
-    }])
+      createdAt: res.term.createdAt,
+      updatedAt: res.term.updatedAt,
+    })])
     newTitle.value = ''
     if (isMultiple.value) {
       selected.value = [...selectedIds.value, String(res.term.id)]
@@ -277,12 +281,12 @@ onMounted(async () => {
         :aria-label="field?.label || fieldKey"
       />
 
-      <p
+      <div
         v-else-if="!terms.length && !loading && !loadError"
         :class="`${rootClass}__empty`"
       >
         No terms
-      </p>
+      </div>
 
       <div
         v-else-if="fieldType === 'radio'"
@@ -338,7 +342,7 @@ onMounted(async () => {
         <MiraiCmsUiButton
           tag="button"
           type="submit"
-          :variant="['secondary', 'small']"
+          variant="secondary"
           :disabled="adding || !newTitle.trim()"
         >
           {{ adding ? 'Adding…' : 'Add' }}

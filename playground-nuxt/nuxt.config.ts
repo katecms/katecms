@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   miraicms: {
     database: {
       driver: 'postgres',
-      url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
+      // url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
     },
     media: {
       maxFileSize: 10,

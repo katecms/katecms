@@ -315,7 +315,5 @@ CREATE INDEX IF NOT EXISTS collection_dictionaries_dictionary_idx
 
 CREATE TABLE IF NOT EXISTS options (
   key      TEXT PRIMARY KEY,
-  value    TEXT,
-  autoload INTEGER NOT NULL DEFAULT 1 CHECK (autoload IN (0, 1))
+  value    TEXT
 );
-CREATE INDEX IF NOT EXISTS options_autoload_idx ON options (autoload) WHERE autoload = 1;

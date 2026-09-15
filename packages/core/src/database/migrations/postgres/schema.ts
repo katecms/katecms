@@ -196,7 +196,5 @@ CREATE INDEX IF NOT EXISTS collection_dictionaries_dictionary_idx
 
 CREATE TABLE IF NOT EXISTS options (
   key      text PRIMARY KEY,
-  value    jsonb,
-  autoload boolean NOT NULL DEFAULT true
-);
-CREATE INDEX IF NOT EXISTS options_autoload_idx ON options (autoload) WHERE autoload;`
+  value    jsonb
+);`

@@ -33,7 +33,6 @@ const FULL_RIGHTS: RoleRights = {
 export const BUILT_IN_ROLES: Roles = {
   admin: {
     label: 'Administrator',
-    maintenance: true,
     rights: FULL_RIGHTS,
   },
   editor: {
@@ -106,7 +105,6 @@ export function resolveRoles(configRoles?: Roles): ResolveRolesResult {
       slug: OWNER_ROLE,
       label: 'Owner',
       superuser: true,
-      maintenance: true,
       rights: normalizeRights(FULL_RIGHTS),
     },
   }
@@ -119,7 +117,6 @@ export function resolveRoles(configRoles?: Roles): ResolveRolesResult {
       slug,
       label: definition.label,
       superuser: false,
-      maintenance: definition.maintenance === true,
       rights: normalizeRights(definition.rights),
     }
   }

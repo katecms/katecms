@@ -17,6 +17,7 @@ import {
   computeIndexDiff,
   indexDefinitionsMatch,
   isManagedFieldIndexName,
+  syncCollectionFieldIndexes,
 } from '../src'
 
 describe('field index definitions', () => {
@@ -164,6 +165,7 @@ function fakeDb(log: string[]): Kysely<Database> {
   }
   const trx = { getExecutor: () => executor }
   return {
+    getExecutor: () => executor,
     transaction: () => ({
       execute: async <T>(fn: (inner: typeof trx) => Promise<T>) => fn(trx),
     }),
@@ -238,5 +240,28 @@ describe('applyFieldIndexDiff', () => {
       buildDropIndexSql(desired.indexName),
       buildCreateIndexSql(desired),
     ])
+  })
+})
+
+describe('syncCollectionFieldIndexes', () => {
+  it('creates missing indexes from collection config', async () => {
+    const log: string[] = []
+    const result = await syncCollectionFieldIndexes(fakeDb(log), {
+      products: {
+        labels: { name: 'Products' },
+        fields: {
+          price: { label: 'Price', type: 'number', indexed: true },
+        },
+      },
+    })
+
+    expect(result.warnings).toEqual([])
+    expect(result.created).toEqual(['collections_fld__products__price_idx'])
+    expect(result.dropped).toEqual([])
+    expect(log[0]).toContain('pg_indexes')
+    expect(log[1]).toContain('pg_advisory_xact_lock')
+    expect(log[2]).toBe(
+      'CREATE INDEX IF NOT EXISTS collections_fld__products__price_idx ON collections (((fields->>\'price\')::numeric)) WHERE type = \'products\'',
+    )
   })
 })

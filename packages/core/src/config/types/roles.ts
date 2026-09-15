@@ -49,11 +49,6 @@ export interface RoleRights {
 export interface Role {
   /** Human-readable label shown in the admin UI. */
   label: string
-  /**
-   * When true, the role may run schema/index maintenance.
-   * Built-in `admin` sets this; `owner` is always treated as maintenance.
-   */
-  maintenance?: boolean
   /** Capabilities granted to the role. Omitted resources grant no access. */
   rights?: RoleRights
 }
@@ -91,7 +86,5 @@ export interface ResolvedRole {
   label: string
   /** When true the role bypasses all checks (the `owner` superuser). */
   superuser: boolean
-  /** When true the role may run schema/index maintenance. */
-  maintenance: boolean
   rights: ResolvedRoleRights
 }

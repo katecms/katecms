@@ -5,7 +5,6 @@ import {
   canOnEntry,
   defineMiraiCmsConfig,
   defaults,
-  isAdminOrOwner,
   isOwner,
   isValidRole,
   mergeMiraiCmsConfig,
@@ -53,7 +52,7 @@ describe('resolveRoles', () => {
   it('ignores admin: false and records a warning', () => {
     const { roles, warnings } = resolveRoles({ admin: false })
     expect(roles.admin).toBeDefined()
-    expect(roles.admin?.maintenance).toBe(true)
+    expect(roles.admin?.rights.users).toBe(true)
     expect(warnings).toHaveLength(1)
     expect(warnings[0]).toContain('admin')
   })
@@ -211,11 +210,9 @@ describe('can', () => {
     expect(can({ role: 'intern' }, 'collections', 'read', { roles })).toBe(false)
   })
 
-  it('detects owner and admin', () => {
+  it('detects owner', () => {
     expect(isOwner({ role: 'owner' }, roles)).toBe(true)
     expect(isOwner({ role: 'admin' }, roles)).toBe(false)
-    expect(isAdminOrOwner({ role: 'admin' }, roles)).toBe(true)
-    expect(isAdminOrOwner({ role: 'editor' }, roles)).toBe(false)
   })
 
   it('limits update/delete on an entry to the author unless rights are blanket', () => {
@@ -230,6 +227,11 @@ describe('can', () => {
       userId: 1,
     })).toBe(false)
     expect(canOnEntry({ role: 'admin' }, 'collections', 'update', { authorId: 2 }, {
+      roles,
+      scope: 'pages',
+      userId: 1,
+    })).toBe(true)
+    expect(canOnEntry({ role: 'editor' }, 'collections', 'update', { authorId: 2 }, {
       roles,
       scope: 'pages',
       userId: 1,

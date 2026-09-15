@@ -4,6 +4,7 @@ export type {
   DesiredFieldIndex,
   IndexSyncChange,
   IndexSyncDiff,
+  SyncCollectionFieldIndexesResult,
 } from './types'
 export {
   FIELD_INDEX_TABLE,
@@ -29,4 +30,5 @@ export {
   FIELD_INDEX_LOCK_KEY,
   applyFieldIndexDiff,
   loadActualFieldIndexes,
+  syncCollectionFieldIndexes,
 } from './apply'

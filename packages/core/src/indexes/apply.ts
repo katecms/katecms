@@ -1,5 +1,6 @@
 import { sql } from 'kysely'
 import type { Kysely } from 'kysely'
+import type { Collections } from '../config'
 import type { Database } from '../database'
 import {
   FIELD_INDEX_TABLE,
@@ -8,6 +9,8 @@ import {
   buildCreateIndexSql,
   buildDropIndexSql,
   buildIndexExpression,
+  collectDesiredFieldIndexes,
+  computeIndexDiff,
   isManagedFieldIndexName,
 } from './definitions'
 import type {
@@ -16,6 +19,7 @@ import type {
   DesiredFieldIndex,
   IndexSyncChange,
   IndexSyncDiff,
+  SyncCollectionFieldIndexesResult,
 } from './types'
 
 /**
@@ -120,4 +124,22 @@ export async function applyFieldIndexDiff(
   })
 
   return { created, dropped }
+}
+
+/**
+ * Align PostgreSQL field indexes with `indexed: true` in collection config.
+ *
+ * Collects desired indexes, diffs against `pg_indexes`, then applies the
+ * managed create/drop set. PostgreSQL only — adapters must not call this on
+ * SQLite.
+ */
+export async function syncCollectionFieldIndexes(
+  db: Kysely<Database>,
+  collections: Collections,
+): Promise<SyncCollectionFieldIndexesResult> {
+  const { desired, warnings } = collectDesiredFieldIndexes(collections)
+  const actual = await loadActualFieldIndexes(db)
+  const diff = computeIndexDiff(desired, actual)
+  const applied = await applyFieldIndexDiff(db, diff)
+  return { ...applied, warnings }
 }

@@ -30,11 +30,6 @@ export function isOwner(user: RoleHolder, roles: RoleMap): boolean {
   return getRole(roles, user.role)?.superuser === true
 }
 
-/** Whether the user may run schema/index maintenance (owner or `maintenance` role). */
-export function isAdminOrOwner(user: RoleHolder, roles: RoleMap): boolean {
-  return isOwner(user, roles) || getRole(roles, user.role)?.maintenance === true
-}
-
 function resourceAllows(right: ResourceRights, action: RoleAction): boolean {
   if (typeof right === 'boolean') {
     return right
@@ -95,8 +90,8 @@ export interface CanOnEntryOptions extends CanOptions {
  * Permission check for one stored entry (update/delete).
  *
  * `read` / `create` follow {@link can}. `update` / `delete` additionally require
- * `userId === entry.authorId`, unless the role is owner, has `maintenance`,
- * or has blanket (`true`) rights on the resource/scope.
+ * `userId === entry.authorId`, unless the role has blanket (`true`) rights on
+ * the resource/scope (`owner` / `admin` / `editor` collections).
  */
 export function canOnEntry(
   user: RoleHolder,
@@ -109,9 +104,6 @@ export function canOnEntry(
     return false
   }
   if (action === 'read' || action === 'create') {
-    return true
-  }
-  if (isAdminOrOwner(user, options.roles)) {
     return true
   }
   const role = getRole(options.roles, user.role)

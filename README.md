@@ -159,7 +159,7 @@ media: {
 - `owner` зарезервирован, запись в конфиге игнорируется.
 - `admin` нельзя скрыть (`admin: false` игнорируется), определение `Role` заменяет права.
 
-Права: `true` / `false` / `['read', 'create', 'update', 'delete']`. Для `collections` и `dictionaries` ещё карта по slug. Пропущенный ресурс = нет доступа. `maintenance: true` — обслуживание схемы/индексов.
+Права: `true` / `false` / `['read', 'create', 'update', 'delete']`. Для `collections` и `dictionaries` ещё карта по slug. Пропущенный ресурс = нет доступа. `true` на коллекцию/scope — править чужие записи; список действий — только свои.
 
 ```ts
 roles: {
@@ -265,7 +265,7 @@ interface Condition {
 
 Layout-only (`tab`, `accordion`, `separator`, `message`) не хранят значение под своим ключом. У `tab` / `accordion` `subFields` панелей пишутся плоско в родителя.
 
-`indexed: true` (где тип это допускает) — скалярный индекс Postgres JSONB. SQLite пропускает. Не работает внутри `repeater` / `flexible_content`.
+`indexed: true` (где тип это допускает) — скалярный индекс Postgres JSONB. Nuxt создаёт/снимает их при старте после миграции. SQLite пропускает. Не работает внутри `repeater` / `flexible_content`.
 
 Зарезервированные ключи в строках: `fc_layout` (flexible content), `__miraicmsCollapsed` (свёртка ряда).
 

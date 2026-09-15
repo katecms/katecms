@@ -2,7 +2,6 @@ export {
   can,
   canOnEntry,
   getRole,
-  isAdminOrOwner,
   isOwner,
   isValidRole,
 } from './can'

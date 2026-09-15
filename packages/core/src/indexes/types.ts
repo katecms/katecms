@@ -40,3 +40,8 @@ export interface ApplyFieldIndexDiffResult {
   created: string[]
   dropped: string[]
 }
+
+/** Result of {@link syncCollectionFieldIndexes}. */
+export interface SyncCollectionFieldIndexesResult extends ApplyFieldIndexDiffResult {
+  warnings: string[]
+}

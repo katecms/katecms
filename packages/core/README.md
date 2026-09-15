@@ -177,9 +177,7 @@ Postgres без URL и SQLite без имени файла — ошибка. Н�
 
 Встроенные: `owner`, `admin`, `editor`, `author`, `subscriber`. Карта `roles` добавляет роль, полностью заменяет встроенную или прячет её (`author: false`). Slug `owner` зарезервирован: запись в конфиге игнорируется (warning).
 
-Права на ресурс: `true` (все CRUD), `false` / нет ключа (ничего), список `['read', 'create']`, либо для коллекций и словарей карта по slug.
-
-`maintenance: true` — можно гонять синхронизацию индексов (у `admin` и всегда у `owner`).
+Права на ресурс: `true` (все CRUD), `false` / нет ключа (ничего), список `['read', 'create']`, либо для коллекций и словарей карта по slug. `update` / `delete` чужой записи — только при blanket `true` на ресурс/scope.
 
 <a id="permissions"></a>
 ## Права
@@ -200,19 +198,19 @@ canOnEntry(
 )
 ```
 
-`owner` (`superuser`) проходит всё. `canOnEntry` для `update` / `delete` дополнительно требует автора записи, если роль не owner, не `maintenance` и права не blanket `true` на ресурс/scope. `read` / `create` совпадают с `can`.
+`owner` (`superuser`) проходит всё. `canOnEntry` для `update` / `delete` дополнительно требует автора записи, если права не blanket `true` на ресурс/scope. `read` / `create` совпадают с `can`.
 
-Ещё: `getRole`, `isValidRole`, `isOwner`, `isAdminOrOwner`.
+Ещё: `getRole`, `isValidRole`, `isOwner`.
 
 Встроенные права (после resolve):
 
-| Роль | Коллекции / словари | Медиа | Users / options | maintenance |
-|---|---|---|---|---|
-| owner | всё | всё | всё | да |
-| admin | всё | всё | всё | да |
-| editor | всё | всё | нет | нет |
-| author | read, create, update коллекций | read, create | нет | нет |
-| subscriber | read коллекций | нет | нет | нет |
+| Роль | Коллекции / словари | Медиа | Users / options |
+|---|---|---|---|
+| owner | всё | всё | всё |
+| admin | всё | всё | всё |
+| editor | всё | всё | нет |
+| author | read, create, update коллекций | read, create | нет |
+| subscriber | read коллекций | нет | нет |
 
 <a id="auth"></a>
 ## Пароли и email
@@ -332,18 +330,15 @@ if (hasImageWork(config.media)) {
 <a id="indexes"></a>
 ## Индексы полей
 
-Только PostgreSQL (нужен `pg_indexes`). SQLite адаптер пропускает sync.
+Только PostgreSQL (нужен `pg_indexes`). SQLite адаптер пропускает sync. Nuxt вызывает это после миграции при старте сервера.
 
 Имена вида `collections_fld__{collection}__{path}__idx`, не длиннее 63 байт. Вложенное поле после slug коллекции помечается `n`, чтобы путь не сливался с корневым именем. Выражение: `(fields->>'title')` или `(fields->'seo'->>'title')`, плюс cast (`numeric`, `boolean`, `date`, …).
 
 ```ts
-const desired = collectDesiredFieldIndexes(resolved.collections)
-const actual = await loadActualFieldIndexes(db)
-const diff = computeIndexDiff(desired, actual)
-await applyFieldIndexDiff(db, diff)
+const result = await syncCollectionFieldIndexes(db, resolved.collections)
 ```
 
-`applyFieldIndexDiff` исполняет только SQL, который сама собрала, и берёт advisory lock `FIELD_INDEX_LOCK_KEY`. Чужие индексы не трогает.
+Эквивалент: `collectDesiredFieldIndexes` → `loadActualFieldIndexes` → `computeIndexDiff` → `applyFieldIndexDiff`. `applyFieldIndexDiff` исполняет только SQL, который сама собрала, и берёт advisory lock `FIELD_INDEX_LOCK_KEY`. Чужие индексы не трогает.
 
 <a id="oembed"></a>
 ## oEmbed

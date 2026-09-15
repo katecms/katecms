@@ -153,6 +153,14 @@ export default defineNuxtConfig({
           tagline: {
             type: 'text',
             label: 'Tagline',
+            conditionalLogic: [
+              [
+                {
+                  field: 'title',
+                  operator: 'empty',
+                },
+              ],
+            ],
           },
           description: {
             type: 'textarea',

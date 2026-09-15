@@ -16,6 +16,7 @@ const found = ref(false)
 const loading = ref(true)
 const saving = ref(false)
 const error = ref<string | null>(null)
+const savedNoticeId = ref(0)
 const canRead = ref(false)
 const canUpdate = ref(false)
 const entryForm = ref<{ validateForSubmit: () => boolean } | null>(null)
@@ -76,6 +77,7 @@ async function submit() {
     })
     applyPage(res)
     await nextTick()
+    savedNoticeId.value += 1
   }
   catch (err) {
     error.value = parseAuthError(err, 'Could not save the options.').message
@@ -105,6 +107,14 @@ watch(pageSlug, load)
         {{ saving ? 'Saving…' : 'Save' }}
       </MiraiCmsUiButton>
     </div>
+
+    <MiraiCmsUiNotice
+      v-if="savedNoticeId"
+      :key="savedNoticeId"
+      placement="fixed"
+      message="Changes saved."
+      @close="savedNoticeId = 0"
+    />
 
     <MiraiCmsUiNotice
       v-if="loading"

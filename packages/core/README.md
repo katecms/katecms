@@ -125,6 +125,8 @@ const resolved = resolveMiraiCmsConfig(config)
 | `labels.name` / `singularName` | Подписи в админке |
 | `hierarchical` | Дерево через `parent_id`. По умолчанию `false` |
 | `autosave` | Черновик при уходе с **новой** несохранённой записи. Уже сохранённые — подтверждение. По умолчанию `false` |
+| `public` | Публичный тип. `false` — скрыть в меню админки, публичные URL записей и архива не резолвятся. По умолчанию `true` |
+| `has_archive` | Архив. `true` — префикс rewrite (`/type/%name%` → `/type`), строка — свой слаг (`'typepage'` → `/typepage`). По умолчанию `false` |
 | `rewrite` | Публичный URL, плейсхолдер `%name%`. Нет паттерна → `/{slug}/%name%` |
 | `fields` | Карта полей записи |
 | `blocks` | `string[]` разрешённых блоков, `true` — все, иначе выкл |
@@ -279,9 +281,11 @@ matchCollectionPath(collections, '/page/about/team')
 
 buildPublicPath('/page/%name%', 'pages', 'about/team') // '/page/about/team'
 normalizePublicPath('page/about/?x=1')                 // '/page/about'
+resolveArchivePath({ rewrite: '/page/%name%', has_archive: true }, 'pages') // '/page'
+resolveArchivePath({ has_archive: 'typepage' }, 'type')                    // '/typepage'
 ```
 
-Сначала более длинный `rewrite`. При равной длине — порядок ключей в объекте конфига (не полагайтесь на это между движками). Без `%name%` паттерн не матчится.
+Сначала более длинный `rewrite`. При равной длине — порядок ключей в объекте конфига (не полагайтесь на это между движками). Без `%name%` паттерн не матчится. `public: false` исключает коллекцию из `matchPublicCollectionRoute`. Архив (`has_archive`) матчится только как точный путь, и только если запись с тем же URL не перехватила rewrite.
 
 `buildSlugPathMap(entries)` — `id → parent/child`. Цикл в `parent_id` сжимается до собственного slug.
 

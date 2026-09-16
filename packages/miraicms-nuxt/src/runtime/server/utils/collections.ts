@@ -72,6 +72,8 @@ export function toCollectionMeta(slug: string, def: CollectionDefinition): Admin
     },
     hierarchical: def.hierarchical === true,
     autosave: def.autosave === true,
+    public: def.public !== false,
+    has_archive: typeof def.has_archive === 'string' ? def.has_archive : def.has_archive === true,
     rewrite: def.rewrite,
     fields: (def.fields ?? {}) as Fields,
   }

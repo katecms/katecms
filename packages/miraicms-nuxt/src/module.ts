@@ -40,6 +40,8 @@ function toPublicCollections(collections: ResolvedMiraiCmsConfig['collections'])
           singularName: def.labels.singularName ?? def.labels.name,
         },
         icon: toPublicNavIcon(def.icon),
+        public: def.public !== false,
+        has_archive: typeof def.has_archive === 'string' ? def.has_archive : def.has_archive === true,
       },
     ]),
   )
@@ -428,6 +430,8 @@ declare module '@nuxt/schema' {
       collections: Record<string, {
         labels: { name: string, singularName: string }
         icon: string
+        public: boolean
+        has_archive: boolean | string
       }>
       dictionaries: Record<string, {
         labels: { name: string, singularName: string }
@@ -456,6 +460,8 @@ declare module 'nuxt/schema' {
       collections: Record<string, {
         labels: { name: string, singularName: string }
         icon: string
+        public: boolean
+        has_archive: boolean | string
       }>
       dictionaries: Record<string, {
         labels: { name: string, singularName: string }

@@ -64,7 +64,9 @@ export default defineNuxtConfig({
         },
         hierarchical: true, // default: false
         autosave: true, // новая запись: уход → черновик; сохранённая: подтверждение
+        public: true, // default: true; false — скрыть пункт меню, страница записи не работает
         rewrite: '/inf/%name%', // нужно добавить чтобы можно было определить ЧПУ
+        has_archive: true, // default: false; true — архив /inf; строка 'typepage' → /typepage
         fields: {
           wysiwyg_test: {
             type: 'wysiwyg',
@@ -101,6 +103,7 @@ export default defineNuxtConfig({
         labels: {
           name: 'Product',
         },
+        has_archive: 'catalog', // ЧПУ архива: /catalog (записи остаются /products/%name%)
         fields: {
           description: {
             type: 'wysiwyg',

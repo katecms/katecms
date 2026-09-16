@@ -78,7 +78,7 @@ watch(form, () => {
 }, { deep: true })
 
 const viewUrl = computed(() => {
-  if (!form.slug.trim() || savedStatus.value === 'trash') {
+  if (!form.slug.trim() || savedStatus.value === 'trash' || collection.value?.public === false) {
     return null
   }
   const parent = parents.value.find(item => item.id === form.parentId)

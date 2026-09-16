@@ -1,4 +1,4 @@
-import type { Collections } from './config'
+import type { CollectionDefinition, Collections } from './config'
 
 /** Strip query/hash, ensure leading slash, drop trailing slash (except `/`). */
 export function normalizePublicPath(path: string): string {
@@ -26,6 +26,25 @@ export interface CollectionPathMatch {
   segments: string[]
   /** Joined slug path, e.g. `about/team`. */
   slugPath: string
+}
+
+export type CollectionRouteMatch
+  = | (CollectionPathMatch & { kind: 'entry' })
+    | { kind: 'archive', collectionSlug: string }
+
+/** Default `true`: omitted `public` still exposes the collection. */
+export function isCollectionPublic(def: Pick<CollectionDefinition, 'public'>): boolean {
+  return def.public !== false
+}
+
+/** `true` or a non-empty slug string enables the archive. */
+export function collectionHasArchive(
+  def: Pick<CollectionDefinition, 'has_archive'>,
+): boolean {
+  if (def.has_archive === true) {
+    return true
+  }
+  return typeof def.has_archive === 'string' && def.has_archive.trim() !== ''
 }
 
 /**
@@ -99,6 +118,79 @@ export function buildArchivePath(
 ): string {
   const pattern = normalizePublicPath(rewrite?.trim() || defaultRewrite(collectionSlug))
   return normalizePublicPath(pattern.replace(/%name%/g, '').replace(/\/{2,}/g, '/'))
+}
+
+/**
+ * Public archive URL for a collection, or `null` when archives are off.
+ *
+ * `has_archive: true` uses {@link buildArchivePath}. A string is used as the
+ * permalink slug (`'typepage'` → `/typepage`).
+ */
+export function resolveArchivePath(
+  def: Pick<CollectionDefinition, 'rewrite' | 'has_archive'>,
+  collectionSlug: string,
+): string | null {
+  if (!collectionHasArchive(def)) {
+    return null
+  }
+  if (typeof def.has_archive === 'string') {
+    return normalizePublicPath(def.has_archive.trim())
+  }
+  return buildArchivePath(def.rewrite, collectionSlug)
+}
+
+function publicCollections(collections: Collections): Collections {
+  return Object.fromEntries(
+    Object.entries(collections).filter(([, def]) => isCollectionPublic(def)),
+  )
+}
+
+/**
+ * Match an exact archive path for a public collection with `has_archive`.
+ * Longer archive paths win; equal length keeps config object order.
+ */
+export function matchCollectionArchive(
+  collections: Collections,
+  path: string,
+): { collectionSlug: string } | null {
+  const normalized = normalizePublicPath(path)
+  const candidates = Object.entries(collections)
+    .map(([slug, def]) => {
+      if (!isCollectionPublic(def)) {
+        return null
+      }
+      const archive = resolveArchivePath(def, slug)
+      return archive ? { slug, archive } : null
+    })
+    .filter((item): item is { slug: string, archive: string } => item != null)
+    .sort((a, b) => b.archive.length - a.archive.length)
+
+  for (const { slug, archive } of candidates) {
+    if (archive === normalized) {
+      return { collectionSlug: slug }
+    }
+  }
+  return null
+}
+
+/**
+ * Match a public frontend path to a collection entry or archive.
+ * Non-public collections are skipped. Entry rewrites win over archives.
+ */
+export function matchPublicCollectionRoute(
+  collections: Collections,
+  path: string,
+): CollectionRouteMatch | null {
+  const visible = publicCollections(collections)
+  const entry = matchCollectionPath(visible, path)
+  if (entry) {
+    return { kind: 'entry', ...entry }
+  }
+  const archive = matchCollectionArchive(visible, path)
+  if (archive) {
+    return { kind: 'archive', collectionSlug: archive.collectionSlug }
+  }
+  return null
 }
 
 /**

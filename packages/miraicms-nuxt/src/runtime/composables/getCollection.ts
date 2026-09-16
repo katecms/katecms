@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { /* createError, */ useAsyncData, useRequestFetch, useRoute } from '#imports'
-import { buildPublicPath } from '@miraicms/core'
-import type { ResolveResponse } from '../utils/collections'
+import { buildPublicPath, resolveArchivePath } from '@miraicms/core'
+import type { AdminEntry, ResolveResponse } from '../utils/collections'
 import { isTruthyQueryParam, parsePublicStatusParam } from '../utils/preview'
 
 function useCurrentPublicPath() {
@@ -45,6 +45,18 @@ function statusQueryValue(
   return Array.isArray(status) ? status.join(',') : status
 }
 
+function pageQueryValue(value: unknown, fallback?: number): number | undefined {
+  if (typeof fallback === 'number' && Number.isInteger(fallback) && fallback >= 1) {
+    return fallback
+  }
+  const raw = Array.isArray(value) ? value[0] : value
+  const n = Number(raw)
+  if (!Number.isInteger(n) || n < 1) {
+    return undefined
+  }
+  return n
+}
+
 export interface GetCollectionOptions {
   /** Override the path (default: current route). */
   path?: string
@@ -58,19 +70,26 @@ export interface GetCollectionOptions {
    * Also read from `?status=` on the current route.
    */
   status?: 'published' | 'draft' | Array<'published' | 'draft'>
+  /** Archive listing page. Also read from `?page=` on the current route. */
+  page?: number
+  /** Archive listing page size. Also read from `?perPage=` on the current route. */
+  perPage?: number
 }
 
 /**
- * Resolve the CMS entry for the current (or given) path via collection `rewrite`.
+ * Resolve the CMS entry or archive for the current (or given) path via
+ * collection `rewrite` / `has_archive`.
  *
  * Public pages stay published-only unless `preview` is set (option or
  * `?preview=1`) and the visitor is signed in with read access.
+ * Collections with `public: false` do not resolve.
  *
  * @example
  * ```vue
  * <script setup lang="ts">
  * const { entry, link } = await getCollection()
  * const preview = await getCollection({ preview: true, status: 'draft' })
+ * const { isArchive, entries } = await getCollection()
  * </script>
  * ```
  */
@@ -83,43 +102,79 @@ export async function getCollection(options: GetCollectionOptions = {}) {
     statusQueryValue(options.status)
     ?? ((parsePublicStatusParam(route.query.status) ?? []).join(',') || undefined),
   )
+  const page = computed(() => pageQueryValue(route.query.page, options.page))
+  const perPage = computed(() => pageQueryValue(route.query.perPage, options.perPage))
   const requestFetch = useRequestFetch()
 
   const { data, pending, error, refresh } = await useAsyncData(
-    `miraicms-resolve:${path.value}:${preview.value ? '1' : '0'}:${status.value ?? ''}`,
+    `miraicms-resolve:${path.value}:${preview.value ? '1' : '0'}:${status.value ?? ''}:${page.value ?? ''}:${perPage.value ?? ''}`,
     () => requestFetch<ResolveResponse>('/api/_miraicms/resolve', {
       query: {
         path: path.value,
         ...(preview.value ? { preview: '1' } : {}),
         ...(status.value ? { status: status.value } : {}),
+        ...(page.value ? { page: page.value } : {}),
+        ...(perPage.value ? { perPage: perPage.value } : {}),
       },
     }),
-    { watch: [path, preview, status] },
+    { watch: [path, preview, status, page, perPage] },
   )
 
-  if (error.value || !data.value?.entry) {
+  const resolved = data.value
+  const isArchivePayload = resolved?.kind === 'archive'
+  if (error.value || !resolved || (!isArchivePayload && resolved.kind !== 'entry')) {
     // const { statusCode, statusMessage } = resolveFetchError(error.value)
     // throw createError({ statusCode, statusMessage })
     return []
   }
+  if (resolved.kind === 'entry' && !resolved.entry) {
+    return []
+  }
 
-  const entry = computed(() => data.value?.entry ?? null)
+  const kind = computed(() => data.value?.kind ?? 'entry')
+  const isArchive = computed(() => data.value?.kind === 'archive')
+  const entry = computed(() => data.value?.kind === 'entry' ? data.value.entry : null)
+  const entries = computed(() => data.value?.kind === 'archive' ? data.value.entries : [])
   const collection = computed(() => data.value?.collection ?? null)
   const isPreview = computed(() => data.value?.preview === true)
+  const archivePage = computed(() => data.value?.kind === 'archive' ? data.value.page : 1)
+  const archivePerPage = computed(() => data.value?.kind === 'archive' ? data.value.perPage : 0)
+  const total = computed(() => data.value?.kind === 'archive' ? data.value.total : 0)
   const link = computed(() => {
-    const resolved = entry.value
     const meta = collection.value
-    if (!resolved || !meta) {
+    if (!meta) {
       return null
     }
-    return buildPublicPath(meta.rewrite, meta.slug, resolved.slugPath || resolved.slug)
+    if (data.value?.kind === 'archive') {
+      return resolveArchivePath(meta, meta.slug)
+    }
+    const resolvedEntry = entry.value
+    if (!resolvedEntry) {
+      return null
+    }
+    return buildPublicPath(meta.rewrite, meta.slug, resolvedEntry.slugPath || resolvedEntry.slug)
   })
 
+  function permalink(item: AdminEntry): string | null {
+    const meta = collection.value
+    if (!meta || !meta.public) {
+      return null
+    }
+    return buildPublicPath(meta.rewrite, meta.slug, item.slugPath || item.slug)
+  }
+
   return {
+    kind,
+    isArchive,
     entry,
+    entries,
     collection,
     link,
+    permalink,
     preview: isPreview,
+    page: archivePage,
+    perPage: archivePerPage,
+    total,
     pending,
     error,
     refresh,

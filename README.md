@@ -189,6 +189,8 @@ roles: {
 | `icon` | `string` | дефолтная иконка | Inline SVG в меню |
 | `hierarchical` | `boolean` | `false` | Дерево через `parent_id` |
 | `autosave` | `boolean` | `false` | Уход с новой несохранённой записи → `draft` |
+| `public` | `boolean` | `true` | `false` — скрыть пункт меню, страница записи не работает |
+| `has_archive` | `boolean \| string` | `false` | Архив: `true` → префикс rewrite, строка → свой слаг ЧПУ |
 | `rewrite` | `string` | `/{slug}/%name%` | Публичный URL. Нужен плейсхолдер `%name%` |
 | `fields` | `Fields` | `{}` | Поля записи. Ключ = имя поля |
 | `blocks` | `string[] \| boolean` | `false` | `true` — все блоки, массив — allow-list, иначе выкл |
@@ -224,6 +226,7 @@ export default defineNuxtConfig({
         hierarchical: true,
         autosave: true,
         rewrite: '/inf/%name%',
+        has_archive: true,
         fields: {
           body: { type: 'wysiwyg', label: 'Текст', toolbar: 'full' },
           thumbnail: { type: 'image', label: 'Обложка', position: 'sidebar' },
@@ -342,7 +345,7 @@ related: {
 | `dictionary` | `string[]` | Фильтр по словарям |
 | `allowNull` | `boolean` | Пусто |
 | `multiple` | `boolean` | Несколько URL |
-| `allowArchives` | `boolean` | Пункты архивов коллекции |
+| `allowArchives` | `boolean` | Пункты архивов коллекции (только если у типа `has_archive`) |
 
 ```ts
 cta: {

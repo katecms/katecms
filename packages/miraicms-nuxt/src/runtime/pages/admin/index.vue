@@ -12,11 +12,13 @@ const rootClass = 'miraicms-dashboard'
 const paths = useCmsPaths()
 const collections = computed(() => {
   const map = (useRuntimeConfig().public.miraicms?.collections ?? {}) as Record<string, PublicCollectionNav>
-  return Object.entries(map).map(([slug, def]) => ({
-    slug,
-    label: def.labels?.name || slug,
-    singular: def.labels?.singularName || def.labels?.name || slug,
-  }))
+  return Object.entries(map)
+    .filter(([, def]) => def.public !== false)
+    .map(([slug, def]) => ({
+      slug,
+      label: def.labels?.name || slug,
+      singular: def.labels?.singularName || def.labels?.name || slug,
+    }))
 })
 const dictionaries = computed(() => {
   const map = (useRuntimeConfig().public.miraicms?.dictionaries ?? {}) as Record<string, PublicDictionaryNav>

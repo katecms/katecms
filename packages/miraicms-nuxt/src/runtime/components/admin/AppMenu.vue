@@ -48,16 +48,18 @@ function isActive(to: string, exact = false) {
 
 const groups = computed<MenuGroup[]>(() => {
   const collections = (runtimeConfig.public.miraicms?.collections ?? {}) as Record<string, PublicCollectionNav>
-  const collectionItems = Object.entries(collections).map(([slug, def]) => {
-    const to = paths.collection(slug)
-    return {
-      key: `collection:${slug}`,
-      label: def.labels?.name || slug,
-      to,
-      icon: isSvgIcon(def.icon) ? def.icon! : COLLECTION_ICON,
-      active: isActive(to),
-    }
-  })
+  const collectionItems = Object.entries(collections)
+    .filter(([, def]) => def.public !== false)
+    .map(([slug, def]) => {
+      const to = paths.collection(slug)
+      return {
+        key: `collection:${slug}`,
+        label: def.labels?.name || slug,
+        to,
+        icon: isSvgIcon(def.icon) ? def.icon! : COLLECTION_ICON,
+        active: isActive(to),
+      }
+    })
 
   const dictionaries = (runtimeConfig.public.miraicms?.dictionaries ?? {}) as Record<string, PublicDictionaryNav>
   const dictionaryItems = Object.entries(dictionaries).map(([slug, def]) => {

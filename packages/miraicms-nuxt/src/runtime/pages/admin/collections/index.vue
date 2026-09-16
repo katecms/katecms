@@ -70,7 +70,10 @@ watch(searchQuery, (value) => {
   searchInput.value = value
 }, { immediate: true })
 
-function viewUrl(entry: AdminEntry): string {
+function viewUrl(entry: AdminEntry): string | null {
+  if (collection.value?.public === false) {
+    return null
+  }
   const path = buildPublicPath(
     collection.value?.rewrite,
     collectionSlug.value,
@@ -407,10 +410,10 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
             <td>
               <div :class="`${rootClass}__actions`">
                 <MiraiCmsUiButton
-                  v-if="entry.status !== 'trash'"
+                  v-if="entry.status !== 'trash' && viewUrl(entry)"
                   tag="a"
                   :variant="['secondary', 'small']"
-                  :link="{ url: viewUrl(entry), title: 'View', target: '_blank' }"
+                  :link="{ url: viewUrl(entry)!, title: 'View', target: '_blank' }"
                 >
                   View
                 </MiraiCmsUiButton>

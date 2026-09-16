@@ -1,9 +1,9 @@
 import {
-  buildArchivePath,
   buildPublicPath,
   buildSlugPathMap,
   isImageMedia,
   isMediaItem,
+  resolveArchivePath,
   toRelationEntryValue,
 } from '@miraicms/core'
 import type { Collection, CollectionDefinition, MediaItem, RelationEntryValue } from '@miraicms/core'
@@ -53,7 +53,7 @@ export function toPickerEntry(
     title: row.title,
     slug: row.slug,
     slugPath: path,
-    url: buildPublicPath(def.rewrite, row.type, path),
+    url: def.public === false ? '' : buildPublicPath(def.rewrite, row.type, path),
     fields: row.fields ?? {},
     parentId: row.parent_id,
     menuOrder: row.menu_order,
@@ -74,12 +74,16 @@ export function toPickerEntry(
 export function collectionArchiveOption(
   slug: string,
   def: CollectionDefinition,
-): { url: string, title: string, type: string } {
+): { url: string, title: string, type: string } | null {
+  const url = resolveArchivePath(def, slug)
+  if (!url || def.public === false) {
+    return null
+  }
   const name = def.labels.name
   return {
     type: slug,
     title: `${name} archive`,
-    url: buildArchivePath(def.rewrite, slug),
+    url,
   }
 }
 

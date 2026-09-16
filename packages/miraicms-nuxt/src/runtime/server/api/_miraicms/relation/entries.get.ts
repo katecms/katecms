@@ -89,7 +89,8 @@ export default defineEventHandler(async (event) => {
   const archives = query.archives === '1' || query.archives === 'true'
     ? readable.flatMap((slug) => {
         const def = collections[slug]
-        return def ? [collectionArchiveOption(slug, def)] : []
+        const option = def ? collectionArchiveOption(slug, def) : null
+        return option ? [option] : []
       })
     : []
 

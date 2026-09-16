@@ -22,6 +22,21 @@ export interface CollectionDefinition {
    */
   autosave?: boolean
   /**
+   * Whether this collection is public. Default: `true`.
+   *
+   * When `false`, the collection is hidden from the admin menu and its
+   * public entry/archive URLs do not resolve.
+   */
+  public?: boolean
+  /**
+   * Enable a public archive (listing) for this collection. Default: `false`.
+   *
+   * - `true` — archive URL is the rewrite prefix (`/type/%name%` → `/type`).
+   * - a string — that slug is used as the archive permalink
+   *   (`'typepage'` → `/typepage`).
+   */
+  has_archive?: boolean | string
+  /**
    * Public URL pattern for entries of this collection.
    * Use `%name%` as a placeholder for the entry slug path.
    *

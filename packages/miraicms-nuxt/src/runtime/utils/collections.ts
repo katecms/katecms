@@ -9,6 +9,8 @@ export interface AdminCollectionMeta {
   }
   hierarchical: boolean
   autosave: boolean
+  public: boolean
+  has_archive: boolean | string
   rewrite?: string
   fields: Fields
 }
@@ -94,12 +96,26 @@ export interface CollectionEntryResponse {
   dictionaries?: CollectionDictionaryPicker[]
 }
 
-export interface ResolveResponse {
+export interface ResolveEntryResponse {
+  kind: 'entry'
   collection: AdminCollectionMeta
   entry: AdminEntry
   /** True when unpublished statuses were actually allowed for this request. */
   preview: boolean
 }
+
+export interface ResolveArchiveResponse {
+  kind: 'archive'
+  collection: AdminCollectionMeta
+  entries: AdminEntry[]
+  /** True when unpublished statuses were actually allowed for this request. */
+  preview: boolean
+  page: number
+  perPage: number
+  total: number
+}
+
+export type ResolveResponse = ResolveEntryResponse | ResolveArchiveResponse
 
 export interface CollectionEntryFormModel {
   title: string
@@ -161,4 +177,6 @@ export interface PublicCollectionNav {
     singularName: string
   }
   icon?: string
+  public?: boolean
+  has_archive?: boolean | string
 }

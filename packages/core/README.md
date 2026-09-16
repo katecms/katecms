@@ -125,7 +125,7 @@ const resolved = resolveMiraiCmsConfig(config)
 | `labels.name` / `singularName` | Подписи в админке |
 | `hierarchical` | Дерево через `parent_id`. По умолчанию `false` |
 | `autosave` | Черновик при уходе с **новой** несохранённой записи. Уже сохранённые — подтверждение. По умолчанию `false` |
-| `public` | Публичный тип. `false` — скрыть в меню админки, публичные URL записей и архива не резолвятся. По умолчанию `true` |
+| `public` | Публичный тип. `false` — пункт в админке остаётся, публичные URL записей и архива не резолвятся, View скрыт. По умолчанию `true` |
 | `has_archive` | Архив. `true` — префикс rewrite (`/type/%name%` → `/type`), строка — свой слаг (`'typepage'` → `/typepage`). По умолчанию `false` |
 | `rewrite` | Публичный URL, плейсхолдер `%name%`. Нет паттерна → `/{slug}/%name%` |
 | `fields` | Карта полей записи |

@@ -24,8 +24,8 @@ export interface CollectionDefinition {
   /**
    * Whether this collection is public. Default: `true`.
    *
-   * When `false`, the collection is hidden from the admin menu and its
-   * public entry/archive URLs do not resolve.
+   * When `false`, the collection stays in the admin menu, but public
+   * entry/archive URLs do not resolve and admin View links are hidden.
    */
   public?: boolean
   /**

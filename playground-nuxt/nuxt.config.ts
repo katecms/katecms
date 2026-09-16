@@ -64,7 +64,7 @@ export default defineNuxtConfig({
         },
         hierarchical: true, // default: false
         autosave: true, // новая запись: уход → черновик; сохранённая: подтверждение
-        public: true, // default: true; false — скрыть пункт меню, страница записи не работает
+        public: false, // default: true; false — страница записи/архива не работает, View в админке скрыт
         rewrite: '/inf/%name%', // нужно добавить чтобы можно было определить ЧПУ
         has_archive: true, // default: false; true — архив /inf; строка 'typepage' → /typepage
         fields: {

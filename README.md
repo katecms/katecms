@@ -189,7 +189,7 @@ roles: {
 | `icon` | `string` | дефолтная иконка | Inline SVG в меню |
 | `hierarchical` | `boolean` | `false` | Дерево через `parent_id` |
 | `autosave` | `boolean` | `false` | Уход с новой несохранённой записи → `draft` |
-| `public` | `boolean` | `true` | `false` — скрыть пункт меню, страница записи не работает |
+| `public` | `boolean` | `true` | `false` — страница записи/архива не работает, View в админке скрыт |
 | `has_archive` | `boolean \| string` | `false` | Архив: `true` → префикс rewrite, строка → свой слаг ЧПУ |
 | `rewrite` | `string` | `/{slug}/%name%` | Публичный URL. Нужен плейсхолдер `%name%` |
 | `fields` | `Fields` | `{}` | Поля записи. Ключ = имя поля |

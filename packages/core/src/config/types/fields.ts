@@ -230,6 +230,7 @@ interface RadioField extends BaseField {
   defaultValue?: string
   layout?: 'vertical' | 'horizontal'
   allowCustomChoices?: boolean
+  customChoiceButtonText?: string
   allowNull?: boolean
   returnFormat?: ChoiceReturnFormat
   indexed?: boolean
@@ -293,8 +294,6 @@ interface PostObjectField extends BaseField {
   allowNull?: boolean
   multiple?: boolean
   returnFormat?: 'object' | 'id'
-  ui?: boolean
-  bidirectionalTarget?: string[]
 }
 
 interface PageLinkField extends BaseField {
@@ -320,7 +319,6 @@ interface RelationshipField extends BaseField {
    */
   elements?: string[]
   returnFormat?: 'object' | 'id'
-  bidirectionalTarget?: string[]
 }
 
 interface DictionaryField extends BaseField {
@@ -331,9 +329,6 @@ interface DictionaryField extends BaseField {
   allowNull?: boolean
   returnFormat?: 'object' | 'id'
   addTerm?: boolean
-  loadTerms?: boolean
-  saveTerms?: boolean
-  bidirectionalTarget?: string[]
 }
 
 interface UserField extends BaseField {

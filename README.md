@@ -255,13 +255,46 @@ export default defineNuxtConfig({
 | `position` | `'main' \| 'sidebar'` | `'main'` | Колонка формы |
 | `columnWidth` | `number` | — | Ширина в % |
 
+Нет ключа или `[]` — поле всегда видно. Скрытое поле не проверяется как `required` и не пишется в сохранённые значения.
+
+`Condition[][]`: внешний массив — **OR** (достаточно одной группы), внутренний — **AND** (все условия группы). `field` — ключ поля в `fields`, не `label`.
+
 ```ts
-interface Condition {
-  field: string
-  operator: 'empty' | 'notEmpty' | 'equal' | 'notEqual' | 'contains' | 'notContains' | 'matches' | 'gt' | 'lt'
-  value?: string | number | boolean | Array<string | number>
-}
+tagline: {
+  type: 'text',
+  label: 'Tagline',
+  // показать, если title === 'show'
+  conditionalLogic: [
+    [{ field: 'title', operator: 'equal', value: 'show' }],
+  ],
+},
+seo_note: {
+  type: 'message',
+  label: 'SEO',
+  // (status === 'draft' И title не пустой) ИЛИ flag === true
+  conditionalLogic: [
+    [
+      { field: 'status', operator: 'equal', value: 'draft' },
+      { field: 'title', operator: 'notEmpty' },
+    ],
+    [{ field: 'flag', operator: 'equal', value: true }],
+  ],
+},
 ```
+
+| Оператор | `value` | Когда истинно |
+|---|---|---|
+| `empty` | не нужен | Нет значения: `null` / `undefined`, `''`, `false`, `[]` |
+| `notEmpty` | не нужен | Обратное `empty` |
+| `equal` | да | Скаляр: `String(значение) === String(value)` (регистр важен). Массив выбранных (multi-select и т.п.): содержит `value` |
+| `notEqual` | да | Обратное `equal` |
+| `contains` | да | Строка содержит подстроку `value`. Массив: элемент входит в выбранные |
+| `notContains` | да | Обратное `contains` |
+| `matches` | да | `RegExp(value)` по строке значения. Невалидный паттерн или длиннее 200 символов → ложь |
+| `gt` | да | Число: `Number(значение) > Number(value)`. Массив: `length > Number(value)` |
+| `lt` | да | Аналогично `gt`, но «меньше» |
+
+`value` приводится к строке для `equal` / `contains` / `matches` (`true` → `'true'`). Для `gt` / `lt` — к числу.
 
 Layout-only (`tab`, `accordion`, `separator`, `message`) не хранят значение под своим ключом. У `tab` / `accordion` `subFields` панелей пишутся плоско в родителя.
 
@@ -286,8 +319,6 @@ Select записей коллекций.
 | `allowNull` | `boolean` | Пустое значение |
 | `multiple` | `boolean` | Несколько записей |
 | `returnFormat` | `'object' \| 'id'` | Объект записи или id. В UI без значения → объект |
-| `ui` | `boolean` | Есть в типе. Компонент не читает |
-| `bidirectionalTarget` | `string[]` | Есть в типе. Не реализовано |
 
 ```ts
 related: {
@@ -337,7 +368,6 @@ cta: {
 | `filters` | `Array<'search' \| 'post_type' \| 'dictionary'>` | В UI без значения → `['search']` |
 | `elements` | `string[]` | Ключи image/gallery-полей для превью, например `['thumbnail']` |
 | `returnFormat` | `'object' \| 'id'` | Как у `post_object` |
-| `bidirectionalTarget` | `string[]` | Есть в типе. Не реализовано |
 
 ```ts
 related: {
@@ -365,8 +395,6 @@ related: {
 | `allowNull` | `boolean` | Пусто |
 | `returnFormat` | `'object' \| 'id'` | Термин или id. В UI без значения → объект |
 | `addTerm` | `boolean` | Создать термин при праве `create` |
-| `loadTerms` / `saveTerms` | `boolean` | Есть в типе. Компонент не читает |
-| `bidirectionalTarget` | `string[]` | Есть в типе. Не реализовано |
 
 ```ts
 category: {
@@ -466,10 +494,10 @@ tone: {
 | `choices` | `Record<string, string>` | Обязательно |
 | `defaultValue` | `string \| string[]` | Начальный выбор |
 | `layout` | `'vertical' \| 'horizontal'` | Раскладка |
-| `toggle` | `boolean` | «Выбрать все». Текст — `customChoiceButtonText` или `'Select all'` |
+| `toggle` | `boolean` | «Выбрать все». Без `allowCustomChoices` текст — `customChoiceButtonText` или `'Select all'` |
 | `returnFormat` | `'value' \| 'label' \| 'array'` | Формат |
-| `customChoiceButtonText` | `string` | Подпись toggle |
-| `allowCustomChoices` | `boolean` | Есть в типе. Компонент не читает |
+| `allowCustomChoices` | `boolean` | Поле «Other» + кнопка, свой вариант добавляется в список и сразу отмечается |
+| `customChoiceButtonText` | `string` | Кнопка добавления (`'Add'`). Без `allowCustomChoices` — подпись toggle |
 
 ```ts
 flags: {
@@ -477,6 +505,8 @@ flags: {
   label: 'Опции',
   layout: 'vertical',
   toggle: true,
+  allowCustomChoices: true,
+  customChoiceButtonText: 'Add',
   choices: { a: 'A', b: 'B' },
   defaultValue: ['a'],
   returnFormat: 'array',
@@ -839,7 +869,8 @@ secret: { type: 'password', label: 'Секрет', placeholder: 'Password' }
 | `allowNull` | `boolean` | Снять повторным кликом |
 | `returnFormat` | `'value' \| 'label' \| 'array'` | Формат |
 | `indexed` | `boolean` | Индекс Postgres |
-| `allowCustomChoices` | `boolean` | Есть в типе. Компонент не читает |
+| `allowCustomChoices` | `boolean` | Поле «Other» + кнопка, свой вариант добавляется в список и выбирается |
+| `customChoiceButtonText` | `string` | Кнопка добавления (`'Add'`) |
 
 ```ts
 align: {
@@ -847,6 +878,7 @@ align: {
   label: 'Выравнивание',
   layout: 'vertical',
   allowNull: true,
+  allowCustomChoices: true,
   choices: { left: 'Слева', center: 'Центр' },
   defaultValue: 'left',
 }

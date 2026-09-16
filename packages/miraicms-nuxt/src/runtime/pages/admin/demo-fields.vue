@@ -119,6 +119,7 @@ const fields: Fields = {
     position: 'main',
     layout: 'vertical',
     toggle: true,
+    allowCustomChoices: true,
     choices: {
       red: 'Red',
       green: 'Green',
@@ -227,6 +228,7 @@ const fields: Fields = {
     position: 'main',
     layout: 'vertical',
     allowNull: true,
+    allowCustomChoices: true,
     choices: {
       red: 'Red',
       green: 'Green',

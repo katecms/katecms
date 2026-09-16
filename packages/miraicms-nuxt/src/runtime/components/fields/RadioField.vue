@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import {
   choiceMapLookup,
   decodeChoiceValue,
   encodeChoiceValue,
 } from '@miraicms/core'
-import type { Field } from '@miraicms/core'
+import type { ChoiceMap, Field } from '@miraicms/core'
 
 type RadioFieldConfig = Extract<Field, { type: 'radio' }>
 
@@ -19,7 +19,32 @@ const props = withDefaults(defineProps<{
 const model = defineModel<unknown>()
 
 const rootClass = 'miraicms-radio-field'
-const lookup = computed(() => choiceMapLookup(props.field?.choices ?? {}))
+const customKeys = ref<string[]>([])
+const customDraft = ref('')
+
+const configuredChoices = computed<ChoiceMap>(() => props.field?.choices ?? {})
+
+function rememberCustom(keys: string[]) {
+  const configured = configuredChoices.value
+  for (const key of keys) {
+    if (!key || key in configured || customKeys.value.includes(key)) {
+      continue
+    }
+    customKeys.value = [...customKeys.value, key]
+  }
+}
+
+const displayChoices = computed<ChoiceMap>(() => {
+  const map: ChoiceMap = { ...configuredChoices.value }
+  for (const key of customKeys.value) {
+    if (!(key in map)) {
+      map[key] = key
+    }
+  }
+  return map
+})
+
+const lookup = computed(() => choiceMapLookup(displayChoices.value))
 
 function format(raw: string): unknown {
   return encodeChoiceValue(raw, lookup.value, props.field?.returnFormat)
@@ -35,6 +60,26 @@ const selected = computed<string>({
     model.value = raw === '' ? '' : format(raw)
   },
 })
+
+watch(selected, (raw) => {
+  rememberCustom(raw ? [raw] : [])
+}, { immediate: true })
+
+const canAddCustom = computed(() =>
+  !!props.field?.allowCustomChoices && customDraft.value.trim().length > 0,
+)
+
+const addLabel = computed(() => props.field?.customChoiceButtonText || 'Add')
+
+function addCustom() {
+  const term = customDraft.value.trim()
+  if (!term || !props.field?.allowCustomChoices) {
+    return
+  }
+  rememberCustom([term])
+  selected.value = term
+  customDraft.value = ''
+}
 
 onMounted(() => {
   const raw = selected.value
@@ -54,26 +99,48 @@ function onRadioClick(value: string) {
     :field="field"
     label-tag="div"
   >
-    <div
-      :class="[
-        rootClass,
-        `${rootClass}--${field?.layout || 'vertical'}`,
-      ]"
-    >
-      <label
-        v-for="(label, value) in field?.choices"
-        :key="value"
-        :class="`${rootClass}__item`"
+    <div :class="rootClass">
+      <div
+        :class="[
+          `${rootClass}__choices`,
+          `${rootClass}__choices--${field?.layout || 'vertical'}`,
+        ]"
       >
-        <input
-          v-model="selected"
-          type="radio"
-          :name="fieldKey"
-          :value="value"
-          @click="onRadioClick(value)"
+        <label
+          v-for="(label, value) in displayChoices"
+          :key="value"
+          :class="`${rootClass}__item`"
         >
-        <span>{{ label }}</span>
-      </label>
+          <input
+            v-model="selected"
+            type="radio"
+            :name="fieldKey"
+            :value="value"
+            @click="onRadioClick(value)"
+          >
+          <span>{{ label }}</span>
+        </label>
+      </div>
+
+      <form
+        v-if="field?.allowCustomChoices"
+        :class="`${rootClass}__add`"
+        @submit.prevent="addCustom"
+      >
+        <MiraiCmsInputControl
+          v-model="customDraft"
+          :field-key="`${fieldKey}_custom`"
+          :field="{ placeholder: 'Other' }"
+        />
+        <MiraiCmsUiButton
+          tag="button"
+          type="submit"
+          variant="secondary"
+          :disabled="!canAddCustom"
+        >
+          {{ addLabel }}
+        </MiraiCmsUiButton>
+      </form>
     </div>
   </MiraiCmsFieldWrapper>
 </template>
@@ -85,15 +152,21 @@ $root: '.miraicms-radio-field';
 
 #{$root} {
   display: flex;
-  gap: math-rem(8) math-rem(16);
+  flex-direction: column;
+  gap: math-rem(10);
 
-  &--vertical {
-    flex-direction: column;
-  }
+  &__choices {
+    display: flex;
+    gap: math-rem(8) math-rem(16);
 
-  &--horizontal {
-    flex-direction: row;
-    flex-wrap: wrap;
+    &--vertical {
+      flex-direction: column;
+    }
+
+    &--horizontal {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
   }
 
   &__item {
@@ -105,6 +178,17 @@ $root: '.miraicms-radio-field';
 
     input {
       accent-color: $color-accent;
+    }
+  }
+
+  &__add {
+    display: flex;
+    align-items: center;
+    gap: math-rem(8);
+
+    :deep(.miraicms-input-control) {
+      flex: 1 1 auto;
+      min-width: 0;
     }
   }
 }

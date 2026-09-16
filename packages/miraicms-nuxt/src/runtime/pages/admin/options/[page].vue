@@ -23,7 +23,7 @@ const entryForm = ref<{ validateForSubmit: () => boolean } | null>(null)
 
 const form = reactive<Record<string, unknown>>({})
 
-const pageTitle = computed(() => page.value?.labels.name || 'Options')
+const pageTitle = computed(() => page.value?.label || 'Options')
 useHead({ title: pageTitle })
 
 function applyPage(res: OptionPageResponse) {

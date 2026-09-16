@@ -76,7 +76,7 @@ const groups = computed<MenuGroup[]>(() => {
     const to = paths.option(slug)
     return {
       key: `option:${slug}`,
-      label: def.labels?.name || slug,
+      label: def.label || slug,
       to,
       icon: isSvgIcon(def.icon) ? def.icon! : OPTIONS_ICON,
       active: isActive(to),

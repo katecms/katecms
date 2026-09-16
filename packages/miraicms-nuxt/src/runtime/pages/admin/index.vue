@@ -30,7 +30,7 @@ const optionPages = computed(() => {
   const map = (useRuntimeConfig().public.miraicms?.options ?? {}) as Record<string, PublicOptionNav>
   return Object.entries(map).map(([slug, def]) => ({
     slug,
-    label: def.labels?.name || slug,
+    label: def.label || slug,
   }))
 })
 </script>

@@ -1,10 +1,5 @@
 import type { Field } from './fields'
 
-export interface OptionPageLabels {
-  /** Label shown in the admin menu (e.g. `Site`). */
-  name: string
-}
-
 /** Distribute `Omit` over the {@link Field} union so variant-only keys stay. */
 type OmitPosition<T> = T extends unknown ? Omit<T, 'position'> : never
 
@@ -20,7 +15,8 @@ export type OptionFields = Record<string, OptionField>
  * Field schema lives in config; stored `options.value` is the fields map.
  */
 export interface OptionPageDefinition {
-  labels: OptionPageLabels
+  /** Label shown in the admin menu (e.g. `Site`). */
+  label: string
   /** Inline SVG for the admin menu. Invalid or empty values use the default icon. */
   icon?: string
   fields?: OptionFields

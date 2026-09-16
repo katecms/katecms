@@ -161,12 +161,12 @@ describe('resolveMiraiCmsConfig', () => {
     const resolved = resolveMiraiCmsConfig({
       options: {
         site: {
-          labels: { name: 'Site' },
+          label: 'Site',
           fields: { title: { type: 'text', label: 'Title' } },
         },
       },
     })
-    expect(resolved.options.site?.labels.name).toBe('Site')
+    expect(resolved.options.site?.label).toBe('Site')
     expect(resolved.options.site?.fields?.title).toMatchObject({ type: 'text' })
   })
 

@@ -38,9 +38,7 @@ export function readOptionPageSlug(raw: string | undefined): string {
 export function toOptionMeta(slug: string, def: OptionPageDefinition): AdminOptionMeta {
   return {
     slug,
-    labels: {
-      name: def.labels.name,
-    },
+    label: def.label,
     fields: def.fields ?? {},
   }
 }

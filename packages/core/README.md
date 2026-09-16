@@ -96,7 +96,7 @@ const config = defineMiraiCmsConfig({
   },
   options: {
     site: {
-      labels: { name: 'Site' },
+      label: 'Site',
       fields: {
         title: { type: 'text', label: 'Title' },
       },
@@ -145,7 +145,7 @@ const resolved = resolveMiraiCmsConfig(config)
 
 | Поле | Смысл |
 |---|---|
-| `labels.name` | Подпись в админке |
+| `label` | Подпись в админке |
 | `icon` | SVG в меню. Пустое / не SVG — дефолтная иконка |
 | `fields` | Карта полей страницы |
 

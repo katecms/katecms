@@ -65,9 +65,7 @@ function toPublicOptions(options: ResolvedMiraiCmsConfig['options']) {
     Object.entries(options).map(([slug, def]) => [
       slug,
       {
-        labels: {
-          name: def.labels.name,
-        },
+        label: def.label,
         icon: toPublicNavIcon(def.icon),
       },
     ]),
@@ -436,7 +434,7 @@ declare module '@nuxt/schema' {
         icon: string
       }>
       options: Record<string, {
-        labels: { name: string }
+        label: string
         icon: string
       }>
     }
@@ -464,7 +462,7 @@ declare module 'nuxt/schema' {
         icon: string
       }>
       options: Record<string, {
-        labels: { name: string }
+        label: string
         icon: string
       }>
     }

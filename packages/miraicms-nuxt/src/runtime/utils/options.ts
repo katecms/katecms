@@ -3,9 +3,7 @@ import type { OptionFields } from '@miraicms/core'
 /** Option page definition exposed to the admin UI (from CMS config). */
 export interface AdminOptionMeta {
   slug: string
-  labels: {
-    name: string
-  }
+  label: string
   fields: OptionFields
 }
 
@@ -18,9 +16,7 @@ export interface OptionPageResponse {
 
 /** Slim option page descriptors sent on `public.miraicms.options` (sidebar). */
 export interface PublicOptionNav {
-  labels: {
-    name: string
-  }
+  label: string
   icon?: string
 }
 

@@ -61,4 +61,4 @@ export type {
   ScopedRights,
 } from './roles'
 export type { Dictionaries, DictionaryDefinition, DictionaryLabels } from './dictionary'
-export type { OptionField, OptionFields, OptionPageDefinition, OptionPageLabels, OptionPages } from './option'
+export type { OptionField, OptionFields, OptionPageDefinition, OptionPages } from './option'

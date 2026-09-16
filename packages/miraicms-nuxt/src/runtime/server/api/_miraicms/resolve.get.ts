@@ -3,6 +3,8 @@ import { useRuntimeConfig } from '#imports'
 import {
   buildSlugPathMap,
   can,
+  collectionListPaging,
+  collectionPerPage,
   countCollections,
   findCollectionBySlugPath,
   listCollections,
@@ -89,13 +91,12 @@ export default defineEventHandler(async (event): Promise<ResolveResponse> => {
 
   if (matched.kind === 'archive') {
     const page = readPage(query.page)
-    const perPage = readPerPage(query.perPage)
+    const perPage = readPerPage(query.perPage, collectionPerPage(def))
     const listStatus = listStatusFromPublic(statuses)
     const [rows, total, pathRows] = await Promise.all([
       listCollections(db, matched.collectionSlug, {
         status: listStatus,
-        limit: perPage,
-        offset: (page - 1) * perPage,
+        ...collectionListPaging(page, perPage),
       }),
       countCollections(db, matched.collectionSlug, { status: listStatus }),
       db.selectFrom('collections')

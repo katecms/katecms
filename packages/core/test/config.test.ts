@@ -12,6 +12,10 @@ import {
   resolveMediaConfig,
   resolveRoles,
   isMimeAllowed,
+  collectionPerPage,
+  collectionListPaging,
+  DEFAULT_COLLECTION_PER_PAGE,
+  UNLIMITED_COLLECTION_PER_PAGE,
 } from '../src'
 
 describe('defineMiraiCmsConfig', () => {
@@ -259,5 +263,24 @@ describe('can', () => {
       scope: 'pages',
       userId: 1,
     })).toBe(true)
+  })
+})
+
+describe('collectionPerPage', () => {
+  it('defaults to 10, allows any positive size, and treats -1 as unlimited', () => {
+    expect(collectionPerPage()).toBe(DEFAULT_COLLECTION_PER_PAGE)
+    expect(collectionPerPage({})).toBe(10)
+    expect(collectionPerPage({ perPage: 24 })).toBe(24)
+    expect(collectionPerPage({ perPage: 250 })).toBe(250)
+    expect(collectionPerPage({ perPage: 0 })).toBe(10)
+    expect(collectionPerPage({ perPage: UNLIMITED_COLLECTION_PER_PAGE })).toBe(-1)
+  })
+})
+
+describe('collectionListPaging', () => {
+  it('omits limit when unlimited', () => {
+    expect(collectionListPaging(1, 10)).toEqual({ limit: 10, offset: 0 })
+    expect(collectionListPaging(3, 10)).toEqual({ limit: 10, offset: 20 })
+    expect(collectionListPaging(2, UNLIMITED_COLLECTION_PER_PAGE)).toEqual({})
   })
 })

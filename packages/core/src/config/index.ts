@@ -1,4 +1,11 @@
 export type * from './types'
+export {
+  DEFAULT_COLLECTION_PER_PAGE,
+  UNLIMITED_COLLECTION_PER_PAGE,
+  collectionListPaging,
+  collectionPerPage,
+  isUnlimitedPerPage,
+} from './types'
 export { defaults } from './defaults'
 export { mergeMiraiCmsConfig } from './merge'
 export type { MergedMiraiCmsConfig } from './merge'

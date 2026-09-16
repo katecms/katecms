@@ -2,9 +2,12 @@ import { createError } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import {
   canOnEntry,
+  collectionPerPage,
+  DEFAULT_COLLECTION_PER_PAGE,
   formatRequiredFieldsError,
   isUniqueConstraintError,
   parseDate,
+  UNLIMITED_COLLECTION_PER_PAGE,
   validateRequiredFields,
 } from '@miraicms/core'
 import type {
@@ -28,8 +31,6 @@ import type {
 const ENTRY_STATUSES: readonly CollectionStatus[] = ['published', 'draft', 'trash']
 const LIST_STATUSES: readonly CollectionListStatus[] = ['published', 'draft', 'trash', 'active', 'all']
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/i
-const DEFAULT_PER_PAGE = 20
-const MAX_PER_PAGE = 100
 
 const STATUS_PHRASE: Record<number, string> = {
   400: 'Bad Request',
@@ -74,6 +75,7 @@ export function toCollectionMeta(slug: string, def: CollectionDefinition): Admin
     autosave: def.autosave === true,
     public: def.public !== false,
     has_archive: typeof def.has_archive === 'string' ? def.has_archive : def.has_archive === true,
+    perPage: collectionPerPage(def),
     rewrite: def.rewrite,
     fields: (def.fields ?? {}) as Fields,
   }
@@ -293,15 +295,27 @@ export function readPage(value: unknown): number {
   return n
 }
 
-export function readPerPage(value: unknown): number {
+export function readPerPage(
+  value: unknown,
+  fallback: number = DEFAULT_COLLECTION_PER_PAGE,
+): number {
   if (value === undefined || value === null || value === '') {
-    return DEFAULT_PER_PAGE
+    if (fallback === UNLIMITED_COLLECTION_PER_PAGE) {
+      return UNLIMITED_COLLECTION_PER_PAGE
+    }
+    if (!Number.isInteger(fallback) || fallback < 1) {
+      return DEFAULT_COLLECTION_PER_PAGE
+    }
+    return fallback
   }
   const n = Number(value)
+  if (n === UNLIMITED_COLLECTION_PER_PAGE) {
+    return UNLIMITED_COLLECTION_PER_PAGE
+  }
   if (!Number.isInteger(n) || n < 1) {
     fail(400, 'Invalid page size.')
   }
-  return Math.min(n, MAX_PER_PAGE)
+  return n
 }
 
 export function readSearch(value: unknown): string {

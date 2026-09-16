@@ -288,6 +288,11 @@ export default defineNuxtModule<MiraiCmsConfig>({
       method: 'get',
       handler: resolver.resolve('./runtime/server/api/_miraicms/resolve.get'),
     })
+    addServerHandler({
+      route: '/api/_miraicms/query',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/query.get'),
+    })
 
     addRouteMiddleware({
       name: 'miraicms-auth-guard',
@@ -307,6 +312,10 @@ export default defineNuxtModule<MiraiCmsConfig>({
       {
         name: 'getCollection',
         from: resolver.resolve('./runtime/composables/getCollection'),
+      },
+      {
+        name: 'getQueryCollection',
+        from: resolver.resolve('./runtime/composables/getQueryCollection'),
       },
       {
         name: 'getOptions',

@@ -48,7 +48,12 @@ const searchInput = ref('')
 const title = computed(() => collection.value?.labels.name || '')
 useHead({ title })
 
-const totalPages = computed(() => Math.max(1, Math.ceil(total.value / perPage.value)))
+const totalPages = computed(() => {
+  if (perPage.value < 1) {
+    return 1
+  }
+  return Math.max(1, Math.ceil(total.value / perPage.value))
+})
 
 const emptyMessage = computed(() => {
   if (searchQuery.value) {
@@ -168,7 +173,6 @@ async function load() {
         status: searchQuery.value ? undefined : statusFilter.value,
         q: searchQuery.value || undefined,
         page: page.value,
-        perPage: perPage.value,
       },
     })
     collection.value = res.collection

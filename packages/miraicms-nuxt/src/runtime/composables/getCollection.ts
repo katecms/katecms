@@ -45,12 +45,23 @@ function statusQueryValue(
   return Array.isArray(status) ? status.join(',') : status
 }
 
-function pageQueryValue(value: unknown, fallback?: number): number | undefined {
-  if (typeof fallback === 'number' && Number.isInteger(fallback) && fallback >= 1) {
+function pageQueryValue(
+  value: unknown,
+  fallback?: number,
+  allowUnlimited = false,
+): number | undefined {
+  if (
+    typeof fallback === 'number'
+    && Number.isInteger(fallback)
+    && (fallback >= 1 || (allowUnlimited && fallback === -1))
+  ) {
     return fallback
   }
   const raw = Array.isArray(value) ? value[0] : value
   const n = Number(raw)
+  if (allowUnlimited && n === -1) {
+    return -1
+  }
   if (!Number.isInteger(n) || n < 1) {
     return undefined
   }
@@ -72,7 +83,10 @@ export interface GetCollectionOptions {
   status?: 'published' | 'draft' | Array<'published' | 'draft'>
   /** Archive listing page. Also read from `?page=` on the current route. */
   page?: number
-  /** Archive listing page size. Also read from `?perPage=` on the current route. */
+  /**
+   * Archive listing page size. Also read from `?perPage=` on the current route.
+   * Default: the matched collection's `perPage` (10). `-1` returns every entry.
+   */
   perPage?: number
 }
 
@@ -103,7 +117,7 @@ export async function getCollection(options: GetCollectionOptions = {}) {
     ?? ((parsePublicStatusParam(route.query.status) ?? []).join(',') || undefined),
   )
   const page = computed(() => pageQueryValue(route.query.page, options.page))
-  const perPage = computed(() => pageQueryValue(route.query.perPage, options.perPage))
+  const perPage = computed(() => pageQueryValue(route.query.perPage, options.perPage, true))
   const requestFetch = useRequestFetch()
 
   const { data, pending, error, refresh } = await useAsyncData(

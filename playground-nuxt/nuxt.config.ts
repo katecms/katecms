@@ -67,6 +67,7 @@ export default defineNuxtConfig({
         public: false, // default: true; false — страница записи/архива не работает, View в админке скрыт
         rewrite: '/inf/%name%', // нужно добавить чтобы можно было определить ЧПУ
         has_archive: true, // default: false; true — архив /inf; строка 'typepage' → /typepage
+        perPage: 10, // default: 10; -1 — все записи
         fields: {
           wysiwyg_test: {
             type: 'wysiwyg',

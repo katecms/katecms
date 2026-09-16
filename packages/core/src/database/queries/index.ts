@@ -15,15 +15,18 @@ export { isUniqueConstraintError } from './errors'
 export {
   countCollections,
   countCollectionStatuses,
+  countQueryCollections,
   createCollection,
   deleteCollection,
   deleteTrashedCollections,
   findCollectionById,
   findCollectionBySlugPath,
   flattenCollectionTree,
+  isCollectionOrderField,
   listCollectionParentOptions,
   listCollections,
   loadCollectionSlugPath,
+  queryCollections,
   updateCollection,
   validateCollectionParent,
 } from './collections'
@@ -35,6 +38,8 @@ export type {
   CollectionUpdate,
   ListCollectionsOptions,
   NewCollection,
+  QueryCollectionsOptions,
+  CollectionOrderField,
   ValidateCollectionParentResult,
 } from './collections'
 

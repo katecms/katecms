@@ -5,7 +5,7 @@ import type { OptionPageResponse } from '../utils/options'
 
 export interface GetOptionsOptions {
   /** Option page slug from CMS config (e.g. `site`). */
-  page: string
+  option: string
 }
 
 /**
@@ -14,22 +14,22 @@ export interface GetOptionsOptions {
  * @example
  * ```vue
  * <script setup lang="ts">
- * const { values } = await getOptions({ page: 'site' })
+ * const { values } = await getOptions({ option: 'site' })
  * </script>
  * ```
  */
 export async function getOptions(options: GetOptionsOptions) {
-  const page = computed(() => options.page)
+  const option = computed(() => options.option)
   const requestFetch = useRequestFetch()
 
   const { data, pending, error, refresh } = await useAsyncData(
-    `miraicms-options:${page.value}`,
-    () => requestFetch<OptionPageResponse>(optionApi(page.value)),
-    { watch: [page] },
+    `miraicms-options:${option.value}`,
+    () => requestFetch<OptionPageResponse>(optionApi(option.value)),
+    { watch: [option] },
   )
 
   const values = computed(() => data.value?.values ?? {})
-  const slug = computed(() => data.value?.page.slug ?? page.value)
+  const slug = computed(() => data.value?.page.slug ?? option.value)
 
   return {
     slug,
@@ -37,6 +37,6 @@ export async function getOptions(options: GetOptionsOptions) {
     pending,
     error,
     refresh,
-    page,
+    option,
   }
 }

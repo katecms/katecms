@@ -30,6 +30,8 @@ import {
   listDictionariesByCollection,
   loadCollectionSlugPath,
   migrateSqlite,
+  queryCollections,
+  countQueryCollections,
   setCollectionDictionaries,
   setOption,
   unlinkCollectionDictionary,
@@ -481,6 +483,136 @@ describe('database layer', () => {
         ok: false,
         error: 'Cannot set a descendant as parent.',
       })
+    }
+    finally {
+      await close()
+    }
+  })
+
+  it('queries collections with WP_Query-style filters', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      const ada = await createUser(db, {
+        email: 'ada@example.com',
+        password_hash: 'hash',
+      })
+      const bob = await createUser(db, {
+        email: 'bob@example.com',
+        password_hash: 'hash',
+      })
+      const about = await createCollection(db, {
+        type: 'page',
+        slug: 'about',
+        title: 'About',
+        status: 'published',
+        author_id: ada.id,
+        menu_order: 2,
+      })
+      const team = await createCollection(db, {
+        type: 'page',
+        slug: 'team',
+        title: 'Team',
+        status: 'published',
+        author_id: ada.id,
+        parent_id: about.id,
+        menu_order: 1,
+      })
+      await createCollection(db, {
+        type: 'page',
+        slug: 'notes',
+        title: 'Notes',
+        status: 'draft',
+        author_id: bob.id,
+      })
+      const post = await createCollection(db, {
+        type: 'post',
+        slug: 'hello',
+        title: 'Hello',
+        status: 'published',
+        author_id: bob.id,
+      })
+      const trashed = await createCollection(db, {
+        type: 'page',
+        slug: 'old',
+        title: 'Old',
+        status: 'draft',
+        author_id: ada.id,
+      })
+      await updateCollection(db, trashed.id, { status: 'trash' })
+
+      const news = await createDictionary(db, {
+        type: 'category',
+        slug: 'news',
+        title: 'News',
+      })
+      const featured = await createDictionary(db, {
+        type: 'category',
+        slug: 'featured',
+        title: 'Featured',
+      })
+      await linkCollectionDictionary(db, about.id, news.id)
+      await linkCollectionDictionary(db, about.id, featured.id)
+      await linkCollectionDictionary(db, team.id, news.id)
+      await linkCollectionDictionary(db, post.id, featured.id)
+
+      expect(await queryCollections(db, { types: [] })).toEqual([])
+      expect(await countQueryCollections(db, { types: [] })).toBe(0)
+
+      const mixed = await queryCollections(db, { types: ['page', 'post'] })
+      expect(mixed.map(row => row.slug).sort()).toEqual(['about', 'hello', 'notes', 'team'])
+      expect(await countQueryCollections(db, { types: ['page', 'post'] })).toBe(4)
+
+      const published = await queryCollections(db, {
+        types: ['page'],
+        statuses: ['published'],
+      })
+      expect(published.map(row => row.slug).sort()).toEqual(['about', 'team'])
+
+      const found = await queryCollections(db, { types: ['page'], search: 'ABOUT' })
+      expect(found).toHaveLength(1)
+      expect(found[0]?.slug).toBe('about')
+
+      expect(await queryCollections(db, { types: ['page'], include: [team.id] })).toHaveLength(1)
+      expect(await queryCollections(db, { types: ['page'], include: [] })).toEqual([])
+      expect(
+        (await queryCollections(db, { types: ['page'], exclude: [about.id] })).map(row => row.slug).sort(),
+      ).toEqual(['notes', 'team'])
+
+      expect(await queryCollections(db, { types: ['page'], parent: null })).toHaveLength(2)
+      expect(await queryCollections(db, { types: ['page'], parent: about.id })).toMatchObject([{ slug: 'team' }])
+      expect(await queryCollections(db, { types: ['page'], author: bob.id })).toMatchObject([{ slug: 'notes' }])
+      expect(await queryCollections(db, { types: ['page', 'post'], slug: ['hello', 'missing'] })).toMatchObject([
+        { slug: 'hello' },
+      ])
+
+      const orTerms = await queryCollections(db, {
+        types: ['page', 'post'],
+        dictionaryIds: [news.id, featured.id],
+      })
+      expect(orTerms.map(row => row.slug).sort()).toEqual(['about', 'hello', 'team'])
+      const andTerms = await queryCollections(db, {
+        types: ['page', 'post'],
+        dictionaryIds: [news.id, featured.id],
+        dictionaryRelation: 'AND',
+      })
+      expect(andTerms.map(row => row.slug)).toEqual(['about'])
+
+      const ordered = await queryCollections(db, {
+        types: ['page'],
+        statuses: ['published'],
+        orderBy: 'title',
+        order: 'asc',
+      })
+      expect(ordered.map(row => row.slug)).toEqual(['about', 'team'])
+
+      const page = await queryCollections(db, {
+        types: ['page', 'post'],
+        orderBy: 'slug',
+        order: 'asc',
+        limit: 2,
+        offset: 1,
+      })
+      expect(page.map(row => row.slug)).toEqual(['hello', 'notes'])
     }
     finally {
       await close()

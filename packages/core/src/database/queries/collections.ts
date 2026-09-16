@@ -116,6 +116,172 @@ export async function countCollections(
   return Number(row.n)
 }
 
+const COLLECTION_ORDER_FIELDS = [
+  'menu_order',
+  'created_at',
+  'updated_at',
+  'published_at',
+  'title',
+  'slug',
+  'id',
+] as const
+
+export type CollectionOrderField = typeof COLLECTION_ORDER_FIELDS[number]
+
+export function isCollectionOrderField(value: string): value is CollectionOrderField {
+  return (COLLECTION_ORDER_FIELDS as readonly string[]).includes(value)
+}
+
+export interface QueryCollectionsOptions extends ListPaging {
+  types: string[]
+  statuses?: CollectionStatus[]
+  search?: string
+  include?: number | number[]
+  exclude?: number | number[]
+  parent?: number | null
+  author?: number | number[]
+  slug?: string | string[]
+  dictionaryIds?: number | number[]
+  dictionaryRelation?: 'AND' | 'OR'
+  orderBy?: CollectionOrderField
+  order?: 'asc' | 'desc'
+}
+
+function asIdList(value: number | number[] | undefined): number[] {
+  if (value == null) {
+    return []
+  }
+  const raw = Array.isArray(value) ? value : [value]
+  return [...new Set(raw.filter(id => Number.isInteger(id) && id > 0))]
+}
+
+function asSlugList(value: string | string[] | undefined): string[] {
+  if (value == null) {
+    return []
+  }
+  const raw = Array.isArray(value) ? value : [value]
+  return [...new Set(raw.map(item => item.trim()).filter(Boolean))]
+}
+
+function withCollectionQueryFilters<O>(
+  query: SelectQueryBuilder<Database, 'collections', O>,
+  options: QueryCollectionsOptions,
+): SelectQueryBuilder<Database, 'collections', O> {
+  const types = [...new Set(options.types.map(type => type.trim()).filter(Boolean))]
+  let next = types.length === 1
+    ? query.where('type', '=', types[0]!)
+    : query.where('type', 'in', types)
+
+  const statuses = options.statuses?.filter(status => status === 'published' || status === 'draft' || status === 'trash')
+  if (statuses && statuses.length > 0) {
+    next = statuses.length === 1
+      ? next.where('status', '=', statuses[0]!)
+      : next.where('status', 'in', statuses)
+  }
+  else {
+    next = next.where('status', '!=', 'trash')
+  }
+
+  const pattern = searchPattern(options.search)
+  if (pattern) {
+    next = next.where(sql<SqlBool>`(lower(title) like ${pattern} or lower(slug) like ${pattern})`)
+  }
+
+  const include = asIdList(options.include)
+  if (options.include !== undefined) {
+    next = next.where('id', 'in', include.length > 0 ? include : [0])
+  }
+  const exclude = asIdList(options.exclude)
+  if (exclude.length > 0) {
+    next = next.where('id', 'not in', exclude)
+  }
+
+  if (options.parent !== undefined) {
+    next = options.parent == null
+      ? next.where('parent_id', 'is', null)
+      : next.where('parent_id', '=', options.parent)
+  }
+
+  const authors = asIdList(options.author)
+  if (options.author !== undefined) {
+    next = next.where('author_id', 'in', authors.length > 0 ? authors : [0])
+  }
+
+  const slugs = asSlugList(options.slug)
+  if (options.slug !== undefined) {
+    next = slugs.length === 1
+      ? next.where('slug', '=', slugs[0]!)
+      : next.where('slug', 'in', slugs.length > 0 ? slugs : [''])
+  }
+
+  const dictionaryIds = asIdList(options.dictionaryIds)
+  if (dictionaryIds.length > 0) {
+    if (options.dictionaryRelation === 'AND') {
+      for (const dictionaryId of dictionaryIds) {
+        next = next.where(sql<SqlBool>`id in (select collection_id from collection_dictionaries where dictionary_id = ${dictionaryId})`)
+      }
+    }
+    else {
+      next = next.where(sql<SqlBool>`id in (select collection_id from collection_dictionaries where dictionary_id in (${sql.join(dictionaryIds.map(id => sql`${id}`))}))`)
+    }
+  }
+
+  return next
+}
+
+function applyCollectionOrder<O>(
+  query: SelectQueryBuilder<Database, 'collections', O>,
+  options: QueryCollectionsOptions,
+): SelectQueryBuilder<Database, 'collections', O> {
+  const field = options.orderBy && isCollectionOrderField(options.orderBy)
+    ? options.orderBy
+    : 'menu_order'
+  const direction = options.order === 'desc' || options.order === 'asc'
+    ? options.order
+    : field === 'menu_order' || field === 'title' || field === 'slug'
+      ? 'asc'
+      : 'desc'
+  let next = query.orderBy(field, direction)
+  if (field !== 'id') {
+    next = next.orderBy('id', 'desc')
+  }
+  return next
+}
+
+/** Flexible list query (WP_Query-style filters on `collections`). */
+export async function queryCollections(
+  db: Kysely<Database>,
+  options: QueryCollectionsOptions,
+): Promise<Collection[]> {
+  const types = [...new Set(options.types.map(type => type.trim()).filter(Boolean))]
+  if (types.length === 0) {
+    return []
+  }
+  const query = applyCollectionOrder(
+    withCollectionQueryFilters(
+      db.selectFrom('collections').selectAll(),
+      { ...options, types },
+    ),
+    options,
+  )
+  return applyListPaging(query, options).execute()
+}
+
+export async function countQueryCollections(
+  db: Kysely<Database>,
+  options: Omit<QueryCollectionsOptions, keyof ListPaging>,
+): Promise<number> {
+  const types = [...new Set(options.types.map(type => type.trim()).filter(Boolean))]
+  if (types.length === 0) {
+    return 0
+  }
+  const row = await withCollectionQueryFilters(
+    db.selectFrom('collections').select(eb => eb.fn.countAll<number>().as('n')),
+    { ...options, types },
+  ).executeTakeFirstOrThrow()
+  return Number(row.n)
+}
+
 /** Tab counts for the admin list. Search is not applied so numbers stay stable. */
 export async function countCollectionStatuses(
   db: Kysely<Database>,

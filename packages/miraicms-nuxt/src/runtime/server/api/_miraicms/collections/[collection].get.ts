@@ -3,9 +3,12 @@ import { useRuntimeConfig } from '#imports'
 import {
   buildSlugPathMap,
   can,
+  collectionListPaging,
+  collectionPerPage,
   countCollections,
   countCollectionStatuses,
   flattenCollectionTree,
+  isUnlimitedPerPage,
   listCollectionParentOptions,
   listCollections,
 } from '@miraicms/core'
@@ -27,6 +30,17 @@ import {
 import type { CollectionListResponse } from '../../../../utils/collections'
 import { loadCollectionDictionaryPickers } from '../../../utils/dictionaries'
 
+function pageCollectionTree<T>(
+  tree: Array<{ row: T, depth: number }>,
+  page: number,
+  perPage: number,
+): Array<{ row: T, depth: number }> {
+  if (isUnlimitedPerPage(perPage)) {
+    return tree
+  }
+  return tree.slice((page - 1) * perPage, page * perPage)
+}
+
 /**
  * List collection entries. Query: `status` (all|published|draft|trash),
  * `q`, `page`, `perPage`. Default `status=all` excludes trash.
@@ -42,12 +56,12 @@ export default defineEventHandler(async (event): Promise<CollectionListResponse>
   const listStatus = readListStatus(query.status)
   const search = readSearch(query.q)
   const page = readPage(query.page)
-  const perPage = readPerPage(query.perPage)
+  const perPage = readPerPage(query.perPage, collectionPerPage(def))
   const db = getDb()
   const meta = toCollectionMeta(collectionSlug, def)
   const paging = meta.hierarchical
     ? {}
-    : { limit: perPage, offset: (page - 1) * perPage }
+    : collectionListPaging(page, perPage)
 
   const [rows, total, counts, pathRows] = await Promise.all([
     listCollections(db, collectionSlug, {
@@ -65,7 +79,7 @@ export default defineEventHandler(async (event): Promise<CollectionListResponse>
 
   const paths = buildSlugPathMap(pathRows)
   const listed = meta.hierarchical
-    ? flattenCollectionTree(rows).slice((page - 1) * perPage, page * perPage)
+    ? pageCollectionTree(flattenCollectionTree(rows), page, perPage)
     : rows.map(row => ({ row, depth: 0 }))
 
   const authorIds = [...new Set(
@@ -75,10 +89,10 @@ export default defineEventHandler(async (event): Promise<CollectionListResponse>
   )]
   const authors = authorIds.length > 0
     ? await db
-      .selectFrom('users')
-      .select(['id', 'name', 'email'])
-      .where('id', 'in', authorIds)
-      .execute()
+        .selectFrom('users')
+        .select(['id', 'name', 'email'])
+        .where('id', 'in', authorIds)
+        .execute()
     : []
   const authorNameById = new Map(
     authors.map(user => [user.id, user.name?.trim() || user.email]),

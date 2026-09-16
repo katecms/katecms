@@ -13,6 +13,10 @@
   - [Роли](#config-roles)
   - [Коллекции](#config-collections)
   - [Словари](#config-dictionaries)
+  - [Публичные композаблы](#frontend-composables)
+    - [getCollection](#getCollection)
+    - [getOptions](#getOptions)
+    - [getQueryCollection](#getQueryCollection)
   - [Пример](#config-example)
 - [Общие параметры полей](#fields-base)
 - [Поля](#fields)
@@ -191,6 +195,7 @@ roles: {
 | `autosave` | `boolean` | `false` | Уход с новой несохранённой записи → `draft` |
 | `public` | `boolean` | `true` | `false` — страница записи/архива не работает, View в админке скрыт |
 | `has_archive` | `boolean \| string` | `false` | Архив: `true` → префикс rewrite, строка → свой слаг ЧПУ |
+| `perPage` | `number` | `10` | Записей на страницу архива, списка в админке и `getQueryCollection` (один тип). `-1` — все записи |
 | `rewrite` | `string` | `/{slug}/%name%` | Публичный URL. Нужен плейсхолдер `%name%` |
 | `fields` | `Fields` | `{}` | Поля записи. Ключ = имя поля |
 | `blocks` | `string[] \| boolean` | `false` | `true` — все блоки, массив — allow-list, иначе выкл |
@@ -212,6 +217,95 @@ roles: {
 | `multiple` | `boolean` | `false` | Несколько терминов на запись |
 
 Сайдбар записи использует join-таблицу. Поле `type: 'dictionary'` хранит значение в `fields` отдельно.
+
+<a id="frontend-composables"></a>
+### Публичные композаблы
+
+Автоимпорт модуля. Черновики — только с `preview: true` (и правом `collections:read`). Коллекции с `public: false` с фронта не отдаются.
+
+<a id="getCollection"></a>
+### getCollection()
+
+Запись или архив по текущему пути (`rewrite` / `has_archive`).
+
+| Опция | Тип | Дефолт | Смысл |
+|---|---|---|---|
+| `path` | `string` | текущий URL | Публичный путь |
+| `preview` | `boolean` | `false` | Черновики при праве `collections:read`. Также `?preview=1` |
+| `status` | `'published' \| 'draft' \| array` | `'published'` | Также `?status=`. `draft` без preview игнорируется |
+| `page` | `number` | `1` | Страница архива. Также `?page=` |
+| `perPage` | `number` | `perPage` коллекции | Размер страницы архива. `-1` — все. Также `?perPage=` |
+
+```vue
+<script setup lang="ts">
+const { entry, entries, isArchive, collection, link, permalink } = await getCollection()
+</script>
+
+<template>
+  <ul v-if="isArchive">
+    <li v-for="item in entries" :key="item.id">
+      <NuxtLink :to="permalink(item) || '/'">{{ item.title }}</NuxtLink>
+    </li>
+  </ul>
+  <article v-else>
+    <h1>{{ entry?.title }}</h1>
+    <NuxtLink :to="link || '/'">{{ link }}</NuxtLink>
+  </article>
+</template>
+```
+
+<a id="getOptions"></a>
+### getOptions()
+
+Значения options-страницы по slug из конфига (`miraicms.options`).
+
+| Опция | Тип | Дефолт | Смысл |
+|---|---|---|---|
+| `option` | `string` | — | Slug страницы опций, обязательно |
+
+```vue
+<script setup lang="ts">
+const { values } = await getOptions({ option: 'site' })
+</script>
+
+<template>
+  <p>{{ values.title }}</p>
+</template>
+```
+
+<a id="getQueryCollection"></a>
+### getQueryCollection()
+
+Выборка записей, аналог `WP_Query`. По умолчанию `published`, сортировка по дате.
+
+| Опция | Тип | Дефолт | Смысл |
+|---|---|---|---|
+| `collection` | `string \| string[]` | — | Slug типа(ов), обязательно |
+| `preview` | `boolean` | `false` | Черновики, если есть `collections:read` на все типы. Также `?preview=1` |
+| `status` | `'published' \| 'draft' \| array` | `'published'` | Также `?status=`. `draft` без preview игнорируется |
+| `page` | `number` | `1` | Номер страницы. Также `?page=` |
+| `perPage` | `number` | `perPage` типа или `10` | Размер страницы. `-1` — все. Также `?perPage=` |
+| `search` | `string` | — | Поиск по title/slug |
+| `include` | `number \| number[]` | — | Только эти id |
+| `exclude` | `number \| number[]` | — | Исключить id |
+| `parent` | `number \| null` | — | Родитель. `null` / `0` — корень |
+| `author` | `number \| number[]` | — | Id автора |
+| `slug` | `string \| string[]` | — | Слаг записи |
+| `dictionaryIds` | `number \| number[]` | — | Id записей словаря |
+| `dictionaryRelation` | `'AND' \| 'OR'` | `'OR'` | Все id или любой |
+| `orderBy` | `string` | `'date'` | `date`, `modified`, `name`, `title`, `slug`, `id`, `menu_order`, `published_at`, `created_at`, `updated_at` |
+| `order` | `'asc' \| 'desc'` | по полю | Направление сортировки |
+
+```vue
+<script setup lang="ts">
+const { entries, permalink, page, total } = await getQueryCollection({
+  collection: 'post',
+  perPage: 10,
+  orderBy: 'date',
+  dictionaryIds: [4],
+})
+</script>
+```
 
 <a id="config-example"></a>
 ### Пример

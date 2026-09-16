@@ -1,5 +1,12 @@
 export type { Block, Blocks } from './block'
 export type { CollectionDefinition, CollectionLabels, Collections } from './collection'
+export {
+  DEFAULT_COLLECTION_PER_PAGE,
+  UNLIMITED_COLLECTION_PER_PAGE,
+  collectionListPaging,
+  collectionPerPage,
+  isUnlimitedPerPage,
+} from './collection'
 export type {
   DatabaseConfig,
   DatabaseDriver,

@@ -11,6 +11,7 @@ export interface AdminCollectionMeta {
   autosave: boolean
   public: boolean
   has_archive: boolean | string
+  perPage: number
   rewrite?: string
   fields: Fields
 }
@@ -116,6 +117,17 @@ export interface ResolveArchiveResponse {
 }
 
 export type ResolveResponse = ResolveEntryResponse | ResolveArchiveResponse
+
+/** Public WP_Query-style list from `/api/_miraicms/query`. */
+export interface QueryCollectionResponse {
+  entries: AdminEntry[]
+  collections: AdminCollectionMeta[]
+  /** True when unpublished statuses were actually allowed for this request. */
+  preview: boolean
+  page: number
+  perPage: number
+  total: number
+}
 
 export interface CollectionEntryFormModel {
   title: string

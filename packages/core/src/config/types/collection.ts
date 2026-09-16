@@ -37,6 +37,12 @@ export interface CollectionDefinition {
    */
   has_archive?: boolean | string
   /**
+   * Entries per page on this collection's public archive and admin list.
+   * Default: {@link DEFAULT_COLLECTION_PER_PAGE} (10).
+   * `-1` ({@link UNLIMITED_COLLECTION_PER_PAGE}) returns every entry.
+   */
+  perPage?: number
+  /**
    * Public URL pattern for entries of this collection.
    * Use `%name%` as a placeholder for the entry slug path.
    *
@@ -65,3 +71,41 @@ export interface CollectionDefinition {
  * column on each entry.
  */
 export type Collections = Record<string, CollectionDefinition>
+
+/** Default `perPage` when a collection omits the option. */
+export const DEFAULT_COLLECTION_PER_PAGE = 10
+
+/** `perPage` value that disables paging and returns every entry. */
+export const UNLIMITED_COLLECTION_PER_PAGE = -1
+
+export function isUnlimitedPerPage(perPage: number): boolean {
+  return perPage === UNLIMITED_COLLECTION_PER_PAGE
+}
+
+/** Resolved page size for a collection (`perPage`, default 10, or `-1` for all). */
+export function collectionPerPage(
+  def?: Pick<CollectionDefinition, 'perPage'> | null,
+): number {
+  const n = def?.perPage
+  if (n === UNLIMITED_COLLECTION_PER_PAGE) {
+    return UNLIMITED_COLLECTION_PER_PAGE
+  }
+  if (typeof n !== 'number' || !Number.isInteger(n) || n < 1) {
+    return DEFAULT_COLLECTION_PER_PAGE
+  }
+  return n
+}
+
+/** `LIMIT` / `OFFSET` for a list, or `{}` when `perPage` is unlimited. */
+export function collectionListPaging(
+  page: number,
+  perPage: number,
+): { limit?: number, offset?: number } {
+  if (isUnlimitedPerPage(perPage)) {
+    return {}
+  }
+  return {
+    limit: perPage,
+    offset: Math.max(0, page - 1) * perPage,
+  }
+}

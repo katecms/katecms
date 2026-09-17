@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useAsyncData, useRequestFetch, useRoute } from '#imports'
 import { buildPublicPath } from '@miraicms/core'
-import type { CollectionOrderField } from '@miraicms/core'
+import type { CollectionOrderField, DictionaryQuery } from '@miraicms/core'
 import type { AdminEntry, QueryCollectionResponse } from '../utils/collections'
 import { isTruthyQueryParam, parsePublicStatusParam } from '../utils/preview'
 
@@ -40,10 +40,8 @@ export interface GetQueryCollectionOptions {
   author?: number | number[]
   /** Entry slug(s). */
   slug?: string | string[]
-  /** Dictionary entry ids. */
-  dictionaryIds?: number | number[]
-  /** Match all dictionary ids (`AND`) or any (`OR`, default). */
-  dictionaryRelation?: 'AND' | 'OR'
+  /** Filter by dictionary rows (`relation` + `queries`). */
+  dictionaryQuery?: DictionaryQuery
   /** Sort field. `date` → `published_at`, `modified` → `updated_at`, `name` → `slug`. */
   orderBy?: QueryCollectionOrderBy
   order?: 'asc' | 'desc'
@@ -111,8 +109,13 @@ function pageQueryValue(
  * })
  * const mixed = await getQueryCollection({
  *   collection: ['post', 'page'],
- *   dictionaryIds: [4, 7],
- *   dictionaryRelation: 'AND',
+ *   dictionaryQuery: {
+ *     relation: 'AND',
+ *     queries: [
+ *       { dictionary: 'services', field: 'slug', terms: 'theme-1' },
+ *       { dictionary: 'categories', operator: 'NOT IN', terms: 'category-1' },
+ *     ],
+ *   },
  * })
  * </script>
  * ```
@@ -133,8 +136,11 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
   const parent = computed(() => options.parent)
   const author = computed(() => csv(options.author))
   const slug = computed(() => csv(options.slug))
-  const dictionaryIds = computed(() => csv(options.dictionaryIds))
-  const dictionaryRelation = computed(() => options.dictionaryRelation)
+  const dictionaryQuery = computed(() => (
+    options.dictionaryQuery
+      ? JSON.stringify(options.dictionaryQuery)
+      : undefined
+  ))
   const orderBy = computed(() => options.orderBy)
   const order = computed(() => options.order)
   const includeSet = computed(() => options.include !== undefined)
@@ -142,7 +148,6 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
   const parentSet = computed(() => options.parent !== undefined)
   const authorSet = computed(() => options.author !== undefined)
   const slugSet = computed(() => options.slug !== undefined)
-  const dictionarySet = computed(() => options.dictionaryIds !== undefined)
   const requestFetch = useRequestFetch()
 
   const { data, pending, error, refresh } = await useAsyncData(
@@ -159,8 +164,7 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
       parentSet.value ? String(parent.value ?? 0) : '-',
       authorSet.value ? author.value ?? '' : '-',
       slugSet.value ? slug.value ?? '' : '-',
-      dictionarySet.value ? dictionaryIds.value ?? '' : '-',
-      dictionaryRelation.value ?? '',
+      dictionaryQuery.value ?? '',
       orderBy.value ?? '',
       order.value ?? '',
     ].join(':'),
@@ -177,8 +181,7 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
         ...(parentSet.value ? { parent: parent.value ?? 0 } : {}),
         ...(authorSet.value ? { author: author.value ?? '' } : {}),
         ...(slugSet.value ? { slug: slug.value ?? '' } : {}),
-        ...(dictionarySet.value ? { dictionaryIds: dictionaryIds.value ?? '' } : {}),
-        ...(dictionaryRelation.value ? { dictionaryRelation: dictionaryRelation.value } : {}),
+        ...(dictionaryQuery.value ? { dictionaryQuery: dictionaryQuery.value } : {}),
         ...(orderBy.value ? { orderBy: orderBy.value } : {}),
         ...(order.value ? { order: order.value } : {}),
       },
@@ -201,9 +204,7 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
         authorSet,
         slug,
         slugSet,
-        dictionaryIds,
-        dictionarySet,
-        dictionaryRelation,
+        dictionaryQuery,
         orderBy,
         order,
       ],

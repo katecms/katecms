@@ -4,6 +4,8 @@ import type { CollectionStatus, Database, CollectionsTable } from '../client'
 import { buildSlugPathMap } from '../../rewrite'
 import { applyListPaging } from './paging'
 import type { ListPaging } from './paging'
+import { applyDictionaryQueryFilters } from './dictionary-query'
+import type { DictionaryQuery } from './dictionary-query'
 
 export type Collection = Selectable<CollectionsTable>
 export type NewCollection = Insertable<CollectionsTable>
@@ -141,8 +143,7 @@ export interface QueryCollectionsOptions extends ListPaging {
   parent?: number | null
   author?: number | number[]
   slug?: string | string[]
-  dictionaryIds?: number | number[]
-  dictionaryRelation?: 'AND' | 'OR'
+  dictionaryQuery?: DictionaryQuery
   orderBy?: CollectionOrderField
   order?: 'asc' | 'desc'
 }
@@ -214,18 +215,6 @@ function withCollectionQueryFilters<O>(
       : next.where('slug', 'in', slugs.length > 0 ? slugs : [''])
   }
 
-  const dictionaryIds = asIdList(options.dictionaryIds)
-  if (dictionaryIds.length > 0) {
-    if (options.dictionaryRelation === 'AND') {
-      for (const dictionaryId of dictionaryIds) {
-        next = next.where(sql<SqlBool>`id in (select collection_id from collection_dictionaries where dictionary_id = ${dictionaryId})`)
-      }
-    }
-    else {
-      next = next.where(sql<SqlBool>`id in (select collection_id from collection_dictionaries where dictionary_id in (${sql.join(dictionaryIds.map(id => sql`${id}`))}))`)
-    }
-  }
-
   return next
 }
 
@@ -257,13 +246,15 @@ export async function queryCollections(
   if (types.length === 0) {
     return []
   }
-  const query = applyCollectionOrder(
+  const filtered = await applyDictionaryQueryFilters(
+    db,
     withCollectionQueryFilters(
       db.selectFrom('collections').selectAll(),
       { ...options, types },
     ),
-    options,
+    options.dictionaryQuery,
   )
+  const query = applyCollectionOrder(filtered, options)
   return applyListPaging(query, options).execute()
 }
 
@@ -275,10 +266,15 @@ export async function countQueryCollections(
   if (types.length === 0) {
     return 0
   }
-  const row = await withCollectionQueryFilters(
-    db.selectFrom('collections').select(eb => eb.fn.countAll<number>().as('n')),
-    { ...options, types },
-  ).executeTakeFirstOrThrow()
+  const filtered = await applyDictionaryQueryFilters(
+    db,
+    withCollectionQueryFilters(
+      db.selectFrom('collections').select(eb => eb.fn.countAll<number>().as('n')),
+      { ...options, types },
+    ),
+    options.dictionaryQuery,
+  )
+  const row = await filtered.executeTakeFirstOrThrow()
   return Number(row.n)
 }
 

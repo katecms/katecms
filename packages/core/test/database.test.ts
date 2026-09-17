@@ -517,7 +517,7 @@ describe('database layer', () => {
         parent_id: about.id,
         menu_order: 1,
       })
-      await createCollection(db, {
+      const notes = await createCollection(db, {
         type: 'page',
         slug: 'notes',
         title: 'Notes',
@@ -587,15 +587,108 @@ describe('database layer', () => {
 
       const orTerms = await queryCollections(db, {
         types: ['page', 'post'],
-        dictionaryIds: [news.id, featured.id],
+        dictionaryQuery: {
+          queries: [{
+            dictionary: 'category',
+            field: 'id',
+            terms: [news.id, featured.id],
+          }],
+        },
       })
       expect(orTerms.map(row => row.slug).sort()).toEqual(['about', 'hello', 'team'])
       const andTerms = await queryCollections(db, {
         types: ['page', 'post'],
-        dictionaryIds: [news.id, featured.id],
-        dictionaryRelation: 'AND',
+        dictionaryQuery: {
+          queries: [{
+            dictionary: 'category',
+            terms: [news.id, featured.id],
+            operator: 'AND',
+          }],
+        },
       })
       expect(andTerms.map(row => row.slug)).toEqual(['about'])
+
+      expect(
+        (await queryCollections(db, {
+          types: ['page', 'post'],
+          dictionaryQuery: {
+            queries: [{ dictionary: 'category', field: 'slug', terms: 'featured' }],
+          },
+        })).map(row => row.slug).sort(),
+      ).toEqual(['about', 'hello'])
+      expect(
+        (await queryCollections(db, {
+          types: ['page', 'post'],
+          dictionaryQuery: {
+            queries: [{ dictionary: 'category', field: 'name', terms: 'News' }],
+          },
+        })).map(row => row.slug).sort(),
+      ).toEqual(['about', 'team'])
+      expect(
+        (await queryCollections(db, {
+          types: ['page', 'post'],
+          dictionaryQuery: {
+            queries: [{ dictionary: 'category', field: 'slug', terms: 'featured', operator: 'NOT IN' }],
+          },
+        })).map(row => row.slug).sort(),
+      ).toEqual(['notes', 'team'])
+      expect(
+        (await queryCollections(db, {
+          types: ['page', 'post'],
+          dictionaryQuery: {
+            queries: [{ dictionary: 'category', operator: 'EXISTS' }],
+          },
+        })).map(row => row.slug).sort(),
+      ).toEqual(['about', 'hello', 'team'])
+      expect(
+        (await queryCollections(db, {
+          types: ['page', 'post'],
+          dictionaryQuery: {
+            queries: [{ dictionary: 'category', operator: 'NOT EXISTS' }],
+          },
+        })).map(row => row.slug),
+      ).toEqual(['notes'])
+      expect(
+        (await queryCollections(db, {
+          types: ['page', 'post'],
+          dictionaryQuery: {
+            relation: 'AND',
+            queries: [
+              { dictionary: 'category', field: 'slug', terms: 'news' },
+              { dictionary: 'category', field: 'slug', terms: 'featured' },
+            ],
+          },
+        })).map(row => row.slug),
+      ).toEqual(['about'])
+
+      const local = await createDictionary(db, {
+        type: 'category',
+        slug: 'local',
+        title: 'Local',
+        parent_id: news.id,
+      })
+      await linkCollectionDictionary(db, notes.id, local.id)
+      expect(
+        (await queryCollections(db, {
+          types: ['page', 'post'],
+          dictionaryQuery: {
+            queries: [{ dictionary: 'category', field: 'slug', terms: 'news' }],
+          },
+        })).map(row => row.slug).sort(),
+      ).toEqual(['about', 'notes', 'team'])
+      expect(
+        (await queryCollections(db, {
+          types: ['page', 'post'],
+          dictionaryQuery: {
+            queries: [{
+              dictionary: 'category',
+              field: 'slug',
+              terms: 'news',
+              includeChildren: false,
+            }],
+          },
+        })).map(row => row.slug).sort(),
+      ).toEqual(['about', 'team'])
 
       const ordered = await queryCollections(db, {
         types: ['page'],

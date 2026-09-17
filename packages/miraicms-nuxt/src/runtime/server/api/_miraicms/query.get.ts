@@ -8,11 +8,13 @@ import {
   countQueryCollections,
   DEFAULT_COLLECTION_PER_PAGE,
   isCollectionOrderField,
+  parseDictionaryQuery,
   queryCollections,
 } from '@miraicms/core'
 import type {
   CollectionDefinition,
   CollectionOrderField,
+  DictionaryQuery,
   QueryCollectionsOptions,
 } from '@miraicms/core'
 import { getDb } from '../../utils/db'
@@ -104,16 +106,24 @@ function readOrder(value: unknown): 'asc' | 'desc' | undefined {
   return undefined
 }
 
-function readDictionaryRelation(value: unknown): 'AND' | 'OR' | undefined {
+function readDictionaryQuery(value: unknown): DictionaryQuery | undefined {
   const raw = firstQueryValue(value)
-  if (typeof raw !== 'string') {
+  if (raw == null || raw === '') {
     return undefined
   }
-  const token = raw.trim().toUpperCase()
-  if (token === 'AND' || token === 'OR') {
-    return token
+  let parsed: unknown = raw
+  if (typeof raw === 'string') {
+    try {
+      parsed = JSON.parse(raw)
+    }
+    catch {
+      fail(400, 'Invalid dictionaryQuery.')
+    }
   }
-  return undefined
+  if (typeof parsed !== 'object' || parsed == null || Array.isArray(parsed)) {
+    fail(400, 'Invalid dictionaryQuery.')
+  }
+  return parseDictionaryQuery(parsed)
 }
 
 function defaultPerPage(defs: CollectionDefinition[]): number {
@@ -135,7 +145,7 @@ function defaultPerPage(defs: CollectionDefinition[]): number {
  * - `page`, `perPage`
  * - `search`, `include`, `exclude`
  * - `parent` (`0` = top-level), `author`, `slug`
- * - `dictionaryIds`, `dictionaryRelation` (`AND`|`OR`)
+ * - `dictionaryQuery` — JSON object (`relation` + `queries`)
  * - `orderBy` (`date`, `modified`, `name`, or a column), `order`
  *
  * Collections with `public: false` are skipped. Unknown types are skipped.
@@ -203,12 +213,8 @@ export default defineEventHandler(async (event): Promise<QueryCollectionResponse
   if (hasQueryParam(query, ['slug'])) {
     filters.slug = readStringList(query.slug)
   }
-  if (hasQueryParam(query, ['dictionaryIds'])) {
-    filters.dictionaryIds = readIdList(query.dictionaryIds)
-  }
-  const dictionaryRelation = readDictionaryRelation(query.dictionaryRelation)
-  if (dictionaryRelation) {
-    filters.dictionaryRelation = dictionaryRelation
+  if (hasQueryParam(query, ['dictionaryQuery'])) {
+    filters.dictionaryQuery = readDictionaryQuery(query.dictionaryQuery)
   }
   filters.orderBy = readOrderBy(query.orderBy) ?? 'published_at'
   const order = readOrder(query.order)

@@ -42,6 +42,14 @@ export type {
   CollectionOrderField,
   ValidateCollectionParentResult,
 } from './collections'
+export type {
+  DictionaryQuery,
+  DictionaryQueryField,
+  DictionaryQueryItem,
+  DictionaryQueryOperator,
+  DictionaryQueryRelation,
+} from './dictionary-query'
+export { parseDictionaryQuery } from './dictionary-query'
 
 export {
   deleteCollectionMeta,

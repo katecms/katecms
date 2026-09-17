@@ -291,8 +291,7 @@ const { values } = await getOptions({ option: 'site' })
 | `parent` | `number \| null` | — | Родитель. `null` / `0` — корень |
 | `author` | `number \| number[]` | — | Id автора |
 | `slug` | `string \| string[]` | — | Слаг записи |
-| `dictionaryIds` | `number \| number[]` | — | Id записей словаря |
-| `dictionaryRelation` | `'AND' \| 'OR'` | `'OR'` | Все id или любой |
+| `dictionaryQuery` | `object` | — | Фильтр по словарям (`relation` + `queries`) |
 | `orderBy` | `string` | `'date'` | `date`, `modified`, `name`, `title`, `slug`, `id`, `menu_order`, `published_at`, `created_at`, `updated_at` |
 | `order` | `'asc' \| 'desc'` | по полю | Направление сортировки |
 
@@ -302,10 +301,28 @@ const { entries, permalink, page, total } = await getQueryCollection({
   collection: 'post',
   perPage: 10,
   orderBy: 'date',
-  dictionaryIds: [4],
+  dictionaryQuery: {
+    relation: 'AND',
+    queries: [
+      {
+        dictionary: 'services',
+        field: 'slug',
+        terms: 'theme-1',
+      },
+      {
+        dictionary: 'categories',
+        field: 'slug',
+        terms: 'category-1',
+        operator: 'NOT IN',
+        includeChildren: false,
+      },
+    ],
+  },
 })
 </script>
 ```
+
+`dictionaryQuery.relation` — `'AND'` (дефолт) или `'OR'`. В `queries[]`: `dictionary` (slug словаря), `field` (`id` / `name` / `slug`, дефолт `id`), `terms` (id, заголовок или слаг), `operator` (`IN` дефолт, `NOT IN`, `AND`, `EXISTS`, `NOT EXISTS`), `includeChildren` (дефолт `true` для дерева).
 
 <a id="config-example"></a>
 ### Пример

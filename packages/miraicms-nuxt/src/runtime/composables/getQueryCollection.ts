@@ -6,10 +6,11 @@ import type { AdminEntry, QueryCollectionResponse } from '../utils/collections'
 import { isTruthyQueryParam, parsePublicStatusParam } from '../utils/preview'
 
 export type QueryCollectionOrderBy = CollectionOrderField | 'date' | 'modified' | 'name' | 'includeIds'
+export type QueryCollectionSlug = 'any' | (string & {})
 
 export interface GetQueryCollectionOptions {
-  /** Collection slug(s). */
-  collection: string | string[]
+  /** Collection slug(s). `'any'` includes every public collection. */
+  collection: QueryCollectionSlug | QueryCollectionSlug[]
   /**
    * Include drafts when the requester may `collections:read` every queried
    * collection. Also read from `?preview=1` on the current route.
@@ -155,7 +156,7 @@ function pageQueryValue(
  * ```vue
  * <script setup lang="ts">
  * const { entries, permalink } = await getQueryCollection({
- *   collection: 'post',
+ *   collection: 'any',
  *   perPage: 10,
  *   orderBy: 'date',
  * })

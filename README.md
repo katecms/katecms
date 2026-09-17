@@ -280,7 +280,7 @@ const { values } = await getOptions({ option: 'site' })
 
 | Опция | Тип | Дефолт | Смысл |
 |---|---|---|---|
-| `collection` | `string \| string[]` | — | Slug типа(ов), обязательно |
+| `collection` | `'any' \| string \| string[]` | — | Slug типа(ов). `'any'` — все публичные коллекции |
 | `preview` | `boolean` | `false` | Черновики, если есть `collections:read` на все типы. Также `?preview=1` |
 | `status` | `'published' \| 'draft' \| array` | `'published'` | Также `?status=`. `draft` без preview игнорируется |
 | `page` | `number` | `1` | Номер страницы. Также `?page=` |

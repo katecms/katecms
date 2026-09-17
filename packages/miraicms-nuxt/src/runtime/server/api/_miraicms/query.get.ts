@@ -14,6 +14,7 @@ import {
 import type {
   CollectionDefinition,
   CollectionQueryOrderBy,
+  Collections,
   DictionaryQuery,
   QueryCollectionsOptions,
 } from '@miraicms/core'
@@ -149,11 +150,26 @@ function defaultPerPage(defs: CollectionDefinition[]): number {
   return DEFAULT_COLLECTION_PER_PAGE
 }
 
+function publicCollectionSlugs(all: Collections): string[] {
+  return Object.keys(all).filter(slug => all[slug]?.public !== false)
+}
+
+function resolveQueryCollectionTypes(requested: string[], all: Collections): string[] {
+  if (requested.includes('any')) {
+    return publicCollectionSlugs(all)
+  }
+  return requested.filter((slug) => {
+    const def = all[slug]
+    return def != null && def.public !== false
+  })
+}
+
 /**
  * Public list query.
  *
  * Query:
- * - `collection` (required) — comma-separated collection slugs
+ * - `collection` (required) — comma-separated collection slugs, or `any`
+ *   for every public collection
  * - `preview` — `1`/`true`/`yes` to include drafts when the requester may
  *   `collections:read` every queried collection
  * - `status` — `published`, `draft`, or comma-separated; `draft` is ignored
@@ -175,10 +191,7 @@ export default defineEventHandler(async (event): Promise<QueryCollectionResponse
   }
 
   const all = getCollections()
-  const types = requested.filter((slug) => {
-    const def = all[slug]
-    return def != null && def.public !== false
-  })
+  const types = resolveQueryCollectionTypes(requested, all)
   const defs = types
     .map(slug => getCollectionDefinition(slug))
     .filter((def): def is CollectionDefinition => def != null)

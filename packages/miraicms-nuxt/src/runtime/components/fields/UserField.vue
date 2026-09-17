@@ -159,6 +159,7 @@ onMounted(async () => {
   <MiraiCmsFieldWrapper
     :field-key="fieldKey"
     :field="field"
+    :class="rootClass"
   >
     <div
       v-if="loadError"
@@ -197,6 +198,11 @@ $root: '.miraicms-user-field';
     margin: 0 0 math-rem(8);
     color: $color-danger;
     font-size: math-rem(13);
+  }
+
+  :deep(.miraicms-select__option > span) {
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 }
 </style>

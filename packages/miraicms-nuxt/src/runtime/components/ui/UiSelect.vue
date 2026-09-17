@@ -305,7 +305,9 @@ const displayValue = computed<string | SelectChip[]>(() => {
 const displayImage = computed(() => {
   const value = selectedValue.value
   const empty = value === '' || value === null || value === undefined
-  const image = findImage(value) || (!empty || !props.placeholder ? findImage(defaultLabel.value) : '')
+  const image = empty
+    ? (props.placeholder ? '' : findImage(defaultLabel.value))
+    : findImage(value)
   return {
     src: imageSrc(image || undefined),
     class: image ? '' : 'no-img',
@@ -754,6 +756,7 @@ defineExpose({
         :class="[`${rootClass}__image`]"
       >
         <img
+          :key="String(selectedValue ?? '')"
           :src="displayImage.src"
           :class="displayImage.class || undefined"
           aria-hidden="true"
@@ -975,7 +978,9 @@ defineExpose({
                 aria-hidden="true"
                 alt=""
               >
-              {{ child.lbl }}
+              <span>
+                {{ child.lbl }}
+              </span>
             </button>
           </div>
 
@@ -1002,7 +1007,9 @@ defineExpose({
               aria-hidden="true"
               alt=""
             >
-            {{ opt.lbl }}
+            <span>
+              {{ opt.lbl }}
+            </span>
           </button>
         </template>
 
@@ -1022,7 +1029,7 @@ defineExpose({
           @click="addCustomOption"
           @mouseenter="highlightedIndex = flatFiltered.length"
         >
-          {{ addOptionText }} “{{ searchTerm.trim() }}”
+          {{ addOptionText }} "{{ searchTerm.trim() }}"
         </button>
 
         <div
@@ -1091,7 +1098,7 @@ $root: ".miraicms-select";
     cursor: pointer;
     position: relative;
     padding: 0 10px;
-    gap: 10px;
+    gap: math-rem(8);
 
     &:focus-visible {
       outline: 2px solid rgba($color-accent, .4);
@@ -1100,7 +1107,7 @@ $root: ".miraicms-select";
   }
 
   &__image {
-    width: 25px;
+    flex: 0 0 25px;
     align-content: center;
 
     img {
@@ -1129,6 +1136,7 @@ $root: ".miraicms-select";
     align-items: center;
     gap: 4px;
     color: $color-ink;
+    overflow: hidden;
 
     &--placeholder {
       color: $color-muted;
@@ -1137,6 +1145,12 @@ $root: ".miraicms-select";
     &--multiple {
       padding-top: 3px;
       padding-bottom: 3px;
+    }
+
+    > span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 
@@ -1218,14 +1232,14 @@ $root: ".miraicms-select";
   }
 
   &__arrow {
-    flex: 0 0 14px;
-    max-width: 14px;
+    flex: 0 0 10px;
+    max-width: 10px;
     display: flex;
     align-items: center;
     color: $color-muted;
 
     svg {
-      width: 12px;
+      width: 10px;
       height: auto;
       display: block;
       transition: transform .3s;
@@ -1349,6 +1363,7 @@ $root: ".miraicms-select";
     color: $color-ink;
     cursor: pointer;
     font: inherit;
+    overflow: hidden;
 
     img {
       display: block;
@@ -1397,6 +1412,10 @@ $root: ".miraicms-select";
     &:hover:not([aria-selected="true"]):not([disabled]) {
       background-color: $color-accent-wash;
       border-bottom-color: $color-accent-wash;
+    }
+
+    > span {
+      overflow: hidden;
     }
   }
 }

@@ -147,7 +147,11 @@ async function submit() {
     const res = await persist()
     skipAutosave.value = true
     dirty.value = false
-    await navigateTo(paths.collectionEntry(collectionSlug.value, res.entry.id))
+    const notice = res.entry.status === 'published' ? 'published' : 'draft'
+    await navigateTo({
+      path: paths.collectionEntry(collectionSlug.value, res.entry.id),
+      query: { notice },
+    })
   }
   catch (err) {
     error.value = parseAuthError(err, 'Could not create the entry.').message

@@ -37,6 +37,8 @@ const entryForm = ref<{ validateForSubmit: () => boolean } | null>(null)
 const canUpdate = ref(false)
 const canDelete = ref(false)
 const savedStatus = ref<CollectionEntryFormModel['status']>('draft')
+const savedNoticeId = ref(0)
+const savedNoticeText = ref('')
 
 const form = reactive<CollectionEntryFormModel>({
   title: '',
@@ -90,6 +92,29 @@ const viewUrl = computed(() => {
   const path = buildPublicPath(collection.value?.rewrite, collectionSlug.value, slugPath)
   return form.status === 'published' ? path : `${path}?preview=1`
 })
+
+function flashSavedNotice(status: 'published' | 'draft') {
+  savedNoticeText.value = status === 'published'
+    ? (collection.value?.labels.singularName
+      ? `${collection.value.labels.singularName} published.`
+      : 'Entry published.')
+    : 'Draft saved.'
+  savedNoticeId.value += 1
+}
+
+function consumeRouteNotice() {
+  const raw = route.query.notice
+  const notice = Array.isArray(raw) ? raw[0] : raw
+  if (notice !== 'published' && notice !== 'draft') {
+    return
+  }
+  flashSavedNotice(notice)
+  const query = { ...route.query }
+  delete query.notice
+  void nextTick(() => {
+    void navigateTo({ path: route.path, query }, { replace: true })
+  })
+}
 
 function applyEntry(res: CollectionEntryResponse) {
   collection.value = res.collection
@@ -242,6 +267,9 @@ async function submit(): Promise<boolean> {
     applyEntry(res)
     await nextTick()
     markFormClean()
+    if (res.entry.status === 'published' || res.entry.status === 'draft') {
+      flashSavedNotice(res.entry.status)
+    }
     return true
   }
   catch (err) {
@@ -333,6 +361,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', onBeforeUnload)
 })
 watch([collectionSlug, entryId], load)
+watch(() => route.query.notice, consumeRouteNotice, { immediate: true })
 </script>
 
 <template>
@@ -355,6 +384,14 @@ watch([collectionSlug, entryId], load)
         {{ pageTitle }}
       </div>
     </div>
+
+    <MiraiCmsUiNotice
+      v-if="savedNoticeId"
+      :key="savedNoticeId"
+      placement="fixed"
+      :message="savedNoticeText"
+      @close="savedNoticeId = 0"
+    />
 
     <MiraiCmsUiNotice
       v-if="loading"

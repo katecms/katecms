@@ -176,7 +176,6 @@ const authorField = {
   type: 'user' as const,
   label: 'Author',
   returnFormat: 'id' as const,
-  required: true,
 }
 
 const menuOrderField = {

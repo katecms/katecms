@@ -248,7 +248,7 @@ function applyCollectionOrder<O>(
   return next
 }
 
-/** Flexible list query (WP_Query-style filters on `collections`). */
+/** Flexible list query on `collections`. */
 export async function queryCollections(
   db: Kysely<Database>,
   options: QueryCollectionsOptions,

@@ -276,7 +276,7 @@ const { values } = await getOptions({ option: 'site' })
 <a id="getQueryCollection"></a>
 ### getQueryCollection()
 
-Выборка записей, аналог `WP_Query`. По умолчанию `published`, сортировка по дате.
+Выборка записей по фильтрам. По умолчанию `published`, сортировка по дате.
 
 | Опция | Тип | Дефолт | Смысл |
 |---|---|---|---|

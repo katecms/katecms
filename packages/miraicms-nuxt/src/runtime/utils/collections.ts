@@ -118,7 +118,7 @@ export interface ResolveArchiveResponse {
 
 export type ResolveResponse = ResolveEntryResponse | ResolveArchiveResponse
 
-/** Public WP_Query-style list from `/api/_miraicms/query`. */
+/** Public list from `/api/_miraicms/query`. */
 export interface QueryCollectionResponse {
   entries: AdminEntry[]
   collections: AdminCollectionMeta[]

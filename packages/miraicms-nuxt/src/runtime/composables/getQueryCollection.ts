@@ -8,7 +8,7 @@ import { isTruthyQueryParam, parsePublicStatusParam } from '../utils/preview'
 export type QueryCollectionOrderBy = CollectionOrderField | 'date' | 'modified' | 'name'
 
 export interface GetQueryCollectionOptions {
-  /** Collection slug(s), like WP `post_type`. */
+  /** Collection slug(s). */
   collection: string | string[]
   /**
    * Include drafts when the requester may `collections:read` every queried
@@ -20,25 +20,25 @@ export interface GetQueryCollectionOptions {
    * Also read from `?status=` on the current route.
    */
   status?: 'published' | 'draft' | Array<'published' | 'draft'>
-  /** Listing page (WP `paged`). Also read from `?page=` on the current route. */
+  /** Listing page. Also read from `?page=` on the current route. */
   page?: number
   /**
-   * Page size (WP `posts_per_page`). Also read from `?perPage=` on the current
-   * route. Default: the collection's `perPage` when a single type is queried,
+   * Page size. Also read from `?perPage=` on the current route.
+   * Default: the collection's `perPage` when a single type is queried,
    * otherwise 10. `-1` returns every match.
    */
   perPage?: number
-  /** Title/slug search (WP `s`). */
+  /** Title/slug search. */
   search?: string
-  /** Only these entry ids (WP `post__in` / `p`). */
+  /** Only these entry ids. */
   include?: number | number[]
-  /** Skip these entry ids (WP `post__not_in`). */
+  /** Skip these entry ids. */
   exclude?: number | number[]
-  /** Parent id; `null` / `0` is top-level (WP `post_parent`). */
+  /** Parent id; `null` / `0` is top-level. */
   parent?: number | null
-  /** Author id(s) (WP `author` / `author__in`). */
+  /** Author id(s). */
   author?: number | number[]
-  /** Entry slug(s) (WP `name`). */
+  /** Entry slug(s). */
   slug?: string | string[]
   /** Dictionary entry ids. */
   dictionaryIds?: number | number[]
@@ -95,7 +95,7 @@ function pageQueryValue(
 }
 
 /**
- * List public collection entries with WP_Query-style filters.
+ * List public collection entries by filters.
  *
  * Collections with `public: false` are omitted. Results stay published-only
  * unless `preview` is set (option or `?preview=1`) and the visitor may read

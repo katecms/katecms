@@ -124,25 +124,25 @@ function defaultPerPage(defs: CollectionDefinition[]): number {
 }
 
 /**
- * Public list query (WP_Query-style filters).
+ * Public list query.
  *
  * Query:
- * - `collection` / `post_type` (required) — comma-separated collection slugs
+ * - `collection` (required) — comma-separated collection slugs
  * - `preview` — `1`/`true`/`yes` to include drafts when the requester may
  *   `collections:read` every queried collection
  * - `status` — `published`, `draft`, or comma-separated; `draft` is ignored
  *   unless preview is granted. Trash is never returned.
- * - `page` / `paged`, `perPage` / `posts_per_page`
- * - `search` / `s`, `include` / `post__in` / `p`, `exclude` / `post__not_in`
- * - `parent` / `post_parent` (`0` = top-level), `author`, `slug` / `name`
+ * - `page`, `perPage`
+ * - `search`, `include`, `exclude`
+ * - `parent` (`0` = top-level), `author`, `slug`
  * - `dictionaryIds`, `dictionaryRelation` (`AND`|`OR`)
- * - `orderBy` / `orderby` (`date`, `modified`, `name`, or a column), `order`
+ * - `orderBy` (`date`, `modified`, `name`, or a column), `order`
  *
  * Collections with `public: false` are skipped. Unknown types are skipped.
  */
 export default defineEventHandler(async (event): Promise<QueryCollectionResponse> => {
   const query = getQuery(event) as Record<string, unknown>
-  const requested = readStringList(query.collection ?? query.post_type)
+  const requested = readStringList(query.collection)
   if (requested.length === 0) {
     fail(400, 'Missing collection.')
   }
@@ -161,8 +161,8 @@ export default defineEventHandler(async (event): Promise<QueryCollectionResponse
       entries: [],
       collections: [],
       preview: false,
-      page: readPage(query.page ?? query.paged),
-      perPage: readPerPage(query.perPage ?? query.posts_per_page, DEFAULT_COLLECTION_PER_PAGE),
+      page: readPage(query.page),
+      perPage: readPerPage(query.perPage, DEFAULT_COLLECTION_PER_PAGE),
       total: 0,
     }
   }
@@ -179,29 +179,29 @@ export default defineEventHandler(async (event): Promise<QueryCollectionResponse
     requested: parsePublicStatusParam(query.status),
   })
 
-  const page = readPage(query.page ?? query.paged)
-  const perPage = readPerPage(query.perPage ?? query.posts_per_page, defaultPerPage(defs))
+  const page = readPage(query.page)
+  const perPage = readPerPage(query.perPage, defaultPerPage(defs))
   const filters: QueryCollectionsOptions = {
     types,
     statuses,
-    search: readSearch(query.search ?? query.s) || undefined,
+    search: readSearch(query.search) || undefined,
     ...collectionListPaging(page, perPage),
   }
 
-  if (hasQueryParam(query, ['include', 'post__in', 'p'])) {
-    filters.include = readIdList(query.include ?? query.post__in ?? query.p)
+  if (hasQueryParam(query, ['include'])) {
+    filters.include = readIdList(query.include)
   }
-  if (hasQueryParam(query, ['exclude', 'post__not_in'])) {
-    filters.exclude = readIdList(query.exclude ?? query.post__not_in)
+  if (hasQueryParam(query, ['exclude'])) {
+    filters.exclude = readIdList(query.exclude)
   }
-  if (hasQueryParam(query, ['parent', 'post_parent'])) {
-    filters.parent = readParent(query.parent ?? query.post_parent)
+  if (hasQueryParam(query, ['parent'])) {
+    filters.parent = readParent(query.parent)
   }
   if (hasQueryParam(query, ['author'])) {
     filters.author = readIdList(query.author)
   }
-  if (hasQueryParam(query, ['slug', 'name'])) {
-    filters.slug = readStringList(query.slug ?? query.name)
+  if (hasQueryParam(query, ['slug'])) {
+    filters.slug = readStringList(query.slug)
   }
   if (hasQueryParam(query, ['dictionaryIds'])) {
     filters.dictionaryIds = readIdList(query.dictionaryIds)
@@ -210,7 +210,7 @@ export default defineEventHandler(async (event): Promise<QueryCollectionResponse
   if (dictionaryRelation) {
     filters.dictionaryRelation = dictionaryRelation
   }
-  filters.orderBy = readOrderBy(query.orderBy ?? query.orderby) ?? 'published_at'
+  filters.orderBy = readOrderBy(query.orderBy) ?? 'published_at'
   const order = readOrder(query.order)
   if (order) {
     filters.order = order

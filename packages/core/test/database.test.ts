@@ -489,7 +489,7 @@ describe('database layer', () => {
     }
   })
 
-  it('queries collections with WP_Query-style filters', async () => {
+  it('queries collections with filters, dictionaries, order and paging', async () => {
     const { db, close } = await memoryDb()
     try {
       const ada = await createUser(db, {

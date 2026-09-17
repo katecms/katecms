@@ -17,6 +17,7 @@ import {
   readTitle,
   requireCollection,
   requirePublishedFields,
+  resolveAuthorId,
   rethrowCollectionWriteError,
   toAdminEntry,
   toCollectionMeta,
@@ -37,6 +38,7 @@ interface CreateBody {
   parentId?: unknown
   menuOrder?: unknown
   publishedAt?: unknown
+  authorId?: unknown
   dictionaries?: unknown
 }
 
@@ -56,6 +58,8 @@ export default defineEventHandler(async (event): Promise<CollectionEntryResponse
   const parentId = def.hierarchical === true ? readParentId(body?.parentId) : null
   const menuOrder = readMenuOrder(body?.menuOrder, 0)
   const publishedAt = readPublishedAt(body?.publishedAt)
+  const db = getDb()
+  const authorId = await resolveAuthorId(db, actor, roles, body?.authorId, actor.id)
 
   if (status === 'trash') {
     fail(422, 'New entries cannot be created in the trash.')
@@ -63,7 +67,6 @@ export default defineEventHandler(async (event): Promise<CollectionEntryResponse
 
   requirePublishedFields(def, status, fields)
 
-  const db = getDb()
   try {
     const row = await createCollection(db, {
       type: collectionSlug,
@@ -73,7 +76,7 @@ export default defineEventHandler(async (event): Promise<CollectionEntryResponse
       fields,
       parent_id: parentId,
       menu_order: menuOrder,
-      author_id: actor.id,
+      author_id: authorId,
       ...(publishedAt !== undefined ? { published_at: publishedAt } : {}),
     })
     if (body?.dictionaries !== undefined) {

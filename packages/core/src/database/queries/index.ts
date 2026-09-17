@@ -23,6 +23,7 @@ export {
   findCollectionBySlugPath,
   flattenCollectionTree,
   isCollectionOrderField,
+  isCollectionQueryOrderBy,
   listCollectionParentOptions,
   listCollections,
   loadCollectionSlugPath,
@@ -40,6 +41,7 @@ export type {
   NewCollection,
   QueryCollectionsOptions,
   CollectionOrderField,
+  CollectionQueryOrderBy,
   ValidateCollectionParentResult,
 } from './collections'
 export type {

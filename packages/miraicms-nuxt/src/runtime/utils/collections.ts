@@ -136,6 +136,7 @@ export interface CollectionEntryFormModel {
   parentId: number | null
   menuOrder: number
   publishedAt: string | null
+  authorId: number | null
   fields: Record<string, unknown>
   /** Single: `number | null`. Multiple: `number[]`. */
   dictionaryIds: Record<string, number | number[] | null>

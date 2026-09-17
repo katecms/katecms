@@ -129,23 +129,32 @@ const COLLECTION_ORDER_FIELDS = [
 ] as const
 
 export type CollectionOrderField = typeof COLLECTION_ORDER_FIELDS[number]
+export type CollectionQueryOrderBy = CollectionOrderField | 'includeIds'
 
 export function isCollectionOrderField(value: string): value is CollectionOrderField {
   return (COLLECTION_ORDER_FIELDS as readonly string[]).includes(value)
+}
+
+export function isCollectionQueryOrderBy(value: string): value is CollectionQueryOrderBy {
+  return value === 'includeIds' || isCollectionOrderField(value)
 }
 
 export interface QueryCollectionsOptions extends ListPaging {
   types: string[]
   statuses?: CollectionStatus[]
   search?: string
-  include?: number | number[]
-  exclude?: number | number[]
-  parent?: number | null
+  title?: string | string[]
+  includeIds?: number | number[]
+  excludeIds?: number | number[]
+  parentId?: number | null
+  parentIds?: number | number[]
+  excludeParentIds?: number | number[]
+  slugs?: string | string[]
   authorIn?: number | number[]
   authorNotIn?: number | number[]
   slug?: string | string[]
   dictionaryQuery?: DictionaryQuery
-  orderBy?: CollectionOrderField
+  orderBy?: CollectionQueryOrderBy
   order?: 'asc' | 'desc'
 }
 
@@ -154,7 +163,20 @@ function asIdList(value: number | number[] | undefined): number[] {
     return []
   }
   const raw = Array.isArray(value) ? value : [value]
-  return [...new Set(raw.filter(id => Number.isInteger(id) && id > 0))]
+  return uniqueIds(raw.filter(id => Number.isInteger(id) && id > 0))
+}
+
+function uniqueIds(ids: number[]): number[] {
+  const seen = new Set<number>()
+  const out: number[] = []
+  for (const id of ids) {
+    if (seen.has(id)) {
+      continue
+    }
+    seen.add(id)
+    out.push(id)
+  }
+  return out
 }
 
 function asSlugList(value: string | string[] | undefined): string[] {
@@ -163,6 +185,65 @@ function asSlugList(value: string | string[] | undefined): string[] {
   }
   const raw = Array.isArray(value) ? value : [value]
   return [...new Set(raw.map(item => item.trim()).filter(Boolean))]
+}
+
+interface ParentIdFilter {
+  specified: boolean
+  ids: number[]
+  includeRoot: boolean
+}
+
+function pushParentIdValues(
+  value: number | number[] | null | undefined,
+  into: { ids: number[], includeRoot: boolean, seen: Set<number> },
+) {
+  if (value === undefined) {
+    return
+  }
+  const raw: Array<number | null> = value === null
+    ? [null]
+    : Array.isArray(value)
+      ? value
+      : [value]
+  for (const item of raw) {
+    if (item == null || item === 0) {
+      into.includeRoot = true
+      continue
+    }
+    if (!Number.isInteger(item) || item < 1 || into.seen.has(item)) {
+      continue
+    }
+    into.seen.add(item)
+    into.ids.push(item)
+  }
+}
+
+function parentIdFilter(options: QueryCollectionsOptions): ParentIdFilter {
+  const specified = options.parentId !== undefined
+    || options.parentIds !== undefined
+  if (!specified) {
+    return { specified: false, ids: [], includeRoot: false }
+  }
+  const into = { ids: [] as number[], includeRoot: false, seen: new Set<number>() }
+  pushParentIdValues(options.parentId, into)
+  pushParentIdValues(options.parentIds, into)
+  return { specified: true, ids: into.ids, includeRoot: into.includeRoot }
+}
+
+function excludeParentIdFilter(value: number | number[] | undefined): ParentIdFilter {
+  if (value === undefined) {
+    return { specified: false, ids: [], includeRoot: false }
+  }
+  const into = { ids: [] as number[], includeRoot: false, seen: new Set<number>() }
+  pushParentIdValues(value, into)
+  return { specified: true, ids: into.ids, includeRoot: into.includeRoot }
+}
+
+function includeIdsOrderExpression(ids: number[]) {
+  return sql`case ${sql.join(
+    ids.map((id, index) => sql`when ${sql.ref('id')} = ${id} then ${index}`),
+    sql` `,
+  )} else ${ids.length} end`
 }
 
 function withCollectionQueryFilters<O>(
@@ -189,19 +270,58 @@ function withCollectionQueryFilters<O>(
     next = next.where(sql<SqlBool>`(lower(title) like ${pattern} or lower(slug) like ${pattern})`)
   }
 
-  const include = asIdList(options.include)
-  if (options.include !== undefined) {
+  const titles = asSlugList(options.title)
+  if (options.title !== undefined) {
+    next = titles.length === 1
+      ? next.where('title', '=', titles[0]!)
+      : next.where('title', 'in', titles.length > 0 ? titles : [''])
+  }
+
+  const include = asIdList(options.includeIds)
+  if (options.includeIds !== undefined) {
     next = next.where('id', 'in', include.length > 0 ? include : [0])
   }
-  const exclude = asIdList(options.exclude)
+  const exclude = asIdList(options.excludeIds)
   if (exclude.length > 0) {
     next = next.where('id', 'not in', exclude)
   }
 
-  if (options.parent !== undefined) {
-    next = options.parent == null
-      ? next.where('parent_id', 'is', null)
-      : next.where('parent_id', '=', options.parent)
+  const parents = parentIdFilter(options)
+  if (parents.specified) {
+    if (parents.ids.length === 0 && !parents.includeRoot) {
+      next = next.where('id', 'in', [0])
+    }
+    else if (parents.ids.length > 0 && parents.includeRoot) {
+      next = next.where(eb => eb.or([
+        eb('parent_id', 'is', null),
+        eb('parent_id', 'in', parents.ids),
+      ]))
+    }
+    else if (parents.includeRoot) {
+      next = next.where('parent_id', 'is', null)
+    }
+    else {
+      next = next.where('parent_id', 'in', parents.ids)
+    }
+  }
+
+  const excludedParents = excludeParentIdFilter(options.excludeParentIds)
+  if (excludedParents.specified && (excludedParents.ids.length > 0 || excludedParents.includeRoot)) {
+    if (excludedParents.includeRoot && excludedParents.ids.length === 0) {
+      next = next.where('parent_id', 'is not', null)
+    }
+    else if (excludedParents.includeRoot) {
+      next = next.where(eb => eb.and([
+        eb('parent_id', 'is not', null),
+        eb('parent_id', 'not in', excludedParents.ids),
+      ]))
+    }
+    else {
+      next = next.where(eb => eb.or([
+        eb('parent_id', 'is', null),
+        eb('parent_id', 'not in', excludedParents.ids),
+      ]))
+    }
   }
 
   const authorIn = asIdList(options.authorIn)
@@ -213,8 +333,9 @@ function withCollectionQueryFilters<O>(
     next = next.where('author_id', 'not in', authorNotIn)
   }
 
-  const slugs = asSlugList(options.slug)
-  if (options.slug !== undefined) {
+  const slugSpecified = options.slug !== undefined || options.slugs !== undefined
+  const slugs = [...new Set([...asSlugList(options.slug), ...asSlugList(options.slugs)])]
+  if (slugSpecified) {
     next = slugs.length === 1
       ? next.where('slug', '=', slugs[0]!)
       : next.where('slug', 'in', slugs.length > 0 ? slugs : [''])
@@ -227,6 +348,15 @@ function applyCollectionOrder<O>(
   query: SelectQueryBuilder<Database, 'collections', O>,
   options: QueryCollectionsOptions,
 ): SelectQueryBuilder<Database, 'collections', O> {
+  if (options.orderBy === 'includeIds') {
+    const ids = asIdList(options.includeIds)
+    if (ids.length > 0) {
+      const direction = options.order === 'desc' ? 'desc' : 'asc'
+      return query
+        .orderBy(includeIdsOrderExpression(ids), direction)
+        .orderBy('id', 'desc')
+    }
+  }
   const field = options.orderBy && isCollectionOrderField(options.orderBy)
     ? options.orderBy
     : 'menu_order'

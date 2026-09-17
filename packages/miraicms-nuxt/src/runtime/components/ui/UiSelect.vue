@@ -817,7 +817,7 @@ defineExpose({
           </div>
         </template>
         <template v-else>
-          {{ displayValue }}
+          <span>{{ displayValue }}</span>
         </template>
       </div>
 

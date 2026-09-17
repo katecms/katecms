@@ -45,6 +45,7 @@ const form = reactive<CollectionEntryFormModel>({
   parentId: null,
   menuOrder: 0,
   publishedAt: null,
+  authorId: null,
   fields: {},
   dictionaryIds: {},
 })
@@ -60,6 +61,7 @@ function serializeForm(value: CollectionEntryFormModel): string {
     parentId: value.parentId,
     menuOrder: value.menuOrder,
     publishedAt: value.publishedAt,
+    authorId: value.authorId,
     fields: value.fields,
     dictionaryIds: value.dictionaryIds,
   })
@@ -103,6 +105,7 @@ function applyEntry(res: CollectionEntryResponse) {
   form.parentId = res.entry.parentId
   form.menuOrder = res.entry.menuOrder
   form.publishedAt = res.entry.publishedAt
+  form.authorId = res.entry.authorId
   form.fields = { ...(res.entry.fields ?? {}) }
   form.dictionaryIds = formDictionarySelection(dictionaryPickers.value, res.entry.dictionaryIds)
   savedStatus.value = res.entry.status
@@ -233,6 +236,7 @@ async function submit(): Promise<boolean> {
       parentId: form.parentId,
       menuOrder: form.menuOrder,
       publishedAt: form.publishedAt,
+      authorId: form.authorId,
       dictionaries: form.dictionaryIds,
     })
     applyEntry(res)

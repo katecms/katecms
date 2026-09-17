@@ -7,13 +7,13 @@ import {
   collectionPerPage,
   countQueryCollections,
   DEFAULT_COLLECTION_PER_PAGE,
-  isCollectionOrderField,
+  isCollectionQueryOrderBy,
   parseDictionaryQuery,
   queryCollections,
 } from '@miraicms/core'
 import type {
   CollectionDefinition,
-  CollectionOrderField,
+  CollectionQueryOrderBy,
   DictionaryQuery,
   QueryCollectionsOptions,
 } from '@miraicms/core'
@@ -37,7 +37,7 @@ import {
 } from '../../../utils/preview'
 import type { QueryCollectionResponse } from '../../../utils/collections'
 
-const ORDER_ALIASES: Record<string, CollectionOrderField> = {
+const ORDER_ALIASES: Record<string, CollectionQueryOrderBy> = {
   date: 'published_at',
   modified: 'updated_at',
   name: 'slug',
@@ -72,26 +72,42 @@ function readIdList(value: unknown): number[] {
   return ids
 }
 
-function readParent(value: unknown): number | null {
-  const raw = firstQueryValue(value)
-  if (raw === null || raw === '' || raw === 'null') {
-    return null
+function readParentIdList(value: unknown): number[] {
+  const parts = Array.isArray(value) ? value : typeof value === 'string' ? value.split(',') : value == null ? [] : [value]
+  const ids: number[] = []
+  const seen = new Set<number>()
+  for (const part of parts) {
+    if (part === null || part === 'null') {
+      if (!seen.has(0)) {
+        seen.add(0)
+        ids.push(0)
+      }
+      continue
+    }
+    if (part === '') {
+      continue
+    }
+    const n = Number(part)
+    if (!Number.isInteger(n) || n < 0 || seen.has(n)) {
+      continue
+    }
+    seen.add(n)
+    ids.push(n)
   }
-  const n = Number(raw)
-  if (!Number.isInteger(n) || n < 0) {
-    fail(400, 'Invalid parent.')
-  }
-  return n === 0 ? null : n
+  return ids
 }
 
-function readOrderBy(value: unknown): CollectionOrderField | undefined {
+function readOrderBy(value: unknown): CollectionQueryOrderBy | undefined {
   const raw = firstQueryValue(value)
   if (typeof raw !== 'string' || !raw.trim()) {
     return undefined
   }
   const token = raw.trim()
+  if (token === 'includeIds') {
+    return 'includeIds'
+  }
   const mapped = ORDER_ALIASES[token] ?? token
-  return isCollectionOrderField(mapped) ? mapped : undefined
+  return isCollectionQueryOrderBy(mapped) ? mapped : undefined
 }
 
 function readOrder(value: unknown): 'asc' | 'desc' | undefined {
@@ -143,10 +159,11 @@ function defaultPerPage(defs: CollectionDefinition[]): number {
  * - `status` — `published`, `draft`, or comma-separated; `draft` is ignored
  *   unless preview is granted. Trash is never returned.
  * - `page`, `perPage`
- * - `search`, `include`, `exclude`
- * - `parent` (`0` = top-level), `authorIn`, `authorNotIn`, `slug`
+ * - `search`, `title`, `includeIds`, `excludeIds`
+ * - `parentId` (`0` = top-level), `parentIds`, `excludeParentIds`
+ * - `authorIn`, `authorNotIn`, `slug`, `slugs`
  * - `dictionaryQuery` — JSON object (`relation` + `queries`)
- * - `orderBy` (`date`, `modified`, `name`, or a column), `order`
+ * - `orderBy` (`date`, `modified`, `name`, `includeIds`, or a column), `order`
  *
  * Collections with `public: false` are skipped. Unknown types are skipped.
  */
@@ -198,14 +215,23 @@ export default defineEventHandler(async (event): Promise<QueryCollectionResponse
     ...collectionListPaging(page, perPage),
   }
 
-  if (hasQueryParam(query, ['include'])) {
-    filters.include = readIdList(query.include)
+  if (hasQueryParam(query, ['title'])) {
+    filters.title = readStringList(query.title)
   }
-  if (hasQueryParam(query, ['exclude'])) {
-    filters.exclude = readIdList(query.exclude)
+  if (hasQueryParam(query, ['includeIds'])) {
+    filters.includeIds = readIdList(query.includeIds)
   }
-  if (hasQueryParam(query, ['parent'])) {
-    filters.parent = readParent(query.parent)
+  if (hasQueryParam(query, ['excludeIds'])) {
+    filters.excludeIds = readIdList(query.excludeIds)
+  }
+  if (hasQueryParam(query, ['parentId', 'parentIds'])) {
+    filters.parentIds = [
+      ...readParentIdList(query.parentIds),
+      ...readParentIdList(query.parentId),
+    ]
+  }
+  if (hasQueryParam(query, ['excludeParentIds'])) {
+    filters.excludeParentIds = readParentIdList(query.excludeParentIds)
   }
   if (hasQueryParam(query, ['authorIn'])) {
     filters.authorIn = readIdList(query.authorIn)
@@ -213,8 +239,11 @@ export default defineEventHandler(async (event): Promise<QueryCollectionResponse
   if (hasQueryParam(query, ['authorNotIn'])) {
     filters.authorNotIn = readIdList(query.authorNotIn)
   }
-  if (hasQueryParam(query, ['slug'])) {
-    filters.slug = readStringList(query.slug)
+  if (hasQueryParam(query, ['slug', 'slugs'])) {
+    filters.slugs = [
+      ...readStringList(query.slugs),
+      ...readStringList(query.slug),
+    ]
   }
   if (hasQueryParam(query, ['dictionaryQuery'])) {
     filters.dictionaryQuery = readDictionaryQuery(query.dictionaryQuery)

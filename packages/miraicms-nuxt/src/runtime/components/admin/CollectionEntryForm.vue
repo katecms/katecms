@@ -172,6 +172,13 @@ const publishedField = {
   returnFormat: PUBLISH_FORMAT,
 }
 
+const authorField = {
+  type: 'user' as const,
+  label: 'Author',
+  returnFormat: 'id' as const,
+  required: true,
+}
+
 const menuOrderField = {
   type: 'number' as const,
   label: 'Order',
@@ -326,6 +333,16 @@ const parentModel = computed({
     }
     const id = Number(value)
     updateCore('parentId', Number.isInteger(id) && id > 0 ? id : null)
+  },
+})
+
+const authorModel = computed({
+  get() {
+    return props.modelValue.authorId
+  },
+  set(value: unknown) {
+    const id = Number(value)
+    updateCore('authorId', Number.isInteger(id) && id > 0 ? id : null)
   },
 })
 
@@ -520,6 +537,12 @@ watch(
               field-key="cms-entry-status"
               :field="statusField"
               @update:model-value="updateCore('status', ($event === 'published' ? 'published' : 'draft') as CollectionStatus)"
+            />
+
+            <MiraiCmsUserField
+              v-model="authorModel"
+              field-key="cms-entry-author"
+              :field="authorField"
             />
 
             <MiraiCmsDateTimePickerField

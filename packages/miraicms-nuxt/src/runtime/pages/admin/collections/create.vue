@@ -14,9 +14,11 @@ import type {
 } from '../../../utils/collections'
 import { slugify } from '../../../utils/slugify'
 import { useCmsPaths } from '../../../composables/useCmsPaths'
+import { useAuth } from '../../../composables/useAuth'
 
 const route = useRoute()
 const paths = useCmsPaths()
+const { user } = useAuth()
 const collectionSlug = computed(() => String(route.params.collection ?? ''))
 
 useHead({ title: 'New entry' })
@@ -37,6 +39,7 @@ const form = reactive<CollectionEntryFormModel>({
   parentId: null,
   menuOrder: 0,
   publishedAt: null,
+  authorId: null,
   fields: {},
   dictionaryIds: {},
 })
@@ -44,6 +47,12 @@ const form = reactive<CollectionEntryFormModel>({
 watch(form, () => {
   dirty.value = true
 }, { deep: true })
+
+watch(() => user.value?.id, (id) => {
+  if (id && form.authorId == null) {
+    form.authorId = id
+  }
+}, { immediate: true })
 
 function ensureSlug() {
   if (!form.slug.trim() && form.title.trim()) {
@@ -67,6 +76,7 @@ async function load() {
     dictionaryPickers.value = res.dictionaries ?? []
     form.fields = buildFormValues(res.collection.fields ?? {})
     form.dictionaryIds = emptyDictionarySelection(dictionaryPickers.value)
+    form.authorId = user.value?.id ?? form.authorId
     await nextTick()
     dirty.value = false
   }
@@ -90,6 +100,7 @@ async function persist(status = form.status): Promise<CollectionEntryResponse> {
       parentId: form.parentId,
       menuOrder: form.menuOrder,
       publishedAt: form.publishedAt,
+      authorId: form.authorId,
       dictionaries: form.dictionaryIds,
     },
   })

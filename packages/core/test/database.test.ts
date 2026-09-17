@@ -572,14 +572,46 @@ describe('database layer', () => {
       expect(found).toHaveLength(1)
       expect(found[0]?.slug).toBe('about')
 
-      expect(await queryCollections(db, { types: ['page'], include: [team.id] })).toHaveLength(1)
-      expect(await queryCollections(db, { types: ['page'], include: [] })).toEqual([])
+      expect(await queryCollections(db, { types: ['page'], includeIds: [team.id] })).toMatchObject([{ slug: 'team' }])
+      expect(await queryCollections(db, { types: ['page'], includeIds: [] })).toEqual([])
       expect(
-        (await queryCollections(db, { types: ['page'], exclude: [about.id] })).map(row => row.slug).sort(),
+        (await queryCollections(db, { types: ['page'], excludeIds: [about.id] })).map(row => row.slug).sort(),
       ).toEqual(['notes', 'team'])
+      expect(await queryCollections(db, { types: ['page'], title: 'About' })).toMatchObject([{ slug: 'about' }])
+      expect(await queryCollections(db, { types: ['page', 'post'], slugs: ['hello', 'missing'] })).toMatchObject([
+        { slug: 'hello' },
+      ])
 
-      expect(await queryCollections(db, { types: ['page'], parent: null })).toHaveLength(2)
-      expect(await queryCollections(db, { types: ['page'], parent: about.id })).toMatchObject([{ slug: 'team' }])
+      expect(await queryCollections(db, { types: ['page'], parentId: null })).toHaveLength(2)
+      expect(await queryCollections(db, { types: ['page'], parentId: about.id })).toMatchObject([{ slug: 'team' }])
+      expect(
+        (await queryCollections(db, { types: ['page'], parentIds: [about.id] })).map(row => row.slug),
+      ).toEqual(['team'])
+      expect(
+        (await queryCollections(db, { types: ['page'], excludeParentIds: [about.id] })).map(row => row.slug).sort(),
+      ).toEqual(['about', 'notes'])
+      expect(
+        (await queryCollections(db, {
+          types: ['page'],
+          includeIds: [team.id, about.id],
+          orderBy: 'includeIds',
+        })).map(row => row.slug),
+      ).toEqual(['team', 'about'])
+      expect(
+        (await queryCollections(db, {
+          types: ['page'],
+          includeIds: [about.id, team.id],
+          orderBy: 'includeIds',
+        })).map(row => row.slug),
+      ).toEqual(['about', 'team'])
+      expect(
+        (await queryCollections(db, {
+          types: ['page'],
+          includeIds: [about.id, team.id],
+          orderBy: 'includeIds',
+          order: 'desc',
+        })).map(row => row.slug),
+      ).toEqual(['team', 'about'])
       expect(await queryCollections(db, { types: ['page'], authorIn: [bob.id] })).toMatchObject([{ slug: 'notes' }])
       expect(
         (await queryCollections(db, { types: ['page'], authorNotIn: [ada.id] })).map(row => row.slug),
@@ -709,6 +741,24 @@ describe('database layer', () => {
         offset: 1,
       })
       expect(page.map(row => row.slug)).toEqual(['hello', 'notes'])
+
+      const jobs = await createCollection(db, {
+        type: 'page',
+        slug: 'jobs',
+        title: 'Jobs',
+        status: 'published',
+        author_id: ada.id,
+        parent_id: notes.id,
+      })
+      expect(
+        (await queryCollections(db, {
+          types: ['page'],
+          parentIds: [about.id, notes.id],
+          orderBy: 'slug',
+          order: 'asc',
+        })).map(row => row.slug),
+      ).toEqual(['jobs', 'team'])
+      expect(jobs.slug).toBe('jobs')
     }
     finally {
       await close()

@@ -1,9 +1,11 @@
 import { createError } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import {
+  can,
   canOnEntry,
   collectionPerPage,
   DEFAULT_COLLECTION_PER_PAGE,
+  findUserById,
   formatRequiredFieldsError,
   isUniqueConstraintError,
   parseDate,
@@ -229,6 +231,39 @@ export function readParentId(value: unknown): number | null {
   const id = typeof value === 'number' ? value : Number(value)
   if (!Number.isInteger(id) || id <= 0) {
     fail(422, 'Invalid parent.')
+  }
+  return id
+}
+
+export function readAuthorId(value: unknown): number {
+  const id = typeof value === 'number' ? value : Number(value)
+  if (!Number.isInteger(id) || id <= 0) {
+    fail(422, 'Invalid author.')
+  }
+  return id
+}
+
+/** Resolve `authorId` from the request. Assigning another user requires `users:read`. */
+export async function resolveAuthorId(
+  db: Parameters<typeof findUserById>[0],
+  actor: SafeUser,
+  roles: RoleMap,
+  requested: unknown,
+  fallback: number,
+): Promise<number> {
+  if (requested === undefined || requested === null || requested === '') {
+    return fallback
+  }
+  const id = readAuthorId(requested)
+  if (id === fallback) {
+    return id
+  }
+  if (id !== actor.id && !can(actor, 'users', 'read', { roles })) {
+    fail(403, 'Insufficient permissions.')
+  }
+  const user = await findUserById(db, id)
+  if (!user) {
+    fail(422, 'Author not found.')
   }
   return id
 }

@@ -21,6 +21,12 @@ export default defineNuxtConfig({
       webp: { quality: 90 }, // или true // default 80
       imageSizes: [
         {
+          name: 'min',
+          width: 150,
+          height: 150,
+          crop: true,
+        },
+        {
           name: 'medium',
           width: 480,
           height: 480,
@@ -86,7 +92,7 @@ export default defineNuxtConfig({
           thumbnail: {
             label: 'Thumbnail',
             type: 'image',
-            // cropType: [16, 9],
+            cropType: true,
             position: 'sidebar',
             // required: true,
           },

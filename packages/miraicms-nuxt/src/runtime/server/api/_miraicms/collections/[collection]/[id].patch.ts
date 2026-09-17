@@ -19,6 +19,7 @@ import {
   readTitle,
   requireCollection,
   requirePublishedFields,
+  resolveAuthorId,
   rethrowCollectionWriteError,
   toAdminEntry,
   toCollectionMeta,
@@ -39,6 +40,7 @@ interface PatchBody {
   parentId?: unknown
   menuOrder?: unknown
   publishedAt?: unknown
+  authorId?: unknown
   dictionaries?: unknown
 }
 
@@ -96,6 +98,15 @@ export default defineEventHandler(async (event): Promise<CollectionEntryResponse
     else {
       patch.published_at = publishedAt
     }
+  }
+  if (body?.authorId !== undefined) {
+    patch.author_id = await resolveAuthorId(
+      db,
+      actor,
+      roles,
+      body.authorId,
+      existing.author_id ?? actor.id,
+    )
   }
 
   const nextStatus = patch.status ?? existing.status

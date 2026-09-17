@@ -286,15 +286,19 @@ const { values } = await getOptions({ option: 'site' })
 | `page` | `number` | `1` | Номер страницы. Также `?page=` |
 | `perPage` | `number` | `perPage` типа или `10` | Размер страницы. `-1` — все. Также `?perPage=` |
 | `search` | `string` | — | Поиск по title/slug |
-| `include` | `number \| number[]` | — | Только эти id |
-| `exclude` | `number \| number[]` | — | Исключить id |
-| `parent` | `number \| null` | — | Родитель. `null` / `0` — корень |
+| `title` | `string \| string[]` | — | Точное совпадение заголовка |
+| `slug` | `string \| string[]` | — | Слаг записи |
+| `slugs` | `string \| string[]` | — | Список слагов |
+| `includeIds` | `number \| number[]` | — | Только эти id |
+| `excludeIds` | `number \| number[]` | — | Кроме этих id |
+| `parentId` | `number \| null` | — | Родитель. `null` / `0` — корень |
+| `parentIds` | `number \| number[]` | — | Родитель из списка. `0` — корень |
+| `excludeParentIds` | `number \| number[]` | — | Кроме этих родителей. `0` — корень |
 | `authorIn` | `number[]` | — | Только записи этих авторов |
 | `authorNotIn` | `number[]` | — | Исключить записи этих авторов |
-| `slug` | `string \| string[]` | — | Слаг записи |
 | `dictionaryQuery` | `object` | — | Фильтр по словарям (`relation` + `queries`) |
-| `orderBy` | `string` | `'date'` | `date`, `modified`, `name`, `title`, `slug`, `id`, `menu_order`, `published_at`, `created_at`, `updated_at` |
-| `order` | `'asc' \| 'desc'` | по полю | Направление сортировки |
+| `orderBy` | `string` | `'date'` | `date`, `modified`, `name`, `title`, `slug`, `id`, `menu_order`, `published_at`, `created_at`, `updated_at`, `includeIds` |
+| `order` | `'asc' \| 'desc'` | по полю | Направление сортировки. Для `includeIds` — порядок массива (`desc` разворачивает) |
 
 ```vue
 <script setup lang="ts">
@@ -321,6 +325,16 @@ const { entries, permalink, page, total } = await getQueryCollection({
   },
 })
 </script>
+```
+
+`orderBy: 'includeIds'` сохраняет порядок `includeIds`:
+
+```ts
+const { entries } = await getQueryCollection({
+  collection: 'page',
+  includeIds: [5, 12, 2, 14, 7],
+  orderBy: 'includeIds',
+})
 ```
 
 `dictionaryQuery.relation` — `'AND'` (дефолт) или `'OR'`. В `queries[]`: `dictionary` (slug словаря), `field` (`id` / `name` / `slug`, дефолт `id`), `terms` (id, заголовок или слаг), `operator` (`IN` дефолт, `NOT IN`, `AND`, `EXISTS`, `NOT EXISTS`), `includeChildren` (дефолт `true` для дерева).

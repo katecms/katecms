@@ -289,7 +289,8 @@ const { values } = await getOptions({ option: 'site' })
 | `include` | `number \| number[]` | — | Только эти id |
 | `exclude` | `number \| number[]` | — | Исключить id |
 | `parent` | `number \| null` | — | Родитель. `null` / `0` — корень |
-| `author` | `number \| number[]` | — | Id автора |
+| `authorIn` | `number[]` | — | Только записи этих авторов |
+| `authorNotIn` | `number[]` | — | Исключить записи этих авторов |
 | `slug` | `string \| string[]` | — | Слаг записи |
 | `dictionaryQuery` | `object` | — | Фильтр по словарям (`relation` + `queries`) |
 | `orderBy` | `string` | `'date'` | `date`, `modified`, `name`, `title`, `slug`, `id`, `menu_order`, `published_at`, `created_at`, `updated_at` |

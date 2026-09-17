@@ -144,7 +144,7 @@ function defaultPerPage(defs: CollectionDefinition[]): number {
  *   unless preview is granted. Trash is never returned.
  * - `page`, `perPage`
  * - `search`, `include`, `exclude`
- * - `parent` (`0` = top-level), `author`, `slug`
+ * - `parent` (`0` = top-level), `authorIn`, `authorNotIn`, `slug`
  * - `dictionaryQuery` — JSON object (`relation` + `queries`)
  * - `orderBy` (`date`, `modified`, `name`, or a column), `order`
  *
@@ -207,8 +207,11 @@ export default defineEventHandler(async (event): Promise<QueryCollectionResponse
   if (hasQueryParam(query, ['parent'])) {
     filters.parent = readParent(query.parent)
   }
-  if (hasQueryParam(query, ['author'])) {
-    filters.author = readIdList(query.author)
+  if (hasQueryParam(query, ['authorIn'])) {
+    filters.authorIn = readIdList(query.authorIn)
+  }
+  if (hasQueryParam(query, ['authorNotIn'])) {
+    filters.authorNotIn = readIdList(query.authorNotIn)
   }
   if (hasQueryParam(query, ['slug'])) {
     filters.slug = readStringList(query.slug)

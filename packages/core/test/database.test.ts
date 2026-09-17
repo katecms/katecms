@@ -580,7 +580,10 @@ describe('database layer', () => {
 
       expect(await queryCollections(db, { types: ['page'], parent: null })).toHaveLength(2)
       expect(await queryCollections(db, { types: ['page'], parent: about.id })).toMatchObject([{ slug: 'team' }])
-      expect(await queryCollections(db, { types: ['page'], author: bob.id })).toMatchObject([{ slug: 'notes' }])
+      expect(await queryCollections(db, { types: ['page'], authorIn: [bob.id] })).toMatchObject([{ slug: 'notes' }])
+      expect(
+        (await queryCollections(db, { types: ['page'], authorNotIn: [ada.id] })).map(row => row.slug),
+      ).toEqual(['notes'])
       expect(await queryCollections(db, { types: ['page', 'post'], slug: ['hello', 'missing'] })).toMatchObject([
         { slug: 'hello' },
       ])

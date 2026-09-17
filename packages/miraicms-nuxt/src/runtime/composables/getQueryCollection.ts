@@ -36,8 +36,10 @@ export interface GetQueryCollectionOptions {
   exclude?: number | number[]
   /** Parent id; `null` / `0` is top-level. */
   parent?: number | null
-  /** Author id(s). */
-  author?: number | number[]
+  /** Only entries by these author ids. */
+  authorIn?: number[]
+  /** Skip entries by these author ids. */
+  authorNotIn?: number[]
   /** Entry slug(s). */
   slug?: string | string[]
   /** Filter by dictionary rows (`relation` + `queries`). */
@@ -134,7 +136,8 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
   const include = computed(() => csv(options.include))
   const exclude = computed(() => csv(options.exclude))
   const parent = computed(() => options.parent)
-  const author = computed(() => csv(options.author))
+  const authorIn = computed(() => csv(options.authorIn))
+  const authorNotIn = computed(() => csv(options.authorNotIn))
   const slug = computed(() => csv(options.slug))
   const dictionaryQuery = computed(() => (
     options.dictionaryQuery
@@ -146,7 +149,8 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
   const includeSet = computed(() => options.include !== undefined)
   const excludeSet = computed(() => options.exclude !== undefined)
   const parentSet = computed(() => options.parent !== undefined)
-  const authorSet = computed(() => options.author !== undefined)
+  const authorInSet = computed(() => options.authorIn !== undefined)
+  const authorNotInSet = computed(() => options.authorNotIn !== undefined)
   const slugSet = computed(() => options.slug !== undefined)
   const requestFetch = useRequestFetch()
 
@@ -162,7 +166,8 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
       includeSet.value ? include.value ?? '' : '-',
       excludeSet.value ? exclude.value ?? '' : '-',
       parentSet.value ? String(parent.value ?? 0) : '-',
-      authorSet.value ? author.value ?? '' : '-',
+      authorInSet.value ? authorIn.value ?? '' : '-',
+      authorNotInSet.value ? authorNotIn.value ?? '' : '-',
       slugSet.value ? slug.value ?? '' : '-',
       dictionaryQuery.value ?? '',
       orderBy.value ?? '',
@@ -179,7 +184,8 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
         ...(includeSet.value ? { include: include.value ?? '' } : {}),
         ...(excludeSet.value ? { exclude: exclude.value ?? '' } : {}),
         ...(parentSet.value ? { parent: parent.value ?? 0 } : {}),
-        ...(authorSet.value ? { author: author.value ?? '' } : {}),
+        ...(authorInSet.value ? { authorIn: authorIn.value ?? '' } : {}),
+        ...(authorNotInSet.value ? { authorNotIn: authorNotIn.value ?? '' } : {}),
         ...(slugSet.value ? { slug: slug.value ?? '' } : {}),
         ...(dictionaryQuery.value ? { dictionaryQuery: dictionaryQuery.value } : {}),
         ...(orderBy.value ? { orderBy: orderBy.value } : {}),
@@ -200,8 +206,10 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
         excludeSet,
         parent,
         parentSet,
-        author,
-        authorSet,
+        authorIn,
+        authorInSet,
+        authorNotIn,
+        authorNotInSet,
         slug,
         slugSet,
         dictionaryQuery,

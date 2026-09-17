@@ -141,7 +141,8 @@ export interface QueryCollectionsOptions extends ListPaging {
   include?: number | number[]
   exclude?: number | number[]
   parent?: number | null
-  author?: number | number[]
+  authorIn?: number | number[]
+  authorNotIn?: number | number[]
   slug?: string | string[]
   dictionaryQuery?: DictionaryQuery
   orderBy?: CollectionOrderField
@@ -203,9 +204,13 @@ function withCollectionQueryFilters<O>(
       : next.where('parent_id', '=', options.parent)
   }
 
-  const authors = asIdList(options.author)
-  if (options.author !== undefined) {
-    next = next.where('author_id', 'in', authors.length > 0 ? authors : [0])
+  const authorIn = asIdList(options.authorIn)
+  if (options.authorIn !== undefined) {
+    next = next.where('author_id', 'in', authorIn.length > 0 ? authorIn : [0])
+  }
+  const authorNotIn = asIdList(options.authorNotIn)
+  if (authorNotIn.length > 0) {
+    next = next.where('author_id', 'not in', authorNotIn)
   }
 
   const slugs = asSlugList(options.slug)

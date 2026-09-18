@@ -455,199 +455,198 @@ watch(
 </script>
 
 <template>
+  <MiraiCmsUiNotice
+    v-if="requiredNotice"
+    placement="fixed"
+    variant="danger"
+    :message="requiredNotice"
+    :closable="false"
+  />
+  <MiraiCmsUiNotice
+    v-if="error"
+    placement="fixed"
+    variant="danger"
+    :message="error"
+  />
+
   <form
     :class="rootClass"
     novalidate
     @submit.prevent="onSubmit"
   >
-    <MiraiCmsUiNotice
-      v-if="requiredNotice"
-      placement="static"
-      variant="danger"
-      :message="requiredNotice"
-      :closable="false"
-    />
-    <MiraiCmsUiNotice
-      v-if="error"
-      placement="static"
-      variant="danger"
-      :message="error"
-    />
-    <div :class="`${rootClass}__layout`">
-      <div :class="`${rootClass}__main`">
-        <MiraiCmsFieldWrapper
+    <div :class="`${rootClass}__main`">
+      <MiraiCmsFieldWrapper
+        field-key="cms-entry-title"
+        :field="titleField"
+      >
+        <MiraiCmsInputControl
+          :model-value="modelValue.title"
           field-key="cms-entry-title"
           :field="titleField"
-        >
-          <MiraiCmsInputControl
-            :model-value="modelValue.title"
-            field-key="cms-entry-title"
-            :field="titleField"
-            @update:model-value="updateCore('title', String($event ?? ''))"
-          />
-        </MiraiCmsFieldWrapper>
+          @update:model-value="updateCore('title', String($event ?? ''))"
+        />
+      </MiraiCmsFieldWrapper>
 
-        <MiraiCmsFieldWrapper
+      <MiraiCmsFieldWrapper
+        field-key="cms-entry-slug"
+        :field="slugField"
+      >
+        <MiraiCmsInputControl
+          :model-value="modelValue.slug"
           field-key="cms-entry-slug"
           :field="slugField"
-        >
-          <MiraiCmsInputControl
-            :model-value="modelValue.slug"
-            field-key="cms-entry-slug"
-            :field="slugField"
-            @update:model-value="updateCore('slug', String($event ?? ''))"
-          />
-        </MiraiCmsFieldWrapper>
+          @update:model-value="updateCore('slug', String($event ?? ''))"
+        />
+      </MiraiCmsFieldWrapper>
 
-        <div :class="`${rootClass}__fields`">
-          <div
-            v-for="[key, field] in mainFields"
-            :key="key"
-            :class="`${rootClass}__field`"
-            :style="field.columnWidth ? { width: `${field.columnWidth}%` } : undefined"
-          >
-            <component
-              :is="resolveField(field.type)"
-              v-model="values[key]"
-              :field-key="key"
-              :field="field"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div :class="`${rootClass}__sidebar`">
-        <div :class="`${rootClass}__publish`">
-          <div :class="`${rootClass}__publish-title`">
-            Publish
-          </div>
-
-          <MiraiCmsUiNotice
-            v-if="isTrash"
-            placement="static"
-            variant="warning"
-            message="This entry is in the trash."
-            :closable="false"
-          />
-
-          <template v-else>
-            <MiraiCmsSelectField
-              :model-value="modelValue.status === 'trash' ? 'draft' : modelValue.status"
-              field-key="cms-entry-status"
-              :field="statusField"
-              @update:model-value="updateCore('status', ($event === 'published' ? 'published' : 'draft') as CollectionStatus)"
-            />
-
-            <MiraiCmsUserField
-              v-model="authorModel"
-              field-key="cms-entry-author"
-              :field="authorField"
-            />
-
-            <MiraiCmsDateTimePickerField
-              v-model="publishedLocal"
-              field-key="cms-entry-published"
-              :field="publishedField"
-            />
-
-            <MiraiCmsNumberField
-              v-model="menuOrderModel"
-              field-key="cms-entry-menu-order"
-              :field="menuOrderField"
-            />
-
-            <MiraiCmsSelectField
-              v-if="collection.hierarchical"
-              v-model="parentModel"
-              field-key="cms-entry-parent"
-              :field="parentField"
-            />
-          </template>
-
-          <div :class="`${rootClass}__publish-actions`">
-            <MiraiCmsUiButton
-              v-if="!isTrash && canUpdate"
-              tag="button"
-              type="submit"
-              variant="full"
-              :disabled="!canSubmit"
-            >
-              {{ submitLabel }}
-            </MiraiCmsUiButton>
-
-            <MiraiCmsUiButton
-              v-if="viewUrl && !isTrash"
-              tag="a"
-              :variant="['secondary', 'small', 'full']"
-              :link="{ url: viewUrl, title: 'View', target: '_blank' }"
-            >
-              View
-            </MiraiCmsUiButton>
-
-            <MiraiCmsUiButton
-              v-if="!isTrash && canUpdate"
-              tag="button"
-              type="button"
-              :variant="['red', 'small', 'full']"
-              :disabled="saving"
-              @click="emit('trash')"
-            >
-              Move to trash
-            </MiraiCmsUiButton>
-
-            <MiraiCmsUiButton
-              v-if="isTrash && canUpdate"
-              tag="button"
-              type="button"
-              :disabled="saving"
-              @click="emit('restore')"
-            >
-              Restore
-            </MiraiCmsUiButton>
-
-            <MiraiCmsUiButton
-              v-if="isTrash && canDelete"
-              tag="button"
-              type="button"
-              :variant="['red', 'small']"
-              :disabled="saving"
-              @click="emit('delete')"
-            >
-              Delete permanently
-            </MiraiCmsUiButton>
-          </div>
-        </div>
-
+      <div :class="`${rootClass}__fields`">
         <div
-          v-if="!isTrash && dictionaryPickers.length"
-          :class="`${rootClass}__dictionaries`"
-        >
-          <div :class="`${rootClass}__dictionaries-title`">
-            Dictionaries
-          </div>
-          <MiraiCmsSelectField
-            v-for="picker in dictionaryPickers"
-            :key="picker.slug"
-            :model-value="dictionaryValue(picker)"
-            :field-key="`cms-entry-dictionary-${picker.slug}`"
-            :field="dictionaryField(picker)"
-            @update:model-value="setDictionaryValue(picker, $event)"
-          />
-        </div>
-
-        <div
-          v-if="sidebarFields.length"
-          :class="`${rootClass}__sidebar-fields`"
+          v-for="[key, field] in mainFields"
+          :key="key"
+          :class="`${rootClass}__field`"
+          :style="field.columnWidth ? { width: `${field.columnWidth}%` } : undefined"
         >
           <component
             :is="resolveField(field.type)"
-            v-for="[key, field] in sidebarFields"
-            :key="key"
             v-model="values[key]"
             :field-key="key"
             :field="field"
           />
         </div>
+      </div>
+    </div>
+
+    <div :class="`${rootClass}__sidebar`">
+      <div :class="`${rootClass}__publish`">
+        <div :class="`${rootClass}__publish-title`">
+          Publish
+        </div>
+
+        <MiraiCmsUiNotice
+          v-if="isTrash"
+          placement="static"
+          variant="warning"
+          message="This entry is in the trash."
+          :closable="false"
+        />
+
+        <template v-else>
+          <MiraiCmsSelectField
+            :model-value="modelValue.status === 'trash' ? 'draft' : modelValue.status"
+            field-key="cms-entry-status"
+            :field="statusField"
+            @update:model-value="updateCore('status', ($event === 'published' ? 'published' : 'draft') as CollectionStatus)"
+          />
+
+          <MiraiCmsUserField
+            v-model="authorModel"
+            field-key="cms-entry-author"
+            :field="authorField"
+          />
+
+          <MiraiCmsDateTimePickerField
+            v-model="publishedLocal"
+            field-key="cms-entry-published"
+            :field="publishedField"
+          />
+
+          <MiraiCmsNumberField
+            v-model="menuOrderModel"
+            field-key="cms-entry-menu-order"
+            :field="menuOrderField"
+          />
+
+          <MiraiCmsSelectField
+            v-if="collection.hierarchical"
+            v-model="parentModel"
+            field-key="cms-entry-parent"
+            :field="parentField"
+          />
+        </template>
+
+        <div :class="`${rootClass}__publish-actions`">
+          <MiraiCmsUiButton
+            v-if="!isTrash && canUpdate"
+            tag="button"
+            type="submit"
+            variant="full"
+            :disabled="!canSubmit"
+          >
+            {{ submitLabel }}
+          </MiraiCmsUiButton>
+
+          <MiraiCmsUiButton
+            v-if="viewUrl && !isTrash"
+            tag="a"
+            :variant="['secondary', 'small', 'full']"
+            :link="{ url: viewUrl, title: 'View', target: '_blank' }"
+          >
+            View
+          </MiraiCmsUiButton>
+
+          <MiraiCmsUiButton
+            v-if="!isTrash && canUpdate"
+            tag="button"
+            type="button"
+            :variant="['red', 'small', 'full']"
+            :disabled="saving"
+            @click="emit('trash')"
+          >
+            Move to trash
+          </MiraiCmsUiButton>
+
+          <MiraiCmsUiButton
+            v-if="isTrash && canUpdate"
+            tag="button"
+            type="button"
+            :disabled="saving"
+            @click="emit('restore')"
+          >
+            Restore
+          </MiraiCmsUiButton>
+
+          <MiraiCmsUiButton
+            v-if="isTrash && canDelete"
+            tag="button"
+            type="button"
+            :variant="['red', 'small']"
+            :disabled="saving"
+            @click="emit('delete')"
+          >
+            Delete permanently
+          </MiraiCmsUiButton>
+        </div>
+      </div>
+
+      <div
+        v-if="!isTrash && dictionaryPickers.length"
+        :class="`${rootClass}__dictionaries`"
+      >
+        <div :class="`${rootClass}__dictionaries-title`">
+          Dictionaries
+        </div>
+        <MiraiCmsSelectField
+          v-for="picker in dictionaryPickers"
+          :key="picker.slug"
+          :model-value="dictionaryValue(picker)"
+          :field-key="`cms-entry-dictionary-${picker.slug}`"
+          :field="dictionaryField(picker)"
+          @update:model-value="setDictionaryValue(picker, $event)"
+        />
+      </div>
+
+      <div
+        v-if="sidebarFields.length"
+        :class="`${rootClass}__sidebar-fields`"
+      >
+        <component
+          :is="resolveField(field.type)"
+          v-for="[key, field] in sidebarFields"
+          :key="key"
+          v-model="values[key]"
+          :field-key="key"
+          :field="field"
+        />
       </div>
     </div>
   </form>
@@ -660,27 +659,35 @@ $root: '.miraicms-collection-form';
 
 @include miraicms-wrapper {
   #{$root} {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(8);
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) math-rem(280);
+    grid-template-rows: minmax(0, 1fr);
 
-    &__layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) math-rem(280);
-      gap: math-rem(16);
-      align-items: start;
-      min-width: 0;
-
-      @media (max-width: 1100px) {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 1100px) {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: none;
+      overflow: auto;
     }
 
-    &__main {
+    &__main,
+    &__sidebar {
       display: flex;
       flex-direction: column;
-      gap: math-rem(14);
+      gap: math-rem(16);
       min-width: 0;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+
+      @media (max-width: 1100px) {
+        overflow: visible;
+      }
     }
 
     &__fields {
@@ -689,20 +696,15 @@ $root: '.miraicms-collection-form';
       row-gap: math-rem(16);
       margin-left: math-rem(-8);
       margin-right: math-rem(-8);
+      min-width: 0;
     }
 
     &__field {
       padding-left: math-rem(8);
       padding-right: math-rem(8);
       width: 100%;
-      box-sizing: border-box;
-    }
-
-    &__sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: math-rem(16);
       min-width: 0;
+      box-sizing: border-box;
     }
 
     &__publish,

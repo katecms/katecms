@@ -166,84 +166,34 @@ watch(collectionSlug, load)
 </script>
 
 <template>
-  <div class="miraicms-collection-entry">
-    <div class="miraicms-collection-entry__head">
-      <MiraiCmsUiButton
-        tag="a"
-        :variant="['secondary', 'icon']"
-        :link="{ url: paths.collection(collectionSlug), title: 'Back to list' }"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 640 640"
-        ><path
-          d="M73 297a32 32 0 0 0 0 46l160 160a32 32 0 0 0 46-46L173 352h371a32 32 0 1 0 0-64H173l106-105a32 32 0 0 0-46-46z"
-          fill="currentColor"
-        /></svg>
-      </MiraiCmsUiButton>
-      <div class="miraicms-collection-entry__head-title">
-        New
-        {{ collection?.labels.singularName || collection?.labels.name || 'entry' }}
-      </div>
-    </div>
+  <MiraiCmsUiNotice
+    v-if="loading"
+    placement="static"
+    variant="info"
+    message="Loading…"
+    :closable="false"
+  />
+  <MiraiCmsUiNotice
+    v-else-if="!collection"
+    placement="static"
+    variant="danger"
+    :message="error || 'Collection not found.'"
+    :closable="false"
+  />
 
-    <MiraiCmsUiNotice
-      v-if="loading"
-      placement="static"
-      variant="info"
-      message="Loading…"
-      :closable="false"
-    />
-    <MiraiCmsUiNotice
-      v-else-if="!collection"
-      placement="static"
-      variant="danger"
-      :message="error || 'Collection not found.'"
-      :closable="false"
-    />
-
-    <div
-      v-else
-      @focusout="ensureSlug"
-    >
-      <MiraiCmsCollectionEntryForm
-        :model-value="form"
-        :collection="collection"
-        entry-key="new"
-        :parents="parents"
-        :dictionary-pickers="dictionaryPickers"
-        :saving="saving"
-        :error="error"
-        :can-update="true"
-        :can-delete="false"
-        @update:model-value="(value: CollectionEntryFormModel) => Object.assign(form, value)"
-        @submit="submit"
-      />
-    </div>
-  </div>
+  <MiraiCmsCollectionEntryForm
+    v-else
+    :model-value="form"
+    :collection="collection"
+    entry-key="new"
+    :parents="parents"
+    :dictionary-pickers="dictionaryPickers"
+    :saving="saving"
+    :error="error"
+    :can-update="true"
+    :can-delete="false"
+    @focusout="ensureSlug"
+    @update:model-value="(value: CollectionEntryFormModel) => Object.assign(form, value)"
+    @submit="submit"
+  />
 </template>
-
-<style scoped lang="scss">
-@use "../../../assets/styles" as *;
-
-$root: '.miraicms-collection-entry';
-
-@include miraicms-wrapper {
-  #{$root} {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(16);
-
-    &__head {
-      display: flex;
-      align-items: center;
-      gap: math-rem(16);
-    }
-
-    &__head-title {
-      font-size: math-rem(18);
-      font-weight: 600;
-    }
-  }
-}
-</style>

@@ -22,9 +22,7 @@ const rootClass = 'miraicms'
     </div>
 
     <div :class="[`${rootClass}-main`]">
-      <div :class="[`${rootClass}-main-wrapper`]">
-        <NuxtPage />
-      </div>
+      <NuxtPage />
     </div>
 
     <!--    <NuxtCmsIndexSyncModal /> -->
@@ -74,12 +72,11 @@ $root: '.miraicms';
 
     &-main {
       grid-area: main;
-      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
       min-height: 0;
-
-      &-wrapper {
-        padding: math-rem(8);
-      }
+      overflow: hidden;
     }
   }
 }

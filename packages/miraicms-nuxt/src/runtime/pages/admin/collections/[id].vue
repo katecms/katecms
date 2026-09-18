@@ -96,8 +96,8 @@ const viewUrl = computed(() => {
 function flashSavedNotice(status: 'published' | 'draft') {
   savedNoticeText.value = status === 'published'
     ? (collection.value?.labels.singularName
-      ? `${collection.value.labels.singularName} published.`
-      : 'Entry published.')
+        ? `${collection.value.labels.singularName} published.`
+        : 'Entry published.')
     : 'Draft saved.'
   savedNoticeId.value += 1
 }
@@ -365,102 +365,56 @@ watch(() => route.query.notice, consumeRouteNotice, { immediate: true })
 </script>
 
 <template>
-  <div class="miraicms-collection-entry">
-    <div class="miraicms-collection-entry__head">
-      <MiraiCmsUiButton
-        tag="a"
-        :variant="['secondary', 'icon']"
-        :link="{ url: paths.collection(collectionSlug), title: 'Back to list' }"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 640 640"
-        ><path
-          d="M73 297a32 32 0 0 0 0 46l160 160a32 32 0 0 0 46-46L173 352h371a32 32 0 1 0 0-64H173l106-105a32 32 0 0 0-46-46z"
-          fill="currentColor"
-        /></svg>
-      </MiraiCmsUiButton>
-      <div class="miraicms-collection-entry__head-title">
-        {{ pageTitle }}
-      </div>
-    </div>
+  <MiraiCmsUiNotice
+    v-if="savedNoticeId"
+    :key="savedNoticeId"
+    placement="fixed"
+    :message="savedNoticeText"
+    @close="savedNoticeId = 0"
+  />
 
-    <MiraiCmsUiNotice
-      v-if="savedNoticeId"
-      :key="savedNoticeId"
-      placement="fixed"
-      :message="savedNoticeText"
-      @close="savedNoticeId = 0"
-    />
+  <MiraiCmsUiNotice
+    v-if="loading"
+    placement="static"
+    variant="info"
+    message="Loading…"
+    :closable="false"
+  />
+  <MiraiCmsUiNotice
+    v-else-if="!found"
+    placement="static"
+    variant="danger"
+    :message="error || 'Entry not found.'"
+    :closable="false"
+  />
 
-    <MiraiCmsUiNotice
-      v-if="loading"
-      placement="static"
-      variant="info"
-      message="Loading…"
-      :closable="false"
-    />
-    <MiraiCmsUiNotice
-      v-else-if="!found"
-      placement="static"
-      variant="danger"
-      :message="error || 'Entry not found.'"
-      :closable="false"
-    />
+  <MiraiCmsCollectionEntryForm
+    v-else-if="collection"
+    ref="entryForm"
+    :model-value="form"
+    :collection="collection"
+    :entry-key="entryId"
+    :parents="parents"
+    :dictionary-pickers="dictionaryPickers"
+    :saving="saving"
+    :error="error"
+    :view-url="viewUrl"
+    :can-update="canUpdate"
+    :can-delete="canDelete"
+    :saved-status="savedStatus"
+    @update:model-value="(value: CollectionEntryFormModel) => Object.assign(form, value)"
+    @submit="submit"
+    @trash="moveToTrash"
+    @restore="restore"
+    @delete="removePermanent"
+  />
 
-    <MiraiCmsCollectionEntryForm
-      v-else-if="collection"
-      ref="entryForm"
-      :model-value="form"
-      :collection="collection"
-      :entry-key="entryId"
-      :parents="parents"
-      :dictionary-pickers="dictionaryPickers"
-      :saving="saving"
-      :error="error"
-      :view-url="viewUrl"
-      :can-update="canUpdate"
-      :can-delete="canDelete"
-      :saved-status="savedStatus"
-      @update:model-value="(value: CollectionEntryFormModel) => Object.assign(form, value)"
-      @submit="submit"
-      @trash="moveToTrash"
-      @restore="restore"
-      @delete="removePermanent"
-    />
-
-    <MiraiCmsConfirmDialog
-      :open="leaveOpen"
-      :busy="saving"
-      :save-label="form.status === 'published' ? 'Publish' : 'Save draft'"
-      @save="saveAndLeave"
-      @discard="discardLeave"
-      @cancel="cancelLeave"
-    />
-  </div>
+  <MiraiCmsConfirmDialog
+    :open="leaveOpen"
+    :busy="saving"
+    :save-label="form.status === 'published' ? 'Publish' : 'Save draft'"
+    @save="saveAndLeave"
+    @discard="discardLeave"
+    @cancel="cancelLeave"
+  />
 </template>
-
-<style scoped lang="scss">
-@use "../../../assets/styles" as *;
-
-$root: '.miraicms-collection-entry';
-
-@include miraicms-wrapper {
-  #{$root} {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(16);
-
-    &__head {
-      display: flex;
-      align-items: center;
-      gap: math-rem(16);
-    }
-
-    &__head-title {
-      font-size: math-rem(18);
-      font-weight: 600;
-    }
-  }
-}
-</style>

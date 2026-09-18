@@ -32,6 +32,7 @@ import {
   migrateSqlite,
   queryCollections,
   countQueryCollections,
+  parseFieldsQuery,
   setCollectionDictionaries,
   setOption,
   unlinkCollectionDictionary,
@@ -759,6 +760,149 @@ describe('database layer', () => {
         })).map(row => row.slug),
       ).toEqual(['jobs', 'team'])
       expect(jobs.slug).toBe('jobs')
+    }
+    finally {
+      await close()
+    }
+  })
+
+  it('filters collections by fieldsQuery', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      const ada = await createUser(db, {
+        email: 'ada@example.com',
+        password_hash: 'hash',
+      })
+      await createCollection(db, {
+        type: 'post',
+        slug: 'red-cheap',
+        title: 'Red cheap',
+        status: 'published',
+        author_id: ada.id,
+        fields: { color: 'red', price: 10, sku: 'bar_is' },
+      })
+      await createCollection(db, {
+        type: 'post',
+        slug: 'blue-dear',
+        title: 'Blue dear',
+        status: 'published',
+        author_id: ada.id,
+        fields: { color: 'blue', price: 50, seo: { title: 'Hello' } },
+      })
+      await createCollection(db, {
+        type: 'post',
+        slug: 'no-color',
+        title: 'No color',
+        status: 'published',
+        author_id: ada.id,
+        fields: { price: 10 },
+      })
+
+      expect(parseFieldsQuery({
+        queries: [{ key: 'color', value: 'red' }],
+      })).toMatchObject({
+        relation: 'AND',
+        queries: [{
+          key: 'color',
+          compareKey: '=',
+          compareValue: '=',
+          type: 'TEXT',
+          value: 'red',
+        }],
+      })
+
+      expect(
+        (await queryCollections(db, {
+          types: ['post'],
+          fieldsQuery: { queries: [{ key: 'color', value: 'red' }] },
+        })).map(row => row.slug),
+      ).toEqual(['red-cheap'])
+
+      expect(
+        (await queryCollections(db, {
+          types: ['post'],
+          fieldsQuery: { queries: [{ key: 'color', compareValue: 'EXISTS' }] },
+        })).map(row => row.slug).sort(),
+      ).toEqual(['blue-dear', 'red-cheap'])
+
+      expect(
+        (await queryCollections(db, {
+          types: ['post'],
+          fieldsQuery: {
+            queries: [{ key: 'color', compareValue: 'NOT EXISTS' }],
+          },
+        })).map(row => row.slug),
+      ).toEqual(['no-color'])
+
+      expect(
+        (await queryCollections(db, {
+          types: ['post'],
+          fieldsQuery: {
+            queries: [{ key: 'price', compareValue: '>=', value: 50, type: 'NUMERIC' }],
+          },
+        })).map(row => row.slug),
+      ).toEqual(['blue-dear'])
+
+      expect(
+        (await queryCollections(db, {
+          types: ['post'],
+          fieldsQuery: { queries: [{ key: 'seo.title', value: 'Hello' }] },
+        })).map(row => row.slug),
+      ).toEqual(['blue-dear'])
+
+      expect(
+        (await queryCollections(db, {
+          types: ['post'],
+          fieldsQuery: {
+            relation: 'OR',
+            queries: [
+              { key: 'color', value: 'red' },
+              { key: 'color', value: 'blue' },
+            ],
+          },
+        })).map(row => row.slug).sort(),
+      ).toEqual(['blue-dear', 'red-cheap'])
+
+      expect(
+        (await queryCollections(db, {
+          types: ['post'],
+          fieldsQuery: { queries: [{ key: 'sku', compareValue: 'REGEXP', value: '^bar' }] },
+        })).map(row => row.slug),
+      ).toEqual(['red-cheap'])
+
+      expect(
+        (await queryCollections(db, {
+          types: ['post'],
+          fieldsQuery: { queries: [{ key: 'color', compareValue: 'LIKE', value: 'lu' }] },
+        })).map(row => row.slug),
+      ).toEqual(['blue-dear'])
+
+      expect(
+        (await queryCollections(db, {
+          types: ['post'],
+          fieldsQuery: {
+            queries: [{ key: 'price', compareValue: 'BETWEEN', value: [5, 25], type: 'NUMERIC' }],
+          },
+        })).map(row => row.slug).sort(),
+      ).toEqual(['no-color', 'red-cheap'])
+
+      expect(
+        (await queryCollections(db, {
+          types: ['post'],
+          fieldsQuery: {
+            queries: [{ key: '^col', compareKey: 'REGEXP', compareValue: 'EXISTS' }],
+          },
+        })).map(row => row.slug).sort(),
+      ).toEqual(['blue-dear', 'red-cheap'])
+
+      expect(
+        (await queryCollections(db, {
+          types: ['post'],
+          fieldsQuery: {
+            queries: [{ key: ['color', 'sku'], value: 'red' }],
+          },
+        })).map(row => row.slug),
+      ).toEqual(['red-cheap'])
     }
     finally {
       await close()

@@ -52,6 +52,16 @@ export type {
   DictionaryQueryRelation,
 } from './dictionary-query'
 export { parseDictionaryQuery } from './dictionary-query'
+export { parseFieldsQuery } from './fields-query'
+export type {
+  FieldsQuery,
+  FieldsQueryCast,
+  FieldsQueryItem,
+  FieldsQueryKeyCompare,
+  FieldsQueryRelation,
+  FieldsQueryScalar,
+  FieldsQueryValueCompare,
+} from './fields-query'
 
 export {
   deleteCollectionMeta,

@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useAsyncData, useRequestFetch, useRoute } from '#imports'
 import { buildPublicPath } from '@miraicms/core'
-import type { CollectionOrderField, DictionaryQuery } from '@miraicms/core'
+import type { CollectionOrderField, DictionaryQuery, FieldsQuery } from '@miraicms/core'
 import type { AdminEntry, QueryCollectionResponse } from '../utils/collections'
 import { isTruthyQueryParam, parsePublicStatusParam } from '../utils/preview'
 
@@ -53,6 +53,8 @@ export interface GetQueryCollectionOptions {
   slugs?: string | string[]
   /** Filter by dictionary rows (`relation` + `queries`). */
   dictionaryQuery?: DictionaryQuery
+  /** Filter by entry `fields` JSON (`relation` + `queries`). */
+  fieldsQuery?: FieldsQuery
   /** Sort field. `date` → `published_at`, `modified` → `updated_at`, `name` → `slug`, `includeIds` → `includeIds` order. */
   orderBy?: QueryCollectionOrderBy
   order?: 'asc' | 'desc'
@@ -197,6 +199,11 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
       ? JSON.stringify(options.dictionaryQuery)
       : undefined
   ))
+  const fieldsQuery = computed(() => (
+    options.fieldsQuery
+      ? JSON.stringify(options.fieldsQuery)
+      : undefined
+  ))
   const orderBy = computed(() => options.orderBy)
   const order = computed(() => options.order)
   const titleSet = computed(() => options.title !== undefined)
@@ -230,6 +237,7 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
       authorNotInSet.value ? authorNotIn.value ?? '' : '-',
       slugSet.value ? slug.value ?? '' : '-',
       dictionaryQuery.value ?? '',
+      fieldsQuery.value ?? '',
       orderBy.value ?? '',
       order.value ?? '',
     ].join(':'),
@@ -250,6 +258,7 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
         ...(authorNotInSet.value ? { authorNotIn: authorNotIn.value ?? '' } : {}),
         ...(slugSet.value ? { slug: slug.value ?? '' } : {}),
         ...(dictionaryQuery.value ? { dictionaryQuery: dictionaryQuery.value } : {}),
+        ...(fieldsQuery.value ? { fieldsQuery: fieldsQuery.value } : {}),
         ...(orderBy.value ? { orderBy: orderBy.value } : {}),
         ...(order.value ? { order: order.value } : {}),
       },
@@ -279,6 +288,7 @@ export async function getQueryCollection(options: GetQueryCollectionOptions) {
         slug,
         slugSet,
         dictionaryQuery,
+        fieldsQuery,
         orderBy,
         order,
       ],

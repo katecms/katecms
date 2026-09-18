@@ -6,6 +6,8 @@ import { applyListPaging } from './paging'
 import type { ListPaging } from './paging'
 import { applyDictionaryQueryFilters } from './dictionary-query'
 import type { DictionaryQuery } from './dictionary-query'
+import { applyFieldsQueryFilters } from './fields-query'
+import type { FieldsQuery } from './fields-query'
 
 export type Collection = Selectable<CollectionsTable>
 export type NewCollection = Insertable<CollectionsTable>
@@ -154,6 +156,7 @@ export interface QueryCollectionsOptions extends ListPaging {
   authorNotIn?: number | number[]
   slug?: string | string[]
   dictionaryQuery?: DictionaryQuery
+  fieldsQuery?: FieldsQuery
   orderBy?: CollectionQueryOrderBy
   order?: 'asc' | 'desc'
 }
@@ -381,7 +384,7 @@ export async function queryCollections(
   if (types.length === 0) {
     return []
   }
-  const filtered = await applyDictionaryQueryFilters(
+  const withDict = await applyDictionaryQueryFilters(
     db,
     withCollectionQueryFilters(
       db.selectFrom('collections').selectAll(),
@@ -389,6 +392,7 @@ export async function queryCollections(
     ),
     options.dictionaryQuery,
   )
+  const filtered = applyFieldsQueryFilters(db, withDict, options.fieldsQuery)
   const query = applyCollectionOrder(filtered, options)
   return applyListPaging(query, options).execute()
 }
@@ -401,7 +405,7 @@ export async function countQueryCollections(
   if (types.length === 0) {
     return 0
   }
-  const filtered = await applyDictionaryQueryFilters(
+  const withDict = await applyDictionaryQueryFilters(
     db,
     withCollectionQueryFilters(
       db.selectFrom('collections').select(eb => eb.fn.countAll<number>().as('n')),
@@ -409,6 +413,7 @@ export async function countQueryCollections(
     ),
     options.dictionaryQuery,
   )
+  const filtered = applyFieldsQueryFilters(db, withDict, options.fieldsQuery)
   const row = await filtered.executeTakeFirstOrThrow()
   return Number(row.n)
 }

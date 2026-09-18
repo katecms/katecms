@@ -9,6 +9,7 @@ import {
   DEFAULT_COLLECTION_PER_PAGE,
   isCollectionQueryOrderBy,
   parseDictionaryQuery,
+  parseFieldsQuery,
   queryCollections,
 } from '@miraicms/core'
 import type {
@@ -16,6 +17,7 @@ import type {
   CollectionQueryOrderBy,
   Collections,
   DictionaryQuery,
+  FieldsQuery,
   QueryCollectionsOptions,
 } from '@miraicms/core'
 import { getDb } from '../../utils/db'
@@ -143,6 +145,26 @@ function readDictionaryQuery(value: unknown): DictionaryQuery | undefined {
   return parseDictionaryQuery(parsed)
 }
 
+function readFieldsQuery(value: unknown): FieldsQuery | undefined {
+  const raw = firstQueryValue(value)
+  if (raw == null || raw === '') {
+    return undefined
+  }
+  let parsed: unknown = raw
+  if (typeof raw === 'string') {
+    try {
+      parsed = JSON.parse(raw)
+    }
+    catch {
+      fail(400, 'Invalid fieldsQuery.')
+    }
+  }
+  if (typeof parsed !== 'object' || parsed == null || Array.isArray(parsed)) {
+    fail(400, 'Invalid fieldsQuery.')
+  }
+  return parseFieldsQuery(parsed)
+}
+
 function defaultPerPage(defs: CollectionDefinition[]): number {
   if (defs.length === 1) {
     return collectionPerPage(defs[0])
@@ -179,6 +201,7 @@ function resolveQueryCollectionTypes(requested: string[], all: Collections): str
  * - `parentId` (`0` = top-level), `parentIds`, `excludeParentIds`
  * - `authorIn`, `authorNotIn`, `slug`, `slugs`
  * - `dictionaryQuery` — JSON object (`relation` + `queries`)
+ * - `fieldsQuery` — JSON object (`relation` + `queries`) against `fields`
  * - `orderBy` (`date`, `modified`, `name`, `includeIds`, or a column), `order`
  *
  * Collections with `public: false` are skipped. Unknown types are skipped.
@@ -260,6 +283,9 @@ export default defineEventHandler(async (event): Promise<QueryCollectionResponse
   }
   if (hasQueryParam(query, ['dictionaryQuery'])) {
     filters.dictionaryQuery = readDictionaryQuery(query.dictionaryQuery)
+  }
+  if (hasQueryParam(query, ['fieldsQuery'])) {
+    filters.fieldsQuery = readFieldsQuery(query.fieldsQuery)
   }
   filters.orderBy = readOrderBy(query.orderBy) ?? 'published_at'
   const order = readOrder(query.order)

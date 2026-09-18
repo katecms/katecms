@@ -17,6 +17,8 @@
     - [getCollection](#getCollection)
     - [getOptions](#getOptions)
     - [getQueryCollection](#getQueryCollection)
+      - [dictionaryQuery](#getQueryCollection-dictionaryQuery)
+      - [fieldsQuery](#getQueryCollection-fieldsQuery)
   - [Пример](#config-example)
 - [Общие параметры полей](#fields-base)
 - [Поля](#fields)
@@ -296,9 +298,40 @@ const { values } = await getOptions({ option: 'site' })
 | `excludeParentIds` | `number \| number[]` | — | Кроме этих родителей. `0` — корень |
 | `authorIn` | `number[]` | — | Только записи этих авторов |
 | `authorNotIn` | `number[]` | — | Исключить записи этих авторов |
-| `dictionaryQuery` | `object` | — | Фильтр по словарям (`relation` + `queries`) |
+| `dictionaryQuery` | `object` | — | Фильтр по словарям. [значения](#getQueryCollection-dictionaryQuery) |
+| `fieldsQuery` | `object` | — | Фильтр по JSON `fields`. [значения](#getQueryCollection-fieldsQuery) |
 | `orderBy` | `string` | `'date'` | `date`, `modified`, `name`, `title`, `slug`, `id`, `menu_order`, `published_at`, `created_at`, `updated_at`, `includeIds` |
 | `order` | `'asc' \| 'desc'` | по полю | Направление сортировки. Для `includeIds` — порядок массива (`desc` разворачивает) |
+
+<a id="getQueryCollection-dictionaryQuery"></a>
+#### dictionaryQuery
+
+Связи записи со словарём (`collection_dictionaries`). Пустой или невалидный `queries` — фильтр не применяется.
+
+| Поле | Тип | Дефолт | Смысл |
+|---|---|---|---|
+| `relation` | `'AND' \| 'OR'` | `'AND'` | Как сочетать элементы `queries` |
+| `queries` | `object[]` | — | Условия. Без валидных элементов фильтр снимается |
+
+Каждый элемент `queries[]`:
+
+| Поле | Тип | Дефолт | Смысл |
+|---|---|---|---|
+| `dictionary` | `string` | — | Slug словаря (`type`), обязательно |
+| `field` | `'id' \| 'name' \| 'slug'` | `'id'` | По чему искать `terms`. `name` — заголовок строки словаря |
+| `terms` | `number \| string \| array` | — | id, заголовок или слаг. Не нужен для `EXISTS` / `NOT EXISTS` |
+| `operator` | см. ниже | `'IN'` | Как сопоставлять найденные строки |
+| `includeChildren` | `boolean` | `true` | Добавить потомков в дереве. Не для `EXISTS` / `NOT EXISTS` |
+
+`operator`:
+
+| Значение | Смысл |
+|---|---|
+| `IN` | Запись связана хотя бы с одним из `terms` |
+| `NOT IN` | Запись не связана ни с одним из `terms` |
+| `AND` | Запись связана со **всеми** `terms` |
+| `EXISTS` | Есть любая связь с этим словарём (`terms` игнорируются) |
+| `NOT EXISTS` | Нет связей с этим словарём |
 
 ```vue
 <script setup lang="ts">
@@ -327,6 +360,74 @@ const { entries, permalink, page, total } = await getQueryCollection({
 </script>
 ```
 
+<a id="getQueryCollection-fieldsQuery"></a>
+#### fieldsQuery
+
+Смотрит в JSON `fields` записи, не в `collection_meta`. Пустой или невалидный `queries` — фильтр не применяется.
+
+| Поле | Тип | Дефолт | Смысл |
+|---|---|---|---|
+| `relation` | `'AND' \| 'OR'` | `'AND'` | Как сочетать элементы `queries` |
+| `queries` | `object[]` | — | Условия. Без валидных элементов фильтр снимается |
+
+Каждый элемент `queries[]`:
+
+| Поле | Тип | Дефолт | Смысл |
+|---|---|---|---|
+| `key` | `string \| string[]` | — | Ключ в `fields`. Обязательно. Точечный путь (`seo.title`) только для `=` / `IN` |
+| `compareKey` | см. ниже | `=` или `IN` | Как сопоставлять **имя** ключа. `IN`, если `key` — массив |
+| `value` | `string \| number \| boolean \| array` | — | Не нужен для `EXISTS` / `NOT EXISTS` |
+| `compareValue` | см. ниже | `=` или `IN` | Как сопоставлять **значение**. `IN`, если `value` — массив |
+| `type` | см. ниже | `'TEXT'` | Приведение значения при сравнении |
+
+`compareKey` (имя ключа):
+
+| Значение | Смысл |
+|---|---|
+| `=` | Точное имя. Один ключ |
+| `IN` | Имя из списка |
+| `!=` | Имя не равно. Только корневые ключи объекта |
+| `NOT IN` | Имя не из списка. Только корневые ключи |
+| `LIKE` / `NOT LIKE` | Подстрока в имени. Только корневые ключи |
+| `REGEXP` / `NOT REGEXP` | Регулярка по имени. Только корневые ключи |
+
+`compareValue` (значение поля):
+
+| Значение | Смысл |
+|---|---|
+| `=` / `!=` | Равно / не равно |
+| `>` / `>=` / `<` / `<=` | Числовое или текстовое сравнение |
+| `LIKE` / `NOT LIKE` | Подстрока, `%` не нужны |
+| `ILIKE` / `NOT ILIKE` | То же без регистра. PostgreSQL — `ILIKE`, SQLite — `LOWER()` |
+| `IN` / `NOT IN` | Значение из списка. Пустой `IN` — нет совпадений, пустой `NOT IN` — все строки |
+| `BETWEEN` / `NOT BETWEEN` | Интервал: `value: [min, max]` |
+| `EXISTS` / `NOT EXISTS` | Ключ есть / нет в `fields` (`value` игнорируется) |
+| `REGEXP` / `NOT REGEXP` | Регулярка по значению, без `/.../` |
+
+`type`:
+
+| Значение | Смысл |
+|---|---|
+| `TEXT` | Как строка |
+| `INTEGER` | Целое |
+| `NUMERIC` | Число с дробью |
+| `DATETIME` / `DATE` / `TIME` | Как текст (ISO-строки сравниваются лексикографически) |
+
+`LIKE` / `REGEXP` / `!=` / `NOT IN` по **ключу** обходят только корневые ключи (`json_each` / `jsonb_each_text`), вложенные пути вроде `seo.title` там не работают. `REGEXP` в PostgreSQL — POSIX `~`, в SQLite — JS `RegExp`; на D1 кастомного `REGEXP` нет. JSON-массив в поле сравнивается целиком как текст, не поэлементно.
+
+```ts
+const { entries } = await getQueryCollection({
+  collection: 'post',
+  fieldsQuery: {
+    relation: 'AND',
+    queries: [
+      { key: 'color', value: 'red' },
+      { key: 'price', compareValue: '>=', value: 10, type: 'NUMERIC' },
+    ],
+  },
+})
+```
+
 `orderBy: 'includeIds'` сохраняет порядок `includeIds`:
 
 ```ts
@@ -336,8 +437,6 @@ const { entries } = await getQueryCollection({
   orderBy: 'includeIds',
 })
 ```
-
-`dictionaryQuery.relation` — `'AND'` (дефолт) или `'OR'`. В `queries[]`: `dictionary` (slug словаря), `field` (`id` / `name` / `slug`, дефолт `id`), `terms` (id, заголовок или слаг), `operator` (`IN` дефолт, `NOT IN`, `AND`, `EXISTS`, `NOT EXISTS`), `includeChildren` (дефолт `true` для дерева).
 
 <a id="config-example"></a>
 ### Пример

@@ -40,6 +40,35 @@ function wrapDatabase(database: SqliteDatabase, closeOnDestroy: boolean): Sqlite
   }
 }
 
+function registerSqliteRegexp(database: SqliteDatabase) {
+  const api = database as SqliteDatabase & {
+    function?: (
+      name: string,
+      options: { deterministic?: boolean },
+      cb: (...args: unknown[]) => unknown,
+    ) => void
+  }
+  if (typeof api.function !== 'function') {
+    return
+  }
+  try {
+    api.function('regexp', { deterministic: true }, (pattern: unknown, value: unknown) => {
+      if (pattern == null || value == null) {
+        return 0
+      }
+      try {
+        return new RegExp(String(pattern)).test(String(value)) ? 1 : 0
+      }
+      catch {
+        return 0
+      }
+    })
+  }
+  catch {
+    // already registered on a reused connection
+  }
+}
+
 async function applySqlitePragmas(
   connection: { executeQuery: (query: CompiledQuery) => Promise<unknown> },
   wal: boolean,
@@ -75,9 +104,11 @@ export function createSqliteDb(input: string | CreateSqliteDbOptions): Kysely<Da
   }
 
   const openedFile = options.filename != null && !isMemorySqliteFilename(options.filename)
-  const database = options.database
-    ? wrapDatabase(options.database, false)
-    : wrapDatabase(openBetterSqlite(resolveSqliteFilename(options.filename!)), true)
+  const rawDatabase = options.database
+    ? options.database
+    : openBetterSqlite(resolveSqliteFilename(options.filename!))
+  registerSqliteRegexp(rawDatabase)
+  const database = wrapDatabase(rawDatabase, !options.database)
 
   return new Kysely<Database>({
     dialect: new SqliteDialect({

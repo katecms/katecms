@@ -681,10 +681,6 @@ $root: '.miraicms-collection-form';
       flex-direction: column;
       gap: math-rem(14);
       min-width: 0;
-      padding: math-rem(16);
-      background: $color-surface;
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
     }
 
     &__fields {

@@ -60,7 +60,7 @@ export type {
   FieldsQueryKeyCompare,
   FieldsQueryRelation,
   FieldsQueryScalar,
-  FieldsQueryValueCompare,
+  FieldsQueryCompare,
 } from './fields-query'
 
 export {

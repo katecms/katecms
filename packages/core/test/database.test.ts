@@ -805,7 +805,7 @@ describe('database layer', () => {
         queries: [{
           key: 'color',
           compareKey: '=',
-          compareValue: '=',
+          compare: '=',
           type: 'TEXT',
           value: 'red',
         }],
@@ -821,7 +821,7 @@ describe('database layer', () => {
       expect(
         (await queryCollections(db, {
           types: ['post'],
-          fieldsQuery: { queries: [{ key: 'color', compareValue: 'EXISTS' }] },
+          fieldsQuery: { queries: [{ key: 'color', compare: 'EXISTS' }] },
         })).map(row => row.slug).sort(),
       ).toEqual(['blue-dear', 'red-cheap'])
 
@@ -829,7 +829,7 @@ describe('database layer', () => {
         (await queryCollections(db, {
           types: ['post'],
           fieldsQuery: {
-            queries: [{ key: 'color', compareValue: 'NOT EXISTS' }],
+            queries: [{ key: 'color', compare: 'NOT EXISTS' }],
           },
         })).map(row => row.slug),
       ).toEqual(['no-color'])
@@ -838,7 +838,7 @@ describe('database layer', () => {
         (await queryCollections(db, {
           types: ['post'],
           fieldsQuery: {
-            queries: [{ key: 'price', compareValue: '>=', value: 50, type: 'NUMERIC' }],
+            queries: [{ key: 'price', compare: '>=', value: 50, type: 'NUMERIC' }],
           },
         })).map(row => row.slug),
       ).toEqual(['blue-dear'])
@@ -866,14 +866,14 @@ describe('database layer', () => {
       expect(
         (await queryCollections(db, {
           types: ['post'],
-          fieldsQuery: { queries: [{ key: 'sku', compareValue: 'REGEXP', value: '^bar' }] },
+          fieldsQuery: { queries: [{ key: 'sku', compare: 'REGEXP', value: '^bar' }] },
         })).map(row => row.slug),
       ).toEqual(['red-cheap'])
 
       expect(
         (await queryCollections(db, {
           types: ['post'],
-          fieldsQuery: { queries: [{ key: 'color', compareValue: 'LIKE', value: 'lu' }] },
+          fieldsQuery: { queries: [{ key: 'color', compare: 'LIKE', value: 'lu' }] },
         })).map(row => row.slug),
       ).toEqual(['blue-dear'])
 
@@ -881,7 +881,7 @@ describe('database layer', () => {
         (await queryCollections(db, {
           types: ['post'],
           fieldsQuery: {
-            queries: [{ key: 'price', compareValue: 'BETWEEN', value: [5, 25], type: 'NUMERIC' }],
+            queries: [{ key: 'price', compare: 'BETWEEN', value: [5, 25], type: 'NUMERIC' }],
           },
         })).map(row => row.slug).sort(),
       ).toEqual(['no-color', 'red-cheap'])
@@ -890,7 +890,7 @@ describe('database layer', () => {
         (await queryCollections(db, {
           types: ['post'],
           fieldsQuery: {
-            queries: [{ key: '^col', compareKey: 'REGEXP', compareValue: 'EXISTS' }],
+            queries: [{ key: '^col', compareKey: 'REGEXP', compare: 'EXISTS' }],
           },
         })).map(row => row.slug).sort(),
       ).toEqual(['blue-dear', 'red-cheap'])

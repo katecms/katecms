@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import {
   buildFormValues,
   collectPanelDefaults,
@@ -40,6 +40,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: CollectionEntryFormModel]
+  'ready': []
   'submit': []
   'trash': []
   'restore': []
@@ -189,6 +190,8 @@ const titleField = { type: 'text' as const, label: 'Title', required: true }
 const slugField = { type: 'text' as const, label: 'Slug', required: true }
 
 let syncingFromParent = false
+let hydrating = false
+let hydrateGen = 0
 
 function replaceValues(next: Record<string, unknown>) {
   syncingFromParent = true
@@ -201,27 +204,49 @@ function replaceValues(next: Record<string, unknown>) {
   })
 }
 
+function emitFields() {
+  emit('update:modelValue', {
+    ...props.modelValue,
+    fields: { ...values },
+  })
+}
+
+async function hydrateFromModel() {
+  const gen = ++hydrateGen
+  hydrating = true
+  replaceValues({
+    ...buildFormValues(fieldDefs.value),
+    ...(props.modelValue.fields ?? {}),
+  })
+  await nextTick()
+  await nextTick()
+  if (gen !== hydrateGen) {
+    return
+  }
+  emitFields()
+  hydrating = false
+  emit('ready')
+}
+
 watch(
   () => `${props.collection.slug}:${props.entryKey ?? 'default'}`,
   () => {
-    replaceValues({
-      ...buildFormValues(fieldDefs.value),
-      ...(props.modelValue.fields ?? {}),
-    })
+    void hydrateFromModel()
   },
   { immediate: true },
 )
 
+onBeforeUnmount(() => {
+  hydrateGen += 1
+})
+
 watch(
   values,
   () => {
-    if (syncingFromParent) {
+    if (syncingFromParent || hydrating) {
       return
     }
-    emit('update:modelValue', {
-      ...props.modelValue,
-      fields: { ...values },
-    })
+    emitFields()
   },
   { deep: true },
 )

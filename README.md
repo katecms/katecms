@@ -377,7 +377,7 @@ const { entries, permalink, page, total } = await getQueryCollection({
 | `key` | `string \| string[]` | — | Ключ в `fields`. Обязательно. Точечный путь (`seo.title`) только для `=` / `IN` |
 | `compareKey` | см. ниже | `=` или `IN` | Как сопоставлять **имя** ключа. `IN`, если `key` — массив |
 | `value` | `string \| number \| boolean \| array` | — | Не нужен для `EXISTS` / `NOT EXISTS` |
-| `compareValue` | см. ниже | `=` или `IN` | Как сопоставлять **значение**. `IN`, если `value` — массив |
+| `compare` | см. ниже | `=` или `IN` | Оператор сравнения. `IN`, если `value` — массив |
 | `type` | см. ниже | `'TEXT'` | Приведение значения при сравнении |
 
 `compareKey` (имя ключа):
@@ -391,7 +391,7 @@ const { entries, permalink, page, total } = await getQueryCollection({
 | `LIKE` / `NOT LIKE` | Подстрока в имени. Только корневые ключи |
 | `REGEXP` / `NOT REGEXP` | Регулярка по имени. Только корневые ключи |
 
-`compareValue` (значение поля):
+`compare`:
 
 | Значение | Смысл |
 |---|---|
@@ -422,7 +422,7 @@ const { entries } = await getQueryCollection({
     relation: 'AND',
     queries: [
       { key: 'color', value: 'red' },
-      { key: 'price', compareValue: '>=', value: 10, type: 'NUMERIC' },
+      { key: 'price', compare: '>=', value: 10, type: 'NUMERIC' },
     ],
   },
 })

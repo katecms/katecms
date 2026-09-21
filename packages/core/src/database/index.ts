@@ -108,7 +108,7 @@ export type {
   FieldsQueryKeyCompare,
   FieldsQueryRelation,
   FieldsQueryScalar,
-  FieldsQueryValueCompare,
+  FieldsQueryCompare,
   CollectionMeta,
   CollectionRevision,
   NewCollectionRevision,

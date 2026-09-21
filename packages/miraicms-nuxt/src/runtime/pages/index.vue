@@ -24,8 +24,6 @@ const rootClass = 'miraicms'
     <div :class="[`${rootClass}-main`]">
       <NuxtPage />
     </div>
-
-    <!--    <NuxtCmsIndexSyncModal /> -->
   </div>
 </template>
 

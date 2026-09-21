@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { $fetch, navigateTo, onBeforeRouteLeave, useHead, useRoute } from '#imports'
-import { buildPublicPath } from '@miraicms/core'
+import { buildPublicPath, buildFormValues } from '@miraicms/core'
 import { parseAuthError } from '../../../utils/auth-error'
 import {
   collectionApi,
@@ -131,7 +131,10 @@ function applyEntry(res: CollectionEntryResponse) {
   form.menuOrder = res.entry.menuOrder
   form.publishedAt = res.entry.publishedAt
   form.authorId = res.entry.authorId
-  form.fields = { ...(res.entry.fields ?? {}) }
+  form.fields = {
+    ...buildFormValues(res.collection.fields ?? {}),
+    ...(res.entry.fields ?? {}),
+  }
   form.dictionaryIds = formDictionarySelection(dictionaryPickers.value, res.entry.dictionaryIds)
   savedStatus.value = res.entry.status
   canUpdate.value = res.canUpdate
@@ -161,11 +164,6 @@ async function load() {
   }
   finally {
     loading.value = false
-  }
-  await nextTick()
-  await nextTick()
-  if (found.value) {
-    markFormClean()
   }
 }
 
@@ -403,6 +401,7 @@ watch(() => route.query.notice, consumeRouteNotice, { immediate: true })
     :can-delete="canDelete"
     :saved-status="savedStatus"
     @update:model-value="(value: CollectionEntryFormModel) => Object.assign(form, value)"
+    @ready="markFormClean"
     @submit="submit"
     @trash="moveToTrash"
     @restore="restore"

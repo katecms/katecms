@@ -14,7 +14,7 @@ export type FieldsQueryKeyCompare
     | 'REGEXP'
     | 'NOT REGEXP'
 
-export type FieldsQueryValueCompare
+export type FieldsQueryCompare
   = | '='
     | '!='
     | '>'
@@ -51,8 +51,8 @@ export interface FieldsQueryItem {
   compareKey?: FieldsQueryKeyCompare
   /** Unused for `EXISTS` / `NOT EXISTS`. */
   value?: FieldsQueryScalar | FieldsQueryScalar[]
-  /** How to match `value`. Default: `IN` when `value` is an array, otherwise `=`. */
-  compareValue?: FieldsQueryValueCompare
+  /** Comparison operator. Default: `IN` when `value` is an array, otherwise `=`. */
+  compare?: FieldsQueryCompare
   /** Cast for numeric/date compares. Default: `TEXT`. */
   type?: FieldsQueryCast
 }
@@ -67,7 +67,7 @@ interface ResolvedItem {
   keys: string[]
   compareKey: FieldsQueryKeyCompare
   values: FieldsQueryScalar[]
-  compareValue: FieldsQueryValueCompare
+  compare: FieldsQueryCompare
   type: FieldsQueryCast
 }
 
@@ -158,10 +158,10 @@ function normalizeKeyCompare(value: unknown, keyCount: number): FieldsQueryKeyCo
   return keyCount > 1 ? 'IN' : '='
 }
 
-function normalizeValueCompare(value: unknown, valueCount: number): FieldsQueryValueCompare {
+function normalizeCompare(value: unknown, valueCount: number): FieldsQueryCompare {
   const token = normalizeToken(value)
   if (VALUE_COMPARES.has(token)) {
-    return token as FieldsQueryValueCompare
+    return token as FieldsQueryCompare
   }
   return valueCount > 1 ? 'IN' : '='
 }
@@ -299,7 +299,7 @@ function valueCompare(
   item: ResolvedItem,
   postgres: boolean,
 ): RawBuilder<SqlBool> {
-  const op = item.compareValue
+  const op = item.compare
   const typed = castExpr(expr, item.type, postgres)
   const values = item.values
 
@@ -411,10 +411,10 @@ function scanValue(item: ResolvedItem, postgres: boolean): RawBuilder<SqlBool> {
 }
 
 function itemSql(item: ResolvedItem, postgres: boolean): RawBuilder<SqlBool> {
-  const existsOp = item.compareValue === 'EXISTS' || item.compareValue === 'NOT EXISTS'
+  const existsOp = item.compare === 'EXISTS' || item.compare === 'NOT EXISTS'
   if (keyScan(item.compareKey)) {
     const inner = existsOp ? scanExists(item, postgres) : scanValue(item, postgres)
-    return item.compareValue === 'NOT EXISTS' ? sql<SqlBool>`not (${inner})` : inner
+    return item.compare === 'NOT EXISTS' ? sql<SqlBool>`not (${inner})` : inner
   }
 
   const paths = item.keys.map(splitPath).filter((path): path is string[] => path != null)
@@ -425,7 +425,7 @@ function itemSql(item: ResolvedItem, postgres: boolean): RawBuilder<SqlBool> {
   if (existsOp) {
     const parts = paths.map(path => literalExists(path, postgres))
     const inner = parts.length === 1 ? parts[0]! : sql<SqlBool>`(${sql.join(parts, sql` or `)})`
-    return item.compareValue === 'NOT EXISTS' ? sql<SqlBool>`not (${inner})` : inner
+    return item.compare === 'NOT EXISTS' ? sql<SqlBool>`not (${inner})` : inner
   }
 
   const parts = paths.map(path => valueCompare(extractText(path, postgres), item, postgres))
@@ -437,16 +437,16 @@ function resolveItem(item: FieldsQueryItem): ResolvedItem | null {
   if (keys.length === 0) {
     return null
   }
-  const compareValue = item.compareValue != null
-    ? normalizeValueCompare(item.compareValue, asValueList(item.value).length)
-    : normalizeValueCompare(undefined, Array.isArray(item.value) ? item.value.length : 0)
-  const existsOp = compareValue === 'EXISTS' || compareValue === 'NOT EXISTS'
+  const compare = item.compare != null
+    ? normalizeCompare(item.compare, asValueList(item.value).length)
+    : normalizeCompare(undefined, Array.isArray(item.value) ? item.value.length : 0)
+  const existsOp = compare === 'EXISTS' || compare === 'NOT EXISTS'
   const values = existsOp ? [] : asValueList(item.value)
   return {
     keys,
     compareKey: normalizeKeyCompare(item.compareKey, keys.length),
     values,
-    compareValue,
+    compare,
     type: normalizeCast(item.type),
   }
 }
@@ -473,7 +473,7 @@ export function parseFieldsQuery(value: unknown): FieldsQuery | undefined {
         key: resolved.keys.length === 1 ? resolved.keys[0]! : resolved.keys,
         compareKey: resolved.compareKey,
         value: resolved.values.length === 1 ? resolved.values[0] : resolved.values,
-        compareValue: resolved.compareValue,
+        compare: resolved.compare,
         type: resolved.type,
       }
     })

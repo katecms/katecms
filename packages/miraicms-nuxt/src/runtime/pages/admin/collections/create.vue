@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { $fetch, navigateTo, onBeforeRouteLeave, useHead, useRoute } from '#imports'
 import { buildFormValues } from '@miraicms/core'
 import { parseAuthError } from '../../../utils/auth-error'
@@ -30,6 +30,7 @@ const loading = ref(true)
 const saving = ref(false)
 const error = ref<string | null>(null)
 const dirty = ref(false)
+const formReady = ref(false)
 const skipAutosave = ref(false)
 
 const form = reactive<CollectionEntryFormModel>({
@@ -45,6 +46,9 @@ const form = reactive<CollectionEntryFormModel>({
 })
 
 watch(form, () => {
+  if (!formReady.value) {
+    return
+  }
   dirty.value = true
 }, { deep: true })
 
@@ -61,6 +65,7 @@ function ensureSlug() {
 }
 
 async function load() {
+  formReady.value = false
   loading.value = true
   error.value = null
   try {
@@ -77,8 +82,6 @@ async function load() {
     form.fields = buildFormValues(res.collection.fields ?? {})
     form.dictionaryIds = emptyDictionarySelection(dictionaryPickers.value)
     form.authorId = user.value?.id ?? form.authorId
-    await nextTick()
-    dirty.value = false
   }
   catch (err) {
     error.value = parseAuthError(err, 'Could not load the collection.').message
@@ -86,6 +89,11 @@ async function load() {
   finally {
     loading.value = false
   }
+}
+
+function onFormReady() {
+  formReady.value = true
+  dirty.value = false
 }
 
 async function persist(status = form.status): Promise<CollectionEntryResponse> {
@@ -194,6 +202,7 @@ watch(collectionSlug, load)
     :can-delete="false"
     @focusout="ensureSlug"
     @update:model-value="(value: CollectionEntryFormModel) => Object.assign(form, value)"
+    @ready="onFormReady"
     @submit="submit"
   />
 </template>

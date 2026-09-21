@@ -475,50 +475,52 @@ watch(
     @submit.prevent="onSubmit"
   >
     <div :class="`${rootClass}__main`">
-      <MiraiCmsFieldWrapper
-        field-key="cms-entry-title"
-        :field="titleField"
-      >
-        <MiraiCmsInputControl
-          :model-value="modelValue.title"
+      <div :class="`${rootClass}__main-wrap`">
+        <MiraiCmsFieldWrapper
           field-key="cms-entry-title"
           :field="titleField"
-          @update:model-value="updateCore('title', String($event ?? ''))"
-        />
-      </MiraiCmsFieldWrapper>
+        >
+          <MiraiCmsInputControl
+            :model-value="modelValue.title"
+            field-key="cms-entry-title"
+            :field="titleField"
+            @update:model-value="updateCore('title', String($event ?? ''))"
+          />
+        </MiraiCmsFieldWrapper>
 
-      <MiraiCmsFieldWrapper
-        field-key="cms-entry-slug"
-        :field="slugField"
-      >
-        <MiraiCmsInputControl
-          :model-value="modelValue.slug"
+        <MiraiCmsFieldWrapper
           field-key="cms-entry-slug"
           :field="slugField"
-          @update:model-value="updateCore('slug', String($event ?? ''))"
-        />
-      </MiraiCmsFieldWrapper>
-
-      <div :class="`${rootClass}__fields`">
-        <div
-          v-for="[key, field] in mainFields"
-          :key="key"
-          :class="`${rootClass}__field`"
-          :style="field.columnWidth ? { width: `${field.columnWidth}%` } : undefined"
         >
-          <component
-            :is="resolveField(field.type)"
-            v-model="values[key]"
-            :field-key="key"
-            :field="field"
+          <MiraiCmsInputControl
+            :model-value="modelValue.slug"
+            field-key="cms-entry-slug"
+            :field="slugField"
+            @update:model-value="updateCore('slug', String($event ?? ''))"
           />
+        </MiraiCmsFieldWrapper>
+
+        <div :class="`${rootClass}__fields`">
+          <div
+            v-for="[key, field] in mainFields"
+            :key="key"
+            :class="`${rootClass}__field`"
+            :style="field.columnWidth ? { width: `${field.columnWidth}%` } : undefined"
+          >
+            <component
+              :is="resolveField(field.type)"
+              v-model="values[key]"
+              :field-key="key"
+              :field="field"
+            />
+          </div>
         </div>
       </div>
     </div>
 
     <div :class="`${rootClass}__sidebar`">
-      <div :class="`${rootClass}__publish`">
-        <div :class="`${rootClass}__publish-title`">
+      <div :class="`${rootClass}__block`">
+        <div :class="`${rootClass}__block-title`">
           Publish
         </div>
 
@@ -564,7 +566,7 @@ watch(
           />
         </template>
 
-        <div :class="`${rootClass}__publish-actions`">
+        <div :class="`${rootClass}__block-actions`">
           <MiraiCmsUiButton
             v-if="!isTrash && canUpdate"
             tag="button"
@@ -620,9 +622,9 @@ watch(
 
       <div
         v-if="!isTrash && dictionaryPickers.length"
-        :class="`${rootClass}__dictionaries`"
+        :class="`${rootClass}__block`"
       >
-        <div :class="`${rootClass}__dictionaries-title`">
+        <div :class="`${rootClass}__block-title`">
           Dictionaries
         </div>
         <MiraiCmsSelectField
@@ -637,7 +639,7 @@ watch(
 
       <div
         v-if="sidebarFields.length"
-        :class="`${rootClass}__sidebar-fields`"
+        :class="`${rootClass}__block`"
       >
         <component
           :is="resolveField(field.type)"
@@ -665,7 +667,7 @@ $root: '.miraicms-collection-form';
     min-height: 0;
     overflow: hidden;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) math-rem(280);
+    grid-template-columns: minmax(0, 1fr) math-rem(300);
     grid-template-rows: minmax(0, 1fr);
 
     @media (max-width: 1100px) {
@@ -674,15 +676,34 @@ $root: '.miraicms-collection-form';
       overflow: auto;
     }
 
-    &__main,
+    &__main {
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+      overscroll-behavior: contain;
+
+      &-wrap {
+        padding: math-rem(16) math-rem(8);
+        display: flex;
+        flex-direction: column;
+        gap: math-rem(16);
+
+        @media (max-width: 1100px) {
+          overflow: visible;
+        }
+      }
+    }
+
     &__sidebar {
+      background: $color-bg;
+      border-left: 1px solid $color-border;
+      padding: math-rem(16) 0;
       display: flex;
       flex-direction: column;
       gap: math-rem(16);
       min-width: 0;
       min-height: 0;
-      overflow-x: hidden;
-      overflow-y: auto;
+      overflow: auto;
       overscroll-behavior: contain;
 
       @media (max-width: 1100px) {
@@ -707,32 +728,32 @@ $root: '.miraicms-collection-form';
       box-sizing: border-box;
     }
 
-    &__publish,
-    &__dictionaries,
-    &__sidebar-fields {
+    &__block {
       display: flex;
       flex-direction: column;
-      gap: math-rem(14);
-      padding: math-rem(16);
-      background: $color-bg;
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
-    }
+      gap: math-rem(16);
+      padding-left: math-rem(8);
+      padding-right: math-rem(8);
 
-    &__publish-title,
-    &__dictionaries-title {
-      margin: 0;
-      font-size: math-rem(14);
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: $color-ink;
-    }
+      &:not(:last-child) {
+        padding-bottom: math-rem(16);
+        border-bottom: 1px solid $color-border;
+      }
 
-    &__publish-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: math-rem(8);
+      &-title {
+        margin: 0;
+        font-size: math-rem(14);
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: $color-ink;
+      }
+
+      &-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: math-rem(8);
+      }
     }
   }
 }

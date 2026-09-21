@@ -1259,15 +1259,11 @@ $root: ".miraicms-select";
     left: 0;
     width: 100%;
     max-height: v-bind(dropdownMaxHeight);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity .2s, visibility .2s;
-    display: flex;
-    flex-direction: column;
+    display: none;
 
     &.active {
-      opacity: 1;
-      visibility: visible;
+      display: flex;
+      flex-direction: column;
     }
   }
 

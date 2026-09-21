@@ -186,6 +186,7 @@ $root: '.miraicms-users';
     display: flex;
     flex-direction: column;
     gap: math-rem(16);
+    padding: math-rem(8);
 
     &__head {
       display: flex;

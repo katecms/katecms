@@ -495,34 +495,60 @@ onMounted(async () => {
           <div :class="`${rootClass}__side`">
             <div :class="`${rootClass}__details`">
               <div :class="`${rootClass}__row`">
-                <div :class="`${rootClass}__term`">Uploaded</div>
-                <div :class="`${rootClass}__def`">{{ formatDate(selected.created_at) }}</div>
+                <div :class="`${rootClass}__term`">
+                  Uploaded
+                </div>
+                <div :class="`${rootClass}__def`">
+                  {{ formatDate(selected.created_at) }}
+                </div>
               </div>
               <div :class="`${rootClass}__row`">
-                <div :class="`${rootClass}__term`">Author</div>
-                <div :class="`${rootClass}__def`">{{ selected.uploaded_by_name || '—' }}</div>
+                <div :class="`${rootClass}__term`">
+                  Author
+                </div>
+                <div :class="`${rootClass}__def`">
+                  {{ selected.uploaded_by_name || '—' }}
+                </div>
               </div>
               <div :class="`${rootClass}__row`">
-                <div :class="`${rootClass}__term`">File name</div>
-                <div :class="`${rootClass}__def`">{{ selected.filename }}</div>
+                <div :class="`${rootClass}__term`">
+                  File name
+                </div>
+                <div :class="`${rootClass}__def`">
+                  {{ selected.filename }}
+                </div>
               </div>
               <div :class="`${rootClass}__row`">
-                <div :class="`${rootClass}__term`">Type</div>
-                <div :class="`${rootClass}__def`">{{ selected.mime_type }}</div>
+                <div :class="`${rootClass}__term`">
+                  Type
+                </div>
+                <div :class="`${rootClass}__def`">
+                  {{ selected.mime_type }}
+                </div>
               </div>
               <div :class="`${rootClass}__row`">
-                <div :class="`${rootClass}__term`">Size</div>
-                <div :class="`${rootClass}__def`">{{ formatSize(selected.filesize) }}</div>
+                <div :class="`${rootClass}__term`">
+                  Size
+                </div>
+                <div :class="`${rootClass}__def`">
+                  {{ formatSize(selected.filesize) }}
+                </div>
               </div>
               <div
                 v-if="selected.width && selected.height"
                 :class="`${rootClass}__row`"
               >
-                <div :class="`${rootClass}__term`">Dimensions</div>
-                <div :class="`${rootClass}__def`">{{ selected.width }} × {{ selected.height }} px</div>
+                <div :class="`${rootClass}__term`">
+                  Dimensions
+                </div>
+                <div :class="`${rootClass}__def`">
+                  {{ selected.width }} × {{ selected.height }} px
+                </div>
               </div>
               <div :class="`${rootClass}__row`">
-                <div :class="`${rootClass}__term`">URL</div>
+                <div :class="`${rootClass}__term`">
+                  URL
+                </div>
                 <div :class="`${rootClass}__def`">
                   <a
                     :href="selected.url"
@@ -535,7 +561,9 @@ onMounted(async () => {
                 v-if="isImageMedia(selected) && selected.variants.length"
                 :class="`${rootClass}__row`"
               >
-                <div :class="`${rootClass}__term`">Variants</div>
+                <div :class="`${rootClass}__term`">
+                  Variants
+                </div>
                 <div :class="`${rootClass}__def`">
                   <div :class="`${rootClass}__variants`">
                     <div
@@ -613,6 +641,7 @@ $root: '.miraicms-media';
     display: flex;
     flex-direction: column;
     gap: math-rem(16);
+    padding: math-rem(8);
 
     &__head {
       display: flex;

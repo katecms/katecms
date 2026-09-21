@@ -124,6 +124,7 @@ $root: '.miraicms-dashboard';
     display: flex;
     flex-direction: column;
     gap: math-rem(16);
+    padding: math-rem(8);
 
     &__head-title {
       font-size: math-rem(18);

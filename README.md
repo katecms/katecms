@@ -19,6 +19,7 @@
     - [getQueryCollection](#getQueryCollection)
       - [dictionaryQuery](#getQueryCollection-dictionaryQuery)
       - [fieldsQuery](#getQueryCollection-fieldsQuery)
+    - [getTerms](#getTerms)
   - [Пример](#config-example)
 - [Общие параметры полей](#fields-base)
 - [Поля](#fields)
@@ -435,6 +436,47 @@ const { entries } = await getQueryCollection({
   collection: 'page',
   includeIds: [5, 12, 2, 14, 7],
   orderBy: 'includeIds',
+})
+```
+
+<a id="getTerms"></a>
+### getTerms()
+
+Строки словаря. `count` — число опубликованных записей публичных коллекций, связанных с термином. Пустой термин скрыт, пока у потомка нет записей.
+
+| Опция | Тип | Дефолт | Смысл |
+|---|---|---|---|
+| `dictionary` | `string \| string[]` | — | Slug словаря, обязательно |
+| `perPage` | `number` | все | Размер страницы. `-1` — все |
+| `offset` | `number` | `0` | Сколько совпадений пропустить |
+| `includeIds` | `number \| number[]` | — | Только эти id. Пустой список — ничего |
+| `excludeIds` | `number \| number[]` | — | Кроме этих id |
+| `excludeTreeIds` | `number \| number[]` | — | Кроме этих терминов и всех потомков |
+| `parentId` | `number \| null` | — | Прямой родитель. `null` / `0` — корень |
+| `childOf` | `number` | — | Все потомки этого id, без него самого |
+| `childless` | `boolean` | `false` | Пропустить термины, у которых есть дети |
+| `slug` | `string \| string[]` | — | Точный слаг |
+| `title` | `string \| string[]` | — | Точный заголовок |
+| `search` | `string` | — | Подстрока в title или slug, без регистра |
+| `hideEmpty` | `boolean` | `true` | Скрыть термины с `count = 0` |
+| `hierarchical` | `boolean` | `true` | Оставить пустой термин, если у потомка есть записи |
+| `padCounts` | `boolean` | `false` | Прибавить к `count` записи потомков |
+| `fieldsQuery` | `object` | — | Фильтр JSON `fields`. [значения](#getQueryCollection-fieldsQuery) |
+| `orderBy` | `string` | `'title'` | `id`, `title`, `slug`, `count`, `parent`, `includeIds`, `slugs`, `field`, `none` |
+| `orderByField` | `{ key, type? }` | — | Ключ для `orderBy: 'field'`. `type` как в `fieldsQuery` |
+| `order` | `'asc' \| 'desc'` | `'asc'` | Направление сортировки |
+| `return` | `string` | `'all'` | `all` — объекты, `ids`, `titles`, `count`, `idParent`, `idSlug`, `idTitle` |
+
+`return: 'count'` — это `total` до `perPage` и `offset`. Остальные режимы режут страницу, `total` остаётся полным. Карты `idParent` / `idSlug` / `idTitle` лежат в `map`, ключ — id строкой.
+
+```ts
+const { terms, total } = await getTerms({
+  dictionary: 'services',
+  parentId: 0,
+  padCounts: true,
+  fieldsQuery: {
+    queries: [{ key: 'color', value: 'red' }],
+  },
 })
 ```
 

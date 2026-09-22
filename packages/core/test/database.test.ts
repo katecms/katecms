@@ -31,6 +31,7 @@ import {
   loadCollectionSlugPath,
   migrateSqlite,
   queryCollections,
+  queryTerms,
   countQueryCollections,
   parseFieldsQuery,
   setCollectionDictionaries,
@@ -903,6 +904,184 @@ describe('database layer', () => {
           },
         })).map(row => row.slug),
       ).toEqual(['red-cheap'])
+    }
+    finally {
+      await close()
+    }
+  })
+
+  it('lists dictionary terms with queryTerms', async () => {
+    const { db, close } = await memoryDb()
+    try {
+      const ada = await createUser(db, {
+        email: 'ada@example.com',
+        password_hash: 'hash',
+      })
+      const page = await createCollection(db, {
+        type: 'page',
+        slug: 'about',
+        title: 'About',
+        status: 'published',
+        author_id: ada.id,
+      })
+      const draft = await createCollection(db, {
+        type: 'page',
+        slug: 'draft',
+        title: 'Draft',
+        status: 'draft',
+        author_id: ada.id,
+      })
+      const post = await createCollection(db, {
+        type: 'post',
+        slug: 'hello',
+        title: 'Hello',
+        status: 'published',
+        author_id: ada.id,
+      })
+      const design = await createDictionary(db, {
+        type: 'services',
+        slug: 'design',
+        title: 'Design',
+      })
+      const web = await createDictionary(db, {
+        type: 'services',
+        slug: 'web',
+        title: 'Web',
+        parent_id: design.id,
+      })
+      await createDictionary(db, {
+        type: 'services',
+        slug: 'blank',
+        title: 'Blank',
+        parent_id: design.id,
+      })
+      const unused = await createDictionary(db, {
+        type: 'services',
+        slug: 'unused',
+        title: 'Unused',
+      })
+      const red = await createDictionary(db, {
+        type: 'services',
+        slug: 'red',
+        title: 'Red',
+        fields: { color: 'red', rank: 2 },
+      })
+      const news = await createDictionary(db, {
+        type: 'categories',
+        slug: 'news',
+        title: 'News',
+      })
+      await linkCollectionDictionary(db, page.id, web.id)
+      await linkCollectionDictionary(db, page.id, red.id)
+      await linkCollectionDictionary(db, draft.id, unused.id)
+      await linkCollectionDictionary(db, post.id, news.id)
+
+      const listed = await queryTerms(db, { dictionaries: ['services'] })
+      expect(listed.total).toBe(3)
+      expect(listed.terms.map(term => term.slug)).toEqual(['design', 'red', 'web'])
+      expect(listed.terms.map(term => term.count)).toEqual([0, 1, 1])
+      expect(listed.terms.find(term => term.slug === 'web')?.slugPath).toBe('design/web')
+
+      const padded = await queryTerms(db, {
+        dictionaries: ['services'],
+        padCounts: true,
+        parentId: 0,
+      })
+      expect(padded.terms.map(term => [term.slug, term.count])).toEqual([
+        ['design', 1],
+        ['red', 1],
+      ])
+
+      expect(
+        (await queryTerms(db, {
+          dictionaries: ['services'],
+          hideEmpty: false,
+          childOf: design.id,
+          orderBy: 'slug',
+        })).terms.map(term => term.slug),
+      ).toEqual(['blank', 'web'])
+
+      expect(
+        (await queryTerms(db, {
+          dictionaries: ['services'],
+          hideEmpty: false,
+          childless: true,
+          orderBy: 'slug',
+        })).terms.map(term => term.slug),
+      ).toEqual(['blank', 'red', 'unused', 'web'])
+
+      expect(
+        (await queryTerms(db, {
+          dictionaries: ['services'],
+          hideEmpty: false,
+          excludeTreeIds: [design.id],
+          orderBy: 'slug',
+        })).terms.map(term => term.slug),
+      ).toEqual(['red', 'unused'])
+
+      expect(
+        (await queryTerms(db, {
+          dictionaries: ['services'],
+          includeIds: [red.id, web.id],
+          orderBy: 'includeIds',
+        })).terms.map(term => term.slug),
+      ).toEqual(['red', 'web'])
+
+      expect(
+        (await queryTerms(db, {
+          dictionaries: ['services'],
+          search: 'WEB',
+        })).terms.map(term => term.slug),
+      ).toEqual(['web'])
+
+      expect(
+        (await queryTerms(db, {
+          dictionaries: ['services'],
+          fieldsQuery: { queries: [{ key: 'color', value: 'red' }] },
+        })).terms.map(term => term.slug),
+      ).toEqual(['red'])
+
+      expect(
+        (await queryTerms(db, {
+          dictionaries: ['services'],
+          orderBy: 'field',
+          orderByField: { key: 'rank', type: 'NUMERIC' },
+          order: 'desc',
+          hideEmpty: false,
+        })).terms[0]?.slug,
+      ).toBe('red')
+
+      const ids = await queryTerms(db, {
+        dictionaries: ['services'],
+        return: 'ids',
+        perPage: 1,
+        offset: 1,
+      })
+      expect(ids.total).toBe(3)
+      expect(ids.ids).toEqual([red.id])
+      expect(ids.terms).toEqual([])
+
+      expect(
+        (await queryTerms(db, {
+          dictionaries: ['services'],
+          return: 'count',
+          perPage: 1,
+        })).total,
+      ).toBe(3)
+
+      expect(
+        (await queryTerms(db, {
+          dictionaries: ['services'],
+          countTypes: ['post'],
+        })).total,
+      ).toBe(0)
+
+      const parents = await queryTerms(db, {
+        dictionaries: ['services'],
+        return: 'idParent',
+        includeIds: [web.id],
+      })
+      expect(parents.map).toEqual({ [String(web.id)]: design.id })
     }
     finally {
       await close()

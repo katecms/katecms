@@ -98,6 +98,16 @@ export {
 } from './dictionaries'
 export type { Dictionary, DictionaryUpdate, NewDictionary } from './dictionaries'
 
+export { isTermOrderBy, isTermsReturn, queryTerms } from './terms-query'
+export type {
+  QueryTerm,
+  QueryTermsOptions,
+  QueryTermsResult,
+  TermOrderBy,
+  TermOrderField,
+  TermsReturn,
+} from './terms-query'
+
 export {
   linkCollectionDictionary,
   listCollectionsByDictionary,

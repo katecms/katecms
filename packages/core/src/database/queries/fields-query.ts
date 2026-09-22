@@ -487,12 +487,12 @@ export function parseFieldsQuery(value: unknown): FieldsQuery | undefined {
   }
 }
 
-/** Filter `collections.fields` JSON by {@link FieldsQuery}. */
-export function applyFieldsQueryFilters<O>(
+/** Filter a `fields` JSON column by {@link FieldsQuery}. */
+export function applyFieldsQueryFilters<TB extends keyof Database, O>(
   db: Kysely<Database>,
-  query: SelectQueryBuilder<Database, 'collections', O>,
+  query: SelectQueryBuilder<Database, TB, O>,
   input: FieldsQuery | undefined,
-): SelectQueryBuilder<Database, 'collections', O> {
+): SelectQueryBuilder<Database, TB, O> {
   const parsed = parseFieldsQuery(input)
   if (!parsed?.queries?.length) {
     return query

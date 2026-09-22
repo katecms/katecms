@@ -1,4 +1,5 @@
 import { createError, defineEventHandler, readMultipartFormData } from 'h3'
+import { useRuntimeConfig } from '#imports'
 import {
   createMedia,
   generateVariants,
@@ -12,13 +13,17 @@ import {
 import type { MediaItem } from '@miraicms/core'
 import { getDb } from '../../../utils/db'
 import { getMediaConfig, getMediaStorage, scheduleBackground, toClientMediaRow } from '../../../utils/media'
-import { getCurrentUser } from '../../../utils/session'
+import { requirePermission } from '../../../utils/permissions'
+import { requireUser } from '../../../utils/session'
 
 /**
  * Upload a single file to `public/uploads` and record its metadata.
  * Variant generation (if configured) runs in the background; poll GET by id.
  */
 export default defineEventHandler(async (event): Promise<{ media: MediaItem }> => {
+  const user = await requireUser(event)
+  requirePermission(user, 'media', 'create', useRuntimeConfig().miraicms?.roles ?? {})
+
   const config = getMediaConfig()
   const storage = getMediaStorage()
 
@@ -49,8 +54,6 @@ export default defineEventHandler(async (event): Promise<{ media: MediaItem }> =
   const dimensions = mimeType.startsWith('image/') ? readImageSize(data) : null
   const willGenerate = isProcessableImage(mimeType) && hasImageWork(config)
 
-  const actor = await getCurrentUser(event)
-
   let row
   try {
     row = await createMedia(getDb(), {
@@ -61,7 +64,7 @@ export default defineEventHandler(async (event): Promise<{ media: MediaItem }> =
       height: dimensions?.height ?? null,
       alt: textPart(parts, 'alt'),
       caption: textPart(parts, 'caption'),
-      uploaded_by: actor?.id ?? null,
+      uploaded_by: user.id,
       variants_status: willGenerate ? 'pending' : 'none',
     })
   }

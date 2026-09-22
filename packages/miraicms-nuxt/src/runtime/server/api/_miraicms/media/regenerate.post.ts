@@ -1,15 +1,18 @@
 import { defineEventHandler } from 'h3'
+import { useRuntimeConfig } from '#imports'
 import { isProcessableImage, listMedia, updateMedia } from '@miraicms/core'
 import { getDb } from '../../../utils/db'
 import { scheduleBackground, storedVariants } from '../../../utils/media'
 import { regenerateMedia } from '../../../utils/regenerate'
+import { requirePermission } from '../../../utils/permissions'
 import { requireUser } from '../../../utils/session'
 
 /**
  * Queue variant regeneration for every processable image, one at a time.
  */
 export default defineEventHandler(async (event): Promise<{ count: number }> => {
-  await requireUser(event)
+  const actor = await requireUser(event)
+  requirePermission(actor, 'media', 'update', useRuntimeConfig().miraicms?.roles ?? {})
 
   const rows = await listMedia(getDb())
   const targets = rows.filter(row => isProcessableImage(row.mime_type))

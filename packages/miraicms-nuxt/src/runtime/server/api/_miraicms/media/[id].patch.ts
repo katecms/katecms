@@ -1,8 +1,10 @@
 import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
+import { useRuntimeConfig } from '#imports'
 import { findMediaById, updateMedia } from '@miraicms/core'
 import type { MediaItem } from '@miraicms/core'
 import { getDb } from '../../../utils/db'
 import { parseMediaId, toClientMediaRow } from '../../../utils/media'
+import { requirePermission } from '../../../utils/permissions'
 import { requireUser } from '../../../utils/session'
 
 interface UpdateBody {
@@ -26,7 +28,8 @@ function readText(value: unknown): string | null | undefined {
 
 /** Update editable media metadata (`alt`, `caption`). */
 export default defineEventHandler(async (event): Promise<{ media: MediaItem }> => {
-  await requireUser(event)
+  const actor = await requireUser(event)
+  requirePermission(actor, 'media', 'update', useRuntimeConfig().miraicms?.roles ?? {})
 
   const id = parseMediaId(getRouterParam(event, 'id'))
   const body = await readBody<UpdateBody>(event)

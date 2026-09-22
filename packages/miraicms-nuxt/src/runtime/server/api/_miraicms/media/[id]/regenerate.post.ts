@@ -1,16 +1,19 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
+import { useRuntimeConfig } from '#imports'
 import { findMediaById, hasImageWork, isProcessableImage, updateMedia } from '@miraicms/core'
 import type { MediaItem } from '@miraicms/core'
 import { getDb } from '../../../../utils/db'
 import { getMediaConfig, parseMediaId, scheduleBackground, storedVariants, toClientMediaRow } from '../../../../utils/media'
 import { regenerateMedia } from '../../../../utils/regenerate'
+import { requirePermission } from '../../../../utils/permissions'
 import { requireUser } from '../../../../utils/session'
 
 /**
  * Queue variant regeneration for one image. Clients poll GET by id for `ready` / `failed`.
  */
 export default defineEventHandler(async (event): Promise<{ media: MediaItem }> => {
-  await requireUser(event)
+  const actor = await requireUser(event)
+  requirePermission(actor, 'media', 'update', useRuntimeConfig().miraicms?.roles ?? {})
 
   const id = parseMediaId(getRouterParam(event, 'id'))
   const row = await findMediaById(getDb(), id)

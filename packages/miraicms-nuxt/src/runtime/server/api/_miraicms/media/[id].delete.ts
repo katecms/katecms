@@ -1,14 +1,17 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
+import { useRuntimeConfig } from '#imports'
 import { deleteMedia, findMediaById } from '@miraicms/core'
 import { getDb } from '../../../utils/db'
 import { getMediaStorage, parseMediaId, storedVariants } from '../../../utils/media'
+import { requirePermission } from '../../../utils/permissions'
 import { requireUser } from '../../../utils/session'
 
 /**
  * Delete a media row and its files. Missing binaries do not block the row delete.
  */
 export default defineEventHandler(async (event): Promise<{ ok: true }> => {
-  await requireUser(event)
+  const actor = await requireUser(event)
+  requirePermission(actor, 'media', 'delete', useRuntimeConfig().miraicms?.roles ?? {})
 
   const id = parseMediaId(getRouterParam(event, 'id'))
   const row = await findMediaById(getDb(), id)

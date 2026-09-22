@@ -1,14 +1,20 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
+import { useRuntimeConfig } from '#imports'
 import { findMediaById } from '@miraicms/core'
 import type { MediaItem } from '@miraicms/core'
 import { getDb } from '../../../utils/db'
 import { parseMediaId, toClientMediaRow } from '../../../utils/media'
+import { requirePermission } from '../../../utils/permissions'
+import { requireUser } from '../../../utils/session'
 
 /**
  * Fetch a single media library entry by id.
  * Used to restore `returnFormat: 'id'` previews and to poll `variants_status`.
  */
 export default defineEventHandler(async (event): Promise<{ media: MediaItem }> => {
+  const actor = await requireUser(event)
+  requirePermission(actor, 'media', 'read', useRuntimeConfig().miraicms?.roles ?? {})
+
   const id = parseMediaId(getRouterParam(event, 'id'))
   const row = await findMediaById(getDb(), id)
   if (!row) {

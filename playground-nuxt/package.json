@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
+    "seed": "node ./scripts/seed.mjs",
     "build": "nuxt build",
     "generate": "nuxt generate"
   },

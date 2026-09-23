@@ -69,10 +69,7 @@ onMounted(load)
 
 <template>
   <div :class="rootClass">
-    <div :class="`${rootClass}__head`">
-      <div :class="`${rootClass}__head-title`">
-        Users
-      </div>
+    <MiraiCmsAdminHeader title="Users">
       <MiraiCmsUiButton
         tag="a"
         :disabled="!canCreate"
@@ -80,7 +77,7 @@ onMounted(load)
       >
         Add user
       </MiraiCmsUiButton>
-    </div>
+    </MiraiCmsAdminHeader>
 
     <MiraiCmsUiNotice
       v-if="loading"
@@ -187,18 +184,6 @@ $root: '.miraicms-users';
     flex-direction: column;
     gap: math-rem(16);
     padding: math-rem(8);
-
-    &__head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: math-rem(16);
-
-      &-title {
-        font-size: math-rem(18);
-        font-weight: 600;
-      }
-    }
 
     &__table-wrap {
       overflow-x: auto;

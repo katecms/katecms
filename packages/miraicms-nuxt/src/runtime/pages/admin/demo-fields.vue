@@ -1192,6 +1192,9 @@ $root: '.miraicms-admin-demo';
     display: flex;
     flex-direction: column;
     gap: math-rem(16);
+    height: 100%;
+    overflow: auto;
+    padding: math-rem(8);
 
     &__buttons {
       display: flex;

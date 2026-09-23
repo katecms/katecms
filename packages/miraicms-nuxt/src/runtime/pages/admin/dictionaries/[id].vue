@@ -134,23 +134,10 @@ watch([dictionarySlug, termId], load)
 
 <template>
   <div :class="rootClass">
-    <div :class="`${rootClass}__head`">
-      <MiraiCmsUiButton
-        tag="a"
-        :variant="['secondary', 'icon']"
-        :link="{ url: paths.dictionary(dictionarySlug), title: 'Back to list' }"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 640 640"
-        ><path
-          d="M73 297a32 32 0 0 0 0 46l160 160a32 32 0 0 0 46-46L173 352h371a32 32 0 1 0 0-64H173l106-105a32 32 0 0 0-46-46z"
-          fill="currentColor"
-        /></svg>
-      </MiraiCmsUiButton>
-      <div :class="`${rootClass}__head-title`">
-        {{ pageTitle }}
-      </div>
+    <MiraiCmsAdminHeader
+      :title="pageTitle"
+      :back-to="paths.dictionary(dictionarySlug)"
+    >
       <MiraiCmsUiButton
         v-if="found && canUpdate"
         tag="button"
@@ -160,7 +147,7 @@ watch([dictionarySlug, termId], load)
       >
         {{ saving ? 'Saving…' : 'Save' }}
       </MiraiCmsUiButton>
-    </div>
+    </MiraiCmsAdminHeader>
 
     <MiraiCmsUiNotice
       v-if="loading"
@@ -178,20 +165,22 @@ watch([dictionarySlug, termId], load)
     />
 
     <template v-else-if="dictionary">
-      <MiraiCmsDictionaryTermForm
-        ref="entryForm"
-        :form-id="formId"
-        :model-value="form"
-        :dictionary="dictionary"
-        :entry-key="termId"
-        :parents="parents"
-        :saving="saving"
-        :error="error"
-        :can-update="canUpdate"
-        :show-submit="false"
-        @update:model-value="(value: DictionaryTermFormModel) => Object.assign(form, value)"
-        @submit="submit"
-      />
+      <div :class="`${rootClass}__fields`">
+        <MiraiCmsDictionaryTermForm
+          ref="entryForm"
+          :form-id="formId"
+          :model-value="form"
+          :dictionary="dictionary"
+          :entry-key="termId"
+          :parents="parents"
+          :saving="saving"
+          :error="error"
+          :can-update="canUpdate"
+          :show-submit="false"
+          @update:model-value="(value: DictionaryTermFormModel) => Object.assign(form, value)"
+          @submit="submit"
+        />
+      </div>
 
       <div
         v-if="canDelete"
@@ -219,27 +208,16 @@ $root: '.miraicms-dictionary-entry';
 @include miraicms-wrapper {
   #{$root} {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: math-rem(16);
-    padding: math-rem(8);
-
-    &__head {
-      display: flex;
-      align-items: center;
-      gap: math-rem(16);
-
-      :deep([type="submit"]) {
-        margin-left: auto;
-      }
-    }
-
-    &__head-title {
-      font-size: math-rem(18);
-      font-weight: 600;
-    }
+    min-height: 0;
+    padding: 0 math-rem(8);
+    overflow: hidden;
 
     &__danger {
       display: flex;
+      flex-shrink: 0;
       justify-content: flex-start;
     }
   }

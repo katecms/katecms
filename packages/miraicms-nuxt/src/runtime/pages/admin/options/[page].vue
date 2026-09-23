@@ -93,10 +93,7 @@ watch(pageSlug, load)
 
 <template>
   <div :class="rootClass">
-    <div :class="`${rootClass}__head`">
-      <div :class="`${rootClass}__head-title`">
-        {{ pageTitle }}
-      </div>
+    <MiraiCmsAdminHeader :title="pageTitle">
       <MiraiCmsUiButton
         v-if="found && canUpdate"
         tag="button"
@@ -106,7 +103,7 @@ watch(pageSlug, load)
       >
         {{ saving ? 'Saving…' : 'Save' }}
       </MiraiCmsUiButton>
-    </div>
+    </MiraiCmsAdminHeader>
 
     <MiraiCmsUiNotice
       v-if="savedNoticeId"
@@ -115,7 +112,6 @@ watch(pageSlug, load)
       message="Changes saved."
       @close="savedNoticeId = 0"
     />
-
     <MiraiCmsUiNotice
       v-if="loading"
       placement="static"
@@ -131,18 +127,22 @@ watch(pageSlug, load)
       :closable="false"
     />
 
-    <MiraiCmsOptionPageForm
+    <div
       v-else-if="page"
-      ref="entryForm"
-      :form-id="formId"
-      :page="page"
-      :model-value="form"
-      :saving="saving"
-      :error="error"
-      :can-update="canUpdate"
-      @update:model-value="replaceForm"
-      @submit="submit"
-    />
+      :class="`${rootClass}__fields`"
+    >
+      <MiraiCmsOptionPageForm
+        ref="entryForm"
+        :form-id="formId"
+        :page="page"
+        :model-value="form"
+        :saving="saving"
+        :error="error"
+        :can-update="canUpdate"
+        @update:model-value="replaceForm"
+        @submit="submit"
+      />
+    </div>
   </div>
 </template>
 
@@ -156,18 +156,18 @@ $root: '.miraicms-options-page';
     display: flex;
     flex-direction: column;
     gap: math-rem(16);
-    padding: math-rem(8);
+    padding: 0;
+    height: 100%;
 
-    &__head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: math-rem(16);
+    &__fields {
+      padding: 0 math-rem(8) math-rem(8);
+      flex-grow: 1;
+      min-height: 0;
+      overflow: auto;
     }
 
-    &__head-title {
-      font-size: math-rem(18);
-      font-weight: 600;
+    :deep(.miraicms-admin-header) {
+      padding: math-rem(8);
     }
   }
 }

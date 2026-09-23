@@ -189,23 +189,10 @@ onMounted(load)
 
 <template>
   <div :class="rootClass">
-    <div :class="`${rootClass}__head`">
-      <MiraiCmsUiButton
-        tag="a"
-        :variant="['secondary', 'icon']"
-        :link="{ url: paths.users, title: 'Users' }"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 640 640"
-        ><path
-          d="M73 297a32 32 0 0 0 0 46l160 160a32 32 0 0 0 46-46L173 352h371a32 32 0 1 0 0-64H173l106-105a32 32 0 0 0-46-46z"
-          fill="currentColor"
-        /></svg>
-      </MiraiCmsUiButton>
-      <div :class="`${rootClass}__head-title`">
-        {{ `Edit user: ${form.name || form.email || 'Unknown'}` }}
-      </div>
+    <MiraiCmsAdminHeader
+      :title="`Edit user: ${form.name || form.email || 'Unknown'}`"
+      :back-to="paths.users"
+    >
       <MiraiCmsUiButton
         tag="button"
         type="submit"
@@ -214,7 +201,7 @@ onMounted(load)
       >
         {{ saving ? 'Saving…' : 'Save' }}
       </MiraiCmsUiButton>
-    </div>
+    </MiraiCmsAdminHeader>
 
     <MiraiCmsUiNotice
       v-if="loading"
@@ -315,21 +302,6 @@ $root: '.miraicms-user-form';
     flex-direction: column;
     gap: math-rem(16);
     padding: math-rem(8);
-
-    &__head {
-      display: flex;
-      align-items: center;
-      gap: math-rem(16);
-
-      &-title {
-        font-size: math-rem(18);
-        font-weight: 600;
-      }
-
-      :deep([type="submit"]) {
-        margin-left: auto;
-      }
-    }
 
     &__form {
       display: flex;

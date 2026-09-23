@@ -309,36 +309,34 @@ onMounted(async () => {
 
 <template>
   <div :class="rootClass">
-    <div :class="`${rootClass}__head`">
-      <div :class="`${rootClass}__head-title`">
-        Media library
-      </div>
-      <div :class="`${rootClass}__head-actions`">
-        <input
-          ref="fileInput"
-          type="file"
-          :class="`${rootClass}__file`"
-          multiple
-          @change="onFilesSelected"
-        >
-        <MiraiCmsUiButton
-          tag="button"
-          variant="secondary"
-          :disabled="regenerating || !items.length"
-          title="Regenerate image variants from the current media config"
-          @click="regenerateAll"
-        >
-          {{ regenerating ? 'Regenerating…' : 'Regenerate' }}
-        </MiraiCmsUiButton>
-        <MiraiCmsUiButton
-          tag="button"
-          :disabled="uploading"
-          @click="fileInput?.click()"
-        >
-          {{ uploading ? 'Uploading…' : 'Upload files' }}
-        </MiraiCmsUiButton>
-      </div>
-    </div>
+    <MiraiCmsAdminHeader
+      title="Media library"
+      :count="`${items.length} items`"
+    >
+      <input
+        ref="fileInput"
+        type="file"
+        :class="`${rootClass}__file`"
+        multiple
+        @change="onFilesSelected"
+      >
+      <MiraiCmsUiButton
+        tag="button"
+        variant="secondary"
+        :disabled="regenerating || !items.length"
+        title="Regenerate image variants from the current media config"
+        @click="regenerateAll"
+      >
+        {{ regenerating ? 'Regenerating…' : 'Regenerate' }}
+      </MiraiCmsUiButton>
+      <MiraiCmsUiButton
+        tag="button"
+        :disabled="uploading"
+        @click="fileInput?.click()"
+      >
+        {{ uploading ? 'Uploading…' : 'Upload files' }}
+      </MiraiCmsUiButton>
+    </MiraiCmsAdminHeader>
 
     <MiraiCmsUiNotice
       v-if="notice"
@@ -371,76 +369,78 @@ onMounted(async () => {
 
     <div
       v-else-if="items.length"
-      :class="`${rootClass}__grid`"
+      :class="`${rootClass}__scroller`"
     >
-      <div
-        v-for="item in items"
-        :key="item.id"
-        :class="`${rootClass}__card`"
-      >
-        <button
-          type="button"
-          :class="`${rootClass}__thumb`"
-          @click="openEditor(item)"
+      <div :class="`${rootClass}__grid`">
+        <div
+          v-for="item in items"
+          :key="item.id"
+          :class="`${rootClass}__card`"
         >
-          <picture v-if="isImageMedia(item)">
-            <source
-              v-for="variant in pictureSources(item)"
-              :key="variant.format"
-              :srcset="variant.url"
-              :type="`image/${variant.format}`"
-            >
-            <img
-              :src="item.url"
-              :alt="item.alt || item.filename"
-              loading="lazy"
-            >
-          </picture>
-          <span
-            v-else
-            :class="`${rootClass}__ext`"
-          >{{ item.mime_type }}</span>
-          <span
-            v-if="isProcessing(item)"
-            :class="`${rootClass}__processing`"
+          <button
+            type="button"
+            :class="`${rootClass}__thumb`"
+            @click="openEditor(item)"
           >
-            <span :class="`${rootClass}__spinner`" />
-            Processing…
-          </span>
-        </button>
-        <div :class="`${rootClass}__meta`">
-          <span
-            :class="`${rootClass}__name`"
-            :title="item.filename"
+            <picture v-if="isImageMedia(item)">
+              <source
+                v-for="variant in pictureSources(item)"
+                :key="variant.format"
+                :srcset="variant.url"
+                :type="`image/${variant.format}`"
+              >
+              <img
+                :src="item.url"
+                :alt="item.alt || item.filename"
+                loading="lazy"
+              >
+            </picture>
+            <span
+              v-else
+              :class="`${rootClass}__ext`"
+            >{{ item.mime_type }}</span>
+            <span
+              v-if="isProcessing(item)"
+              :class="`${rootClass}__processing`"
+            >
+              <span :class="`${rootClass}__spinner`" />
+              Processing…
+            </span>
+          </button>
+          <div :class="`${rootClass}__meta`">
+            <span
+              :class="`${rootClass}__name`"
+              :title="item.filename"
+            >
+              {{ item.filename }}
+            </span>
+            <span :class="`${rootClass}__sub`">
+              {{ formatSize(item.filesize) }}
+              <template v-if="item.width && item.height">
+                · {{ item.width }}×{{ item.height }}
+              </template>
+            </span>
+          </div>
+          <MiraiCmsUiButton
+            tag="button"
+            :variant="['red', 'small']"
+            @click="remove(item)"
           >
-            {{ item.filename }}
-          </span>
-          <span :class="`${rootClass}__sub`">
-            {{ formatSize(item.filesize) }}
-            <template v-if="item.width && item.height">
-              · {{ item.width }}×{{ item.height }}
-            </template>
-          </span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 6h18" />
+              <path d="M8 6V4h8v2" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+            </svg>
+            Delete
+          </MiraiCmsUiButton>
         </div>
-        <MiraiCmsUiButton
-          tag="button"
-          :variant="['red', 'small']"
-          @click="remove(item)"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M3 6h18" />
-            <path d="M8 6V4h8v2" />
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-          </svg>
-          Delete
-        </MiraiCmsUiButton>
       </div>
     </div>
 
@@ -639,40 +639,35 @@ $root: '.miraicms-media';
 @include miraicms-wrapper {
   #{$root} {
     display: flex;
+    flex: 1;
     flex-direction: column;
-    gap: math-rem(16);
-    padding: math-rem(8);
-
-    &__head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: math-rem(16);
-
-      &-title {
-        font-size: math-rem(18);
-        font-weight: 600;
-      }
-
-      &-actions {
-        display: flex;
-        gap: math-rem(8);
-      }
-    }
+    //gap: math-rem(16);
+    min-height: 0;
+    overflow: hidden;
+    padding: 0 math-rem(8);
 
     &__file {
       display: none;
+    }
+
+    &__scroller {
+      flex: 1;
+      min-height: 0;
+      padding: 0 0 math-rem(8);
+      overflow: auto;
     }
 
     &__grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(math-rem(160), 1fr));
       gap: math-rem(16);
+      align-content: start;
     }
 
     &__card {
       display: flex;
       flex-direction: column;
+      min-width: 0;
       overflow: hidden;
       background: $color-surface;
       border: 1px solid $color-border;
@@ -688,8 +683,10 @@ $root: '.miraicms-media';
     &__thumb {
       position: relative;
       display: flex;
+      flex: none;
       align-items: center;
       justify-content: center;
+      width: 100%;
       aspect-ratio: 4 / 3;
       padding: 0;
       overflow: hidden;
@@ -827,6 +824,7 @@ $root: '.miraicms-media';
         width: 100%;
         height: 100%;
       }
+
       img {
         width: 100%;
         height: 100%;

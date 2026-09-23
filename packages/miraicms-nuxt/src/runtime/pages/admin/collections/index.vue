@@ -287,30 +287,25 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
 
 <template>
   <div :class="rootClass">
-    <div :class="`${rootClass}__head`">
-      <div :class="`${rootClass}__head-title`">
-        {{ title }}
-      </div>
-      <div :class="`${rootClass}__head-actions`">
-        <MiraiCmsUiButton
-          v-if="canCreate && collection"
-          tag="a"
-          :link="{ url: paths.collectionCreate(collectionSlug), title: 'Add' }"
-        >
-          Add {{ collection.labels.singularName || collection.labels.name }}
-        </MiraiCmsUiButton>
+    <MiraiCmsAdminHeader :title="title">
+      <MiraiCmsUiButton
+        v-if="canCreate && collection"
+        tag="a"
+        :link="{ url: paths.collectionCreate(collectionSlug), title: 'Add' }"
+      >
+        Add {{ collection.labels.singularName || collection.labels.name }}
+      </MiraiCmsUiButton>
 
-        <MiraiCmsUiButton
-          v-if="statusFilter === 'trash' && canDelete && counts.trash > 0"
-          tag="button"
-          variant="red"
-          :disabled="emptyingTrash || pendingId !== null || loading"
-          @click="emptyTrash"
-        >
-          {{ emptyingTrash ? 'Emptying…' : 'Empty Trash' }}
-        </MiraiCmsUiButton>
-      </div>
-    </div>
+      <MiraiCmsUiButton
+        v-if="statusFilter === 'trash' && canDelete && counts.trash > 0"
+        tag="button"
+        variant="red"
+        :disabled="emptyingTrash || pendingId !== null || loading"
+        @click="emptyTrash"
+      >
+        {{ emptyingTrash ? 'Emptying…' : 'Empty Trash' }}
+      </MiraiCmsUiButton>
+    </MiraiCmsAdminHeader>
 
     <div :class="`${rootClass}__toolbar`">
       <div :class="`${rootClass}__tabs`">
@@ -377,93 +372,102 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
       v-else
       :class="`${rootClass}__table-wrap`"
     >
-      <table :class="`${rootClass}__table`">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Status</th>
-            <th>Author</th>
-            <th>Date</th>
-            <th aria-label="Actions" />
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="entry in entries"
-            :key="entry.id"
+      <div
+        :class="[`${rootClass}__columns`, `${rootClass}__columns--head`]"
+        role="row"
+      >
+        <span role="columnheader">Title</span>
+        <span role="columnheader">Status</span>
+        <span role="columnheader">Author</span>
+        <span role="columnheader">Date</span>
+        <span
+          role="columnheader"
+          aria-label="Actions"
+        />
+      </div>
+      <div :class="`${rootClass}__rows`">
+        <div
+          v-for="entry in entries"
+          :key="entry.id"
+          :class="`${rootClass}__columns`"
+          role="row"
+        >
+          <div
+            role="cell"
+            :class="`${rootClass}__title`"
           >
-            <td>
-              <div :class="`${rootClass}__title`">
-                {{ entryListTitle(entry) }}
-              </div>
-            </td>
-            <td>
-              <span
-                :class="[`${rootClass}__status`, `${rootClass}__status--${entry.status}`]"
-              >
-                {{ collectionStatusLabel(entry.status) }}
-              </span>
-            </td>
-            <td>{{ entryAuthor(entry) }}</td>
-            <td>
-              <div :class="`${rootClass}__date`">
-                <span :class="`${rootClass}__date-label`">{{ entryDateDisplay(entry).label }}</span>
-                <span :class="`${rootClass}__date-value`">{{ entryDateDisplay(entry).value }}</span>
-              </div>
-            </td>
-            <td>
-              <div :class="`${rootClass}__actions`">
-                <MiraiCmsUiButton
-                  v-if="entry.status !== 'trash' && viewUrl(entry)"
-                  tag="a"
-                  :variant="['secondary', 'small']"
-                  :link="{ url: viewUrl(entry)!, title: 'View', target: '_blank' }"
-                >
-                  View
-                </MiraiCmsUiButton>
-                <MiraiCmsUiButton
-                  v-if="entry.canUpdate || entry.status === 'trash'"
-                  tag="a"
-                  :variant="['secondary', 'small']"
-                  :link="{
-                    url: paths.collectionEntry(collectionSlug, entry.id),
-                    title: 'Edit',
-                  }"
-                >
-                  {{ entry.canUpdate ? 'Edit' : 'View' }}
-                </MiraiCmsUiButton>
-                <MiraiCmsUiButton
-                  v-if="entry.status !== 'trash' && entry.canUpdate"
-                  tag="button"
-                  :variant="['red', 'small']"
-                  :disabled="pendingId === entry.id || emptyingTrash"
-                  @click="moveToTrash(entry)"
-                >
-                  Trash
-                </MiraiCmsUiButton>
-                <MiraiCmsUiButton
-                  v-if="entry.status === 'trash' && entry.canUpdate"
-                  tag="button"
-                  :variant="['secondary', 'small']"
-                  :disabled="pendingId === entry.id || emptyingTrash"
-                  @click="restore(entry)"
-                >
-                  Restore
-                </MiraiCmsUiButton>
-                <MiraiCmsUiButton
-                  v-if="entry.status === 'trash' && entry.canDelete"
-                  tag="button"
-                  :variant="['red', 'small']"
-                  :disabled="pendingId === entry.id || emptyingTrash"
-                  @click="removePermanent(entry)"
-                >
-                  Delete
-                </MiraiCmsUiButton>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            {{ entryListTitle(entry) }}
+          </div>
+          <div role="cell">
+            <span
+              :class="[`${rootClass}__status`, `${rootClass}__status--${entry.status}`]"
+            >
+              {{ collectionStatusLabel(entry.status) }}
+            </span>
+          </div>
+          <div role="cell">
+            {{ entryAuthor(entry) }}
+          </div>
+          <div
+            role="cell"
+            :class="`${rootClass}__date`"
+          >
+            <span :class="`${rootClass}__date-label`">{{ entryDateDisplay(entry).label }}</span>
+            <span :class="`${rootClass}__date-value`">{{ entryDateDisplay(entry).value }}</span>
+          </div>
+          <div
+            role="cell"
+            :class="`${rootClass}__actions`"
+          >
+            <MiraiCmsUiButton
+              v-if="entry.status !== 'trash' && viewUrl(entry)"
+              tag="a"
+              :variant="['secondary', 'small']"
+              :link="{ url: viewUrl(entry)!, title: 'View', target: '_blank' }"
+            >
+              View
+            </MiraiCmsUiButton>
+            <MiraiCmsUiButton
+              v-if="entry.canUpdate || entry.status === 'trash'"
+              tag="a"
+              :variant="['secondary', 'small']"
+              :link="{
+                url: paths.collectionEntry(collectionSlug, entry.id),
+                title: 'Edit',
+              }"
+            >
+              {{ entry.canUpdate ? 'Edit' : 'View' }}
+            </MiraiCmsUiButton>
+            <MiraiCmsUiButton
+              v-if="entry.status !== 'trash' && entry.canUpdate"
+              tag="button"
+              :variant="['red', 'small']"
+              :disabled="pendingId === entry.id || emptyingTrash"
+              @click="moveToTrash(entry)"
+            >
+              Trash
+            </MiraiCmsUiButton>
+            <MiraiCmsUiButton
+              v-if="entry.status === 'trash' && entry.canUpdate"
+              tag="button"
+              :variant="['secondary', 'small']"
+              :disabled="pendingId === entry.id || emptyingTrash"
+              @click="restore(entry)"
+            >
+              Restore
+            </MiraiCmsUiButton>
+            <MiraiCmsUiButton
+              v-if="entry.status === 'trash' && entry.canDelete"
+              tag="button"
+              :variant="['red', 'small']"
+              :disabled="pendingId === entry.id || emptyingTrash"
+              @click="removePermanent(entry)"
+            >
+              Delete
+            </MiraiCmsUiButton>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div
@@ -501,29 +505,16 @@ $root: '.miraicms-collection-list';
 @include miraicms-wrapper {
   #{$root} {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: math-rem(16);
-    padding: math-rem(8);
-
-    &__head {
-      display: flex;
-      align-items: center;
-      gap: math-rem(16);
-
-      &-title {
-        font-size: math-rem(18);
-        font-weight: 600;
-      }
-
-      &-actions {
-        display: flex;
-        align-items: center;
-        gap: math-rem(16);
-      }
-    }
+    min-height: 0;
+    padding: 0 math-rem(8) math-rem(8);
+    overflow: hidden;
 
     &__toolbar {
       display: flex;
+      flex-shrink: 0;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
@@ -577,41 +568,61 @@ $root: '.miraicms-collection-list';
     }
 
     &__table-wrap {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
       overflow-x: auto;
+      overflow-y: hidden;
       background: $color-surface;
       border: 1px solid $color-border;
       border-radius: $border-radius;
     }
 
-    &__table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: math-rem(14);
+    &__columns {
+      display: grid;
+      grid-template-columns: minmax(math-rem(180), 2.2fr) math-rem(110) minmax(math-rem(120), 1fr) math-rem(190) minmax(math-rem(160), auto);
+      align-items: center;
+      min-width: math-rem(760);
 
-      th,
-      td {
-        text-align: left;
+      > [role='columnheader'],
+      > [role='cell'] {
+        min-width: 0;
         padding: math-rem(10) math-rem(14);
-        border-bottom: 1px solid $color-border;
-        vertical-align: middle;
       }
 
-      th {
-        font-size: math-rem(12);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        color: $color-muted;
+      &--head {
+        flex-shrink: 0;
         background: $color-bg;
-      }
+        border-bottom: 1px solid $color-border;
 
-      tbody tr:last-child td {
-        border-bottom: none;
+        > [role='columnheader'] {
+          font-size: math-rem(12);
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          color: $color-muted;
+        }
+      }
+    }
+
+    &__rows {
+      flex: 1;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+
+      #{$root}__columns {
+        border-bottom: 1px solid $color-border;
+
+        &:last-child {
+          border-bottom: none;
+        }
       }
     }
 
     &__title {
       font-weight: 600;
+      overflow-wrap: anywhere;
     }
 
     &__status {
@@ -665,6 +676,7 @@ $root: '.miraicms-collection-list';
 
     &__pager {
       display: flex;
+      flex-shrink: 0;
       align-items: center;
       justify-content: flex-end;
       gap: math-rem(12);

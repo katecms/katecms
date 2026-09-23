@@ -174,17 +174,10 @@ watch(dictionarySlug, async () => {
 
 <template>
   <div :class="rootClass">
-    <div :class="`${rootClass}__head`">
-      <div :class="`${rootClass}__head-title`">
-        {{ title }}
-      </div>
-      <div
-        v-if="attachedLabel"
-        :class="`${rootClass}__head-meta`"
-      >
-        {{ attachedLabel }}
-      </div>
-    </div>
+    <MiraiCmsAdminHeader
+      :title="title"
+      :meta="attachedLabel"
+    />
 
     <MiraiCmsUiNotice
       v-if="loading"
@@ -248,50 +241,61 @@ watch(dictionarySlug, async () => {
           v-else
           :class="`${rootClass}__table-wrap`"
         >
-          <table :class="`${rootClass}__table`">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Slug</th>
-                <th>Date</th>
-                <th aria-label="Actions" />
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="term in terms"
-                :key="term.id"
+          <div
+            :class="[`${rootClass}__columns`, `${rootClass}__columns--head`]"
+            role="row"
+          >
+            <span role="columnheader">Title</span>
+            <span role="columnheader">Slug</span>
+            <span role="columnheader">Date</span>
+            <span
+              role="columnheader"
+              aria-label="Actions"
+            />
+          </div>
+          <div :class="`${rootClass}__rows`">
+            <div
+              v-for="term in terms"
+              :key="term.id"
+              :class="`${rootClass}__columns`"
+              role="row"
+            >
+              <div role="cell">
+                {{ termListTitle(term) }}
+              </div>
+              <div role="cell">
+                {{ term.slug }}
+              </div>
+              <div role="cell">
+                {{ formatListDate(term.updatedAt) }}
+              </div>
+              <div
+                role="cell"
+                :class="`${rootClass}__actions`"
               >
-                <td>{{ termListTitle(term) }}</td>
-                <td>{{ term.slug }}</td>
-                <td>{{ formatListDate(term.updatedAt) }}</td>
-                <td>
-                  <div :class="`${rootClass}__actions`">
-                    <MiraiCmsUiButton
-                      v-if="term.canUpdate"
-                      tag="a"
-                      :variant="['secondary', 'small']"
-                      :link="{
-                        url: paths.dictionaryTerm(dictionarySlug, term.id),
-                        title: 'Edit',
-                      }"
-                    >
-                      Edit
-                    </MiraiCmsUiButton>
-                    <MiraiCmsUiButton
-                      v-if="term.canDelete"
-                      tag="button"
-                      :variant="['red', 'small']"
-                      :disabled="pendingId === term.id"
-                      @click="removeTerm(term)"
-                    >
-                      Delete
-                    </MiraiCmsUiButton>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                <MiraiCmsUiButton
+                  v-if="term.canUpdate"
+                  tag="a"
+                  :variant="['secondary', 'small']"
+                  :link="{
+                    url: paths.dictionaryTerm(dictionarySlug, term.id),
+                    title: 'Edit',
+                  }"
+                >
+                  Edit
+                </MiraiCmsUiButton>
+                <MiraiCmsUiButton
+                  v-if="term.canDelete"
+                  tag="button"
+                  :variant="['red', 'small']"
+                  :disabled="pendingId === term.id"
+                  @click="removeTerm(term)"
+                >
+                  Delete
+                </MiraiCmsUiButton>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -308,85 +312,104 @@ $root: '.miraicms-dictionary-list';
     display: flex;
     flex-direction: column;
     gap: math-rem(16);
-    padding: math-rem(8);
-
-    &__head {
-      display: flex;
-      flex-direction: column;
-      gap: math-rem(4);
-    }
-
-    &__head-title {
-      font-size: math-rem(18);
-      font-weight: 600;
-    }
-
-    &__head-meta {
-      font-size: math-rem(13);
-      color: $color-muted;
-    }
+    padding: 0 math-rem(8);
+    height: 100%;
 
     &__layout {
-      display: grid;
-      grid-template-columns: minmax(math-rem(290), math-rem(400)) minmax(0, 1fr);
-      gap: math-rem(16);
+      display: flex;
+      flex-wrap: wrap;
+      gap: math-rem(8);
       align-items: start;
-
-      @media (max-width: 960px) {
-        grid-template-columns: 1fr;
-      }
+      flex-grow: 1;
+      min-height: 0;
+      overflow: hidden;
     }
 
     &__create {
+      flex: 0 0 400px;
+      max-width: 400px;
       display: flex;
       flex-direction: column;
       gap: math-rem(10);
       min-width: 0;
+      min-height: 0;
+      height: 100%;
+      overflow: auto;
+      padding: 0 math-rem(8) math-rem(8) 0;
     }
 
     &__create-title {
+      flex-shrink: 0;
       font-size: math-rem(15);
       font-weight: 600;
     }
 
     &__list {
+      flex-basis: 0;
+      flex-grow: 1;
+      align-self: stretch;
+      max-width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       gap: math-rem(12);
       min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      padding-bottom: math-rem(8);
     }
 
     &__table-wrap {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
       overflow-x: auto;
+      overflow-y: hidden;
       background: $color-surface;
       border: 1px solid $color-border;
       border-radius: $border-radius;
     }
 
-    &__table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: math-rem(14);
+    &__columns {
+      display: grid;
+      grid-template-columns: minmax(math-rem(160), 2fr) minmax(math-rem(120), 1.4fr) math-rem(200) minmax(math-rem(140), auto);
+      align-items: center;
+      min-width: math-rem(640);
 
-      th,
-      td {
-        text-align: left;
+      > [role='columnheader'],
+      > [role='cell'] {
+        min-width: 0;
         padding: math-rem(10) math-rem(14);
-        border-bottom: 1px solid $color-border;
-        vertical-align: middle;
+        overflow-wrap: anywhere;
       }
 
-      th {
-        font-size: math-rem(12);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        color: $color-muted;
+      &--head {
+        flex-shrink: 0;
         background: $color-bg;
-      }
+        border-bottom: 1px solid $color-border;
 
-      tbody tr:last-child td {
-        border-bottom: none;
+        > [role='columnheader'] {
+          font-size: math-rem(12);
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          color: $color-muted;
+        }
+      }
+    }
+
+    &__rows {
+      flex: 1;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+
+      #{$root}__columns {
+        border-bottom: 1px solid $color-border;
+
+        &:last-child {
+          border-bottom: none;
+        }
       }
     }
 

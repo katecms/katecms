@@ -37,11 +37,7 @@ const optionPages = computed(() => {
 
 <template>
   <div :class="rootClass">
-    <div :class="`${rootClass}__head`">
-      <div :class="`${rootClass}__head-title`">
-        Dashboard
-      </div>
-    </div>
+    <MiraiCmsAdminHeader title="Dashboard" />
 
     <div
       v-if="!collections.length"
@@ -69,11 +65,7 @@ const optionPages = computed(() => {
     </div>
 
     <template v-if="dictionaries.length">
-      <div :class="`${rootClass}__head`">
-        <div :class="`${rootClass}__head-title`">
-          Dictionaries
-        </div>
-      </div>
+      <MiraiCmsAdminHeader title="Dictionaries" />
       <div :class="`${rootClass}__list`">
         <div
           v-for="item in dictionaries"
@@ -91,11 +83,7 @@ const optionPages = computed(() => {
     </template>
 
     <template v-if="optionPages.length">
-      <div :class="`${rootClass}__head`">
-        <div :class="`${rootClass}__head-title`">
-          Options
-        </div>
-      </div>
+      <MiraiCmsAdminHeader title="Options" />
       <div :class="`${rootClass}__list`">
         <div
           v-for="item in optionPages"
@@ -125,11 +113,6 @@ $root: '.miraicms-dashboard';
     flex-direction: column;
     gap: math-rem(16);
     padding: math-rem(8);
-
-    &__head-title {
-      font-size: math-rem(18);
-      font-weight: 600;
-    }
 
     &__empty {
       margin: 0;

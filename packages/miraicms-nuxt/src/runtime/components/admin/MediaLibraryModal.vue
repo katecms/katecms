@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import type { MediaItem } from '@miraicms/core'
 import { isImageMedia as isImage } from '@miraicms/core'
 
@@ -12,6 +12,8 @@ const props = withDefaults(defineProps<{
   selectedIds?: number[]
   multiple?: boolean
   loading?: boolean
+  loadingMore?: boolean
+  hasMore?: boolean
   error?: string | null
   uploading?: boolean
   processing?: boolean
@@ -24,6 +26,8 @@ const props = withDefaults(defineProps<{
   selectedIds: () => [],
   multiple: false,
   loading: false,
+  loadingMore: false,
+  hasMore: false,
   error: null,
   uploading: false,
   processing: false,
@@ -35,10 +39,58 @@ const emit = defineEmits<{
   choose: [item: MediaItem]
   confirm: [items: MediaItem[]]
   upload: []
+  loadMore: []
 }>()
 
 const rootClass = 'miraicms-media-modal'
 const pendingIds = ref<number[]>([])
+const body = ref<HTMLElement | null>(null)
+const sentinel = ref<HTMLElement | null>(null)
+let loadObserver: IntersectionObserver | null = null
+
+function stopLoadObserver() {
+  loadObserver?.disconnect()
+  loadObserver = null
+}
+
+function startLoadObserver() {
+  stopLoadObserver()
+  const root = body.value
+  const target = sentinel.value
+  if (!props.open || !root || !target || !props.hasMore) {
+    return
+  }
+  loadObserver = new IntersectionObserver((entries) => {
+    if (entries.some(entry => entry.isIntersecting)) {
+      emit('loadMore')
+    }
+  }, { root, rootMargin: '160px' })
+  loadObserver.observe(target)
+}
+
+watch([() => props.open, body, sentinel, () => props.hasMore], () => {
+  void nextTick(startLoadObserver)
+})
+
+watch(() => props.loadingMore, (busy) => {
+  if (busy || !props.open || !props.hasMore) {
+    return
+  }
+  void nextTick(() => {
+    const root = body.value
+    const target = sentinel.value
+    if (!root || !target) {
+      return
+    }
+    const rootRect = root.getBoundingClientRect()
+    const targetRect = target.getBoundingClientRect()
+    if (targetRect.top <= rootRect.bottom + 160) {
+      emit('loadMore')
+    }
+  })
+})
+
+onBeforeUnmount(stopLoadObserver)
 
 watch(() => props.open, (isOpen) => {
   if (isOpen && props.multiple) {
@@ -145,7 +197,10 @@ function confirmSelection() {
           </MiraiCmsUiButton>
         </div>
 
-        <div :class="`${rootClass}__dialog-body`">
+        <div
+          ref="body"
+          :class="`${rootClass}__dialog-body`"
+        >
           <div
             v-if="error"
             :class="`${rootClass}__error`"
@@ -175,62 +230,68 @@ function confirmSelection() {
 
             <template v-if="libraryEnabled">
               <div
-                v-if="loading"
+                v-if="loading && !library.length"
                 :class="`${rootClass}__hint`"
               >
                 Loading…
               </div>
               <div
-                v-else-if="!library.length"
+                v-else-if="!library.length && !hasMore"
                 :class="`${rootClass}__hint`"
               >
                 The library is empty. Upload the first file.
               </div>
-              <div
-                v-else
-                :class="`${rootClass}__grid`"
-              >
-                <button
-                  v-for="item in library"
-                  :key="item.id"
-                  type="button"
-                  :class="[
-                    `${rootClass}__grid-item`,
-                    {
-                      'is-selected': isHighlighted(item),
-                      'is-disabled': multiple && isAlreadySelected(item.id),
-                    },
-                  ]"
-                  :disabled="multiple && isAlreadySelected(item.id)"
-                  @click="onItemClick(item)"
-                >
-                  <img
-                    v-if="isImage(item)"
-                    :src="thumbUrl(item)"
-                    :alt="item.alt || ''"
-                    :class="`${rootClass}__grid-image`"
+              <template v-else>
+                <div :class="`${rootClass}__grid`">
+                  <button
+                    v-for="item in library"
+                    :key="item.id"
+                    type="button"
+                    :class="[
+                      `${rootClass}__grid-item`,
+                      {
+                        'is-selected': isHighlighted(item),
+                        'is-disabled': multiple && isAlreadySelected(item.id),
+                      },
+                    ]"
+                    :disabled="multiple && isAlreadySelected(item.id)"
+                    @click="onItemClick(item)"
                   >
-                  <span
-                    v-else
-                    :class="`${rootClass}__grid-file`"
-                  >
-                    <span
-                      :class="`${rootClass}__grid-file-icon`"
-                      aria-hidden="true"
+                    <img
+                      v-if="isImage(item)"
+                      :src="thumbUrl(item)"
+                      :alt="item.alt || ''"
+                      :class="`${rootClass}__grid-image`"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 640 640"
+                    <span
+                      v-else
+                      :class="`${rootClass}__grid-file`"
+                    >
+                      <span
+                        :class="`${rootClass}__grid-file-icon`"
+                        aria-hidden="true"
                       >
-                        <path
-                          d="M304 112L192 112C183.2 112 176 119.2 176 128L176 512C176 520.8 183.2 528 192 528L448 528C456.8 528 464 520.8 464 512L464 272L376 272C336.2 272 304 239.8 304 200L304 112zM444.1 224L352 131.9L352 200C352 213.3 362.7 224 376 224L444.1 224zM128 128C128 92.7 156.7 64 192 64L325.5 64C342.5 64 358.8 70.7 370.8 82.7L493.3 205.3C505.3 217.3 512 233.6 512 250.6L512 512C512 547.3 483.3 576 448 576L192 576C156.7 576 128 547.3 128 512L128 128z"
-                        />
-                      </svg>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 640 640"
+                        >
+                          <path
+                            d="M304 112L192 112C183.2 112 176 119.2 176 128L176 512C176 520.8 183.2 528 192 528L448 528C456.8 528 464 520.8 464 512L464 272L376 272C336.2 272 304 239.8 304 200L304 112zM444.1 224L352 131.9L352 200C352 213.3 362.7 224 376 224L444.1 224zM128 128C128 92.7 156.7 64 192 64L325.5 64C342.5 64 358.8 70.7 370.8 82.7L493.3 205.3C505.3 217.3 512 233.6 512 250.6L512 512C512 547.3 483.3 576 448 576L192 576C156.7 576 128 547.3 128 512L128 128z"
+                          />
+                        </svg>
+                      </span>
+                      <span :class="`${rootClass}__grid-file-name`">{{ fileLabel(item) }}</span>
                     </span>
-                    <span :class="`${rootClass}__grid-file-name`">{{ fileLabel(item) }}</span>
-                  </span>
-                </button>
-              </div>
+                  </button>
+                </div>
+                <div
+                  v-if="hasMore"
+                  ref="sentinel"
+                  :class="`${rootClass}__hint`"
+                >
+                  {{ loadingMore ? 'Loading…' : '' }}
+                </div>
+              </template>
             </template>
 
             <div

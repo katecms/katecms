@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useHead } from '#imports'
-import { onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { isImageMedia, RESERVED_SIZE_NAME } from '@miraicms/core'
 import type { MediaItem } from '@miraicms/core'
 
@@ -10,9 +10,12 @@ const rootClass = 'miraicms-media'
 
 const POLL_MAX_ATTEMPTS = 60
 const POLL_INTERVAL_MS = 2000
+const PAGE_SIZE = 40
 
 const items = ref<MediaItem[]>([])
+const total = ref(0)
 const loading = ref(false)
+const loadingMore = ref(false)
 const uploading = ref(false)
 const saving = ref(false)
 const regenerating = ref(false)
@@ -22,6 +25,9 @@ const notice = ref<{
   message: string
 } | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
+const scroller = ref<HTMLElement | null>(null)
+const sentinel = ref<HTMLElement | null>(null)
+let loadObserver: IntersectionObserver | null = null
 
 const selected = ref<MediaItem | null>(null)
 const editAlt = ref('')
@@ -72,17 +78,27 @@ function replaceItem(next: MediaItem) {
   }
 }
 
+const hasMore = computed(() => items.value.length < total.value)
+
+async function fetchPage(offset: number) {
+  return $fetch<{ media: MediaItem[], total: number }>('/api/_miraicms/media', {
+    query: { limit: PAGE_SIZE, offset },
+  })
+}
+
 async function load(options?: { silent?: boolean }) {
   if (!options?.silent) {
     loading.value = true
     error.value = null
   }
   try {
-    const res = await $fetch<{ media: MediaItem[] }>('/api/_miraicms/media')
+    const res = await fetchPage(0)
+    total.value = res.total
     items.value = res.media
     if (selected.value) {
       selected.value = items.value.find(entry => entry.id === selected.value?.id) ?? selected.value
     }
+    pollVariants(res.media.filter(item => item.variants_status === 'pending').map(item => item.id))
   }
   catch (err) {
     error.value = errMessage(err, 'Could not load the media library.')
@@ -92,6 +108,63 @@ async function load(options?: { silent?: boolean }) {
       loading.value = false
     }
   }
+}
+
+async function loadMore() {
+  if (loading.value || loadingMore.value || !hasMore.value) {
+    return
+  }
+  loadingMore.value = true
+  try {
+    const res = await fetchPage(items.value.length)
+    total.value = res.total
+    const seen = new Set(items.value.map(item => item.id))
+    const next = res.media.filter(item => !seen.has(item.id))
+    if (!next.length) {
+      total.value = items.value.length
+      return
+    }
+    items.value = [...items.value, ...next]
+    pollVariants(next.filter(item => item.variants_status === 'pending').map(item => item.id))
+  }
+  catch (err) {
+    error.value = errMessage(err, 'Could not load more files.')
+  }
+  finally {
+    loadingMore.value = false
+  }
+  void nextTick(() => {
+    const root = scroller.value
+    const target = sentinel.value
+    if (!root || !target || !hasMore.value || loadingMore.value) {
+      return
+    }
+    const rootRect = root.getBoundingClientRect()
+    const targetRect = target.getBoundingClientRect()
+    if (targetRect.top <= rootRect.bottom + 240) {
+      void loadMore()
+    }
+  })
+}
+
+function stopLoadObserver() {
+  loadObserver?.disconnect()
+  loadObserver = null
+}
+
+function startLoadObserver() {
+  stopLoadObserver()
+  const root = scroller.value
+  const target = sentinel.value
+  if (!root || !target || !hasMore.value) {
+    return
+  }
+  loadObserver = new IntersectionObserver((entries) => {
+    if (entries.some(entry => entry.isIntersecting)) {
+      void loadMore()
+    }
+  }, { root, rootMargin: '240px' })
+  loadObserver.observe(target)
 }
 
 function failedCount(ids: number[]): number {
@@ -179,6 +252,7 @@ async function onFilesSelected(event: Event) {
         body: form,
       })
       items.value = [res.media, ...items.value]
+      total.value += 1
       if (res.media.variants_status === 'pending') {
         pendingIds.push(res.media.id)
       }
@@ -235,6 +309,7 @@ async function remove(item: MediaItem) {
   try {
     await $fetch(`/api/_miraicms/media/${item.id}`, { method: 'DELETE' })
     items.value = items.value.filter(entry => entry.id !== item.id)
+    total.value = Math.max(0, total.value - 1)
     if (selected.value?.id === item.id) {
       closeEditor()
     }
@@ -303,7 +378,10 @@ async function regenerateOne(item: MediaItem) {
 
 onMounted(async () => {
   await load()
-  pollVariants(items.value.filter(item => item.variants_status === 'pending').map(item => item.id))
+})
+onBeforeUnmount(stopLoadObserver)
+watch([scroller, sentinel, hasMore], () => {
+  void nextTick(startLoadObserver)
 })
 </script>
 
@@ -311,7 +389,7 @@ onMounted(async () => {
   <div :class="rootClass">
     <MiraiCmsAdminHeader
       title="Media library"
-      :count="`${items.length} items`"
+      :count="`${total} items`"
     >
       <input
         ref="fileInput"
@@ -369,6 +447,7 @@ onMounted(async () => {
 
     <div
       v-else-if="items.length"
+      ref="scroller"
       :class="`${rootClass}__scroller`"
     >
       <div :class="`${rootClass}__grid`">
@@ -441,6 +520,13 @@ onMounted(async () => {
             Delete
           </MiraiCmsUiButton>
         </div>
+      </div>
+      <div
+        v-if="hasMore"
+        ref="sentinel"
+        :class="`${rootClass}__more`"
+      >
+        {{ loadingMore ? 'Loading…' : '' }}
       </div>
     </div>
 
@@ -662,6 +748,14 @@ $root: '.miraicms-media';
       grid-template-columns: repeat(auto-fill, minmax(math-rem(160), 1fr));
       gap: math-rem(16);
       align-content: start;
+    }
+
+    &__more {
+      min-height: math-rem(32);
+      padding: math-rem(8) 0;
+      color: $color-muted;
+      font-size: math-rem(13);
+      text-align: center;
     }
 
     &__card {

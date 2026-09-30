@@ -4,6 +4,7 @@ import { $fetch } from '#imports'
 import { isImageMedia } from '@miraicms/core'
 import type { MediaItem } from '@miraicms/core'
 import { avatarSrc } from '../../utils/admin-users'
+import { useMediaLibrary } from '../../composables/useMediaLibrary'
 
 /** Bound avatar media item (`null` when cleared / not set). */
 const model = defineModel<MediaItem | null>({ default: null })
@@ -11,8 +12,15 @@ const model = defineModel<MediaItem | null>({ default: null })
 const rootClass = 'miraicms-user-avatar-field'
 
 const open = ref(false)
-const library = ref<MediaItem[]>([])
-const loading = ref(false)
+const {
+  items: library,
+  loading,
+  loadingMore,
+  hasMore,
+  load: loadLibrary,
+  loadMore,
+  prepend: prependLibrary,
+} = useMediaLibrary(() => isImageMedia)
 const uploading = ref(false)
 const error = ref<string | null>(null)
 const fileInput = ref<HTMLInputElement>()
@@ -20,17 +28,21 @@ const fileInput = ref<HTMLInputElement>()
 const previewUrl = computed(() => avatarSrc(model.value))
 
 async function fetchLibrary() {
-  loading.value = true
   error.value = null
   try {
-    const data = await $fetch<{ media: MediaItem[] }>('/api/_miraicms/media')
-    library.value = data.media.filter(item => isImageMedia(item))
+    await loadLibrary()
   }
   catch {
     error.value = 'Could not load the media library.'
   }
-  finally {
-    loading.value = false
+}
+
+async function onLoadMore() {
+  try {
+    await loadMore()
+  }
+  catch {
+    error.value = 'Could not load more files.'
   }
 }
 
@@ -81,7 +93,7 @@ async function onFileChange(event: Event) {
       method: 'POST',
       body: form,
     })
-    library.value.unshift(data.media)
+    prependLibrary(data.media)
     applyAvatar(data.media)
   }
   catch {
@@ -158,11 +170,14 @@ async function onFileChange(event: Event) {
       :library="library"
       :selected-id="model?.id"
       :loading="loading"
+      :loading-more="loadingMore"
+      :has-more="hasMore"
       :error="error"
       :uploading="uploading"
       @close="closeModal"
       @choose="choose"
       @upload="triggerUpload"
+      @load-more="onLoadMore"
     />
   </div>
 </template>

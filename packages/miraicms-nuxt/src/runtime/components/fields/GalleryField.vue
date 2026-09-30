@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import type { Field, MediaItem } from '@miraicms/core'
 import { isMediaItem } from '@miraicms/core'
+import { useMediaLibrary } from '../../composables/useMediaLibrary'
 
 type GalleryFieldConfig = Extract<Field, { type: 'gallery' }>
 
@@ -172,24 +173,36 @@ function maxReachedMessage() {
 }
 
 const open = ref(false)
-const library = ref<MediaItem[]>([])
-const loading = ref(false)
+const {
+  items: library,
+  loading,
+  loadingMore,
+  hasMore,
+  load: loadLibrary,
+  loadMore,
+  prepend: prependLibrary,
+  replace: replaceLibrary,
+} = useMediaLibrary(() => item => matchesMime(item.mime_type, item.filename))
 const error = ref<string | null>(null)
 const uploading = ref(false)
 const processing = ref(false)
 
 async function fetchLibrary() {
-  loading.value = true
   error.value = null
   try {
-    const data = await $fetch<{ media: MediaItem[] }>('/api/_miraicms/media')
-    library.value = data.media.filter(item => matchesMime(item.mime_type, item.filename))
+    await loadLibrary()
   }
   catch {
     error.value = 'Could not load the media library.'
   }
-  finally {
-    loading.value = false
+}
+
+async function onLoadMore() {
+  try {
+    await loadMore()
+  }
+  catch {
+    error.value = 'Could not load more files.'
   }
 }
 
@@ -245,7 +258,7 @@ async function waitUntilReady(item: MediaItem): Promise<MediaItem> {
 async function finalizeItems(newItems: MediaItem[]) {
   for (const item of newItems) {
     if (!library.value.some(m => m.id === item.id)) {
-      library.value.unshift(item)
+      prependLibrary(item)
     }
   }
 
@@ -261,10 +274,7 @@ async function finalizeItems(newItems: MediaItem[]) {
               return item
             }
             const ready = await waitUntilReady(item)
-            const index = library.value.findIndex(m => m.id === ready.id)
-            if (index >= 0) {
-              library.value[index] = ready
-            }
+            replaceLibrary(ready)
             return ready
           }),
         )
@@ -420,11 +430,16 @@ async function restoreFromModel() {
 
   if (value.every(v => typeof v === 'number')) {
     try {
-      const data = await $fetch<{ media: MediaItem[] }>('/api/_miraicms/media')
-      const byId = new Map(data.media.map(item => [item.id, item]))
-      items.value = (value as number[])
-        .map(id => byId.get(id))
-        .filter((item): item is MediaItem => !!item)
+      const rows = await Promise.all((value as number[]).map(async (id) => {
+        try {
+          const data = await $fetch<{ media: MediaItem }>(`/api/_miraicms/media/${id}`)
+          return data.media
+        }
+        catch {
+          return null
+        }
+      }))
+      items.value = rows.filter((item): item is MediaItem => item != null)
     }
     catch {
       // Keep the model value without a preview.
@@ -548,12 +563,15 @@ onMounted(restoreFromModel)
         :library="library"
         :selected-ids="selectedIds"
         :loading="loading"
+        :loading-more="loadingMore"
+        :has-more="hasMore"
         :error="error"
         :uploading="uploading"
         :processing="processing"
         @close="closeModal"
         @confirm="onConfirm"
         @upload="triggerUpload"
+        @load-more="onLoadMore"
       />
     </div>
   </MiraiCmsFieldWrapper>

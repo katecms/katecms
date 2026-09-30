@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { Field, MediaItem } from '@miraicms/core'
 import { isMediaItem } from '@miraicms/core'
+import { useMediaLibrary } from '../../composables/useMediaLibrary'
 
 type ImageFieldConfig = Extract<Field, { type: 'image' }>
 type CropSource = { kind: 'library', item: MediaItem } | { kind: 'file', file: File }
@@ -132,24 +133,36 @@ function validateDimensions(width: number, height: number): string | null {
 }
 
 const open = ref(false)
-const library = ref<MediaItem[]>([])
-const loading = ref(false)
+const {
+  items: library,
+  loading,
+  loadingMore,
+  hasMore,
+  load: loadLibrary,
+  loadMore,
+  prepend: prependLibrary,
+  replace: replaceLibrary,
+} = useMediaLibrary(() => item => matchesMime(item.mime_type, item.filename))
 const error = ref<string | null>(null)
 const uploading = ref(false)
 const processing = ref(false)
 
 async function fetchLibrary() {
-  loading.value = true
   error.value = null
   try {
-    const data = await $fetch<{ media: MediaItem[] }>('/api/_miraicms/media')
-    library.value = data.media.filter(item => matchesMime(item.mime_type, item.filename))
+    await loadLibrary()
   }
   catch {
     error.value = 'Could not load the media library.'
   }
-  finally {
-    loading.value = false
+}
+
+async function onLoadMore() {
+  try {
+    await loadMore()
+  }
+  catch {
+    error.value = 'Could not load more files.'
   }
 }
 
@@ -202,15 +215,12 @@ async function waitUntilReady(item: MediaItem): Promise<MediaItem> {
 }
 
 async function finalize(item: MediaItem) {
-  library.value.unshift(item)
+  prependLibrary(item)
   if (returnFormat.value === 'array' && item.variants_status === 'pending') {
     processing.value = true
     try {
       const ready = await waitUntilReady(item)
-      const index = library.value.findIndex(m => m.id === ready.id)
-      if (index >= 0) {
-        library.value[index] = ready
-      }
+      replaceLibrary(ready)
       applySelection(ready)
     }
     finally {
@@ -478,6 +488,8 @@ onBeforeUnmount(revokeCropUrl)
         :library="library"
         :selected-id="selected?.id"
         :loading="loading"
+        :loading-more="loadingMore"
+        :has-more="hasMore"
         :error="error"
         :uploading="uploading"
         :processing="processing"
@@ -485,6 +497,7 @@ onBeforeUnmount(revokeCropUrl)
         @close="closeModal"
         @choose="choose"
         @upload="triggerUpload"
+        @load-more="onLoadMore"
       >
         <MiraiCmsImageCropper
           :src="cropSrc"

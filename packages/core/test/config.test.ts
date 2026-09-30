@@ -155,10 +155,16 @@ describe('resolveMiraiCmsConfig', () => {
     })
     expect(resolved.adminPath).toBe('backoffice')
     expect(resolved.loginPath).toBe('login')
+    expect(resolved.registration).toBe(true)
     expect(resolved.dictionaries).toEqual({})
     expect(resolved.options).toEqual({})
     expect(resolved.roles.owner?.superuser).toBe(true)
     expect(resolved.warnings.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('lets registration be turned off without affecting the default', () => {
+    expect(resolveMiraiCmsConfig().registration).toBe(true)
+    expect(resolveMiraiCmsConfig({ registration: false }).registration).toBe(false)
   })
 
   it('keeps option pages from config', () => {

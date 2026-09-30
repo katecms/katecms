@@ -1,4 +1,5 @@
 import { createError, defineEventHandler, readBody } from 'h3'
+import { useRuntimeConfig } from '#imports'
 import {
   OWNER_ROLE,
   SUBSCRIBER_ROLE,
@@ -34,6 +35,9 @@ interface RegisterBody {
  * every later registration is a `subscriber`. The "is this the first user?"
  * check and the INSERT run inside a single transaction so two concurrent
  * first-time registrations can't both claim ownership.
+ *
+ * `registration: false` rejects every account after the first. Admin user
+ * creation does not use this handler.
  */
 export default defineEventHandler(async (event): Promise<{ user: SafeUser }> => {
   const body = await readBody<RegisterBody>(event)
@@ -65,10 +69,18 @@ export default defineEventHandler(async (event): Promise<{ user: SafeUser }> => 
   }
 
   const passwordHash = await hashPassword(password)
+  const registrationOpen = useRuntimeConfig().miraicms?.registration !== false
 
   try {
     const user = await getDb().transaction().execute(async (trx) => {
       const isFirstUser = !(await hasAnyUser(trx))
+      if (!isFirstUser && !registrationOpen) {
+        throw createError({
+          statusCode: 403,
+          statusMessage: 'Forbidden',
+          message: 'Registration is disabled.',
+        })
+      }
       return createUser(trx, {
         email,
         password_hash: passwordHash,

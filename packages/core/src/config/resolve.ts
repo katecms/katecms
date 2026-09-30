@@ -15,6 +15,7 @@ export function resolveMiraiCmsConfig(config: MiraiCmsConfig = {}): ResolvedMira
     adminPath: merged.adminPath,
     loginPath: merged.loginPath,
     registerPath: merged.registerPath,
+    registration: merged.registration,
     collections: merged.collections,
     dictionaries: merged.dictionaries,
     options: merged.options,

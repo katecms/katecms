@@ -37,10 +37,14 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
+  const registrationOpen = paths?.registration !== false
   const entry = hasUsers ? login : register
 
   if (isAdmin) {
     return navigateTo(entry)
+  }
+  if (isRegister && hasUsers && !registrationOpen) {
+    return navigateTo(login)
   }
   if (isLogin && !hasUsers) {
     return navigateTo(register)

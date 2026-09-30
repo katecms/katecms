@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   compatibilityDate: 'latest',
   miraicms: {
+    registration: false,
     // database: {
     //   driver: 'postgres',
     // },

@@ -122,6 +122,7 @@ export default defineNuxtModule<MiraiCmsConfig>({
       adminPath: resolved.adminPath,
       loginPath: resolved.loginPath,
       registerPath: resolved.registerPath,
+      registration: resolved.registration,
       collections: toPublicCollections(resolved.collections),
       dictionaries: toPublicDictionaries(resolved.dictionaries),
       options: toPublicOptions(resolved.options),
@@ -439,6 +440,7 @@ declare module '@nuxt/schema' {
       adminPath: string
       loginPath: string
       registerPath: string
+      registration: boolean
       collections: Record<string, {
         labels: { name: string, singularName: string }
         icon: string
@@ -469,6 +471,7 @@ declare module 'nuxt/schema' {
       adminPath: string
       loginPath: string
       registerPath: string
+      registration: boolean
       collections: Record<string, {
         labels: { name: string, singularName: string }
         icon: string

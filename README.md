@@ -85,6 +85,7 @@ export default defineNuxtConfig({
 | `adminPath` | `string` | `'admin'` | Сегмент URL админки |
 | `loginPath` | `string` | `'login'` | Сегмент входа, URL `/${adminPath}/login` |
 | `registerPath` | `string` | `'register'` | Сегмент регистрации, URL `/${adminPath}/register` |
+| `registration` | `boolean` | `true` | Саморегистрация. `false` — закрыта после первого пользователя (`owner`). Создание пользователей в админке не зависит от этого флага |
 | `collections` | `Collections` | `{}` | Типы записей. Ключ объекта = slug |
 | `dictionaries` | `Dictionaries` | `{}` | Словари. Ключ объекта = slug |
 | `blocks` | `Blocks` | `{}` | Реестр блоков. Ключ объекта = slug |

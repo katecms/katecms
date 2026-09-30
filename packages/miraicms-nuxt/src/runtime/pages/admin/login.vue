@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { $fetch, navigateTo, useHead } from '#imports'
+import { $fetch, navigateTo, useHead, useRuntimeConfig } from '#imports'
 import { parseAuthError } from '../../utils/auth-error'
 import { useAuthCooldown } from '../../composables/useAuthCooldown'
 import { useCmsPaths } from '../../composables/useCmsPaths'
@@ -13,6 +13,7 @@ useHead({
 })
 
 const paths = useCmsPaths()
+const registrationOpen = useRuntimeConfig().public.miraicms?.registration !== false
 const { remainingSec, locked, start: startCooldown } = useAuthCooldown()
 const emailField = { label: 'Email', required: true }
 const passwordField = { type: 'password' as const, label: 'Password', required: true }
@@ -127,7 +128,10 @@ async function submit() {
         Error: {{ error }}
       </div>
 
-      <div class="miraicms-auth__footer">
+      <div
+        v-if="registrationOpen"
+        class="miraicms-auth__footer"
+      >
         No account?
         <NuxtLink :to="paths.register">
           Register

@@ -11,6 +11,13 @@ export interface MiraiCmsConfig {
   adminPath?: string
   loginPath?: string
   registerPath?: string
+  /**
+   * Self-service registration at `/${adminPath}/${registerPath}`.
+   * `false` blocks every account after the first. The first account is still
+   * created as `owner`. Creating users from the admin is unaffected.
+   * Default: `true`.
+   */
+  registration?: boolean
   collections?: Collections
   dictionaries?: Dictionaries
   /** Singleton settings pages, keyed by slug (`site` → `options.key`). */
@@ -38,6 +45,7 @@ export interface ResolvedMiraiCmsConfig {
   adminPath: string
   loginPath: string
   registerPath: string
+  registration: boolean
   collections: Collections
   dictionaries: Dictionaries
   options: OptionPages

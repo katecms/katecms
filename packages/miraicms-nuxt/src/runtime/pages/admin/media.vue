@@ -3,6 +3,16 @@ import { useHead } from '#imports'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { isImageMedia, RESERVED_SIZE_NAME } from '@miraicms/core'
 import type { MediaItem } from '@miraicms/core'
+import {
+  defaultMediaLibraryFilters,
+  localUtcOffsetMinutes,
+  mediaFiltersActive,
+  mediaLibraryQuery,
+  mediaMatchesFilters,
+  monthKey,
+  normalizeMediaLibraryFilters,
+} from '../../utils/media-library-query'
+import type { MediaLibraryFilterState, MediaLibraryPage } from '../../utils/media-library-query'
 
 useHead({ title: 'Media library' })
 
@@ -14,11 +24,16 @@ const PAGE_SIZE = 40
 
 const items = ref<MediaItem[]>([])
 const total = ref(0)
+const fetched = ref(0)
+const months = ref<string[]>([])
+const filters = ref<MediaLibraryFilterState>(defaultMediaLibraryFilters())
 const loading = ref(false)
 const loadingMore = ref(false)
 const uploading = ref(false)
 const saving = ref(false)
 const regenerating = ref(false)
+const deleting = ref(false)
+const markedIds = ref<number[]>([])
 const error = ref<string | null>(null)
 const notice = ref<{
   variant: 'success' | 'info' | 'warning' | 'danger'
@@ -78,57 +93,96 @@ function replaceItem(next: MediaItem) {
   }
 }
 
-const hasMore = computed(() => items.value.length < total.value)
+const hasMore = computed(() => fetched.value < total.value)
+const filtersActive = computed(() => mediaFiltersActive(filters.value))
+const markedCount = computed(() => markedIds.value.length)
+let requestId = 0
+
+function rememberMonth(iso: string) {
+  const key = monthKey(iso, localUtcOffsetMinutes())
+  if (!key || months.value.includes(key)) {
+    return
+  }
+  months.value = [...months.value, key].sort((a, b) => b.localeCompare(a))
+}
 
 async function fetchPage(offset: number) {
-  return $fetch<{ media: MediaItem[], total: number }>('/api/_miraicms/media', {
-    query: { limit: PAGE_SIZE, offset },
+  return $fetch<MediaLibraryPage<MediaItem>>('/api/_miraicms/media', {
+    query: mediaLibraryQuery(filters.value, { limit: PAGE_SIZE, offset }),
   })
 }
 
 async function load(options?: { silent?: boolean }) {
-  if (!options?.silent) {
-    loading.value = true
-    error.value = null
-  }
+  const id = ++requestId
+    if (!options?.silent) {
+      loading.value = true
+      error.value = null
+      items.value = []
+      fetched.value = 0
+      markedIds.value = []
+    }
   try {
     const res = await fetchPage(0)
+    if (id !== requestId) {
+      return
+    }
     total.value = res.total
+    fetched.value = res.media.length
+    months.value = res.months
     items.value = res.media
+    pruneMarked()
     if (selected.value) {
       selected.value = items.value.find(entry => entry.id === selected.value?.id) ?? selected.value
     }
     pollVariants(res.media.filter(item => item.variants_status === 'pending').map(item => item.id))
   }
   catch (err) {
-    error.value = errMessage(err, 'Could not load the media library.')
+    if (id === requestId) {
+      error.value = errMessage(err, 'Could not load the media library.')
+    }
   }
   finally {
-    if (!options?.silent) {
+    if (id === requestId && !options?.silent) {
       loading.value = false
     }
   }
+}
+
+async function onLibraryFilters(next: MediaLibraryFilterState) {
+  filters.value = normalizeMediaLibraryFilters(next)
+  await load()
 }
 
 async function loadMore() {
   if (loading.value || loadingMore.value || !hasMore.value) {
     return
   }
+  const id = requestId
   loadingMore.value = true
   try {
-    const res = await fetchPage(items.value.length)
+    const res = await fetchPage(fetched.value)
+    if (id !== requestId) {
+      return
+    }
     total.value = res.total
+    if (!res.media.length) {
+      fetched.value = total.value
+      return
+    }
+    fetched.value += res.media.length
     const seen = new Set(items.value.map(item => item.id))
     const next = res.media.filter(item => !seen.has(item.id))
-    if (!next.length) {
-      total.value = items.value.length
+    if (!next.length && fetched.value >= total.value) {
       return
     }
     items.value = [...items.value, ...next]
+    pruneMarked()
     pollVariants(next.filter(item => item.variants_status === 'pending').map(item => item.id))
   }
   catch (err) {
-    error.value = errMessage(err, 'Could not load more files.')
+    if (id === requestId) {
+      error.value = errMessage(err, 'Could not load more files.')
+    }
   }
   finally {
     loadingMore.value = false
@@ -251,8 +305,13 @@ async function onFilesSelected(event: Event) {
         method: 'POST',
         body: form,
       })
-      items.value = [res.media, ...items.value]
-      total.value += 1
+      if (mediaMatchesFilters(res.media, { ...filters.value, month: 'all' })) {
+        rememberMonth(res.media.created_at)
+      }
+      if (mediaMatchesFilters(res.media, filters.value)) {
+        items.value = [res.media, ...items.value.filter(entry => entry.id !== res.media.id)]
+        total.value += 1
+      }
       if (res.media.variants_status === 'pending') {
         pendingIds.push(res.media.id)
       }
@@ -301,6 +360,35 @@ async function saveMeta() {
   }
 }
 
+function isMarked(id: number): boolean {
+  return markedIds.value.includes(id)
+}
+
+function toggleMarked(id: number) {
+  markedIds.value = isMarked(id)
+    ? markedIds.value.filter(entry => entry !== id)
+    : [...markedIds.value, id]
+}
+
+function pruneMarked() {
+  const visible = new Set(items.value.map(item => item.id))
+  markedIds.value = markedIds.value.filter(id => visible.has(id))
+}
+
+function dropDeleted(ids: number[]) {
+  if (!ids.length) {
+    return
+  }
+  const removed = new Set(ids)
+  items.value = items.value.filter(entry => !removed.has(entry.id))
+  markedIds.value = markedIds.value.filter(id => !removed.has(id))
+  total.value = Math.max(0, total.value - ids.length)
+  fetched.value = Math.max(0, fetched.value - ids.length)
+  if (selected.value && removed.has(selected.value.id)) {
+    closeEditor()
+  }
+}
+
 async function remove(item: MediaItem) {
   if (!confirm(`Delete “${item.filename}”?`)) {
     return
@@ -308,14 +396,43 @@ async function remove(item: MediaItem) {
   error.value = null
   try {
     await $fetch(`/api/_miraicms/media/${item.id}`, { method: 'DELETE' })
-    items.value = items.value.filter(entry => entry.id !== item.id)
-    total.value = Math.max(0, total.value - 1)
-    if (selected.value?.id === item.id) {
-      closeEditor()
-    }
+    dropDeleted([item.id])
   }
   catch (err) {
     error.value = errMessage(err, 'Could not delete the file.')
+  }
+}
+
+async function removeMarked() {
+  const ids = markedIds.value.slice()
+  if (!ids.length || deleting.value) {
+    return
+  }
+  const label = ids.length === 1 ? 'Delete 1 file?' : `Delete ${ids.length} files?`
+  if (!confirm(label)) {
+    return
+  }
+  deleting.value = true
+  error.value = null
+  const failed: number[] = []
+  await Promise.all(ids.map(async (id) => {
+    try {
+      await $fetch(`/api/_miraicms/media/${id}`, { method: 'DELETE' })
+    }
+    catch {
+      failed.push(id)
+    }
+  }))
+  const failedSet = new Set(failed)
+  dropDeleted(ids.filter(id => !failedSet.has(id)))
+  if (failed.length) {
+    error.value = failed.length === 1
+      ? 'Could not delete 1 file.'
+      : `Could not delete ${failed.length} files.`
+  }
+  deleting.value = false
+  if (!items.value.length && hasMore.value) {
+    await load()
   }
 }
 
@@ -389,7 +506,7 @@ watch([scroller, sentinel, hasMore], () => {
   <div :class="rootClass">
     <MiraiCmsAdminHeader
       title="Media library"
-      :count="`${total} items`"
+      :count="total === 1 ? '1 item' : `${total} items`"
     >
       <input
         ref="fileInput"
@@ -398,6 +515,15 @@ watch([scroller, sentinel, hasMore], () => {
         multiple
         @change="onFilesSelected"
       >
+      <MiraiCmsUiButton
+        v-if="markedCount"
+        tag="button"
+        variant="red"
+        :disabled="deleting"
+        @click="removeMarked"
+      >
+        {{ deleting ? 'Deleting…' : `Delete selected (${markedCount})` }}
+      </MiraiCmsUiButton>
       <MiraiCmsUiButton
         tag="button"
         variant="secondary"
@@ -415,6 +541,14 @@ watch([scroller, sentinel, hasMore], () => {
         {{ uploading ? 'Uploading…' : 'Upload files' }}
       </MiraiCmsUiButton>
     </MiraiCmsAdminHeader>
+
+    <MiraiCmsMediaLibraryFilters
+      :filters="filters"
+      :months="months"
+      id-prefix="library"
+      :class="`${rootClass}__filters`"
+      @update:filters="onLibraryFilters"
+    />
 
     <MiraiCmsUiNotice
       v-if="notice"
@@ -441,7 +575,7 @@ watch([scroller, sentinel, hasMore], () => {
       v-else-if="!items.length && !error"
       placement="static"
       variant="info"
-      message="No files yet. Upload the first one."
+      :message="filtersActive ? 'No files match.' : 'No files yet. Upload the first one.'"
       :closable="false"
     />
 
@@ -454,8 +588,16 @@ watch([scroller, sentinel, hasMore], () => {
         <div
           v-for="item in items"
           :key="item.id"
-          :class="`${rootClass}__card`"
+          :class="[`${rootClass}__card`, { 'is-marked': isMarked(item.id) }]"
         >
+          <label :class="`${rootClass}__check`">
+            <input
+              type="checkbox"
+              :checked="isMarked(item.id)"
+              :aria-label="`Select ${item.filename}`"
+              @change="toggleMarked(item.id)"
+            >
+          </label>
           <button
             type="button"
             :class="`${rootClass}__thumb`"
@@ -736,6 +878,12 @@ $root: '.miraicms-media';
       display: none;
     }
 
+    &__filters {
+      position: relative;
+      z-index: 2;
+      margin-bottom: math-rem(8);
+    }
+
     &__scroller {
       flex: 1;
       min-height: 0;
@@ -759,6 +907,7 @@ $root: '.miraicms-media';
     }
 
     &__card {
+      position: relative;
       display: flex;
       flex-direction: column;
       min-width: 0;
@@ -768,9 +917,39 @@ $root: '.miraicms-media';
       border-radius: $border-radius;
       box-shadow: $shadow-sm;
 
+      &.is-marked {
+        border-color: $color-accent;
+        box-shadow: 0 0 0 1px $color-accent;
+      }
+
       :deep(.miraicms-btn) {
         width: calc(100% - #{math-rem(16)});
         margin: 0 math-rem(8) math-rem(8);
+      }
+    }
+
+    &__check {
+      position: absolute;
+      z-index: 1;
+      top: math-rem(8);
+      left: math-rem(8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: math-rem(28);
+      height: math-rem(28);
+      margin: 0;
+      border-radius: $border-radius;
+      background: rgba($color-surface, 0.92);
+      box-shadow: $shadow-sm;
+      cursor: pointer;
+
+      input {
+        width: math-rem(16);
+        height: math-rem(16);
+        margin: 0;
+        accent-color: $color-accent;
+        cursor: pointer;
       }
     }
 

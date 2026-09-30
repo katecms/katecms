@@ -1,6 +1,15 @@
 import { computed, ref } from 'vue'
 import { $fetch } from '#imports'
 import type { MediaItem } from '@miraicms/core'
+import {
+  defaultMediaLibraryFilters,
+  localUtcOffsetMinutes,
+  mediaLibraryQuery,
+  mediaMatchesFilters,
+  monthKey,
+  normalizeMediaLibraryFilters,
+} from '../utils/media-library-query'
+import type { MediaLibraryFilterState, MediaLibraryPage } from '../utils/media-library-query'
 
 /** Page size for media pickers. The library page uses the same size. */
 export const MEDIA_LIBRARY_PAGE_SIZE = 40
@@ -10,17 +19,26 @@ export const MEDIA_LIBRARY_PAGE_SIZE = 40
  * `matches` runs on each loaded page so a field can hide files it cannot use.
  * `fetched` counts raw API rows, so scrolling continues past pages that were filtered out.
  */
-export function useMediaLibrary(matches: () => (item: MediaItem) => boolean) {
+export function useMediaLibrary(
+  matches: () => (item: MediaItem) => boolean,
+  options?: { baseType?: 'image' },
+) {
   const items = ref<MediaItem[]>([])
   const total = ref(0)
   const fetched = ref(0)
+  const months = ref<string[]>([])
+  const filters = ref<MediaLibraryFilterState>(defaultMediaLibraryFilters())
   const loading = ref(false)
   const loadingMore = ref(false)
   const hasMore = computed(() => fetched.value < total.value)
+  let requestId = 0
 
-  async function fetchPage(offset: number) {
-    return $fetch<{ media: MediaItem[], total: number }>('/api/_miraicms/media', {
-      query: { limit: MEDIA_LIBRARY_PAGE_SIZE, offset },
+  function fetchPage(offset: number) {
+    return $fetch<MediaLibraryPage<MediaItem>>('/api/_miraicms/media', {
+      query: mediaLibraryQuery(filters.value, {
+        limit: MEDIA_LIBRARY_PAGE_SIZE,
+        offset,
+      }, options?.baseType),
     })
   }
 
@@ -28,16 +46,50 @@ export function useMediaLibrary(matches: () => (item: MediaItem) => boolean) {
     return list.filter(matches())
   }
 
-  async function load() {
-    loading.value = true
+  /** Image fields cannot use these types, so don't page through every rejected file. */
+  function fieldHidesType(): boolean {
+    return options?.baseType === 'image'
+      && filters.value.type !== 'all'
+      && filters.value.type !== 'image'
+  }
+
+  function rememberMonth(iso: string) {
+    const key = monthKey(iso, localUtcOffsetMinutes())
+    if (!key || months.value.includes(key)) {
+      return
+    }
+    months.value = [...months.value, key].sort((a, b) => b.localeCompare(a))
+  }
+
+  async function load(loadOptions?: { resetFilters?: boolean, silent?: boolean }) {
+    const id = ++requestId
+    if (loadOptions?.resetFilters) {
+      filters.value = defaultMediaLibraryFilters()
+    }
+    if (!loadOptions?.silent) {
+      loading.value = true
+      items.value = []
+      fetched.value = 0
+    }
     try {
       const res = await fetchPage(0)
+      if (id !== requestId) {
+        return
+      }
       total.value = res.total
+      months.value = res.months
+      if (fieldHidesType()) {
+        fetched.value = res.total
+        items.value = []
+        return
+      }
       fetched.value = res.media.length
       items.value = accept(res.media)
     }
     finally {
-      loading.value = false
+      if (id === requestId && !loadOptions?.silent) {
+        loading.value = false
+      }
     }
   }
 
@@ -45,9 +97,13 @@ export function useMediaLibrary(matches: () => (item: MediaItem) => boolean) {
     if (loading.value || loadingMore.value || !hasMore.value) {
       return
     }
+    const id = requestId
     loadingMore.value = true
     try {
       const res = await fetchPage(fetched.value)
+      if (id !== requestId) {
+        return
+      }
       total.value = res.total
       if (!res.media.length) {
         fetched.value = total.value
@@ -63,8 +119,16 @@ export function useMediaLibrary(matches: () => (item: MediaItem) => boolean) {
     }
   }
 
+  async function applyFilters(next: MediaLibraryFilterState) {
+    filters.value = normalizeMediaLibraryFilters(next)
+    await load()
+  }
+
   function prepend(item: MediaItem) {
-    if (!matches()(item)) {
+    if (mediaMatchesFilters(item, { ...filters.value, month: 'all' })) {
+      rememberMonth(item.created_at)
+    }
+    if (!matches()(item) || !mediaMatchesFilters(item, filters.value)) {
       return
     }
     const index = items.value.findIndex(entry => entry.id === item.id)
@@ -73,6 +137,7 @@ export function useMediaLibrary(matches: () => (item: MediaItem) => boolean) {
       return
     }
     items.value = [item, ...items.value]
+    total.value += 1
   }
 
   function replace(item: MediaItem) {
@@ -84,11 +149,15 @@ export function useMediaLibrary(matches: () => (item: MediaItem) => boolean) {
 
   return {
     items,
+    total,
+    months,
+    filters,
     loading,
     loadingMore,
     hasMore,
     load,
     loadMore,
+    applyFilters,
     prepend,
     replace,
   }

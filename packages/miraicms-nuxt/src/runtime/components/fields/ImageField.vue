@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { Field, MediaItem } from '@miraicms/core'
 import { isMediaItem } from '@miraicms/core'
 import { useMediaLibrary } from '../../composables/useMediaLibrary'
+import type { MediaLibraryFilterState } from '../../utils/media-library-query'
 
 type ImageFieldConfig = Extract<Field, { type: 'image' }>
 type CropSource = { kind: 'library', item: MediaItem } | { kind: 'file', file: File }
@@ -138,11 +139,14 @@ const {
   loading,
   loadingMore,
   hasMore,
+  filters,
+  months,
   load: loadLibrary,
   loadMore,
+  applyFilters,
   prepend: prependLibrary,
   replace: replaceLibrary,
-} = useMediaLibrary(() => item => matchesMime(item.mime_type, item.filename))
+} = useMediaLibrary(() => item => matchesMime(item.mime_type, item.filename), { baseType: 'image' })
 const error = ref<string | null>(null)
 const uploading = ref(false)
 const processing = ref(false)
@@ -150,7 +154,17 @@ const processing = ref(false)
 async function fetchLibrary() {
   error.value = null
   try {
-    await loadLibrary()
+    await loadLibrary({ resetFilters: true })
+  }
+  catch {
+    error.value = 'Could not load the media library.'
+  }
+}
+
+async function onLibraryFilters(next: MediaLibraryFilterState) {
+  error.value = null
+  try {
+    await applyFilters(next)
   }
   catch {
     error.value = 'Could not load the media library.'
@@ -490,6 +504,8 @@ onBeforeUnmount(revokeCropUrl)
         :loading="loading"
         :loading-more="loadingMore"
         :has-more="hasMore"
+        :filters="filters"
+        :months="months"
         :error="error"
         :uploading="uploading"
         :processing="processing"
@@ -498,6 +514,7 @@ onBeforeUnmount(revokeCropUrl)
         @choose="choose"
         @upload="triggerUpload"
         @load-more="onLoadMore"
+        @update:filters="onLibraryFilters"
       >
         <MiraiCmsImageCropper
           :src="cropSrc"

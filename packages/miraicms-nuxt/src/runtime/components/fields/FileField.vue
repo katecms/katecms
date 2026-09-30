@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import type { Field, MediaItem } from '@miraicms/core'
 import { isImageMedia as isImage, isMediaItem } from '@miraicms/core'
 import { useMediaLibrary } from '../../composables/useMediaLibrary'
+import type { MediaLibraryFilterState } from '../../utils/media-library-query'
 
 type FileFieldConfig = Extract<Field, { type: 'file' }>
 
@@ -107,8 +108,11 @@ const {
   loading,
   loadingMore,
   hasMore,
+  filters,
+  months,
   load: loadLibrary,
   loadMore,
+  applyFilters,
   prepend: prependLibrary,
   replace: replaceLibrary,
 } = useMediaLibrary(() => item => matchesMime(item.mime_type, item.filename))
@@ -119,7 +123,17 @@ const processing = ref(false)
 async function fetchLibrary() {
   error.value = null
   try {
-    await loadLibrary()
+    await loadLibrary({ resetFilters: true })
+  }
+  catch {
+    error.value = 'Could not load the media library.'
+  }
+}
+
+async function onLibraryFilters(next: MediaLibraryFilterState) {
+  error.value = null
+  try {
+    await applyFilters(next)
   }
   catch {
     error.value = 'Could not load the media library.'
@@ -362,6 +376,8 @@ onMounted(restoreFromModel)
         :loading="loading"
         :loading-more="loadingMore"
         :has-more="hasMore"
+        :filters="filters"
+        :months="months"
         :error="error"
         :uploading="uploading"
         :processing="processing"
@@ -369,6 +385,7 @@ onMounted(restoreFromModel)
         @choose="choose"
         @upload="triggerUpload"
         @load-more="onLoadMore"
+        @update:filters="onLibraryFilters"
       />
     </div>
   </MiraiCmsFieldWrapper>

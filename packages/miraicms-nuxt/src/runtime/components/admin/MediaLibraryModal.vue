@@ -2,6 +2,8 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import type { MediaItem } from '@miraicms/core'
 import { isImageMedia as isImage } from '@miraicms/core'
+import { defaultMediaLibraryFilters, mediaFiltersActive } from '../../utils/media-library-query'
+import type { MediaLibraryFilterState } from '../../utils/media-library-query'
 
 const props = withDefaults(defineProps<{
   open?: boolean
@@ -14,6 +16,8 @@ const props = withDefaults(defineProps<{
   loading?: boolean
   loadingMore?: boolean
   hasMore?: boolean
+  filters?: MediaLibraryFilterState
+  months?: string[]
   error?: string | null
   uploading?: boolean
   processing?: boolean
@@ -28,6 +32,8 @@ const props = withDefaults(defineProps<{
   loading: false,
   loadingMore: false,
   hasMore: false,
+  filters: () => defaultMediaLibraryFilters(),
+  months: () => [],
   error: null,
   uploading: false,
   processing: false,
@@ -40,6 +46,7 @@ const emit = defineEmits<{
   confirm: [items: MediaItem[]]
   upload: []
   loadMore: []
+  'update:filters': [filters: MediaLibraryFilterState]
 }>()
 
 const rootClass = 'miraicms-media-modal'
@@ -115,6 +122,12 @@ const noLibraryHint = computed(() =>
   isImageKind.value
     ? 'Picking from the library is disabled. Upload a new image.'
     : 'Picking from the library is disabled. Upload a new file.',
+)
+
+const emptyLibraryHint = computed(() =>
+  mediaFiltersActive(props.filters)
+    ? 'No files match.'
+    : 'The library is empty. Upload the first file.',
 )
 
 const pendingCount = computed(() => pendingIds.value.length)
@@ -197,6 +210,15 @@ function confirmSelection() {
           </MiraiCmsUiButton>
         </div>
 
+        <MiraiCmsMediaLibraryFilters
+          v-if="libraryEnabled && !cropping && !processing"
+          :filters="filters"
+          :months="months"
+          id-prefix="picker"
+          :class="`${rootClass}__filters`"
+          @update:filters="emit('update:filters', $event)"
+        />
+
         <div
           ref="body"
           :class="`${rootClass}__dialog-body`"
@@ -239,7 +261,7 @@ function confirmSelection() {
                 v-else-if="!library.length && !hasMore"
                 :class="`${rootClass}__hint`"
               >
-                The library is empty. Upload the first file.
+                {{ emptyLibraryHint }}
               </div>
               <template v-else>
                 <div :class="`${rootClass}__grid`">
@@ -373,6 +395,13 @@ $root: '.miraicms-media-modal';
   &__dialog-title {
     font-weight: 600;
     color: $color-ink;
+  }
+
+  &__filters {
+    position: relative;
+    z-index: 2;
+    padding: math-rem(12) math-rem(16);
+    border-bottom: 1px solid $color-border;
   }
 
   &__dialog-body {

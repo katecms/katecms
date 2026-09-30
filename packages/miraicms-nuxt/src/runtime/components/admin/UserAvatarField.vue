@@ -5,6 +5,7 @@ import { isImageMedia } from '@miraicms/core'
 import type { MediaItem } from '@miraicms/core'
 import { avatarSrc } from '../../utils/admin-users'
 import { useMediaLibrary } from '../../composables/useMediaLibrary'
+import type { MediaLibraryFilterState } from '../../utils/media-library-query'
 
 /** Bound avatar media item (`null` when cleared / not set). */
 const model = defineModel<MediaItem | null>({ default: null })
@@ -17,10 +18,13 @@ const {
   loading,
   loadingMore,
   hasMore,
+  filters,
+  months,
   load: loadLibrary,
   loadMore,
+  applyFilters,
   prepend: prependLibrary,
-} = useMediaLibrary(() => isImageMedia)
+} = useMediaLibrary(() => isImageMedia, { baseType: 'image' })
 const uploading = ref(false)
 const error = ref<string | null>(null)
 const fileInput = ref<HTMLInputElement>()
@@ -30,7 +34,17 @@ const previewUrl = computed(() => avatarSrc(model.value))
 async function fetchLibrary() {
   error.value = null
   try {
-    await loadLibrary()
+    await loadLibrary({ resetFilters: true })
+  }
+  catch {
+    error.value = 'Could not load the media library.'
+  }
+}
+
+async function onLibraryFilters(next: MediaLibraryFilterState) {
+  error.value = null
+  try {
+    await applyFilters(next)
   }
   catch {
     error.value = 'Could not load the media library.'
@@ -172,12 +186,15 @@ async function onFileChange(event: Event) {
       :loading="loading"
       :loading-more="loadingMore"
       :has-more="hasMore"
+      :filters="filters"
+      :months="months"
       :error="error"
       :uploading="uploading"
       @close="closeModal"
       @choose="choose"
       @upload="triggerUpload"
       @load-more="onLoadMore"
+      @update:filters="onLibraryFilters"
     />
   </div>
 </template>

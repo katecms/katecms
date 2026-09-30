@@ -9,7 +9,7 @@ export interface SafeUser {
 
 /**
  * Auth snapshot shared by the route guard and admin UI:
- * `hasUsers` chooses first-run `/register` vs `/login`;
+ * `hasUsers` chooses first-run `/admin/register` vs `/admin/login`;
  * `user` keeps authenticated visitors out of the auth pages.
  */
 export interface AuthState {

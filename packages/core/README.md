@@ -113,7 +113,7 @@ const resolved = resolveMiraiCmsConfig(config)
 
 `defineMiraiCmsConfig` — только типизация, значение не меняет. `resolveMiraiCmsConfig` подставляет дефолты, мержит роли, нормализует media/database. Предупреждения (зарезервированное имя размера, дубликаты, неизвестный драйвер, попытка переопределить `owner`) попадают в `resolved.warnings`.
 
-Пути админки по умолчанию: `adminPath: 'admin'`, `loginPath: 'login'`, `registerPath: 'register'`.
+Пути админки по умолчанию: `adminPath: 'admin'`, вход `/${adminPath}/${loginPath}` (`/admin/login`), регистрация `/${adminPath}/${registerPath}` (`/admin/register`).
 
 <a id="collections-config"></a>
 ### Коллекции

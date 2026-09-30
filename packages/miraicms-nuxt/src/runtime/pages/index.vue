@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { useHead } from '#imports'
+import { computed } from 'vue'
+import { useHead, useRoute } from '#imports'
+import { useCmsPaths } from '../composables/useCmsPaths'
 
 useHead({
   bodyAttrs: {
@@ -8,11 +10,21 @@ useHead({
   titleTemplate: title => title ? `${title} - MiraiCMS` : 'MiraiCMS',
 })
 
+const route = useRoute()
+const paths = useCmsPaths()
 const rootClass = 'miraicms'
+const isAuthPage = computed(() => {
+  const path = route.path.length > 1 ? route.path.replace(/\/+$/, '') : route.path
+  return path === paths.login || path === paths.register
+})
 </script>
 
 <template>
-  <div :class="[rootClass]">
+  <NuxtPage v-if="isAuthPage" />
+  <div
+    v-else
+    :class="[rootClass]"
+  >
     <div :class="[`${rootClass}-header`]">
       <MiraiCmsAppUser />
     </div>

@@ -355,6 +355,16 @@ export default defineNuxtModule<MiraiCmsConfig>({
               file: resolver.resolve('./runtime/pages/admin/index.vue'),
             },
             {
+              name: 'admin-login',
+              path: resolved.loginPath.replace(/^\/+|\/+$/g, ''),
+              file: resolver.resolve('./runtime/pages/admin/login.vue'),
+            },
+            {
+              name: 'admin-register',
+              path: resolved.registerPath.replace(/^\/+|\/+$/g, ''),
+              file: resolver.resolve('./runtime/pages/admin/register.vue'),
+            },
+            {
               name: 'admin-media',
               path: 'media',
               file: resolver.resolve('./runtime/pages/admin/media.vue'),
@@ -411,22 +421,6 @@ export default defineNuxtModule<MiraiCmsConfig>({
               file: resolver.resolve('./runtime/pages/admin/demo-fields.vue'),
             },
           ],
-        },
-        {
-          name: 'login',
-          path: `/${resolved.loginPath}`,
-          file: resolver.resolve('./runtime/pages/login.vue'),
-          meta: {
-            layout: false,
-          },
-        },
-        {
-          name: 'register',
-          path: `/${resolved.registerPath}`,
-          file: resolver.resolve('./runtime/pages/register.vue'),
-          meta: {
-            layout: false,
-          },
         },
       )
     })

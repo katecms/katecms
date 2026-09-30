@@ -1,29 +1,23 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { $fetch, navigateTo, useHead } from '#imports'
-import { parseAuthError } from '../utils/auth-error'
-import { useAuth } from '../composables/useAuth'
-import { useAuthCooldown } from '../composables/useAuthCooldown'
-import { useCmsPaths } from '../composables/useCmsPaths'
-
-const { authState } = useAuth()
-const isFirstUser = computed(() => authState.value?.hasUsers === false)
+import { parseAuthError } from '../../utils/auth-error'
+import { useAuthCooldown } from '../../composables/useAuthCooldown'
+import { useCmsPaths } from '../../composables/useCmsPaths'
 
 useHead({
   bodyAttrs: {
     id: 'miraicms-body',
   },
-  title: () => isFirstUser.value ? 'Create owner' : 'Register',
+  title: 'Sign in',
 })
 
 const paths = useCmsPaths()
 const { remainingSec, locked, start: startCooldown } = useAuthCooldown()
 const emailField = { label: 'Email', required: true }
 const passwordField = { type: 'password' as const, label: 'Password', required: true }
-const passwordConfirmField = { type: 'password' as const, label: 'Confirm password', required: true }
 const email = ref('')
 const password = ref('')
-const passwordConfirm = ref('')
 const loading = ref(false)
 const error = ref<string | null>(null)
 
@@ -31,18 +25,17 @@ const canSubmit = computed(() =>
   !loading.value
   && !locked.value
   && email.value.trim().length > 0
-  && password.value.length > 0
-  && passwordConfirm.value.length > 0,
+  && password.value.length > 0,
 )
 
 const submitLabel = computed(() => {
   if (loading.value) {
-    return 'Creating…'
+    return 'Signing in…'
   }
   if (locked.value) {
     return `Wait ${remainingSec.value} sec.`
   }
-  return 'Register'
+  return 'Sign in'
 })
 
 async function submit() {
@@ -54,18 +47,17 @@ async function submit() {
   error.value = null
 
   try {
-    await $fetch('/api/_miraicms/auth/register', {
+    await $fetch('/api/_miraicms/auth/login', {
       method: 'POST',
       body: {
         email: email.value.trim(),
         password: password.value,
-        passwordConfirm: passwordConfirm.value,
       },
     })
     await navigateTo(paths.admin)
   }
   catch (err) {
-    const parsed = parseAuthError(err, 'Could not register.')
+    const parsed = parseAuthError(err, 'Could not sign in.')
     error.value = parsed.message
     startCooldown(parsed.retryAfterMs, () => {
       error.value = null
@@ -82,19 +74,14 @@ async function submit() {
     <div class="miraicms-auth__card">
       <img
         class="miraicms-auth__logo"
-        src="../assets/img/miraicms-logo.svg"
+        src="../../assets/img/miraicms-logo.svg"
         alt="MiraiCMS"
       >
       <div class="miraicms-auth__title">
-        {{ isFirstUser ? 'Create owner' : 'Register' }}
+        Sign in
       </div>
       <div class="miraicms-auth__subtitle">
-        <template v-if="isFirstUser">
-          This is the first account — it will automatically receive the owner role.
-        </template>
-        <template v-else>
-          Fill in the form to create an account. New users are assigned the subscriber role.
-        </template>
+        Sign in to the CMS admin.
       </div>
 
       <form
@@ -102,13 +89,13 @@ async function submit() {
         @submit.prevent="submit"
       >
         <MiraiCmsFieldWrapper
-          field-key="cms-register-email"
+          field-key="cms-login-email"
           :field="emailField"
         >
           <MiraiCmsInputControl
             v-model="email"
             type="email"
-            field-key="cms-register-email"
+            field-key="cms-login-email"
             :field="emailField"
             autocomplete="email"
           />
@@ -116,17 +103,9 @@ async function submit() {
 
         <MiraiCmsPasswordField
           v-model="password"
-          field-key="cms-register-password"
+          field-key="cms-login-password"
           :field="passwordField"
-          autocomplete="new-password"
-          minlength="8"
-        />
-
-        <MiraiCmsPasswordField
-          v-model="passwordConfirm"
-          field-key="cms-register-password-confirm"
-          :field="passwordConfirmField"
-          autocomplete="new-password"
+          autocomplete="current-password"
         />
 
         <div class="miraicms-auth__actions">
@@ -148,13 +127,10 @@ async function submit() {
         Error: {{ error }}
       </div>
 
-      <div
-        v-if="!isFirstUser"
-        class="miraicms-auth__footer"
-      >
-        Already have an account?
-        <NuxtLink :to="paths.login">
-          Sign in
+      <div class="miraicms-auth__footer">
+        No account?
+        <NuxtLink :to="paths.register">
+          Register
         </NuxtLink>
       </div>
     </div>
@@ -162,13 +138,13 @@ async function submit() {
 </template>
 
 <style lang="scss">
-@use "../assets/styles" as *;
+@use "../../assets/styles" as *;
 
 @include miraicms-document;
 </style>
 
 <style scoped lang="scss">
-@use "../assets/styles" as *;
+@use "../../assets/styles" as *;
 
 @include miraicms-auth;
 </style>

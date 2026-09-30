@@ -5,7 +5,7 @@ import { getCurrentUser } from '../../../utils/session'
 
 /**
  * Combined auth snapshot for the route guard:
- * - hasUsers drives the first-run flow (no users -> /register, else /login);
+ * - hasUsers drives the first-run flow (no users -> /admin/register, else /admin/login);
  * - user drives the authenticated redirects (keep logged-in users out of the
  *   auth pages).
  */

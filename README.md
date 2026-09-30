@@ -83,8 +83,8 @@ export default defineNuxtConfig({
 | Ключ | Тип | Дефолт | Смысл |
 |---|---|---|---|
 | `adminPath` | `string` | `'admin'` | Сегмент URL админки |
-| `loginPath` | `string` | `'login'` | Страница входа |
-| `registerPath` | `string` | `'register'` | Страница регистрации |
+| `loginPath` | `string` | `'login'` | Сегмент входа, URL `/${adminPath}/login` |
+| `registerPath` | `string` | `'register'` | Сегмент регистрации, URL `/${adminPath}/register` |
 | `collections` | `Collections` | `{}` | Типы записей. Ключ объекта = slug |
 | `dictionaries` | `Dictionaries` | `{}` | Словари. Ключ объекта = slug |
 | `blocks` | `Blocks` | `{}` | Реестр блоков. Ключ объекта = slug |
@@ -92,7 +92,7 @@ export default defineNuxtConfig({
 | `media` | `MediaConfig` | см. ниже | Загрузки |
 | `roles` | `Roles` | `{}` поверх встроенных | Роли |
 
-Пути — сегменты без ведущего `/`. Модуль вешает страницы на `/${adminPath}`, `/${loginPath}`, `/${registerPath}`.
+Пути — сегменты без ведущего `/`. Админка на `/${adminPath}`, вход на `/${adminPath}/${loginPath}`, регистрация на `/${adminPath}/${registerPath}`.
 
 Загрузки всегда в `<rootDir>/public/uploads` (модуль сам ставит `media.dir`).
 

@@ -1,5 +1,5 @@
 import { useRuntimeConfig } from '#imports'
-import { cmsRoutePath } from '../utils/cms-paths'
+import { cmsAdminChildPath, cmsRoutePath } from '../utils/cms-paths'
 
 export function useCmsPaths() {
   const config = useRuntimeConfig().public.miraicms
@@ -18,7 +18,7 @@ export function useCmsPaths() {
     dictionaryTerm: (slug: string, id: number | string) =>
       `${admin}/dictionaries/${encodeURIComponent(slug)}/${id}`,
     option: (slug: string) => `${admin}/options/${encodeURIComponent(slug)}`,
-    login: cmsRoutePath(config?.loginPath || 'login'),
-    register: cmsRoutePath(config?.registerPath || 'register'),
+    login: cmsAdminChildPath(config?.adminPath || 'admin', config?.loginPath || 'login'),
+    register: cmsAdminChildPath(config?.adminPath || 'admin', config?.registerPath || 'register'),
   }
 }

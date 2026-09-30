@@ -24,7 +24,9 @@ export {
   flattenCollectionTree,
   isCollectionOrderField,
   isCollectionQueryOrderBy,
+  COLLECTION_LIST_SORTS,
   listCollectionParentOptions,
+  listCollectionMonths,
   listCollections,
   loadCollectionSlugPath,
   queryCollections,
@@ -34,6 +36,7 @@ export {
 export type {
   Collection,
   CollectionListStatus,
+  CollectionListSort,
   CollectionParentOption,
   CollectionStatusCounts,
   CollectionUpdate,

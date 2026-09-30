@@ -2,8 +2,20 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { $fetch, navigateTo, useHead, useRoute } from '#imports'
 import { buildPublicPath } from '@miraicms/core'
-import type { CollectionStatus } from '@miraicms/core'
+import type { CollectionStatus, SelectModelValue } from '@miraicms/core'
+
+const COLLECTION_LIST_SORTS = [
+  'date-desc',
+  'date-asc',
+  'author-asc',
+  'author-desc',
+  'title-asc',
+  'title-desc',
+] as const
+
+type CollectionListSort = typeof COLLECTION_LIST_SORTS[number]
 import { parseAuthError } from '../../../utils/auth-error'
+import { localUtcOffsetMinutes, monthLabel } from '../../../utils/media-library-query'
 import {
   collectionApi,
   collectionStatusLabel,
@@ -30,9 +42,20 @@ const statusFilter = computed<CollectionListFilter>(() => {
 })
 const searchQuery = computed(() => String(route.query.q ?? ''))
 const page = computed(() => Math.max(1, Number(route.query.page) || 1))
+const monthFilter = computed(() => {
+  const raw = String(route.query.month ?? '')
+  return /^\d{4}-(0[1-9]|1[0-2])$/.test(raw) ? raw : 'all'
+})
+const sortFilter = computed<CollectionListSort>(() => {
+  const raw = String(route.query.sort ?? 'date-desc')
+  return (COLLECTION_LIST_SORTS as readonly string[]).includes(raw)
+    ? raw as CollectionListSort
+    : 'date-desc'
+})
 
 const collection = ref<AdminCollectionMeta | null>(null)
 const entries = ref<AdminEntry[]>([])
+const months = ref<string[]>([])
 const counts = ref({ all: 0, published: 0, draft: 0, trash: 0 })
 const total = ref(0)
 const perPage = ref(10)
@@ -43,7 +66,18 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 const pendingId = ref<number | null>(null)
 const emptyingTrash = ref(false)
+const deletingMarked = ref(false)
+const markedIds = ref<number[]>([])
 const searchInput = ref('')
+
+const SORT_CHOICES: { val: CollectionListSort, lbl: string }[] = [
+  { val: 'date-desc', lbl: 'Date, newest' },
+  { val: 'date-asc', lbl: 'Date, oldest' },
+  { val: 'author-asc', lbl: 'Author, A–Z' },
+  { val: 'author-desc', lbl: 'Author, Z–A' },
+  { val: 'title-asc', lbl: 'Title, A–Z' },
+  { val: 'title-desc', lbl: 'Title, Z–A' },
+]
 
 const title = computed(() => collection.value?.labels.name || '')
 useHead({ title })
@@ -55,9 +89,37 @@ const totalPages = computed(() => {
   return Math.max(1, Math.ceil(total.value / perPage.value))
 })
 
+const monthChoices = computed(() => {
+  const values = [...months.value]
+  if (monthFilter.value !== 'all' && !values.includes(monthFilter.value)) {
+    values.push(monthFilter.value)
+  }
+  values.sort((a, b) => b.localeCompare(a))
+  return [
+    { val: 'all', lbl: 'All dates' },
+    ...values.map(value => ({ val: value, lbl: monthLabel(value) })),
+  ]
+})
+
+const markedEntries = computed(() =>
+  entries.value.filter(entry => markedIds.value.includes(entry.id)),
+)
+
+const bulkTrashIds = computed(() =>
+  statusFilter.value === 'trash'
+    ? []
+    : markedEntries.value.filter(entry => entry.canUpdate).map(entry => entry.id),
+)
+
+const bulkDeleteIds = computed(() =>
+  statusFilter.value === 'trash'
+    ? markedEntries.value.filter(entry => entry.canDelete).map(entry => entry.id)
+    : [],
+)
+
 const emptyMessage = computed(() => {
-  if (searchQuery.value) {
-    return 'No entries match this search.'
+  if (searchQuery.value || monthFilter.value !== 'all') {
+    return 'No entries match.'
   }
   if (statusFilter.value === 'trash') {
     return 'Trash is empty.'
@@ -138,27 +200,93 @@ async function navigateQuery(query: Record<string, string> = {}) {
   })
 }
 
+function listQuery(patch: {
+  status?: CollectionListFilter
+  q?: string
+  page?: number
+  month?: string
+  sort?: CollectionListSort
+} = {}) {
+  const status = patch.status ?? statusFilter.value
+  const q = patch.q ?? searchQuery.value
+  const month = patch.month ?? monthFilter.value
+  const sort = patch.sort ?? sortFilter.value
+  const nextPage = patch.page ?? 1
+  const query: Record<string, string> = {}
+  if (q) {
+    query.q = q
+  }
+  else if (status !== 'all') {
+    query.status = status
+  }
+  if (month !== 'all') {
+    query.month = month
+  }
+  if (sort !== 'date-desc') {
+    query.sort = sort
+  }
+  if (nextPage > 1) {
+    query.page = String(nextPage)
+  }
+  return query
+}
+
 function setStatus(status: CollectionListFilter) {
-  return navigateQuery(status === 'all' ? {} : { status })
+  return navigateQuery(listQuery({ status, q: '', page: 1 }))
 }
 
 function applySearch() {
-  const q = searchInput.value.trim()
-  return navigateQuery(q ? { q } : {})
+  return navigateQuery(listQuery({
+    q: searchInput.value.trim(),
+    status: 'all',
+    page: 1,
+  }))
+}
+
+function setMonth(month: string) {
+  return navigateQuery(listQuery({ month, page: 1 }))
+}
+
+function setSort(sort: CollectionListSort) {
+  return navigateQuery(listQuery({ sort, page: 1 }))
 }
 
 function setPage(next: number) {
-  const query: Record<string, string> = {}
-  if (searchQuery.value) {
-    query.q = searchQuery.value
-  }
-  else if (statusFilter.value !== 'all') {
-    query.status = statusFilter.value
-  }
-  if (next > 1) {
-    query.page = String(next)
-  }
-  return navigateQuery(query)
+  return navigateQuery(listQuery({ page: next }))
+}
+
+const monthModel = computed({
+  get(): SelectModelValue {
+    return monthFilter.value
+  },
+  set(value: SelectModelValue) {
+    const raw = typeof value === 'string' ? value : 'all'
+    const month = raw === 'all' || /^\d{4}-(0[1-9]|1[0-2])$/.test(raw) ? raw : 'all'
+    void setMonth(month)
+  },
+})
+
+const sortModel = computed({
+  get(): SelectModelValue {
+    return sortFilter.value
+  },
+  set(value: SelectModelValue) {
+    const raw = typeof value === 'string' ? value : 'date-desc'
+    const sort = (COLLECTION_LIST_SORTS as readonly string[]).includes(raw)
+      ? raw as CollectionListSort
+      : 'date-desc'
+    void setSort(sort)
+  },
+})
+
+function isMarked(id: number): boolean {
+  return markedIds.value.includes(id)
+}
+
+function toggleMarked(id: number) {
+  markedIds.value = isMarked(id)
+    ? markedIds.value.filter(entry => entry !== id)
+    : [...markedIds.value, id]
 }
 
 async function load() {
@@ -167,16 +295,21 @@ async function load() {
   }
   loading.value = true
   error.value = null
+  markedIds.value = []
   try {
     const res = await $fetch<CollectionListResponse>(collectionApi(collectionSlug.value), {
       query: {
         status: searchQuery.value ? undefined : statusFilter.value,
         q: searchQuery.value || undefined,
+        month: monthFilter.value === 'all' ? undefined : monthFilter.value,
+        sort: sortFilter.value,
+        tz: localUtcOffsetMinutes(),
         page: page.value,
       },
     })
     collection.value = res.collection
     entries.value = res.entries
+    months.value = res.months ?? []
     counts.value = res.counts
     total.value = res.total
     perPage.value = res.perPage
@@ -260,6 +393,55 @@ async function removePermanent(entry: AdminEntry) {
   }
 }
 
+async function removeMarked() {
+  const trashIds = bulkTrashIds.value
+  const deleteIds = bulkDeleteIds.value
+  const ids = trashIds.length ? trashIds : deleteIds
+  if (!ids.length || deletingMarked.value || pendingId.value !== null) {
+    return
+  }
+  const permanent = deleteIds.length > 0
+  const label = permanent
+    ? (ids.length === 1
+        ? 'Delete 1 entry permanently? This cannot be undone.'
+        : `Delete ${ids.length} entries permanently? This cannot be undone.`)
+    : (ids.length === 1
+        ? 'Move 1 entry to trash?'
+        : `Move ${ids.length} entries to trash?`)
+  if (!window.confirm(label)) {
+    return
+  }
+  deletingMarked.value = true
+  error.value = null
+  const failed: number[] = []
+  await Promise.all(ids.map(async (id) => {
+    try {
+      if (permanent) {
+        await $fetch(collectionApi(collectionSlug.value, id), { method: 'DELETE' })
+      }
+      else {
+        await $fetch(collectionApi(collectionSlug.value, id), {
+          method: 'PATCH',
+          body: { status: 'trash' satisfies CollectionStatus },
+        })
+      }
+    }
+    catch {
+      failed.push(id)
+    }
+  }))
+  deletingMarked.value = false
+  await load()
+  if (failed.length) {
+    error.value = failed.length === 1
+      ? 'Could not update 1 entry.'
+      : `Could not update ${failed.length} entries.`
+  }
+  else if (!entries.value.length && page.value > 1) {
+    await setPage(page.value - 1)
+  }
+}
+
 async function emptyTrash() {
   if (!canDelete.value || emptyingTrash.value || pendingId.value !== null || counts.value.trash <= 0) {
     return
@@ -282,7 +464,7 @@ async function emptyTrash() {
 }
 
 onMounted(load)
-watch([collectionSlug, statusFilter, searchQuery, page], load)
+watch([collectionSlug, statusFilter, searchQuery, monthFilter, sortFilter, page], load)
 </script>
 
 <template>
@@ -294,6 +476,25 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
         :link="{ url: paths.collectionCreate(collectionSlug), title: 'Add' }"
       >
         Add {{ collection.labels.singularName || collection.labels.name }}
+      </MiraiCmsUiButton>
+
+      <MiraiCmsUiButton
+        v-if="bulkTrashIds.length"
+        tag="button"
+        variant="red"
+        :disabled="deletingMarked || pendingId !== null || emptyingTrash"
+        @click="removeMarked"
+      >
+        {{ deletingMarked ? 'Moving…' : `Trash selected (${bulkTrashIds.length})` }}
+      </MiraiCmsUiButton>
+      <MiraiCmsUiButton
+        v-if="bulkDeleteIds.length"
+        tag="button"
+        variant="red"
+        :disabled="deletingMarked || pendingId !== null || emptyingTrash"
+        @click="removeMarked"
+      >
+        {{ deletingMarked ? 'Deleting…' : `Delete selected (${bulkDeleteIds.length})` }}
       </MiraiCmsUiButton>
 
       <MiraiCmsUiButton
@@ -325,6 +526,21 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
           {{ tab.label }}
           {{ tab.count }}
         </MiraiCmsUiButton>
+      </div>
+
+      <div :class="`${rootClass}__filters`">
+        <MiraiCmsUiSelect
+          id="collection-month"
+          v-model="monthModel"
+          :choices="monthChoices"
+          aria-label="Date"
+        />
+        <MiraiCmsUiSelect
+          id="collection-sort"
+          v-model="sortModel"
+          :choices="SORT_CHOICES"
+          aria-label="Sort"
+        />
       </div>
 
       <form
@@ -376,6 +592,10 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
         :class="[`${rootClass}__columns`, `${rootClass}__columns--head`]"
         role="row"
       >
+        <span
+          role="columnheader"
+          aria-label="Select"
+        />
         <span role="columnheader">Title</span>
         <span role="columnheader">Status</span>
         <span role="columnheader">Author</span>
@@ -389,9 +609,20 @@ watch([collectionSlug, statusFilter, searchQuery, page], load)
         <div
           v-for="entry in entries"
           :key="entry.id"
-          :class="`${rootClass}__columns`"
+          :class="[`${rootClass}__columns`, { 'is-marked': isMarked(entry.id) }]"
           role="row"
         >
+          <div
+            role="cell"
+            :class="`${rootClass}__check`"
+          >
+            <input
+              type="checkbox"
+              :checked="isMarked(entry.id)"
+              :aria-label="`Select ${entry.title}`"
+              @change="toggleMarked(entry.id)"
+            >
+          </div>
           <div
             role="cell"
             :class="`${rootClass}__title`"
@@ -567,6 +798,20 @@ $root: '.miraicms-collection-list';
       min-width: math-rem(220);
     }
 
+    &__filters {
+      display: flex;
+      flex: 1 1 math-rem(360);
+      flex-wrap: wrap;
+      gap: math-rem(8);
+      min-width: math-rem(280);
+
+      :deep(.miraicms-select) {
+        flex: 1 1 math-rem(180);
+        min-width: math-rem(180);
+        max-width: math-rem(260);
+      }
+    }
+
     &__table-wrap {
       display: flex;
       flex-direction: column;
@@ -580,9 +825,9 @@ $root: '.miraicms-collection-list';
 
     &__columns {
       display: grid;
-      grid-template-columns: minmax(math-rem(180), 2.2fr) math-rem(110) minmax(math-rem(120), 1fr) math-rem(190) minmax(math-rem(160), auto);
+      grid-template-columns: math-rem(44) minmax(math-rem(180), 2.2fr) math-rem(110) minmax(math-rem(120), 1fr) math-rem(190) minmax(math-rem(160), auto);
       align-items: center;
-      min-width: math-rem(760);
+      min-width: math-rem(820);
 
       > [role='columnheader'],
       > [role='cell'] {
@@ -617,6 +862,23 @@ $root: '.miraicms-collection-list';
         &:last-child {
           border-bottom: none;
         }
+
+        &.is-marked {
+          background: $color-accent-wash;
+        }
+      }
+    }
+
+    &__check {
+      display: flex;
+      align-items: center;
+
+      input {
+        width: math-rem(16);
+        height: math-rem(16);
+        margin: 0;
+        accent-color: $color-accent;
+        cursor: pointer;
       }
     }
 

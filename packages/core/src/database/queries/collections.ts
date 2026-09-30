@@ -1,4 +1,4 @@
-import type { Insertable, Kysely, Selectable, SelectQueryBuilder, SqlBool, Updateable } from 'kysely'
+import type { Insertable, Kysely, RawBuilder, Selectable, SelectQueryBuilder, SqlBool, Updateable } from 'kysely'
 import { sql } from 'kysely'
 import type { CollectionStatus, Database, CollectionsTable } from '../client'
 import { buildSlugPathMap } from '../../rewrite'
@@ -49,10 +49,27 @@ export async function findCollectionById(
  */
 export type CollectionListStatus = CollectionStatus | 'active' | 'all'
 
+export const COLLECTION_LIST_SORTS = [
+  'date-desc',
+  'date-asc',
+  'author-asc',
+  'author-desc',
+  'title-asc',
+  'title-desc',
+] as const
+
+/** Admin list order. Omitted keeps menu order, then newest `created_at`. */
+export type CollectionListSort = typeof COLLECTION_LIST_SORTS[number]
+
 export interface ListCollectionsOptions extends ListPaging {
   status?: CollectionListStatus
   /** Case-insensitive match on title or slug (max 200 chars; `%`/`_` stripped). */
   search?: string
+  /** `YYYY-MM` of the date shown in the admin list, in the viewer's timezone. */
+  month?: string
+  /** Minutes to add to UTC to get that local time. */
+  offsetMinutes?: number
+  sort?: CollectionListSort
 }
 
 export interface CollectionStatusCounts {
@@ -72,10 +89,62 @@ function searchPattern(search: string | undefined): string | null {
   return escaped ? `%${escaped}%` : null
 }
 
+function isPostgres(db: Kysely<Database>): boolean {
+  return db.getExecutor().adapter.constructor.name === 'PostgresAdapter'
+}
+
+function clampOffsetMinutes(value: number | undefined): number {
+  if (value == null || !Number.isFinite(value)) {
+    return 0
+  }
+  return Math.max(-14 * 60, Math.min(14 * 60, Math.trunc(value)))
+}
+
+/**
+ * Timestamp shown in the admin date column: published time, unless the entry
+ * was modified more than two seconds later (then the modification time).
+ */
+function collectionListInstant(postgres: boolean): RawBuilder<Date | string> {
+  if (postgres) {
+    return sql<Date>`CASE
+      WHEN collections.status = 'published'
+        AND collections.published_at IS NOT NULL
+        AND (
+          collections.updated_at IS NULL
+          OR collections.updated_at <= collections.published_at + interval '2 seconds'
+        )
+      THEN collections.published_at
+      ELSE COALESCE(collections.updated_at, collections.published_at, collections.created_at)
+    END`
+  }
+  return sql<string>`CASE
+    WHEN collections.status = 'published'
+      AND collections.published_at IS NOT NULL
+      AND (
+        collections.updated_at IS NULL
+        OR strftime('%s', substr(replace(replace(collections.updated_at, 'T', ' '), 'Z', ''), 1, 19))
+           <= strftime('%s', substr(replace(replace(collections.published_at, 'T', ' '), 'Z', ''), 1, 19)) + 2
+      )
+    THEN collections.published_at
+    ELSE COALESCE(collections.updated_at, collections.published_at, collections.created_at)
+  END`
+}
+
+function collectionListMonth(postgres: boolean, offsetMinutes: number): RawBuilder<string> {
+  const instant = collectionListInstant(postgres)
+  const offset = clampOffsetMinutes(offsetMinutes)
+  if (postgres) {
+    return sql<string>`to_char((${instant} AT TIME ZONE 'UTC') + (${offset} * interval '1 minute'), 'YYYY-MM')`
+  }
+  const modifier = `${offset >= 0 ? '+' : ''}${offset} minutes`
+  return sql<string>`substr(datetime(substr(replace(replace(${instant}, 'T', ' '), 'Z', ''), 1, 19), ${modifier}), 1, 7)`
+}
+
 function withCollectionListFilters<O>(
   query: SelectQueryBuilder<Database, 'collections', O>,
   type: string,
   options?: ListCollectionsOptions,
+  postgres = false,
 ): SelectQueryBuilder<Database, 'collections', O> {
   let next = query.where('type', '=', type)
   const status = options?.status ?? 'active'
@@ -87,9 +156,42 @@ function withCollectionListFilters<O>(
   }
   const pattern = searchPattern(options?.search)
   if (pattern) {
-    next = next.where(sql<SqlBool>`(lower(title) like ${pattern} or lower(slug) like ${pattern})`)
+    next = next.where(sql<SqlBool>`(lower(collections.title) like ${pattern} or lower(collections.slug) like ${pattern})`)
+  }
+  if (options?.month && /^\d{4}-(0[1-9]|1[0-2])$/.test(options.month)) {
+    const month = collectionListMonth(postgres, options.offsetMinutes ?? 0)
+    next = next.where(sql<SqlBool>`${month} = ${options.month}`)
   }
   return next
+}
+
+function applyCollectionListOrder<O>(
+  query: SelectQueryBuilder<Database, 'collections', O>,
+  options: ListCollectionsOptions | undefined,
+  postgres: boolean,
+): SelectQueryBuilder<Database, 'collections', O> {
+  const sort = options?.sort
+  if (!sort || !COLLECTION_LIST_SORTS.includes(sort)) {
+    return query
+      .orderBy('menu_order', 'asc')
+      .orderBy('created_at', 'desc')
+      .orderBy('id', 'desc')
+  }
+  const direction = sort.endsWith('-asc') ? 'asc' : 'desc'
+  const field = sort.slice(0, -(direction.length + 1))
+  if (field === 'title') {
+    return query.orderBy(sql`lower(collections.title)`, direction).orderBy('id', 'asc')
+  }
+  if (field === 'author') {
+    const author = sql`(select lower(coalesce(nullif(trim(users.name), ''), users.email)) from users where users.id = collections.author_id)`
+    return query
+      .orderBy(sql`${author} is null`)
+      .orderBy(author, direction)
+      .orderBy('id', 'asc')
+  }
+  return query
+    .orderBy(collectionListInstant(postgres), direction)
+    .orderBy('id', direction)
 }
 
 export async function listCollections(
@@ -97,13 +199,17 @@ export async function listCollections(
   type: string,
   options?: ListCollectionsOptions,
 ): Promise<Collection[]> {
-  const query = withCollectionListFilters(
-    db.selectFrom('collections').selectAll(),
-    type,
+  const postgres = isPostgres(db)
+  const query = applyCollectionListOrder(
+    withCollectionListFilters(
+      db.selectFrom('collections').selectAll(),
+      type,
+      options,
+      postgres,
+    ),
     options,
+    postgres,
   )
-    .orderBy('menu_order', 'asc')
-    .orderBy('created_at', 'desc')
   return applyListPaging(query, options).execute()
 }
 
@@ -112,12 +218,38 @@ export async function countCollections(
   type: string,
   options?: Omit<ListCollectionsOptions, keyof ListPaging>,
 ): Promise<number> {
+  const postgres = isPostgres(db)
   const row = await withCollectionListFilters(
     db.selectFrom('collections').select(eb => eb.fn.countAll<number>().as('n')),
     type,
     options,
+    postgres,
   ).executeTakeFirstOrThrow()
   return Number(row.n)
+}
+
+/** Months (`YYYY-MM`) that contain entries for the same status and search, ignoring `month`. */
+export async function listCollectionMonths(
+  db: Kysely<Database>,
+  type: string,
+  options?: Omit<ListCollectionsOptions, keyof ListPaging | 'month' | 'sort'>,
+): Promise<string[]> {
+  const postgres = isPostgres(db)
+  const month = collectionListMonth(postgres, options?.offsetMinutes ?? 0)
+  const rows = await withCollectionListFilters(
+    db.selectFrom('collections'),
+    type,
+    options,
+    postgres,
+  )
+    .select(month.as('month'))
+    .distinct()
+    .execute()
+
+  return rows
+    .map(row => String(row.month ?? ''))
+    .filter(value => /^\d{4}-(0[1-9]|1[0-2])$/.test(value))
+    .sort((a, b) => b.localeCompare(a))
 }
 
 const COLLECTION_ORDER_FIELDS = [

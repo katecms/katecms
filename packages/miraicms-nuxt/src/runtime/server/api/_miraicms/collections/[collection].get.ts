@@ -8,10 +8,13 @@ import {
   countCollections,
   countCollectionStatuses,
   flattenCollectionTree,
+  COLLECTION_LIST_SORTS,
   isUnlimitedPerPage,
+  listCollectionMonths,
   listCollectionParentOptions,
   listCollections,
 } from '@miraicms/core'
+import type { CollectionListSort } from '@miraicms/core'
 import { getDb } from '../../../utils/db'
 import { requireUser } from '../../../utils/session'
 import { requirePermission } from '../../../utils/permissions'
@@ -41,9 +44,39 @@ function pageCollectionTree<T>(
   return tree.slice((page - 1) * perPage, page * perPage)
 }
 
+function readRaw(value: unknown): string {
+  const raw = Array.isArray(value) ? value[0] : value
+  return typeof raw === 'string' ? raw.trim() : ''
+}
+
+function readMonth(value: unknown): string {
+  const raw = readRaw(value)
+  return /^\d{4}-(0[1-9]|1[0-2])$/.test(raw) ? raw : ''
+}
+
+function readOffset(value: unknown): number {
+  const raw = readRaw(value)
+  if (!raw) {
+    return 0
+  }
+  const n = Number(raw)
+  if (!Number.isInteger(n)) {
+    return 0
+  }
+  return Math.max(-14 * 60, Math.min(14 * 60, n))
+}
+
+function readSort(value: unknown): CollectionListSort {
+  const raw = readRaw(value)
+  return (COLLECTION_LIST_SORTS as readonly string[]).includes(raw)
+    ? raw as CollectionListSort
+    : 'date-desc'
+}
+
 /**
  * List collection entries. Query: `status` (all|published|draft|trash),
- * `q`, `page`, `perPage`. Default `status=all` excludes trash.
+ * `q`, `month` (`YYYY-MM`), `sort`, `tz` (UTC offset minutes), `page`, `perPage`.
+ * Default `status=all` excludes trash. Default sort is newest list date.
  */
 export default defineEventHandler(async (event): Promise<CollectionListResponse> => {
   const actor = await requireUser(event)
@@ -55,6 +88,9 @@ export default defineEventHandler(async (event): Promise<CollectionListResponse>
   const query = getQuery(event)
   const listStatus = readListStatus(query.status)
   const search = readSearch(query.q)
+  const month = readMonth(query.month)
+  const offsetMinutes = readOffset(query.tz)
+  const sort = readSort(query.sort)
   const page = readPage(query.page)
   const perPage = readPerPage(query.perPage, collectionPerPage(def))
   const db = getDb()
@@ -62,19 +98,30 @@ export default defineEventHandler(async (event): Promise<CollectionListResponse>
   const paging = meta.hierarchical
     ? {}
     : collectionListPaging(page, perPage)
+  const listOptions = {
+    status: listStatus,
+    search,
+    month,
+    offsetMinutes,
+    sort,
+  }
 
-  const [rows, total, counts, pathRows] = await Promise.all([
+  const [rows, total, counts, pathRows, months] = await Promise.all([
     listCollections(db, collectionSlug, {
-      status: listStatus,
-      search,
+      ...listOptions,
       ...paging,
     }),
-    countCollections(db, collectionSlug, { status: listStatus, search }),
+    countCollections(db, collectionSlug, listOptions),
     countCollectionStatuses(db, collectionSlug),
     db.selectFrom('collections')
       .select(['id', 'slug', 'parent_id'])
       .where('type', '=', collectionSlug)
       .execute(),
+    listCollectionMonths(db, collectionSlug, {
+      status: listStatus,
+      search,
+      offsetMinutes,
+    }),
   ])
 
   const paths = buildSlugPathMap(pathRows)
@@ -110,6 +157,7 @@ export default defineEventHandler(async (event): Promise<CollectionListResponse>
       },
     )),
     counts,
+    months,
     page,
     perPage,
     total,

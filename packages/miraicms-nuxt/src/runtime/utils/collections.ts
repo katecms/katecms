@@ -78,6 +78,8 @@ export interface CollectionListResponse {
   collection: AdminCollectionMeta
   entries: AdminEntry[]
   counts: CollectionStatusCounts
+  /** `YYYY-MM` months that contain entries for the current status and search. */
+  months?: string[]
   page: number
   perPage: number
   total: number

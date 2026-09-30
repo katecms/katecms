@@ -103,23 +103,18 @@ function mergeEntries(fetched: RelationPickerEntry[]) {
 
 function syncModel() {
   if (props.field?.multiple) {
-    const ids = Array.isArray(model.value) ? model.value.map(relationFieldId) : []
-    model.value = ids
+    const ids = Array.isArray(model.value) ? model.value.map(relationFieldId).filter(Boolean) : []
+    const next = ids
       .map(id => findEntry(id))
       .filter((entry): entry is RelationPickerEntry => !!entry)
-      .map(entry => encodeRelationEntryValue(entry, props.field?.returnFormat))
-    return
-  }
-  const id = relationFieldId(model.value)
-  if (!id) {
-    if (props.field?.allowNull && (model.value === undefined || model.value === '')) {
-      model.value = null
+    if (next.length !== ids.length) {
+      model.value = next.map(entry => encodeRelationEntryValue(entry, props.field?.returnFormat))
     }
     return
   }
-  const entry = findEntry(id)
-  if (entry) {
-    model.value = encodeRelationEntryValue(entry, props.field?.returnFormat)
+  const id = relationFieldId(model.value)
+  if (!id && props.field?.allowNull && (model.value === undefined || model.value === '')) {
+    model.value = null
   }
 }
 

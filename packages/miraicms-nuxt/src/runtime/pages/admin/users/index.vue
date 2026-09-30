@@ -105,70 +105,82 @@ onMounted(load)
       v-else
       :class="`${rootClass}__table-wrap`"
     >
-      <table :class="`${rootClass}__table`">
-        <thead>
-          <tr>
-            <th
-              :class="`${rootClass}__avatar-col`"
-              aria-label="Avatar"
-            />
-            <th>Email</th>
-            <th>Name</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Created</th>
-            <th aria-label="Actions" />
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="user in users"
-            :key="user.id"
-            :class="{ [`${rootClass}__row--banned`]: user.status === 'banned' }"
+      <div
+        :class="[`${rootClass}__columns`, `${rootClass}__columns--head`]"
+        role="row"
+      >
+        <span
+          role="columnheader"
+          aria-label="Avatar"
+        />
+        <span role="columnheader">Email</span>
+        <span role="columnheader">Name</span>
+        <span role="columnheader">Role</span>
+        <span role="columnheader">Status</span>
+        <span role="columnheader">Created</span>
+        <span
+          role="columnheader"
+          aria-label="Actions"
+        />
+      </div>
+      <div :class="`${rootClass}__rows`">
+        <div
+          v-for="user in users"
+          :key="user.id"
+          :class="[`${rootClass}__columns`, { [`${rootClass}__row--banned`]: user.status === 'banned' }]"
+          role="row"
+        >
+          <div role="cell">
+            <span :class="`${rootClass}__avatar`">
+              <img
+                v-if="avatarSrc(user.avatar)"
+                :src="avatarSrc(user.avatar)!"
+                :alt="user.avatar?.alt || ''"
+              >
+              <span
+                v-else
+                :class="`${rootClass}__avatar-initials`"
+              >{{ userInitials(user) }}</span>
+            </span>
+          </div>
+          <div role="cell">
+            {{ user.email }}
+            <span
+              v-if="user.id === currentUserId"
+              :class="`${rootClass}__badge`"
+            >you</span>
+          </div>
+          <div role="cell">
+            {{ user.name || '—' }}
+          </div>
+          <div role="cell">
+            {{ roleLabel(user.role) }}
+          </div>
+          <div role="cell">
+            <span
+              :class="[`${rootClass}__status`, `${rootClass}__status--${user.status}`]"
+            >
+              {{ statusLabel(user.status) }}
+            </span>
+          </div>
+          <div role="cell">
+            {{ formatDate(user.created_at) }}
+          </div>
+          <div
+            role="cell"
+            :class="`${rootClass}__actions`"
           >
-            <td :class="`${rootClass}__avatar-col`">
-              <span :class="`${rootClass}__avatar`">
-                <img
-                  v-if="avatarSrc(user.avatar)"
-                  :src="avatarSrc(user.avatar)!"
-                  :alt="user.avatar?.alt || ''"
-                >
-                <span
-                  v-else
-                  :class="`${rootClass}__avatar-initials`"
-                >{{ userInitials(user) }}</span>
-              </span>
-            </td>
-            <td>
-              {{ user.email }}
-              <span
-                v-if="user.id === currentUserId"
-                :class="`${rootClass}__badge`"
-              >you</span>
-            </td>
-            <td>{{ user.name || '—' }}</td>
-            <td>{{ roleLabel(user.role) }}</td>
-            <td>
-              <span
-                :class="[`${rootClass}__status`, `${rootClass}__status--${user.status}`]"
-              >
-                {{ statusLabel(user.status) }}
-              </span>
-            </td>
-            <td>{{ formatDate(user.created_at) }}</td>
-            <td :class="`${rootClass}__actions`">
-              <MiraiCmsUiButton
-                v-if="canEditRow(user)"
-                tag="a"
-                :variant="['secondary', 'small']"
-                :link="{ url: `${paths.users}/${user.id}`, title: 'Edit' }"
-              >
-                Edit
-              </MiraiCmsUiButton>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            <MiraiCmsUiButton
+              v-if="canEditRow(user)"
+              tag="a"
+              :variant="['secondary', 'small']"
+              :link="{ url: `${paths.users}/${user.id}`, title: 'Edit' }"
+            >
+              Edit
+            </MiraiCmsUiButton>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -181,47 +193,66 @@ $root: '.miraicms-users';
 @include miraicms-wrapper {
   #{$root} {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: math-rem(16);
-    padding: math-rem(8);
+    min-height: 0;
+    padding: 0 math-rem(8) math-rem(8);
+    overflow: hidden;
 
     &__table-wrap {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
       overflow-x: auto;
+      overflow-y: hidden;
       background: $color-surface;
       border: 1px solid $color-border;
       border-radius: $border-radius;
     }
 
-    &__table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: math-rem(14);
+    &__columns {
+      display: grid;
+      grid-template-columns: math-rem(56) minmax(math-rem(180), 1.6fr) minmax(math-rem(120), 1.2fr) math-rem(140) math-rem(110) math-rem(180) minmax(math-rem(72), auto);
+      align-items: center;
+      min-width: math-rem(860);
 
-      th,
-      td {
-        text-align: left;
+      > [role='columnheader'],
+      > [role='cell'] {
+        min-width: 0;
         padding: math-rem(10) math-rem(14);
-        border-bottom: 1px solid $color-border;
-        vertical-align: middle;
+        overflow-wrap: anywhere;
       }
 
-      th {
-        font-size: math-rem(12);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        color: $color-muted;
+      &--head {
+        flex-shrink: 0;
         background: $color-bg;
-      }
+        border-bottom: 1px solid $color-border;
 
-      tbody tr:last-child td {
-        border-bottom: none;
+        > [role='columnheader'] {
+          font-size: math-rem(12);
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          color: $color-muted;
+        }
       }
     }
 
-    &__avatar-col {
-      width: math-rem(48);
-      padding-right: 0;
+    &__rows {
+      flex: 1;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+
+      #{$root}__columns {
+        border-bottom: 1px solid $color-border;
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
     }
 
     &__avatar {
@@ -250,7 +281,7 @@ $root: '.miraicms-users';
       line-height: 1;
     }
 
-    &__row--banned td {
+    &__row--banned {
       opacity: 0.6;
     }
 
@@ -283,7 +314,8 @@ $root: '.miraicms-users';
     }
 
     &__actions {
-      text-align: right;
+      display: flex;
+      justify-content: flex-end;
       white-space: nowrap;
     }
   }

@@ -103,21 +103,17 @@ function mergeOptions(fetched: RelationPickerEntry[], archives: RelationArchiveO
 
 function syncModel() {
   if (props.field?.multiple) {
-    const urls = Array.isArray(model.value) ? model.value.map(pageLinkUrl) : []
-    model.value = urls.filter(url => !!findOption(url))
-    return
-  }
-  const url = pageLinkUrl(model.value)
-  if (!url) {
-    if (props.field?.allowNull && (model.value === undefined || model.value === '')) {
-      model.value = null
+    const urls = Array.isArray(model.value) ? model.value.map(pageLinkUrl).filter(Boolean) : []
+    const next = urls.filter(url => !!findOption(url))
+    if (next.length !== urls.length) {
+      model.value = next
     }
     return
   }
-  if (!findOption(url)) {
-    return
+  const url = pageLinkUrl(model.value)
+  if (!url && props.field?.allowNull && (model.value === undefined || model.value === '')) {
+    model.value = null
   }
-  model.value = url
 }
 
 async function loadEntries() {

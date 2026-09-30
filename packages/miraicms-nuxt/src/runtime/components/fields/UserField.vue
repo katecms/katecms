@@ -113,24 +113,19 @@ function mergeUsers(fetched: UserFieldValue[]) {
 
 function syncModel() {
   if (props.field?.multiple) {
-    const ids = Array.isArray(model.value) ? model.value.map(userFieldId) : []
-    model.value = ids
+    const ids = Array.isArray(model.value) ? model.value.map(userFieldId).filter(Boolean) : []
+    const next = ids
       .map(id => findUser(id))
       .filter((user): user is UserFieldValue => !!user)
-      .map(user => encodeUserFieldValue(user, props.field?.returnFormat))
+    if (next.length !== ids.length) {
+      model.value = next.map(user => encodeUserFieldValue(user, props.field?.returnFormat))
+    }
     return
   }
 
   const id = userFieldId(model.value)
-  if (!id) {
-    if (props.field?.allowNull && (model.value === undefined || model.value === '')) {
-      model.value = null
-    }
-    return
-  }
-  const user = findUser(id)
-  if (user) {
-    model.value = encodeUserFieldValue(user, props.field?.returnFormat)
+  if (!id && props.field?.allowNull && (model.value === undefined || model.value === '')) {
+    model.value = null
   }
 }
 

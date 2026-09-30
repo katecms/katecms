@@ -151,23 +151,18 @@ function mergeTerms(fetched: RelationTermValue[]) {
 
 function syncModel() {
   if (isMultiple.value) {
-    const ids = Array.isArray(model.value) ? model.value.map(relationFieldId) : []
-    model.value = ids
+    const ids = Array.isArray(model.value) ? model.value.map(relationFieldId).filter(Boolean) : []
+    const next = ids
       .map(id => findTerm(id))
       .filter((term): term is RelationTermValue => !!term)
-      .map(encode)
-    return
-  }
-  const id = relationFieldId(model.value)
-  if (!id) {
-    if (props.field?.allowNull && (model.value === undefined || model.value === '')) {
-      model.value = null
+    if (next.length !== ids.length) {
+      model.value = next.map(encode)
     }
     return
   }
-  const term = findTerm(id)
-  if (term) {
-    model.value = encode(term)
+  const id = relationFieldId(model.value)
+  if (!id && props.field?.allowNull && (model.value === undefined || model.value === '')) {
+    model.value = null
   }
 }
 

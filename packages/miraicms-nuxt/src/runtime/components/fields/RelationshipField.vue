@@ -226,11 +226,6 @@ async function load() {
       }))
       termsByDictionary.value = Object.fromEntries(loaded)
     }
-
-    const ids = relationFieldIds(model.value)
-    if (ids.length) {
-      commit(ids)
-    }
   }
   catch {
     loadError.value = 'Could not load entries.'

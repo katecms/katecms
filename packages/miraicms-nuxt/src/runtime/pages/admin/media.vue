@@ -297,6 +297,7 @@ async function onFilesSelected(event: Event) {
   uploading.value = true
   error.value = null
   const pendingIds: number[] = []
+  let resort = false
   try {
     for (const file of files) {
       const form = new FormData()
@@ -309,8 +310,13 @@ async function onFilesSelected(event: Event) {
         rememberMonth(res.media.created_at)
       }
       if (mediaMatchesFilters(res.media, filters.value)) {
-        items.value = [res.media, ...items.value.filter(entry => entry.id !== res.media.id)]
-        total.value += 1
+        if (filters.value.sort === 'date-desc') {
+          items.value = [res.media, ...items.value.filter(entry => entry.id !== res.media.id)]
+          total.value += 1
+        }
+        else {
+          resort = true
+        }
       }
       if (res.media.variants_status === 'pending') {
         pendingIds.push(res.media.id)
@@ -325,6 +331,9 @@ async function onFilesSelected(event: Event) {
     input.value = ''
   }
 
+  if (resort) {
+    await load({ silent: true })
+  }
   pollVariants(pendingIds)
 }
 

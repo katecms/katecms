@@ -2,12 +2,14 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { SelectModelValue } from '@miraicms/core'
 import {
+  MEDIA_SORT_CHOICES,
   MEDIA_TYPE_CHOICES,
+  isMediaSort,
   isMediaTypeFilter,
   monthLabel,
   searchNeedle,
 } from '../../utils/media-library-query'
-import type { MediaLibraryFilterState, MediaTypeFilter } from '../../utils/media-library-query'
+import type { MediaLibraryFilterState, MediaSort, MediaTypeFilter } from '../../utils/media-library-query'
 
 const props = withDefaults(defineProps<{
   filters: MediaLibraryFilterState
@@ -62,6 +64,17 @@ const monthModel = computed({
   },
 })
 
+const sortModel = computed({
+  get(): SelectModelValue {
+    return isMediaSort(props.filters.sort) ? props.filters.sort : 'date-desc'
+  },
+  set(value: SelectModelValue) {
+    const raw = typeof value === 'string' ? value : 'date-desc'
+    const sort: MediaSort = isMediaSort(raw) ? raw : 'date-desc'
+    emitChange({ ...props.filters, sort, search: searchDraft.value })
+  },
+})
+
 watch(() => props.filters.search, (value) => {
   searchDraft.value = value
 })
@@ -85,6 +98,7 @@ function emitChange(next: MediaLibraryFilterState) {
     next.type === props.filters.type
     && next.month === props.filters.month
     && next.search === props.filters.search
+    && next.sort === props.filters.sort
   ) {
     return
   }
@@ -113,6 +127,15 @@ function flushSearch() {
         v-model="monthModel"
         :choices="monthChoices"
         aria-label="Date"
+      />
+    </div>
+    <div :class="[`${rootClass}__field`, `${rootClass}__field--sort`]">
+      <MiraiCmsUiSelect
+        :id="`${idPrefix}-sort`"
+        v-model="sortModel"
+        :choices="MEDIA_SORT_CHOICES"
+        aria-label="Sort"
+        max-height="400px"
       />
     </div>
     <form
@@ -144,6 +167,10 @@ $root: '.miraicms-media-filters';
     flex: 1 1 math-rem(200);
     min-width: math-rem(180);
     max-width: math-rem(260);
+
+    &--sort {
+      max-width: math-rem(280);
+    }
   }
 
   &__search {

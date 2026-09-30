@@ -131,6 +131,10 @@ export function useMediaLibrary(
     if (!matches()(item) || !mediaMatchesFilters(item, filters.value)) {
       return
     }
+    if (filters.value.sort !== 'date-desc') {
+      void load({ silent: true })
+      return
+    }
     const index = items.value.findIndex(entry => entry.id === item.id)
     if (index >= 0) {
       items.value[index] = item

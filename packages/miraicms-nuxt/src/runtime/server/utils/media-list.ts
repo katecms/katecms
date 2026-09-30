@@ -8,7 +8,7 @@ import {
   clampUtcOffsetMinutes,
   searchNeedle,
 } from '../../utils/media-library-query'
-import type { MediaTypeFilter } from '../../utils/media-library-query'
+import type { MediaSort, MediaTypeFilter } from '../../utils/media-library-query'
 
 export interface MediaListFilter {
   type: MediaTypeFilter
@@ -16,6 +16,7 @@ export interface MediaListFilter {
   month: string
   search: string
   offsetMinutes: number
+  sort: MediaSort
 }
 
 type MediaQuery<T> = SelectQueryBuilder<Database, 'media', T>
@@ -75,6 +76,37 @@ export function applyMediaListFilter<T>(
   }
 
   return next
+}
+
+function sortParts(sort: MediaSort): { field: string, direction: 'asc' | 'desc' } {
+  const direction = sort.endsWith('-asc') ? 'asc' : 'desc'
+  const field = sort.slice(0, -(direction.length + 1))
+  return { field, direction }
+}
+
+/** Stable order for the paged library. Non-images stay last when sorting by pixel size. */
+export function applyMediaListOrder<T>(query: MediaQuery<T>, sort: MediaSort): MediaQuery<T> {
+  const { field, direction } = sortParts(sort)
+  if (field === 'name') {
+    return query.orderBy(sql`lower(media.filename)`, direction).orderBy('id', 'asc')
+  }
+  if (field === 'filesize') {
+    return query.orderBy('filesize', direction).orderBy('id', 'asc')
+  }
+  if (field === 'dimensions') {
+    return query
+      .orderBy(sql`(media.width is null or media.height is null)`)
+      .orderBy(sql`coalesce(media.width, 0) * coalesce(media.height, 0)`, direction)
+      .orderBy('id', 'asc')
+  }
+  if (field === 'author') {
+    const author = sql`(select lower(coalesce(nullif(trim(users.name), ''), users.email)) from users where users.id = media.uploaded_by)`
+    return query
+      .orderBy(sql`${author} is null`)
+      .orderBy(author, direction)
+      .orderBy('id', 'asc')
+  }
+  return query.orderBy('created_at', direction).orderBy('id', direction)
 }
 
 export async function listMediaMonths(

@@ -2,16 +2,17 @@ import { defineEventHandler, getQuery } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import type { MediaItem } from '@miraicms/core'
 import { getDb } from '../../../utils/db'
-import { applyMediaListFilter, listMediaMonths } from '../../../utils/media-list'
+import { applyMediaListFilter, applyMediaListOrder, listMediaMonths } from '../../../utils/media-list'
 import type { MediaListFilter } from '../../../utils/media-list'
 import { toClientMedia, uploaderNames } from '../../../utils/media'
 import { requirePermission } from '../../../utils/permissions'
 import { requireUser } from '../../../utils/session'
 import {
   clampUtcOffsetMinutes,
+  isMediaSort,
   isMediaTypeFilter,
 } from '../../../../utils/media-library-query'
-import type { MediaLibraryPage, MediaTypeFilter } from '../../../../utils/media-library-query'
+import type { MediaLibraryPage, MediaSort, MediaTypeFilter } from '../../../../utils/media-library-query'
 
 const DEFAULT_LIMIT = 500
 const MAX_LIMIT = 100
@@ -40,6 +41,11 @@ function readMonth(value: unknown): string {
   return /^\d{4}-(0[1-9]|1[0-2])$/.test(raw) ? raw : ''
 }
 
+function readSort(value: unknown): MediaSort {
+  const raw = readRaw(value)
+  return isMediaSort(raw) ? raw : 'date-desc'
+}
+
 function readFilter(query: Record<string, unknown>): MediaListFilter {
   const offset = readInt(query.tz)
   return {
@@ -47,6 +53,7 @@ function readFilter(query: Record<string, unknown>): MediaListFilter {
     month: readMonth(query.month),
     search: readRaw(query.q).slice(0, 200),
     offsetMinutes: clampUtcOffsetMinutes(offset ?? 0),
+    sort: readSort(query.sort),
   }
 }
 
@@ -68,10 +75,7 @@ export default defineEventHandler(async (event): Promise<MediaLibraryPage<MediaI
   const db = getDb()
   const filtered = applyMediaListFilter(db.selectFrom('media'), filter, driver)
   const [rows, totalRow, months] = await Promise.all([
-    filtered
-      .selectAll()
-      .orderBy('created_at', 'desc')
-      .orderBy('id', 'desc')
+    applyMediaListOrder(filtered.selectAll(), filter.sort)
       .limit(limit)
       .offset(offset)
       .execute(),

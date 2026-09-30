@@ -3,11 +3,25 @@ import type { MediaItem } from '@miraicms/core'
 /** Library filter shown in the media page and file pickers. */
 export type MediaTypeFilter = 'all' | 'image' | 'audio' | 'video' | 'document' | 'spreadsheet' | 'archive'
 
+/** How the library list is ordered. The part after the hyphen is the direction. */
+export type MediaSort =
+  | 'date-desc'
+  | 'date-asc'
+  | 'author-asc'
+  | 'author-desc'
+  | 'name-asc'
+  | 'name-desc'
+  | 'filesize-desc'
+  | 'filesize-asc'
+  | 'dimensions-desc'
+  | 'dimensions-asc'
+
 export interface MediaLibraryFilterState {
   type: MediaTypeFilter
   /** `all` or `YYYY-MM`. */
   month: string
   search: string
+  sort: MediaSort
 }
 
 export interface MediaLibraryPage<T> {
@@ -25,6 +39,32 @@ export const MEDIA_TYPE_FILTERS: MediaTypeFilter[] = [
   'document',
   'spreadsheet',
   'archive',
+]
+
+export const MEDIA_SORTS: MediaSort[] = [
+  'date-desc',
+  'date-asc',
+  'author-asc',
+  'author-desc',
+  'name-asc',
+  'name-desc',
+  'filesize-desc',
+  'filesize-asc',
+  'dimensions-desc',
+  'dimensions-asc',
+]
+
+export const MEDIA_SORT_CHOICES: { val: MediaSort, lbl: string }[] = [
+  { val: 'date-desc', lbl: 'Date, newest' },
+  { val: 'date-asc', lbl: 'Date, oldest' },
+  { val: 'author-asc', lbl: 'Author, A–Z' },
+  { val: 'author-desc', lbl: 'Author, Z–A' },
+  { val: 'name-asc', lbl: 'File name, A–Z' },
+  { val: 'name-desc', lbl: 'File name, Z–A' },
+  { val: 'filesize-desc', lbl: 'File size, largest' },
+  { val: 'filesize-asc', lbl: 'File size, smallest' },
+  { val: 'dimensions-desc', lbl: 'Image size, largest' },
+  { val: 'dimensions-asc', lbl: 'Image size, smallest' },
 ]
 
 export const MEDIA_TYPE_CHOICES: { val: MediaTypeFilter, lbl: string }[] = [
@@ -87,11 +127,15 @@ const MONTH_NAMES = [
 const MONTH_VALUE = /^\d{4}-(0[1-9]|1[0-2])$/
 
 export function defaultMediaLibraryFilters(): MediaLibraryFilterState {
-  return { type: 'all', month: 'all', search: '' }
+  return { type: 'all', month: 'all', search: '', sort: 'date-desc' }
 }
 
 export function isMediaTypeFilter(value: unknown): value is MediaTypeFilter {
   return typeof value === 'string' && MEDIA_TYPE_FILTERS.includes(value as MediaTypeFilter)
+}
+
+export function isMediaSort(value: unknown): value is MediaSort {
+  return typeof value === 'string' && MEDIA_SORTS.includes(value as MediaSort)
 }
 
 export function normalizeMediaLibraryFilters(value: MediaLibraryFilterState): MediaLibraryFilterState {
@@ -99,6 +143,7 @@ export function normalizeMediaLibraryFilters(value: MediaLibraryFilterState): Me
     type: isMediaTypeFilter(value.type) ? value.type : 'all',
     month: MONTH_VALUE.test(value.month) ? value.month : 'all',
     search: value.search.slice(0, 200),
+    sort: isMediaSort(value.sort) ? value.sort : 'date-desc',
   }
 }
 
@@ -210,6 +255,9 @@ export function mediaLibraryQuery(
   }
   if (needle) {
     query.q = needle
+  }
+  if (normalized.sort !== 'date-desc') {
+    query.sort = normalized.sort
   }
   return query
 }

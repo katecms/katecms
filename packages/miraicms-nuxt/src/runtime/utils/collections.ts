@@ -118,7 +118,27 @@ export interface ResolveArchiveResponse {
   total: number
 }
 
-export type ResolveResponse = ResolveEntryResponse | ResolveArchiveResponse
+export interface PublicTermEntry {
+  id: number
+  title: string
+  path: string
+}
+
+export interface ResolveTermResponse {
+  kind: 'term'
+  dictionary: {
+    slug: string
+    labels: {
+      name: string
+      singularName: string
+    }
+  }
+  term: PublicDictionaryTerm
+  entries: PublicTermEntry[]
+  path: string
+}
+
+export type ResolveResponse = ResolveEntryResponse | ResolveArchiveResponse | ResolveTermResponse
 
 /** Public list from `/api/_miraicms/query`. */
 export interface QueryCollectionResponse {

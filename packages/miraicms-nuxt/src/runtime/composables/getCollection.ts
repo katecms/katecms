@@ -136,7 +136,8 @@ export async function getCollection(options: GetCollectionOptions = {}) {
 
   const resolved = data.value
   const isArchivePayload = resolved?.kind === 'archive'
-  if (error.value || !resolved || (!isArchivePayload && resolved.kind !== 'entry')) {
+  const isTermPayload = resolved?.kind === 'term'
+  if (error.value || !resolved || (!isArchivePayload && !isTermPayload && resolved.kind !== 'entry')) {
     // const { statusCode, statusMessage } = resolveFetchError(error.value)
     // throw createError({ statusCode, statusMessage })
     return []
@@ -144,17 +145,31 @@ export async function getCollection(options: GetCollectionOptions = {}) {
   if (resolved.kind === 'entry' && !resolved.entry) {
     return []
   }
+  if (resolved.kind === 'term' && !resolved.term) {
+    return []
+  }
 
   const kind = computed(() => data.value?.kind ?? 'entry')
   const isArchive = computed(() => data.value?.kind === 'archive')
+  const isTerm = computed(() => data.value?.kind === 'term')
   const entry = computed(() => data.value?.kind === 'entry' ? data.value.entry : null)
-  const entries = computed(() => data.value?.kind === 'archive' ? data.value.entries : [])
+  const term = computed(() => data.value?.kind === 'term' ? data.value.term : null)
+  const termPath = computed(() => data.value?.kind === 'term' ? data.value.path : null)
+  const entries = computed(() => {
+    if (data.value?.kind === 'archive' || data.value?.kind === 'term') {
+      return data.value.entries
+    }
+    return []
+  })
   const collection = computed(() => data.value?.collection ?? null)
   const isPreview = computed(() => data.value?.preview === true)
   const archivePage = computed(() => data.value?.kind === 'archive' ? data.value.page : 1)
   const archivePerPage = computed(() => data.value?.kind === 'archive' ? data.value.perPage : 0)
   const total = computed(() => data.value?.kind === 'archive' ? data.value.total : 0)
   const link = computed(() => {
+    if (data.value?.kind === 'term') {
+      return data.value.path
+    }
     const meta = collection.value
     if (!meta) {
       return null
@@ -180,7 +195,10 @@ export async function getCollection(options: GetCollectionOptions = {}) {
   return {
     kind,
     isArchive,
+    isTerm,
     entry,
+    term,
+    termPath,
     entries,
     collection,
     link,

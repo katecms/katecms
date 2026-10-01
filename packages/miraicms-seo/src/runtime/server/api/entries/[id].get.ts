@@ -3,10 +3,10 @@ import { useRuntimeConfig } from '#imports'
 import { sql } from 'kysely'
 import { requirePermission, requireUser } from 'miraicms-nuxt/server'
 import { getSeoDb } from '../../utils/db'
-import { readEntrySeo } from '../../utils/documents'
-import type { SeoEntry } from '../../utils/documents'
+import { entryEditorPayload } from '../../utils/editor'
+import type { SeoEditorPayload } from '../../../types'
 
-export default defineEventHandler(async (event): Promise<SeoEntry> => {
+export default defineEventHandler(async (event): Promise<SeoEditorPayload> => {
   const actor = await requireUser(event)
   const id = Number(getRouterParam(event, 'id'))
   if (!Number.isInteger(id) || id < 1) {
@@ -20,5 +20,9 @@ export default defineEventHandler(async (event): Promise<SeoEntry> => {
     throw createError({ statusCode: 404, statusMessage: 'Entry not found.' })
   }
   requirePermission(actor, 'collections', 'read', useRuntimeConfig().miraicms?.roles ?? {}, entry.type)
-  return readEntrySeo(id)
+  const payload = await entryEditorPayload(id)
+  if (!payload) {
+    throw createError({ statusCode: 404, statusMessage: 'Entry not found.' })
+  }
+  return payload
 })

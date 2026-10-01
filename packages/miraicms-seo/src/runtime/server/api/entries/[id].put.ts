@@ -36,6 +36,7 @@ export default defineEventHandler(async (event): Promise<SeoEntry> => {
     title: text(body?.title),
     description: text(body?.description),
     canonical: text(body?.canonical),
+    image: text(body?.image),
     noindex: body?.noindex === true,
     nofollow: body?.nofollow === true,
   })

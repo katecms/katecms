@@ -31,6 +31,10 @@ export default defineNuxtModule({
         name: 'useMiraiSeoHead',
         from: resolver.resolve('./runtime/composables/useMiraiSeoHead'),
       },
+      {
+        name: 'useMiraiSeoRedirect',
+        from: resolver.resolve('./runtime/composables/useMiraiSeoRedirect'),
+      },
     ])
 
     addServerHandler({
@@ -57,6 +61,41 @@ export default defineNuxtModule({
       route: '/api/_miraicms/seo/head',
       method: 'get',
       handler: resolver.resolve('./runtime/server/api/head.get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/seo/redirect',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/redirect.get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/seo/redirects',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/redirects.get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/seo/redirects',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/redirects.post'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/seo/redirects',
+      method: 'patch',
+      handler: resolver.resolve('./runtime/server/api/redirects.patch'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/seo/redirects',
+      method: 'delete',
+      handler: resolver.resolve('./runtime/server/api/redirects.delete'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/seo/terms/:id',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/terms/[id].get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/seo/terms/:id',
+      method: 'put',
+      handler: resolver.resolve('./runtime/server/api/terms/[id].put'),
     })
     addServerHandler({
       route: '/sitemap.xml',

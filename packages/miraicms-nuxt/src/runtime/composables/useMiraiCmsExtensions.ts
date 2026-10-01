@@ -13,6 +13,11 @@ export function useMiraiCmsEntrySidebar() {
   return useState<string[]>('miraicms:entry-sidebar', () => [])
 }
 
+/** Extra panels under a dictionary term form, registered by addons as component names. */
+export function useMiraiCmsTermPanels() {
+  return useState<string[]>('miraicms:term-panels', () => [])
+}
+
 export function useMiraiCmsMenuItems() {
   return useState<MiraiCmsMenuExtra[]>('miraicms:menu-items', () => [])
 }

@@ -336,6 +336,10 @@ export default defineNuxtModule<MiraiCmsConfig>({
         from: resolver.resolve('./runtime/composables/useMiraiCmsExtensions'),
       },
       {
+        name: 'useMiraiCmsTermPanels',
+        from: resolver.resolve('./runtime/composables/useMiraiCmsExtensions'),
+      },
+      {
         name: 'useMiraiCmsMenuItems',
         from: resolver.resolve('./runtime/composables/useMiraiCmsExtensions'),
       },

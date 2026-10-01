@@ -31,7 +31,6 @@ import {
   loadCollectionDictionaryPickers,
   selectedDictionaryIds,
 } from '../../../../utils/dictionaries'
-
 interface PatchBody {
   title?: unknown
   slug?: unknown

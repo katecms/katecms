@@ -1,0 +1,64 @@
+@use 'sass:math';
+
+@function math-em($pixels, $context: 16) {
+  @if (math.is-unitless($pixels)) {
+    $pixels: $pixels * 1px;
+  }
+
+  @if (math.is-unitless($context)) {
+    $context: $context * 1px;
+  }
+
+  @return math.div($pixels, $context) * 1em;
+}
+
+@function math-rem($pixels, $context: 16) {
+  @if (math.is-unitless($pixels)) {
+    $pixels: $pixels * 1px;
+  }
+
+  @if (math.is-unitless($context)) {
+    $context: $context * 1px;
+  }
+
+  @return math.div($pixels, $context) * 1rem;
+}
+
+@function vw($target, $viewport: 1400) {
+  @return math.div($target * 100, $viewport) * 1vw;
+}
+
+@function aspect-ratio($one-value, $two-value, $new-value) {
+  @return math.round(math.div($two-value, math.div($one-value, 100)) * math.div($new-value, 100));
+}
+
+@function _unit($size, $unit) {
+  @if ($unit == 'rem') {
+    @return math-rem($size);
+  } @else if ($unit == 'em') {
+    @return math-em($size);
+  } @else if ($unit == 'px' or ($unit != 'rem' or $unit != 'em')) {
+    @return #{$size}px;
+  }
+}
+
+@function math-clamp($min-size, $max-size, $min_viewport: 768, $max_viewport: 1400, $unit: 'rem') {
+  $view_port_width_offset: _unit(math.div($min_viewport, 100), $unit);
+  $size_difference: $max-size - $min-size;
+  $viewport_difference: $max_viewport - $min_viewport;
+  $linear_factor: math.div(math.round((100 * math.div($size_difference, $viewport_difference)) * 1000), 1000);
+
+  $fluid_target_size: '#{_unit($min-size, $unit)} + ((1vw - #{$view_port_width_offset}) * #{$linear_factor})';
+
+  $result: '';
+
+  @if ($min-size == $max-size) {
+    $result: _unit($min-size, $unit);
+  } @else if ($min-size > $max-size) {
+    $result: clamp(#{_unit($max-size, $unit)}, #{$fluid_target_size}, #{_unit($min-size, $unit)});
+  } @else if ($min-size < $max-size) {
+    $result: clamp(#{_unit($min-size, $unit)}, #{$fluid_target_size}, #{_unit($max-size, $unit)});
+  }
+
+  @return $result;
+}

@@ -23,6 +23,7 @@ import {
   toCollectionMeta,
 } from '../../utils/collections'
 import { loadAssignedEntryDictionaries } from '../../utils/dictionaries'
+import { resolvePublicDictionaryTerm } from '../../utils/public-term'
 import {
   isTruthyQueryParam,
   parsePublicStatusParam,
@@ -66,6 +67,11 @@ export default defineEventHandler(async (event): Promise<ResolveResponse> => {
   const collections = getCollections()
   const matched = matchPublicCollectionRoute(collections, path)
   if (!matched) {
+    const db = getDb()
+    const termPage = await resolvePublicDictionaryTerm(db, path)
+    if (termPage) {
+      return termPage
+    }
     fail(404, 'Page not found.')
   }
 

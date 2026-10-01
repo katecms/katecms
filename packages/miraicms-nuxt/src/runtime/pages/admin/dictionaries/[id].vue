@@ -10,6 +10,7 @@ import type {
   ParentOption,
 } from '../../../utils/dictionaries'
 import { useCmsPaths } from '../../../composables/useCmsPaths'
+import { useMiraiCmsTermPanels } from '../../../composables/useMiraiCmsExtensions'
 
 const route = useRoute()
 const paths = useCmsPaths()
@@ -28,6 +29,7 @@ const error = ref<string | null>(null)
 const canUpdate = ref(false)
 const canDelete = ref(false)
 const entryForm = ref<{ validateForSubmit: () => boolean } | null>(null)
+const termPanels = useMiraiCmsTermPanels()
 
 const form = reactive<DictionaryTermFormModel>({
   title: '',
@@ -179,6 +181,11 @@ watch([dictionarySlug, termId], load)
           :show-submit="false"
           @update:model-value="(value: DictionaryTermFormModel) => Object.assign(form, value)"
           @submit="submit"
+        />
+        <component
+          :is="panel"
+          v-for="panel in termPanels"
+          :key="panel"
         />
       </div>
 

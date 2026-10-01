@@ -1,0 +1,413 @@
+{
+  "pages": [
+    {
+      "n": "index",
+      "path": "/",
+      "p": "packages/miraicms-nuxt/test/fixtures/basic/pages/index.vue"
+    },
+    {
+      "n": "index",
+      "path": "/",
+      "p": "playground-nuxt/pages/index.vue"
+    },
+    {
+      "n": "[...slug]",
+      "path": "/:slug(.*)*",
+      "p": "playground-nuxt/pages/[...slug].vue"
+    },
+    {
+      "n": "admin",
+      "path": "/{adminPath}",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/index.vue"
+    },
+    {
+      "n": "admin-index",
+      "path": "/{adminPath}",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/index.vue"
+    },
+    {
+      "n": "admin-login",
+      "path": "/{adminPath}/{loginPath}",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/login.vue"
+    },
+    {
+      "n": "admin-register",
+      "path": "/{adminPath}/{registerPath}",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/register.vue"
+    },
+    {
+      "n": "admin-collections",
+      "path": "/{adminPath}/collections/:collection",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/collections/index.vue"
+    },
+    {
+      "n": "admin-collections-id",
+      "path": "/{adminPath}/collections/:collection/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/collections/[id].vue"
+    },
+    {
+      "n": "admin-collections-create",
+      "path": "/{adminPath}/collections/:collection/create",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/collections/create.vue"
+    },
+    {
+      "n": "admin-demo-fields",
+      "path": "/{adminPath}/demo-fields",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/demo-fields.vue"
+    },
+    {
+      "n": "admin-dictionaries",
+      "path": "/{adminPath}/dictionaries/:dictionary",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/dictionaries/index.vue"
+    },
+    {
+      "n": "admin-dictionaries-id",
+      "path": "/{adminPath}/dictionaries/:dictionary/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/dictionaries/[id].vue"
+    },
+    {
+      "n": "admin-media",
+      "path": "/{adminPath}/media",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/media.vue"
+    },
+    {
+      "n": "admin-options",
+      "path": "/{adminPath}/options/:page",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/options/[page].vue"
+    },
+    {
+      "n": "admin-seo",
+      "path": "/{adminPath}/seo",
+      "p": "packages/miraicms-seo/src/runtime/pages/admin/seo.vue"
+    },
+    {
+      "n": "admin-users",
+      "path": "/{adminPath}/users",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/users/index.vue"
+    },
+    {
+      "n": "admin-users-id",
+      "path": "/{adminPath}/users/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/users/[id].vue"
+    },
+    {
+      "n": "admin-users-create",
+      "path": "/{adminPath}/users/create",
+      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/users/create.vue"
+    }
+  ],
+  "api": [
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/auth/login",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/auth/login.post.ts"
+    },
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/auth/logout",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/auth/logout.post.ts"
+    },
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/auth/register",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/auth/register.post.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/auth/state",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/auth/state.get.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/collections/:collection",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection].get.ts"
+    },
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/collections/:collection",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection].post.ts"
+    },
+    {
+      "m": "DELETE",
+      "path": "/api/_miraicms/collections/:collection/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection]/[id].delete.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/collections/:collection/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection]/[id].get.ts"
+    },
+    {
+      "m": "PATCH",
+      "path": "/api/_miraicms/collections/:collection/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection]/[id].patch.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/dictionaries/:dictionary",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/dictionaries/[dictionary].get.ts"
+    },
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/dictionaries/:dictionary",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/dictionaries/[dictionary].post.ts"
+    },
+    {
+      "m": "DELETE",
+      "path": "/api/_miraicms/dictionaries/:dictionary/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/dictionaries/[dictionary]/[id].delete.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/dictionaries/:dictionary/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/dictionaries/[dictionary]/[id].get.ts"
+    },
+    {
+      "m": "PATCH",
+      "path": "/api/_miraicms/dictionaries/:dictionary/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/dictionaries/[dictionary]/[id].patch.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/media",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/index.get.ts"
+    },
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/media",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/index.post.ts"
+    },
+    {
+      "m": "DELETE",
+      "path": "/api/_miraicms/media/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/[id].delete.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/media/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/[id].get.ts"
+    },
+    {
+      "m": "PATCH",
+      "path": "/api/_miraicms/media/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/[id].patch.ts"
+    },
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/media/:id/regenerate",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/[id]/regenerate.post.ts"
+    },
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/media/regenerate",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/regenerate.post.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/oembed",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/oembed.get.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/options/:page",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/options/[page].get.ts"
+    },
+    {
+      "m": "PATCH",
+      "path": "/api/_miraicms/options/:page",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/options/[page].patch.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/query",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/query.get.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/relation/entries",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/relation/entries.get.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/relation/terms",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/relation/terms.get.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/resolve",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/resolve.get.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/seo/entries/:id",
+      "p": "packages/miraicms-seo/src/runtime/server/api/entries/[id].get.ts"
+    },
+    {
+      "m": "PUT",
+      "path": "/api/_miraicms/seo/entries/:id",
+      "p": "packages/miraicms-seo/src/runtime/server/api/entries/[id].put.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/seo/head",
+      "p": "packages/miraicms-seo/src/runtime/server/api/head.get.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/seo/redirect",
+      "p": "packages/miraicms-seo/src/runtime/server/api/redirect.get.ts"
+    },
+    {
+      "m": "DELETE",
+      "path": "/api/_miraicms/seo/redirects",
+      "p": "packages/miraicms-seo/src/runtime/server/api/redirects.delete.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/seo/redirects",
+      "p": "packages/miraicms-seo/src/runtime/server/api/redirects.get.ts"
+    },
+    {
+      "m": "PATCH",
+      "path": "/api/_miraicms/seo/redirects",
+      "p": "packages/miraicms-seo/src/runtime/server/api/redirects.patch.ts"
+    },
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/seo/redirects",
+      "p": "packages/miraicms-seo/src/runtime/server/api/redirects.post.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/seo/site",
+      "p": "packages/miraicms-seo/src/runtime/server/api/site.get.ts"
+    },
+    {
+      "m": "PUT",
+      "path": "/api/_miraicms/seo/site",
+      "p": "packages/miraicms-seo/src/runtime/server/api/site.put.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/seo/terms/:id",
+      "p": "packages/miraicms-seo/src/runtime/server/api/terms/[id].get.ts"
+    },
+    {
+      "m": "PUT",
+      "path": "/api/_miraicms/seo/terms/:id",
+      "p": "packages/miraicms-seo/src/runtime/server/api/terms/[id].put.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/terms",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/terms.get.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/users",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/users.get.ts"
+    },
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/users",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/users.post.ts"
+    },
+    {
+      "m": "PATCH",
+      "path": "/api/_miraicms/users/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/users/[id].patch.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/robots.txt",
+      "p": "packages/miraicms-seo/src/runtime/server/routes/robots.get.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/sitemap.xml",
+      "p": "packages/miraicms-seo/src/runtime/server/routes/sitemap.get.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/uploads/**",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/uploads/[...key].get.ts"
+    }
+  ],
+  "plugins": [
+    {
+      "side": "server",
+      "p": "packages/miraicms-nuxt/src/runtime/server/plugins/auto-migrate.ts"
+    },
+    {
+      "side": "client",
+      "p": "packages/miraicms-seo/src/runtime/plugin.ts"
+    },
+    {
+      "side": "server",
+      "p": "packages/miraicms-seo/src/runtime/server/plugins/migrate.ts"
+    }
+  ],
+  "middleware": [
+    {
+      "n": "miraicms-auth-guard",
+      "global": true,
+      "p": "packages/miraicms-nuxt/src/runtime/middleware/auth-guard.ts"
+    }
+  ],
+  "imports": [
+    {
+      "n": "getCollection",
+      "p": "packages/miraicms-nuxt/src/runtime/composables/getCollection.ts"
+    },
+    {
+      "n": "getOptions",
+      "p": "packages/miraicms-nuxt/src/runtime/composables/getOptions.ts"
+    },
+    {
+      "n": "getQueryCollection",
+      "p": "packages/miraicms-nuxt/src/runtime/composables/getQueryCollection.ts"
+    },
+    {
+      "n": "getTerms",
+      "p": "packages/miraicms-nuxt/src/runtime/composables/getTerms.ts"
+    },
+    {
+      "n": "miraicms-nuxt",
+      "p": "packages/miraicms-nuxt/src/runtime/composables/useAuth.ts"
+    },
+    {
+      "n": "miraicms-seo",
+      "p": "packages/miraicms-seo/src/runtime/composables/useMiraiSeoHead.ts"
+    },
+    {
+      "n": "useCmsPaths",
+      "p": "packages/miraicms-nuxt/src/runtime/composables/useCmsPaths.ts"
+    },
+    {
+      "n": "useMiraiCmsEntrySidebar",
+      "p": "packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"
+    },
+    {
+      "n": "useMiraiCmsMenuItems",
+      "p": "packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"
+    },
+    {
+      "n": "useMiraiCmsTermPanels",
+      "p": "packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"
+    },
+    {
+      "n": "useMiraiSeoRedirect",
+      "p": "packages/miraicms-seo/src/runtime/composables/useMiraiSeoRedirect.ts"
+    }
+  ],
+  "components": [
+    {
+      "prefix": "MiraiCms",
+      "dir": "packages/miraicms-nuxt/src/runtime/components"
+    },
+    {
+      "prefix": "Mirai",
+      "dir": "packages/miraicms-seo/src/runtime/components"
+    }
+  ]
+}

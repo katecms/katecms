@@ -17,14 +17,15 @@
     "test:watch": "pnpm --filter @miraicms/core test:watch",
     "test:types": "pnpm --filter @miraicms/core typecheck && pnpm --filter miraicms-nuxt test:types",
     "test:basic": "pnpm --filter miraicms-nuxt test:basic",
+    "ai:index": "node scripts/ai-index.mjs",
     "check-updates": "ncu --target minor",
     "upgrade-deps": "ncu --target minor -u && pnpm install"
   },
   "devDependencies": {
     "@nuxt/eslint-config": "^1.17.0",
     "changelogen": "^0.6.2",
-    "eslint": "^10.8.1",
-    "npm-check-updates": "^23.0.2",
+    "eslint": "^10.11.0",
+    "npm-check-updates": "^23.1.0",
     "typescript": "^5.9.3"
   }
 }

@@ -1,0 +1,15 @@
+---
+description: Use the .ai index before scanning the repo for structure
+alwaysApply: true
+---
+
+# Project index
+
+Before searching the repo for imports, exports, routes, schema, or package dependencies, read `.ai/INDEX.md` and grep `.ai/`.
+
+- Symbol location: `.ai/symbols.jsonl`
+- File dependencies: `.ai/files.jsonl` (`im` outbound, grep the path for importers)
+- Pages and HTTP handlers: `.ai/routes.json`
+- Packages, public API, tables, field types: `.ai/domain.json`
+
+Open source files only for the bodies you still need. After code changes that move files, exports, or routes, run `pnpm ai:index`.

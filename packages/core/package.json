@@ -31,13 +31,13 @@
     "kysely": "^0.29.4",
     "pg": "^8.23.0",
     "better-sqlite3": "^13.0.3",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "@types/node": "latest",
     "@types/pg": "^8.21.0",
     "typescript": "^5.9.3",
     "unbuild": "^3.6.1",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }

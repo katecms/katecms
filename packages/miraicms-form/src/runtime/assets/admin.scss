@@ -1,0 +1,25 @@
+@use 'sass:math';
+
+@function math-rem($pixels, $context: 16) {
+  @if (math.is-unitless($pixels)) {
+    $pixels: $pixels * 1px;
+  }
+
+  @if (math.is-unitless($context)) {
+    $context: $context * 1px;
+  }
+
+  @return math.div($pixels, $context) * 1rem;
+}
+
+$color-accent: #2F6FED;
+$color-accent-hover: #1E58D4;
+$color-accent-wash: #EAF1FD;
+$color-ink: #141A2A;
+$color-muted: #6B7280;
+$color-bg: #F6F7F8;
+$color-surface: #FFFFFF;
+$color-border: #E6E8EB;
+$color-danger: #D64545;
+$border-radius: math-rem(6);
+$shadow-sm: 0 1px 2px rgba(20, 26, 42, 0.05);

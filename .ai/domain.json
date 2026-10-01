@@ -41,6 +41,40 @@
       "dir": "packages/miraicms-nuxt/test/fixtures/basic"
     },
     {
+      "name": "miraicms-form",
+      "dir": "packages/miraicms-form",
+      "sum": "Form builder addon for the MiraiCMS Nuxt module.",
+      "entries": [
+        {
+          "id": "form",
+          "p": "packages/miraicms-form/src/module.ts"
+        }
+      ],
+      "deps": [
+        "@miraicms/core",
+        "@nuxt/kit",
+        "kysely",
+        "miraicms-nuxt",
+        "nodemailer"
+      ],
+      "dev": [
+        "@nuxt/module-builder",
+        "@types/node",
+        "nuxt",
+        "sass-embedded",
+        "typescript",
+        "vue"
+      ],
+      "workspace": [
+        "@miraicms/core",
+        "miraicms-nuxt"
+      ],
+      "scripts": [
+        "dev:prepare",
+        "test"
+      ]
+    },
+    {
       "name": "miraicms-monorepo",
       "dir": ".",
       "sum": "MiraiCMS monorepo: framework-agnostic core and Nuxt adapter.",
@@ -133,11 +167,13 @@
       "name": "miraicms-playground-nuxt",
       "dir": "playground-nuxt",
       "deps": [
+        "miraicms-form",
         "miraicms-nuxt",
         "miraicms-seo",
         "nuxt"
       ],
       "workspace": [
+        "miraicms-form",
         "miraicms-nuxt",
         "miraicms-seo"
       ],
@@ -773,6 +809,9 @@
       "validateRequiredFields",
       "walkSelectChoices"
     ],
+    "form": [
+      "ModuleOptions"
+    ],
     "nuxt": [],
     "nuxt/extensions": [
       "MiraiCmsMenuExtra",
@@ -826,6 +865,22 @@
       "cols": "id:string,applied_at:ts"
     },
     {
+      "n": "miraicms_forms",
+      "cols": "id,name,slug,status,content,created_at,updated_at"
+    },
+    {
+      "n": "miraicms_form_submissions",
+      "cols": "id,form_id,ip,created_at"
+    },
+    {
+      "n": "miraicms_form_submission_values",
+      "cols": "id,submission_id,field_key,value"
+    },
+    {
+      "n": "miraicms_form_mail",
+      "cols": "id,host,port,encryption,username,password,from_email,from_name"
+    },
+    {
       "n": "seo_documents",
       "cols": "id,kind,entry_id,title,description,canonical,noindex,nofollow,site_name,title_separator,title_template,image,updated_at"
     },
@@ -839,6 +894,7 @@
     "packages/core/src/database/migrations/postgres/schema.ts",
     "packages/core/src/database/migrations/sqlite/schema.ts",
     "packages/core/src/database/migrations/sqlite/sqlite.sql",
+    "packages/miraicms-form/src/runtime/server/utils/schema.ts",
     "packages/miraicms-seo/src/runtime/server/utils/documents.ts",
     "packages/miraicms-seo/src/runtime/server/utils/redirects.ts",
     "scripts/ai-index.mjs"

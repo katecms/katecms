@@ -1,0 +1,143 @@
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue'
+import { $fetch, useHead, useRoute } from '#imports'
+import FormBuilder from '../../../builder/FormBuilder.vue'
+import type { FormRecord } from '../../../form/model'
+import { useFormPaths } from '../../../form/paths'
+
+const route = useRoute()
+const paths = useFormPaths()
+const form = ref<FormRecord | null>(null)
+const loading = ref(true)
+const saving = ref(false)
+const error = ref('')
+const saved = ref(false)
+
+const id = computed(() => Number(route.params.id))
+useHead({ title: computed(() => form.value?.name || 'Form') })
+
+function errMessage(err: unknown, fallback: string): string {
+  const value = err as { statusMessage?: string, data?: { message?: string, statusMessage?: string } }
+  return value.data?.statusMessage || value.data?.message || value.statusMessage || fallback
+}
+
+async function load(formId: number) {
+  loading.value = true
+  error.value = ''
+  saved.value = false
+  form.value = null
+  try {
+    form.value = await $fetch<FormRecord>(`/api/_miraicms/forms/item/${formId}`)
+  }
+  catch (err) {
+    error.value = errMessage(err, 'Could not load the form.')
+  }
+  finally {
+    loading.value = false
+  }
+}
+
+async function save() {
+  const current = form.value
+  if (!current || saving.value) {
+    return
+  }
+  saving.value = true
+  error.value = ''
+  saved.value = false
+  try {
+    form.value = await $fetch<FormRecord>(`/api/_miraicms/forms/item/${current.id}`, {
+      method: 'PUT',
+      body: {
+        name: current.name,
+        slug: current.slug,
+        status: current.status,
+        content: current.content,
+      },
+    })
+    saved.value = true
+  }
+  catch (err) {
+    error.value = errMessage(err, 'Could not save the form.')
+  }
+  finally {
+    saving.value = false
+  }
+}
+
+watch(id, (formId) => {
+  if (Number.isInteger(formId) && formId > 0) {
+    void load(formId)
+  }
+}, { immediate: true })
+</script>
+
+<template>
+  <div class="miraicms-form-editor">
+    <MiraiCmsAdminHeader
+      :title="form?.name || 'Form'"
+      :back-to="paths.list"
+      :meta="form ? form.slug : ''"
+    >
+      <MiraiCmsUiButton
+        tag="button"
+        aria-label="Save"
+        :disabled="saving || loading || !form"
+        @click="save"
+      >
+        {{ saving ? 'Saving…' : 'Save' }}
+      </MiraiCmsUiButton>
+    </MiraiCmsAdminHeader>
+
+    <MiraiCmsUiNotice
+      v-if="error"
+      placement="static"
+      variant="danger"
+      :message="error"
+      @close="error = ''"
+    />
+    <MiraiCmsUiNotice
+      v-else-if="saved"
+      placement="static"
+      variant="success"
+      message="Form saved."
+      @close="saved = false"
+    />
+
+    <p
+      v-if="loading"
+      class="miraicms-form-editor__hint"
+    >
+      Loading…
+    </p>
+    <FormBuilder
+      v-else-if="form"
+      v-model:name="form.name"
+      v-model:slug="form.slug"
+      v-model:status="form.status"
+      v-model:content="form.content"
+    />
+  </div>
+</template>
+
+<style scoped lang="scss">
+@use "../../../assets/admin" as *;
+
+.miraicms-form-editor {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  padding: 0 math-rem(8) math-rem(8);
+
+  &__hint {
+    margin: math-rem(12) 0 0;
+    color: $color-muted;
+  }
+
+  :deep(.miraicms-admin-header) {
+    flex-shrink: 0;
+  }
+}
+</style>

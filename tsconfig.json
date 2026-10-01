@@ -14,6 +14,7 @@
     "playground-next",
     "packages/*/dist",
     "packages/*/.nuxt",
-    "packages/miraicms-seo"
+    "packages/miraicms-seo",
+    "packages/miraicms-form"
   ]
 }

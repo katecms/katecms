@@ -66,6 +66,21 @@
       "p": "packages/miraicms-nuxt/src/runtime/pages/admin/dictionaries/[id].vue"
     },
     {
+      "n": "admin-forms",
+      "path": "/{adminPath}/forms",
+      "p": "packages/miraicms-form/src/runtime/pages/admin/forms/index.vue"
+    },
+    {
+      "n": "admin-forms-id",
+      "path": "/{adminPath}/forms/:id(\\\\d+)",
+      "p": "packages/miraicms-form/src/runtime/pages/admin/forms/[id].vue"
+    },
+    {
+      "n": "admin-forms-mail",
+      "path": "/{adminPath}/forms/mail",
+      "p": "packages/miraicms-form/src/runtime/pages/admin/forms/mail.vue"
+    },
+    {
       "n": "admin-media",
       "path": "/{adminPath}/media",
       "p": "packages/miraicms-nuxt/src/runtime/pages/admin/media.vue"
@@ -94,6 +109,11 @@
       "n": "admin-users-create",
       "path": "/{adminPath}/users/create",
       "p": "packages/miraicms-nuxt/src/runtime/pages/admin/users/create.vue"
+    },
+    {
+      "n": "[slug]",
+      "path": "/forms/:slug",
+      "p": "playground-nuxt/pages/forms/[slug].vue"
     }
   ],
   "api": [
@@ -166,6 +186,56 @@
       "m": "PATCH",
       "path": "/api/_miraicms/dictionaries/:dictionary/:id",
       "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/dictionaries/[dictionary]/[id].patch.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/forms",
+      "p": "packages/miraicms-form/src/runtime/server/api/forms.get.ts"
+    },
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/forms",
+      "p": "packages/miraicms-form/src/runtime/server/api/forms.post.ts"
+    },
+    {
+      "m": "DELETE",
+      "path": "/api/_miraicms/forms/item/:id",
+      "p": "packages/miraicms-form/src/runtime/server/api/item/[id].delete.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/forms/item/:id",
+      "p": "packages/miraicms-form/src/runtime/server/api/item/[id].get.ts"
+    },
+    {
+      "m": "PUT",
+      "path": "/api/_miraicms/forms/item/:id",
+      "p": "packages/miraicms-form/src/runtime/server/api/item/[id].put.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/forms/mail",
+      "p": "packages/miraicms-form/src/runtime/server/api/mail.get.ts"
+    },
+    {
+      "m": "PUT",
+      "path": "/api/_miraicms/forms/mail",
+      "p": "packages/miraicms-form/src/runtime/server/api/mail.put.ts"
+    },
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/forms/mail/test",
+      "p": "packages/miraicms-form/src/runtime/server/api/mail/test.post.ts"
+    },
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/forms/submit/:slug",
+      "p": "packages/miraicms-form/src/runtime/server/api/submit/[slug].post.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/forms/view/:slug",
+      "p": "packages/miraicms-form/src/runtime/server/api/view/[slug].get.ts"
     },
     {
       "m": "GET",
@@ -335,6 +405,14 @@
   ],
   "plugins": [
     {
+      "side": "client",
+      "p": "packages/miraicms-form/src/runtime/plugin.ts"
+    },
+    {
+      "side": "server",
+      "p": "packages/miraicms-form/src/runtime/server/plugins/migrate.ts"
+    },
+    {
       "side": "server",
       "p": "packages/miraicms-nuxt/src/runtime/server/plugins/auto-migrate.ts"
     },
@@ -401,6 +479,10 @@
     }
   ],
   "components": [
+    {
+      "prefix": "Mirai",
+      "dir": "packages/miraicms-form/src/runtime/components"
+    },
     {
       "prefix": "MiraiCms",
       "dir": "packages/miraicms-nuxt/src/runtime/components"

@@ -4,7 +4,7 @@ Read this file first. Grep `.ai/` instead of scanning `packages/` for imports, s
 
 Refresh after code changes: `pnpm ai:index`
 
-Counts: 313 files, 753 symbols, 47 handlers, 19 pages, 11 tables, 36 field types.
+Counts: 345 files, 815 symbols, 57 handlers, 23 pages, 15 tables, 36 field types.
 
 ## Files
 
@@ -47,6 +47,7 @@ Column codec in `domain.json`: `name:type`. `?` nullable. `*` generated or DB de
 
 - `@miraicms/core` `packages/core` — Framework-agnostic MiraiCMS core: config, database, auth, fields, media.
 - `basic` `packages/miraicms-nuxt/test/fixtures/basic` — package
+- `miraicms-form` `packages/miraicms-form` — Form builder addon for the MiraiCMS Nuxt module.
 - `miraicms-monorepo` `.` — MiraiCMS monorepo: framework-agnostic core and Nuxt adapter.
 - `miraicms-nuxt` `packages/miraicms-nuxt` — Nuxt module that adds MiraiCMS to your application.
 - `miraicms-playground-nuxt` `playground-nuxt` — package

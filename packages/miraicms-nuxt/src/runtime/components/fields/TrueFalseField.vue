@@ -135,6 +135,7 @@ $root: '.miraicms-true-false-field';
 
     input {
       accent-color: $color-accent;
+      margin: 0;
     }
   }
 

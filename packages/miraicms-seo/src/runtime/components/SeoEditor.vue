@@ -218,12 +218,12 @@ watch(() => props.url, () => {
     <MiraiCmsTrueFalseField
       v-model="form.noindex"
       field-key="seo-noindex"
-      :field="{ type: 'true_false', label: 'Hide from search engines' }"
+      :field="{ type: 'true_false', label: 'Hide from search engines', ui: true }"
     />
     <MiraiCmsTrueFalseField
       v-model="form.nofollow"
       field-key="seo-nofollow"
-      :field="{ type: 'true_false', label: 'Nofollow' }"
+      :field="{ type: 'true_false', label: 'Nofollow', ui: true }"
     />
     <p
       v-if="error"
@@ -277,7 +277,6 @@ $root: '.miraicms-seo-panel';
     display: flex;
     flex-direction: column;
     gap: math-rem(12);
-    padding: 0 math-rem(16);
 
     &--flush {
       padding: 0;

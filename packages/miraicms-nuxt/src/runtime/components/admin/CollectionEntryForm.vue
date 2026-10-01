@@ -665,12 +665,6 @@ watch(
         />
       </div>
 
-      <component
-        :is="panel"
-        v-for="panel in entrySidebar"
-        :key="panel"
-      />
-
       <div
         v-if="sidebarFields.length"
         :class="`${rootClass}__block`"
@@ -684,6 +678,12 @@ watch(
           :field="field"
         />
       </div>
+
+      <component
+        :is="panel"
+        v-for="panel in entrySidebar"
+        :key="panel"
+      />
     </div>
   </form>
 </template>

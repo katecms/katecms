@@ -304,12 +304,12 @@ onMounted(load)
       <MiraiCmsTextareaField
         v-model="form.description"
         field-key="seo-description"
-        :field="{ type: 'textarea', label: 'Default meta description', rows: 4, maxLength: 320 }"
+        :field="{ type: 'textarea', label: 'Default meta description', rows: 4, maxLength: 320, ui: true }"
       />
       <MiraiCmsTrueFalseField
         v-model="form.noindex"
         field-key="seo-noindex"
-        :field="{ type: 'true_false', label: 'Discourage search engines from indexing this site' }"
+        :field="{ type: 'true_false', label: 'Discourage search engines from indexing this site', ui: true }"
       />
     </div>
 
@@ -405,6 +405,7 @@ onMounted(load)
               v-model="allVisibleMarked"
               field-key="seo-redirect-mark-all"
               :field="{ type: 'true_false', label: '' }"
+              :ui="true"
             />
           </span>
           <span role="columnheader">Type</span>
@@ -426,6 +427,7 @@ onMounted(load)
               :model-value="markedIds.includes(item.id)"
               :field-key="`seo-redirect-mark-${item.id}`"
               :field="{ type: 'true_false', label: '' }"
+              :ui="true"
               @update:model-value="setMarked(item.id, $event === true)"
             />
           </div>

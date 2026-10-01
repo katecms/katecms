@@ -35,17 +35,19 @@ const entryId = computed(() => {
 $root: '.miraicms-seo-panel';
 
 #{$root} {
+  display: flex;
+  flex-direction: column;
+  gap: math-rem(16);
   margin: 0;
-  padding: 0 0 math-rem(16);
-  border-bottom: 1px solid $color-border;
+  padding: 0 math-rem(8);
 
   &__title {
-    padding: 0 math-rem(16) math-rem(12);
-    font-size: math-rem(12);
+    margin: 0;
+    font-size: math-rem(14);
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #6b7280;
+    color: $color-ink;
   }
 
   &__hint {

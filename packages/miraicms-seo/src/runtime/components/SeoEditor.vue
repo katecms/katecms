@@ -42,6 +42,24 @@ const snippetImageField = {
   label: 'Snippet image',
   returnFormat: 'url' as const,
 }
+const canonicalField = {
+  type: 'text' as const,
+  label: 'Canonical URL',
+  placeholder: 'Defaults to the public URL',
+  maxLength: 500,
+}
+const entryImageField = computed(() => ({
+  type: 'image_select' as const,
+  label: 'From this entry',
+  allowNull: true,
+  returnFormat: 'value' as const,
+  width: 72,
+  height: 72,
+  choices: Object.fromEntries(imageChoices.value.map(choice => [
+    choice.url,
+    { label: choice.label, image: choice.url },
+  ])),
+}))
 
 const previewTitle = computed(() => {
   const custom = form.title.trim()
@@ -57,6 +75,20 @@ const previewTitle = computed(() => {
 })
 
 const previewDescription = computed(() => form.description.trim() || site.value.description)
+const titleField = computed(() => ({
+  type: 'text' as const,
+  label: 'SEO title',
+  placeholder: 'Defaults to the title template',
+  maxLength: 200,
+  instructions: `${previewTitle.value.length}/60`,
+}))
+const descriptionField = computed(() => ({
+  type: 'textarea' as const,
+  label: 'Meta description',
+  rows: 4,
+  maxLength: 320,
+  instructions: `${previewDescription.value.length}/160`,
+}))
 const previewUrl = computed(() => {
   const canonical = form.canonical.trim()
   if (/^https?:\/\//i.test(canonical)) {
@@ -79,6 +111,18 @@ function applyEntry(entry: SeoEntry) {
 function useEntryImage(url: string) {
   form.image = url
   imageKey.value += 1
+}
+
+function onEntryImage(value: unknown) {
+  const url = typeof value === 'string' ? value : ''
+  if (url) {
+    useEntryImage(url)
+    return
+  }
+  if (imageChoices.value.some(choice => choice.url === form.image)) {
+    form.image = ''
+    imageKey.value += 1
+  }
 }
 
 async function load() {
@@ -133,10 +177,9 @@ watch(() => props.url, () => {
   >
     Loading…
   </p>
-  <form
+  <div
     v-else
     :class="[`${rootClass}__form`, { [`${rootClass}__form--flush`]: !padded }]"
-    @submit.prevent="save"
   >
     <SeoSnippet
       :title="previewTitle"
@@ -150,73 +193,38 @@ watch(() => props.url, () => {
       field-key="seo-snippet-image"
       :field="snippetImageField"
     />
-    <div
+    <MiraiCmsImageSelectField
       v-if="imageChoices.length"
-      :class="`${rootClass}__images`"
-    >
-      <span>From this entry</span>
-      <div :class="`${rootClass}__choices`">
-        <button
-          v-for="choice in imageChoices"
-          :key="choice.url"
-          type="button"
-          :class="[`${rootClass}__choice`, { [`${rootClass}__choice--selected`]: form.image === choice.url }]"
-          :title="choice.label"
-          @click="useEntryImage(choice.url)"
-        >
-          <img
-            :src="choice.url"
-            :alt="choice.label"
-          >
-        </button>
-      </div>
-    </div>
-    <label :class="`${rootClass}__field`">
-      <span :class="`${rootClass}__label`">
-        <span>SEO title</span>
-        <span :class="`${rootClass}__count`">{{ previewTitle.length }}/60</span>
-      </span>
-      <input
-        v-model="form.title"
-        type="text"
-        maxlength="200"
-        placeholder="Defaults to the title template"
-      >
-    </label>
-    <label :class="`${rootClass}__field`">
-      <span :class="`${rootClass}__label`">
-        <span>Meta description</span>
-        <span :class="`${rootClass}__count`">{{ previewDescription.length }}/160</span>
-      </span>
-      <textarea
-        v-model="form.description"
-        rows="4"
-        maxlength="320"
-      />
-    </label>
-    <label :class="`${rootClass}__field`">
-      <span>Canonical URL</span>
-      <input
-        v-model="form.canonical"
-        type="text"
-        maxlength="500"
-        placeholder="Defaults to the public URL"
-      >
-    </label>
-    <label :class="`${rootClass}__check`">
-      <input
-        v-model="form.noindex"
-        type="checkbox"
-      >
-      <span>Hide from search engines</span>
-    </label>
-    <label :class="`${rootClass}__check`">
-      <input
-        v-model="form.nofollow"
-        type="checkbox"
-      >
-      <span>Nofollow</span>
-    </label>
+      :model-value="imageChoices.some(choice => choice.url === form.image) ? form.image : ''"
+      field-key="seo-entry-image"
+      :field="entryImageField"
+      @update:model-value="onEntryImage"
+    />
+    <MiraiCmsTextField
+      v-model="form.title"
+      field-key="seo-title"
+      :field="titleField"
+    />
+    <MiraiCmsTextareaField
+      v-model="form.description"
+      field-key="seo-description"
+      :field="descriptionField"
+    />
+    <MiraiCmsTextField
+      v-model="form.canonical"
+      field-key="seo-canonical"
+      :field="canonicalField"
+    />
+    <MiraiCmsTrueFalseField
+      v-model="form.noindex"
+      field-key="seo-noindex"
+      :field="{ type: 'true_false', label: 'Hide from search engines' }"
+    />
+    <MiraiCmsTrueFalseField
+      v-model="form.nofollow"
+      field-key="seo-nofollow"
+      :field="{ type: 'true_false', label: 'Nofollow' }"
+    />
     <p
       v-if="error"
       :class="`${rootClass}__error`"
@@ -231,13 +239,13 @@ watch(() => props.url, () => {
     </p>
     <MiraiCmsUiButton
       tag="button"
-      type="submit"
       variant="full"
       :disabled="saving"
+      @click="save"
     >
       {{ saving ? 'Saving…' : 'Save SEO' }}
     </MiraiCmsUiButton>
-  </form>
+  </div>
 </template>
 
 <style scoped lang="scss">
@@ -273,88 +281,6 @@ $root: '.miraicms-seo-panel';
 
     &--flush {
       padding: 0;
-    }
-  }
-
-  &__field {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(6);
-    font-size: math-rem(13);
-    color: $color-ink;
-
-    input,
-    textarea {
-      width: 100%;
-      margin: 0;
-      padding: math-rem(8) math-rem(10);
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
-      background: $color-surface;
-      color: $color-ink;
-      font: inherit;
-    }
-  }
-
-  &__label {
-    display: flex;
-    justify-content: space-between;
-    gap: math-rem(12);
-  }
-
-  &__count {
-    color: #6b7280;
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__images {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(7);
-    font-size: math-rem(13);
-    color: #141a2a;
-  }
-
-  &__choices {
-    display: flex;
-    flex-wrap: wrap;
-    gap: math-rem(6);
-  }
-
-  &__choice {
-    width: math-rem(52);
-    height: math-rem(52);
-    margin: 0;
-    padding: 0;
-    border: 2px solid transparent;
-    border-radius: $border-radius;
-    background: #f3f4f6;
-    cursor: pointer;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: inherit;
-    }
-
-    &--selected {
-      border-color: #2f6fed;
-    }
-  }
-
-  &__check {
-    display: flex;
-    align-items: center;
-    gap: math-rem(8);
-    font-size: math-rem(13);
-    color: $color-ink;
-
-    input {
-      width: math-rem(16);
-      height: math-rem(16);
-      margin: 0;
-      accent-color: #2f6fed;
     }
   }
 }

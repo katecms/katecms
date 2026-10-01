@@ -4,6 +4,7 @@ import {
   buildPublicPath,
   buildSlugPathMap,
   isCollectionPublic,
+  isDictionaryPublic,
   loadCollectionSlugPath,
 } from '@miraicms/core'
 import type { SeoEditorPayload, SeoEntry, SeoImageChoice, SeoSite } from '../../types'
@@ -116,8 +117,11 @@ export async function termEditorPayload(termId: number): Promise<SeoEditorPayloa
     SELECT id, slug, parent_id FROM dictionaries WHERE type = ${term.type}
   `.execute(getSeoDb())
   const slugPath = buildSlugPathMap(rows.rows).get(termId) ?? ''
-  const publicPath = slugPath ? `/${term.type}/${slugPath}`.replace(/\/{2,}/g, '/') : ''
   const dictionaries = useRuntimeConfig().miraicms?.dictionaries ?? {}
+  const def = dictionaries[term.type]
+  const publicPath = def && isDictionaryPublic(def) && slugPath
+    ? buildPublicPath(def.rewrite, term.type, slugPath)
+    : ''
   return payload(
     await readTermSeo(termId),
     await readSite(),

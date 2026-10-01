@@ -2,7 +2,7 @@
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { $fetch, navigateTo, useHead, useRoute } from '#imports'
 import { parseAuthError } from '../../../utils/auth-error'
-import { dictionaryApi } from '../../../utils/dictionaries'
+import { dictionaryApi, dictionaryTermUrl } from '../../../utils/dictionaries'
 import type {
   AdminDictionaryMeta,
   DictionaryTermFormModel,
@@ -31,6 +31,11 @@ const canDelete = ref(false)
 const entryForm = ref<{ validateForSubmit: () => boolean } | null>(null)
 const termPanels = useMiraiCmsTermPanels()
 
+const slugPath = ref('')
+const viewUrl = computed(() => dictionary.value
+  ? dictionaryTermUrl(dictionary.value, slugPath.value)
+  : null)
+
 const form = reactive<DictionaryTermFormModel>({
   title: '',
   slug: '',
@@ -47,6 +52,7 @@ function applyTerm(res: DictionaryTermResponse) {
   form.title = res.term.title
   form.slug = res.term.slug
   form.parentId = res.term.parentId
+  slugPath.value = res.term.slugPath || res.term.slug
   form.fields = { ...(res.term.fields ?? {}) }
   canUpdate.value = res.canUpdate
   canDelete.value = res.canDelete
@@ -141,6 +147,14 @@ watch([dictionarySlug, termId], load)
       :back-to="paths.dictionary(dictionarySlug)"
     >
       <MiraiCmsUiButton
+        v-if="viewUrl"
+        tag="a"
+        variant="secondary"
+        :link="{ url: viewUrl, title: 'View', target: '_blank' }"
+      >
+        View
+      </MiraiCmsUiButton>
+      <MiraiCmsUiButton
         v-if="found && canUpdate"
         tag="button"
         type="submit"
@@ -219,8 +233,8 @@ $root: '.miraicms-dictionary-entry';
     flex-direction: column;
     gap: math-rem(16);
     min-height: 0;
-    padding: 0 math-rem(8);
-    overflow: hidden;
+    padding: 0 math-rem(8) math-rem(8);
+    overflow: auto;
 
     &__danger {
       display: flex;

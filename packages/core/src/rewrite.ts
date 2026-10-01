@@ -37,6 +37,11 @@ export function isCollectionPublic(def: Pick<CollectionDefinition, 'public'>): b
   return def.public !== false
 }
 
+/** Default `true`: omitted `public` still exposes dictionary terms. */
+export function isDictionaryPublic(def: { public?: boolean }): boolean {
+  return def.public !== false
+}
+
 /** `true` or a non-empty slug string enables the archive. */
 export function collectionHasArchive(
   def: Pick<CollectionDefinition, 'has_archive'>,
@@ -59,7 +64,7 @@ export function collectionHasArchive(
  * equal-length ties being stable across engines.
  */
 export function matchCollectionPath(
-  collections: Collections,
+  collections: Record<string, Pick<CollectionDefinition, 'rewrite' | 'hierarchical'>>,
   path: string,
 ): CollectionPathMatch | null {
   const normalized = normalizePublicPath(path)

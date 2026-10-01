@@ -60,6 +60,9 @@ export function toDictionaryMeta(slug: string, def: DictionaryDefinition): Admin
     fields: (def.fields ?? {}) as Fields,
     collections: [...def.collections],
     multiple: def.multiple === true,
+    hierarchical: def.hierarchical === true,
+    public: def.public !== false,
+    rewrite: def.rewrite,
   }
 }
 

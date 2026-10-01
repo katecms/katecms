@@ -277,52 +277,41 @@ onMounted(load)
     >
       Loading…
     </p>
-    <form
+    <div
       v-else
       :class="`${rootClass}__form`"
-      @submit.prevent="save"
     >
-      <label :class="`${rootClass}__field`">
-        <span>Site name</span>
-        <MiraiCmsInputControl
-          v-model="form.siteName"
-          field-key="seo-site-name"
-          :field="{ placeholder: 'Shown in the title template' }"
-        />
-      </label>
-      <label :class="`${rootClass}__field`">
-        <span>Title separator</span>
-        <MiraiCmsInputControl
-          v-model="form.titleSeparator"
-          field-key="seo-separator"
-          :field="{ placeholder: '|' }"
-        />
-      </label>
-      <label :class="`${rootClass}__field`">
-        <span>Title template</span>
-        <MiraiCmsInputControl
-          v-model="form.titleTemplate"
-          field-key="seo-template"
-          :field="{ placeholder: '%title% %sep% %sitename%' }"
-        />
-        <small>Use %title%, %sep%, and %sitename%. A custom SEO title on an entry replaces this.</small>
-      </label>
-      <label :class="`${rootClass}__field`">
-        <span>Default meta description</span>
-        <textarea
-          v-model="form.description"
-          rows="4"
-          maxlength="320"
-        />
-      </label>
-      <label :class="`${rootClass}__check`">
-        <input
-          v-model="form.noindex"
-          type="checkbox"
-        >
-        <span>Discourage search engines from indexing this site</span>
-      </label>
-    </form>
+      <MiraiCmsTextField
+        v-model="form.siteName"
+        field-key="seo-site-name"
+        :field="{ type: 'text', label: 'Site name', placeholder: 'Shown in the title template' }"
+      />
+      <MiraiCmsTextField
+        v-model="form.titleSeparator"
+        field-key="seo-separator"
+        :field="{ type: 'text', label: 'Title separator', placeholder: '|' }"
+      />
+      <MiraiCmsTextField
+        v-model="form.titleTemplate"
+        field-key="seo-template"
+        :field="{
+          type: 'text',
+          label: 'Title template',
+          placeholder: '%title% %sep% %sitename%',
+          instructions: 'Use %title%, %sep%, and %sitename%. A custom SEO title on an entry replaces this.',
+        }"
+      />
+      <MiraiCmsTextareaField
+        v-model="form.description"
+        field-key="seo-description"
+        :field="{ type: 'textarea', label: 'Default meta description', rows: 4, maxLength: 320 }"
+      />
+      <MiraiCmsTrueFalseField
+        v-model="form.noindex"
+        field-key="seo-noindex"
+        :field="{ type: 'true_false', label: 'Discourage search engines from indexing this site' }"
+      />
+    </div>
 
     <section
       v-if="!loading"
@@ -516,42 +505,6 @@ $root: '.miraicms-seo-settings';
     flex-direction: column;
     gap: math-rem(16);
     max-width: math-rem(1000);
-  }
-
-  &__field {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(6);
-    color: $color-ink;
-    font-size: math-rem(14);
-
-    small {
-      color: $color-muted;
-    }
-
-    textarea {
-      width: 100%;
-      margin: 0;
-      padding: math-rem(8) math-rem(10);
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
-      background: $color-surface;
-      color: inherit;
-      font: inherit;
-    }
-  }
-
-  &__check {
-    display: flex;
-    align-items: center;
-    gap: math-rem(8);
-
-    input {
-      width: math-rem(16);
-      height: math-rem(16);
-      margin: 0;
-      accent-color: $color-accent;
-    }
   }
 
   &__redirects {

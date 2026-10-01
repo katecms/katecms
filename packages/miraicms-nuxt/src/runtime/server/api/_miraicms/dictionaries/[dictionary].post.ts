@@ -40,7 +40,7 @@ export default defineEventHandler(async (event): Promise<DictionaryTermResponse>
   const title = readTitle(body?.title)
   const slug = readSlug(body?.slug)
   const fields = readFields(body?.fields)
-  const parentId = readParentId(body?.parentId)
+  const parentId = def.hierarchical === true ? readParentId(body?.parentId) : null
   requireTermFields(def, fields)
 
   const db = getDb()

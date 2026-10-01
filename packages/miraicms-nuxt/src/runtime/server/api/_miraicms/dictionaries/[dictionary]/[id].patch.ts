@@ -58,7 +58,7 @@ export default defineEventHandler(async (event): Promise<DictionaryTermResponse>
   if (body?.fields !== undefined) {
     patch.fields = readFields(body.fields)
   }
-  if (body?.parentId !== undefined) {
+  if (def.hierarchical === true && body?.parentId !== undefined) {
     patch.parent_id = readParentId(body.parentId)
   }
 

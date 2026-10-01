@@ -333,6 +333,7 @@ const buttonLabel = computed(() => props.submitLabel)
     </MiraiCmsFieldWrapper>
 
     <MiraiCmsSelectField
+      v-if="dictionary.hierarchical"
       v-model="parentModel"
       field-key="cms-dictionary-parent"
       :field="parentField"

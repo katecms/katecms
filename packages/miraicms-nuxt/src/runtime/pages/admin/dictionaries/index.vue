@@ -4,7 +4,7 @@ import { $fetch, useHead, useRoute, useRuntimeConfig } from '#imports'
 import { buildFormValues } from '@miraicms/core'
 import { parseAuthError } from '../../../utils/auth-error'
 import type { PublicCollectionNav } from '../../../utils/collections'
-import { dictionaryApi } from '../../../utils/dictionaries'
+import { dictionaryApi, dictionaryTermUrl } from '../../../utils/dictionaries'
 import type {
   AdminDictionaryMeta,
   AdminDictionaryTerm,
@@ -54,7 +54,7 @@ const attachedLabel = computed(() => {
 })
 
 function termListTitle(term: AdminDictionaryTerm): string {
-  const depth = term.depth ?? 0
+  const depth = dictionary.value?.hierarchical ? (term.depth ?? 0) : 0
   if (depth < 1) {
     return term.title
   }
@@ -273,6 +273,18 @@ watch(dictionarySlug, async () => {
                 role="cell"
                 :class="`${rootClass}__actions`"
               >
+                <MiraiCmsUiButton
+                  v-if="dictionary.public"
+                  tag="a"
+                  :variant="['secondary', 'small']"
+                  :link="{
+                    url: dictionaryTermUrl(dictionary, term.slugPath) || '/',
+                    title: 'View',
+                    target: '_blank',
+                  }"
+                >
+                  View
+                </MiraiCmsUiButton>
                 <MiraiCmsUiButton
                   v-if="term.canUpdate"
                   tag="a"

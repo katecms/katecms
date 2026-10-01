@@ -2,8 +2,10 @@ import {
   buildPublicPath,
   buildSlugPathMap,
   isCollectionPublic,
+  isDictionaryPublic,
   listCollectionsByDictionary,
   listDictionaries,
+  matchCollectionPath,
 } from '@miraicms/core'
 import type { Kysely } from 'kysely'
 import type { Database } from '@miraicms/core'
@@ -11,39 +13,27 @@ import type { PublicDictionaryTerm, ResolveTermResponse } from '../../utils/coll
 import { getCollections } from './collections'
 import { getDictionaries } from './dictionaries'
 
-function pathSegments(path: string): string[] {
-  const raw = path.trim().split(/[?#]/)[0] ?? ''
-  return raw.split('/').filter(Boolean).map((part) => {
-    try {
-      return decodeURIComponent(part)
-    }
-    catch {
-      return part
-    }
-  })
-}
-
 /**
- * Public term URL is `/{dictionary}/{slugPath}`.
+ * Public term URL follows the dictionary `rewrite` (`/{dictionary}/%name%` by default).
  * A collection rewrite that matches the same path wins before this is called.
  */
 export async function resolvePublicDictionaryTerm(
   db: Kysely<Database>,
   path: string,
 ): Promise<ResolveTermResponse | undefined> {
-  const segments = pathSegments(path)
-  if (segments.length < 2) {
+  const dictionaries = Object.fromEntries(
+    Object.entries(getDictionaries()).filter(([, def]) => isDictionaryPublic(def)),
+  )
+  const matched = matchCollectionPath(dictionaries, path)
+  if (!matched) {
     return undefined
   }
-  const [type, ...rest] = segments
-  if (!type) {
-    return undefined
-  }
-  const def = getDictionaries()[type]
+  const type = matched.collectionSlug
+  const def = dictionaries[type]
   if (!def) {
     return undefined
   }
-  const slugPath = rest.join('/')
+  const slugPath = matched.slugPath
   const rows = await listDictionaries(db, type)
   const slugPaths = buildSlugPathMap(rows)
   const row = rows.find(item => (slugPaths.get(item.id) ?? item.slug) === slugPath)
@@ -103,6 +93,6 @@ export async function resolvePublicDictionaryTerm(
     },
     term,
     entries,
-    path: `/${type}/${slugPath}`.replace(/\/{2,}/g, '/'),
+    path: buildPublicPath(def.rewrite, type, slugPath),
   }
 }

@@ -16,6 +16,21 @@ export interface DictionaryDefinition {
   /** Inline SVG for the admin menu. Invalid or empty values use the default icon. */
   icon?: string
   fields?: Fields
+  /** Enable parent/child nesting (uses the `parent_id` column). Default: false. */
+  hierarchical?: boolean
+  /**
+   * Whether terms of this dictionary have a public URL. Default: `true`.
+   * When `false`, the dictionary stays in the admin, but term URLs do not
+   * resolve and the View link is hidden.
+   */
+  public?: boolean
+  /**
+   * Public URL pattern for terms. `%name%` is the term slug path.
+   * Flat dictionaries use one segment. Hierarchical ones may include ancestors.
+   *
+   * @example '/categories/%name%'
+   */
+  rewrite?: string
   /** Collection slug(s) this dictionary is attached to. */
   collections: string[]
   /**

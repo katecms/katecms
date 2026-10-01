@@ -1,3 +1,4 @@
+import { buildPublicPath } from '@miraicms/core'
 import type { Fields } from '@miraicms/core'
 import type { ParentOption } from './collections'
 
@@ -13,6 +14,9 @@ export interface AdminDictionaryMeta {
   fields: Fields
   collections: string[]
   multiple: boolean
+  hierarchical: boolean
+  public: boolean
+  rewrite?: string
 }
 
 /** A dictionary term as shown in the admin UI. */
@@ -63,6 +67,17 @@ export interface PublicDictionaryNav {
     singularName: string
   }
   icon?: string
+}
+
+/** Public term URL, or `null` when the dictionary is not public. */
+export function dictionaryTermUrl(
+  dictionary: Pick<AdminDictionaryMeta, 'slug' | 'public' | 'rewrite'>,
+  slugPath: string,
+): string | null {
+  if (!dictionary.public || !slugPath) {
+    return null
+  }
+  return buildPublicPath(dictionary.rewrite, dictionary.slug, slugPath)
 }
 
 export function dictionaryApi(slug: string, id?: number): string {

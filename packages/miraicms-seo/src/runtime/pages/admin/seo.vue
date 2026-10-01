@@ -176,6 +176,11 @@ async function removeRedirect(id: number) {
   if (redirectDeleting.value) {
     return
   }
+  const item = redirects.value.find(row => row.id === id)
+  const from = item?.from || 'this redirect'
+  if (!window.confirm(`Delete redirect from “${from}”? This cannot be undone.`)) {
+    return
+  }
   redirectDeleting.value = true
   redirectError.value = ''
   try {
@@ -198,6 +203,13 @@ async function removeRedirect(id: number) {
 
 async function removeMarked() {
   if (!markedIds.value.length || redirectDeleting.value) {
+    return
+  }
+  const count = markedIds.value.length
+  const label = count === 1
+    ? 'Delete 1 redirect? This cannot be undone.'
+    : `Delete ${count} redirects? This cannot be undone.`
+  if (!window.confirm(label)) {
     return
   }
   redirectDeleting.value = true

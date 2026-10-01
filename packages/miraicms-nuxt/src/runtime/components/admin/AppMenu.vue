@@ -5,11 +5,13 @@ import { useCmsPaths } from '../../composables/useCmsPaths'
 import type { PublicCollectionNav } from '../../utils/collections'
 import type { PublicDictionaryNav } from '../../utils/dictionaries'
 import type { PublicOptionNav } from '../../utils/options'
+import { useMiraiCmsMenuItems } from '../../composables/useMiraiCmsExtensions'
 
 const rootClass = 'miraicms-menu'
 const route = useRoute()
 const paths = useCmsPaths()
 const runtimeConfig = useRuntimeConfig()
+const extraMenu = useMiraiCmsMenuItems()
 
 type MenuItem = {
   key: string
@@ -140,6 +142,13 @@ const groups = computed<MenuGroup[]>(() => {
         icon: USERS_ICON,
         active: isActive(paths.users),
       },
+      ...extraMenu.value.map(item => ({
+        key: item.key,
+        label: item.label,
+        to: item.to,
+        icon: item.icon || OPTIONS_ICON,
+        active: isActive(item.to),
+      })),
     ],
   })
 

@@ -331,6 +331,14 @@ export default defineNuxtModule<MiraiCmsConfig>({
         name: 'getOptions',
         from: resolver.resolve('./runtime/composables/getOptions'),
       },
+      {
+        name: 'useMiraiCmsEntrySidebar',
+        from: resolver.resolve('./runtime/composables/useMiraiCmsExtensions'),
+      },
+      {
+        name: 'useMiraiCmsMenuItems',
+        from: resolver.resolve('./runtime/composables/useMiraiCmsExtensions'),
+      },
     ])
 
     addComponentsDir({

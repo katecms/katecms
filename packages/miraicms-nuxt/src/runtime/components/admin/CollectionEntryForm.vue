@@ -22,6 +22,9 @@ import type {
   CollectionEntryFormModel,
   ParentOption,
 } from '../../utils/collections'
+import { useMiraiCmsEntrySidebar } from '../../composables/useMiraiCmsExtensions'
+
+const entrySidebar = useMiraiCmsEntrySidebar()
 
 const props = defineProps<{
   collection: AdminCollectionMeta
@@ -661,6 +664,12 @@ watch(
           @update:model-value="setDictionaryValue(picker, $event)"
         />
       </div>
+
+      <component
+        :is="panel"
+        v-for="panel in entrySidebar"
+        :key="panel"
+      />
 
       <div
         v-if="sidebarFields.length"

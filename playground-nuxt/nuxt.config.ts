@@ -1,5 +1,5 @@
 export default defineNuxtConfig({
-  modules: ['miraicms-nuxt'],
+  modules: ['miraicms-nuxt', 'miraicms-seo'],
   devtools: { enabled: true },
   compatibilityDate: 'latest',
   miraicms: {

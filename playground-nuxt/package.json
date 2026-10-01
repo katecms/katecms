@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "miraicms-nuxt": "workspace:*",
+    "miraicms-seo": "workspace:*",
     "nuxt": "^4.5.2"
   }
 }

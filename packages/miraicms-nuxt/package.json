@@ -9,7 +9,9 @@
     ".": {
       "types": "./dist/types.d.mts",
       "import": "./dist/module.mjs"
-    }
+    },
+    "./extensions": "./src/runtime/composables/useMiraiCmsExtensions.ts",
+    "./server": "./src/runtime/server/kit.ts"
   },
   "main": "./dist/module.mjs",
   "typesVersions": {

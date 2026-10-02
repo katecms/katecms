@@ -47,9 +47,9 @@ Column codec in `domain.json`: `name:type`. `?` nullable. `*` generated or DB de
 
 - `@miraicms/core` `packages/core` — Framework-agnostic MiraiCMS core: config, database, auth, fields, media.
 - `basic` `packages/miraicms-nuxt/test/fixtures/basic` — package
-- `miraicms-form` `packages/miraicms-form` — Form builder addon for the MiraiCMS Nuxt module.
 - `miraicms-monorepo` `.` — MiraiCMS monorepo: framework-agnostic core and Nuxt adapter.
 - `miraicms-nuxt` `packages/miraicms-nuxt` — Nuxt module that adds MiraiCMS to your application.
+- `miraicms-nuxt-form` `packages/miraicms-nuxt-form` — Form builder addon for the MiraiCMS Nuxt module.
+- `miraicms-nuxt-seo` `packages/miraicms-nuxt-seo` — SEO addon for the MiraiCMS Nuxt module: titles, sitemap, and robots.txt.
 - `miraicms-playground-nuxt` `playground-nuxt` — package
-- `miraicms-seo` `packages/miraicms-seo` — SEO addon for the MiraiCMS Nuxt module: titles, sitemap, and robots.txt.
 

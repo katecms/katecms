@@ -68,17 +68,17 @@
     {
       "n": "admin-forms",
       "path": "/{adminPath}/forms",
-      "p": "packages/miraicms-form/src/runtime/pages/admin/forms/index.vue"
+      "p": "packages/miraicms-nuxt-form/src/runtime/pages/admin/forms/index.vue"
     },
     {
       "n": "admin-forms-id",
       "path": "/{adminPath}/forms/:id(\\\\d+)",
-      "p": "packages/miraicms-form/src/runtime/pages/admin/forms/[id].vue"
+      "p": "packages/miraicms-nuxt-form/src/runtime/pages/admin/forms/[id].vue"
     },
     {
       "n": "admin-forms-mail",
       "path": "/{adminPath}/forms/mail",
-      "p": "packages/miraicms-form/src/runtime/pages/admin/forms/mail.vue"
+      "p": "packages/miraicms-nuxt-form/src/runtime/pages/admin/forms/mail.vue"
     },
     {
       "n": "admin-media",
@@ -93,7 +93,7 @@
     {
       "n": "admin-seo",
       "path": "/{adminPath}/seo",
-      "p": "packages/miraicms-seo/src/runtime/pages/admin/seo.vue"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/pages/admin/seo.vue"
     },
     {
       "n": "admin-users",
@@ -190,52 +190,52 @@
     {
       "m": "GET",
       "path": "/api/_miraicms/forms",
-      "p": "packages/miraicms-form/src/runtime/server/api/forms.get.ts"
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/forms.get.ts"
     },
     {
       "m": "POST",
       "path": "/api/_miraicms/forms",
-      "p": "packages/miraicms-form/src/runtime/server/api/forms.post.ts"
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/forms.post.ts"
     },
     {
       "m": "DELETE",
       "path": "/api/_miraicms/forms/item/:id",
-      "p": "packages/miraicms-form/src/runtime/server/api/item/[id].delete.ts"
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/[id].delete.ts"
     },
     {
       "m": "GET",
       "path": "/api/_miraicms/forms/item/:id",
-      "p": "packages/miraicms-form/src/runtime/server/api/item/[id].get.ts"
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/[id].get.ts"
     },
     {
       "m": "PUT",
       "path": "/api/_miraicms/forms/item/:id",
-      "p": "packages/miraicms-form/src/runtime/server/api/item/[id].put.ts"
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/[id].put.ts"
     },
     {
       "m": "GET",
       "path": "/api/_miraicms/forms/mail",
-      "p": "packages/miraicms-form/src/runtime/server/api/mail.get.ts"
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/mail.get.ts"
     },
     {
       "m": "PUT",
       "path": "/api/_miraicms/forms/mail",
-      "p": "packages/miraicms-form/src/runtime/server/api/mail.put.ts"
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/mail.put.ts"
     },
     {
       "m": "POST",
       "path": "/api/_miraicms/forms/mail/test",
-      "p": "packages/miraicms-form/src/runtime/server/api/mail/test.post.ts"
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/mail/test.post.ts"
     },
     {
       "m": "POST",
       "path": "/api/_miraicms/forms/submit/:slug",
-      "p": "packages/miraicms-form/src/runtime/server/api/submit/[slug].post.ts"
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/submit/[slug].post.ts"
     },
     {
       "m": "GET",
       "path": "/api/_miraicms/forms/view/:slug",
-      "p": "packages/miraicms-form/src/runtime/server/api/view/[slug].get.ts"
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/view/[slug].get.ts"
     },
     {
       "m": "GET",
@@ -310,62 +310,62 @@
     {
       "m": "GET",
       "path": "/api/_miraicms/seo/entries/:id",
-      "p": "packages/miraicms-seo/src/runtime/server/api/entries/[id].get.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/entries/[id].get.ts"
     },
     {
       "m": "PUT",
       "path": "/api/_miraicms/seo/entries/:id",
-      "p": "packages/miraicms-seo/src/runtime/server/api/entries/[id].put.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/entries/[id].put.ts"
     },
     {
       "m": "GET",
       "path": "/api/_miraicms/seo/head",
-      "p": "packages/miraicms-seo/src/runtime/server/api/head.get.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/head.get.ts"
     },
     {
       "m": "GET",
       "path": "/api/_miraicms/seo/redirect",
-      "p": "packages/miraicms-seo/src/runtime/server/api/redirect.get.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/redirect.get.ts"
     },
     {
       "m": "DELETE",
       "path": "/api/_miraicms/seo/redirects",
-      "p": "packages/miraicms-seo/src/runtime/server/api/redirects.delete.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/redirects.delete.ts"
     },
     {
       "m": "GET",
       "path": "/api/_miraicms/seo/redirects",
-      "p": "packages/miraicms-seo/src/runtime/server/api/redirects.get.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/redirects.get.ts"
     },
     {
       "m": "PATCH",
       "path": "/api/_miraicms/seo/redirects",
-      "p": "packages/miraicms-seo/src/runtime/server/api/redirects.patch.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/redirects.patch.ts"
     },
     {
       "m": "POST",
       "path": "/api/_miraicms/seo/redirects",
-      "p": "packages/miraicms-seo/src/runtime/server/api/redirects.post.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/redirects.post.ts"
     },
     {
       "m": "GET",
       "path": "/api/_miraicms/seo/site",
-      "p": "packages/miraicms-seo/src/runtime/server/api/site.get.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/site.get.ts"
     },
     {
       "m": "PUT",
       "path": "/api/_miraicms/seo/site",
-      "p": "packages/miraicms-seo/src/runtime/server/api/site.put.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/site.put.ts"
     },
     {
       "m": "GET",
       "path": "/api/_miraicms/seo/terms/:id",
-      "p": "packages/miraicms-seo/src/runtime/server/api/terms/[id].get.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/terms/[id].get.ts"
     },
     {
       "m": "PUT",
       "path": "/api/_miraicms/seo/terms/:id",
-      "p": "packages/miraicms-seo/src/runtime/server/api/terms/[id].put.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/terms/[id].put.ts"
     },
     {
       "m": "GET",
@@ -390,12 +390,12 @@
     {
       "m": "GET",
       "path": "/robots.txt",
-      "p": "packages/miraicms-seo/src/runtime/server/routes/robots.get.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/routes/robots.get.ts"
     },
     {
       "m": "GET",
       "path": "/sitemap.xml",
-      "p": "packages/miraicms-seo/src/runtime/server/routes/sitemap.get.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/routes/sitemap.get.ts"
     },
     {
       "m": "GET",
@@ -406,23 +406,23 @@
   "plugins": [
     {
       "side": "client",
-      "p": "packages/miraicms-form/src/runtime/plugin.ts"
+      "p": "packages/miraicms-nuxt-form/src/runtime/plugin.ts"
     },
     {
       "side": "server",
-      "p": "packages/miraicms-form/src/runtime/server/plugins/migrate.ts"
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/plugins/migrate.ts"
+    },
+    {
+      "side": "client",
+      "p": "packages/miraicms-nuxt-seo/src/runtime/plugin.ts"
+    },
+    {
+      "side": "server",
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/plugins/migrate.ts"
     },
     {
       "side": "server",
       "p": "packages/miraicms-nuxt/src/runtime/server/plugins/auto-migrate.ts"
-    },
-    {
-      "side": "client",
-      "p": "packages/miraicms-seo/src/runtime/plugin.ts"
-    },
-    {
-      "side": "server",
-      "p": "packages/miraicms-seo/src/runtime/server/plugins/migrate.ts"
     }
   ],
   "middleware": [
@@ -454,8 +454,8 @@
       "p": "packages/miraicms-nuxt/src/runtime/composables/useAuth.ts"
     },
     {
-      "n": "miraicms-seo",
-      "p": "packages/miraicms-seo/src/runtime/composables/useMiraiSeoHead.ts"
+      "n": "miraicms-nuxt-seo",
+      "p": "packages/miraicms-nuxt-seo/src/runtime/composables/useMiraiSeoHead.ts"
     },
     {
       "n": "useCmsPaths",
@@ -475,21 +475,21 @@
     },
     {
       "n": "useMiraiSeoRedirect",
-      "p": "packages/miraicms-seo/src/runtime/composables/useMiraiSeoRedirect.ts"
+      "p": "packages/miraicms-nuxt-seo/src/runtime/composables/useMiraiSeoRedirect.ts"
     }
   ],
   "components": [
     {
       "prefix": "Mirai",
-      "dir": "packages/miraicms-form/src/runtime/components"
+      "dir": "packages/miraicms-nuxt-form/src/runtime/components"
+    },
+    {
+      "prefix": "Mirai",
+      "dir": "packages/miraicms-nuxt-seo/src/runtime/components"
     },
     {
       "prefix": "MiraiCms",
       "dir": "packages/miraicms-nuxt/src/runtime/components"
-    },
-    {
-      "prefix": "Mirai",
-      "dir": "packages/miraicms-seo/src/runtime/components"
     }
   ]
 }

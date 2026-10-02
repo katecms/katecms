@@ -8,7 +8,7 @@ export function uploadRoot(): string {
   if (typeof configured === 'string' && configured.trim()) {
     return resolve(configured.trim())
   }
-  return resolve(process.cwd(), 'data', 'miraicms-form')
+  return resolve(process.cwd(), 'data', 'miraicms-nuxt-form')
 }
 
 export function safeFileName(name: string): string {

@@ -9,9 +9,9 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
-    "miraicms-form": "workspace:*",
+    "miraicms-nuxt-form": "workspace:*",
     "miraicms-nuxt": "workspace:*",
-    "miraicms-seo": "workspace:*",
+    "miraicms-nuxt-seo": "workspace:*",
     "nuxt": "^4.5.2"
   }
 }

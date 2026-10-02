@@ -41,40 +41,6 @@
       "dir": "packages/miraicms-nuxt/test/fixtures/basic"
     },
     {
-      "name": "miraicms-form",
-      "dir": "packages/miraicms-form",
-      "sum": "Form builder addon for the MiraiCMS Nuxt module.",
-      "entries": [
-        {
-          "id": "form",
-          "p": "packages/miraicms-form/src/module.ts"
-        }
-      ],
-      "deps": [
-        "@miraicms/core",
-        "@nuxt/kit",
-        "kysely",
-        "miraicms-nuxt",
-        "nodemailer"
-      ],
-      "dev": [
-        "@nuxt/module-builder",
-        "@types/node",
-        "nuxt",
-        "sass-embedded",
-        "typescript",
-        "vue"
-      ],
-      "workspace": [
-        "@miraicms/core",
-        "miraicms-nuxt"
-      ],
-      "scripts": [
-        "dev:prepare",
-        "test"
-      ]
-    },
-    {
       "name": "miraicms-monorepo",
       "dir": ".",
       "sum": "MiraiCMS monorepo: framework-agnostic core and Nuxt adapter.",
@@ -164,34 +130,47 @@
       ]
     },
     {
-      "name": "miraicms-playground-nuxt",
-      "dir": "playground-nuxt",
+      "name": "miraicms-nuxt-form",
+      "dir": "packages/miraicms-nuxt-form",
+      "sum": "Form builder addon for the MiraiCMS Nuxt module.",
+      "entries": [
+        {
+          "id": "nuxt-form",
+          "p": "packages/miraicms-nuxt-form/src/module.ts"
+        }
+      ],
       "deps": [
-        "miraicms-form",
+        "@miraicms/core",
+        "@nuxt/kit",
+        "kysely",
         "miraicms-nuxt",
-        "miraicms-seo",
-        "nuxt"
+        "nodemailer"
+      ],
+      "dev": [
+        "@nuxt/module-builder",
+        "@types/node",
+        "nuxt",
+        "sass-embedded",
+        "typescript",
+        "vue"
       ],
       "workspace": [
-        "miraicms-form",
-        "miraicms-nuxt",
-        "miraicms-seo"
+        "@miraicms/core",
+        "miraicms-nuxt"
       ],
       "scripts": [
-        "build",
-        "dev",
-        "generate",
-        "seed"
+        "dev:prepare",
+        "test"
       ]
     },
     {
-      "name": "miraicms-seo",
-      "dir": "packages/miraicms-seo",
+      "name": "miraicms-nuxt-seo",
+      "dir": "packages/miraicms-nuxt-seo",
       "sum": "SEO addon for the MiraiCMS Nuxt module: titles, sitemap, and robots.txt.",
       "entries": [
         {
-          "id": "seo",
-          "p": "packages/miraicms-seo/src/module.ts"
+          "id": "nuxt-seo",
+          "p": "packages/miraicms-nuxt-seo/src/module.ts"
         }
       ],
       "deps": [
@@ -212,6 +191,27 @@
       ],
       "scripts": [
         "dev:prepare"
+      ]
+    },
+    {
+      "name": "miraicms-playground-nuxt",
+      "dir": "playground-nuxt",
+      "deps": [
+        "miraicms-nuxt",
+        "miraicms-nuxt-form",
+        "miraicms-nuxt-seo",
+        "nuxt"
+      ],
+      "workspace": [
+        "miraicms-nuxt",
+        "miraicms-nuxt-form",
+        "miraicms-nuxt-seo"
+      ],
+      "scripts": [
+        "build",
+        "dev",
+        "generate",
+        "seed"
       ]
     }
   ],
@@ -809,9 +809,6 @@
       "validateRequiredFields",
       "walkSelectChoices"
     ],
-    "form": [
-      "ModuleOptions"
-    ],
     "nuxt": [],
     "nuxt/extensions": [
       "MiraiCmsMenuExtra",
@@ -825,7 +822,10 @@
       "requirePermission",
       "requireUser"
     ],
-    "seo": []
+    "nuxt-form": [
+      "ModuleOptions"
+    ],
+    "nuxt-seo": []
   },
   "tables": [
     {
@@ -894,9 +894,9 @@
     "packages/core/src/database/migrations/postgres/schema.ts",
     "packages/core/src/database/migrations/sqlite/schema.ts",
     "packages/core/src/database/migrations/sqlite/sqlite.sql",
-    "packages/miraicms-form/src/runtime/server/utils/schema.ts",
-    "packages/miraicms-seo/src/runtime/server/utils/documents.ts",
-    "packages/miraicms-seo/src/runtime/server/utils/redirects.ts",
+    "packages/miraicms-nuxt-form/src/runtime/server/utils/schema.ts",
+    "packages/miraicms-nuxt-seo/src/runtime/server/utils/documents.ts",
+    "packages/miraicms-nuxt-seo/src/runtime/server/utils/redirects.ts",
     "scripts/ai-index.mjs"
   ],
   "fields": [

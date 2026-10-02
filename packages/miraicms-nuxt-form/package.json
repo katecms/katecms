@@ -1,5 +1,5 @@
 {
-  "name": "miraicms-form",
+  "name": "miraicms-nuxt-form",
   "version": "1.0.0",
   "description": "Form builder addon for the MiraiCMS Nuxt module.",
   "repository": "https://github.com/ldu1991/miraicms",

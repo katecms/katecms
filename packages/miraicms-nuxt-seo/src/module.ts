@@ -11,7 +11,7 @@ import {
 
 export default defineNuxtModule({
   meta: {
-    name: 'miraicms-seo',
+    name: 'miraicms-nuxt-seo',
     configKey: 'miraicmsSeo',
   },
   setup(_options, nuxt) {

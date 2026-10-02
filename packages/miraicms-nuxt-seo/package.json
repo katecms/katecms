@@ -1,5 +1,5 @@
 {
-  "name": "miraicms-seo",
+  "name": "miraicms-nuxt-seo",
   "version": "1.0.0",
   "description": "SEO addon for the MiraiCMS Nuxt module: titles, sitemap, and robots.txt.",
   "repository": "https://github.com/ldu1991/miraicms",

@@ -28,7 +28,7 @@ dist
 .env
 
 # Form uploads
-**/data/miraicms-form/
+**/data/miraicms-nuxt-form/
 
 # Local SQLite
 **/data/*.db

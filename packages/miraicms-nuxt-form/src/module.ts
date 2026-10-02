@@ -17,7 +17,7 @@ export interface ModuleOptions {
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: 'miraicms-form',
+    name: 'miraicms-nuxt-form',
     configKey: 'miraicmsForm',
   },
   defaults: {

@@ -104,12 +104,12 @@ watch(id, (formId) => {
       @close="saved = false"
     />
 
-    <p
+    <div
       v-if="loading"
       class="miraicms-form-editor__hint"
     >
       Loading…
-    </p>
+    </div>
     <FormBuilder
       v-else-if="form"
       v-model:name="form.name"
@@ -121,7 +121,7 @@ watch(id, (formId) => {
 </template>
 
 <style scoped lang="scss">
-@use "../../../assets/admin" as *;
+@use "../../../assets/styles" as *;
 
 .miraicms-form-editor {
   display: flex;

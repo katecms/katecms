@@ -152,87 +152,71 @@ onMounted(load)
       @close="tested = false"
     />
 
-    <p
+    <div
       v-if="loading"
       class="miraicms-form-mail__hint"
     >
       Loading…
-    </p>
+    </div>
     <div
       v-else
       class="miraicms-form-mail__grid"
     >
-      <label>
-        <span>Host</span>
-        <input
-          v-model="form.host"
-          type="text"
-          autocomplete="off"
-        >
-      </label>
-      <label>
-        <span>Port</span>
-        <input
-          v-model.number="form.port"
-          type="number"
-          min="1"
-          max="65535"
-        >
-      </label>
-      <label>
-        <span>Encryption</span>
-        <select v-model="form.encryption">
-          <option value="none">
-            None
-          </option>
-          <option value="starttls">
-            STARTTLS
-          </option>
-          <option value="ssl">
-            SSL
-          </option>
-        </select>
-      </label>
-      <label>
-        <span>Username</span>
-        <input
-          v-model="form.username"
-          type="text"
-          autocomplete="off"
-        >
-      </label>
-      <label>
-        <span>Password</span>
-        <input
-          v-model="password"
-          type="password"
-          autocomplete="new-password"
-          :placeholder="form.passwordSet ? 'Leave blank to keep the saved password' : ''"
-        >
-      </label>
-      <label>
-        <span>From name</span>
-        <input
-          v-model="form.fromName"
-          type="text"
-        >
-      </label>
-      <label>
-        <span>From address</span>
-        <input
-          v-model="form.fromEmail"
-          type="email"
-        >
-      </label>
+      <MiraiCmsTextField
+        v-model="form.host"
+        field-key="mail-host"
+        :field="{ type: 'text', label: 'Host' }"
+      />
+      <MiraiCmsNumberField
+        :model-value="form.port"
+        field-key="mail-port"
+        :field="{ type: 'number', label: 'Port', min: 1, max: 65535, step: 1 }"
+        @update:model-value="form.port = Number($event) || 587"
+      />
+      <MiraiCmsSelectField
+        v-model="form.encryption"
+        field-key="mail-encryption"
+        :field="{
+          type: 'select',
+          label: 'Encryption',
+          returnFormat: 'value',
+          choices: [
+            { val: 'none', lbl: 'None' },
+            { val: 'starttls', lbl: 'STARTTLS' },
+            { val: 'ssl', lbl: 'SSL' },
+          ],
+        }"
+      />
+      <MiraiCmsTextField
+        v-model="form.username"
+        field-key="mail-username"
+        :field="{ type: 'text', label: 'Username' }"
+      />
+      <MiraiCmsPasswordField
+        v-model="password"
+        field-key="mail-password"
+        :field="{
+          type: 'password',
+          label: 'Password',
+          placeholder: form.passwordSet ? 'Leave blank to keep the saved password' : '',
+        }"
+      />
+      <MiraiCmsTextField
+        v-model="form.fromName"
+        field-key="mail-from-name"
+        :field="{ type: 'text', label: 'From name' }"
+      />
+      <MiraiCmsEmailField
+        v-model="form.fromEmail"
+        field-key="mail-from-email"
+        :field="{ type: 'email', label: 'From address' }"
+      />
       <div class="miraicms-form-mail__test">
-        <label>
-          <span>Send a test to</span>
-          <input
-            v-model="testTo"
-            type="email"
-            placeholder="you@example.com"
-          >
-        </label>
+        <MiraiCmsEmailField
+          v-model="testTo"
+          field-key="mail-test-to"
+          :field="{ type: 'email', label: 'Send a test to', placeholder: 'you@example.com' }"
+        />
         <MiraiCmsUiButton
           tag="button"
           variant="secondary"
@@ -248,7 +232,7 @@ onMounted(load)
 </template>
 
 <style scoped lang="scss">
-@use "../../../assets/admin" as *;
+@use "../../../assets/styles" as *;
 
 .miraicms-form-mail {
   display: flex;
@@ -269,26 +253,6 @@ onMounted(load)
     grid-template-columns: repeat(auto-fill, minmax(math-rem(240), 1fr));
     gap: math-rem(14);
     max-width: math-rem(820);
-
-    label {
-      display: flex;
-      flex-direction: column;
-      gap: math-rem(4);
-      font-size: math-rem(13);
-      font-weight: 600;
-    }
-
-    input,
-    select {
-      width: 100%;
-      padding: math-rem(8) math-rem(10);
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
-      background: $color-surface;
-      color: $color-ink;
-      font: inherit;
-      font-weight: 400;
-    }
   }
 
   &__test {

@@ -25,28 +25,29 @@ function patchLayout(partial: Partial<LayoutItem>) {
   emit('layout', { ...props.item, ...partial })
 }
 
-function setColumn(raw: string) {
-  const column = Number(raw)
-  if (!Number.isFinite(column)) {
+function setColumn(raw: number | null) {
+  if (raw == null || !Number.isFinite(raw)) {
     return
   }
-  patchLayout({ x: column - 1 })
+  patchLayout({ x: raw - 1 })
 }
 
-function setRow(raw: string) {
-  const row = Number(raw)
-  if (!Number.isFinite(row)) {
+function setRow(raw: number | null) {
+  if (raw == null || !Number.isFinite(raw)) {
     return
   }
-  patchLayout({ y: row - 1 })
+  patchLayout({ y: raw - 1 })
 }
 
-function setWidth(raw: string) {
-  const width = Number(raw)
-  if (!Number.isFinite(width)) {
+function setWidth(raw: number | null) {
+  if (raw == null || !Number.isFinite(raw)) {
     return
   }
-  patchLayout({ w: width })
+  patchLayout({ w: raw })
+}
+
+function setRows(raw: number | null) {
+  patch({ rows: raw == null || !Number.isFinite(raw) ? 4 : raw })
 }
 
 function updateOption(index: number, partial: Partial<FormField['options'][number]>) {
@@ -69,183 +70,112 @@ function removeOption(index: number) {
 
 <template>
   <div class="miraicms-form-settings">
-    <p class="miraicms-form-settings__type">
+    <div class="miraicms-form-settings__type">
       {{ FIELD_LABELS[field.type] }}
-    </p>
+    </div>
 
-    <label class="miraicms-form-settings__field">
-      <span>Label</span>
-      <input
-        :value="field.label"
-        type="text"
-        maxlength="200"
-        @input="patch({ label: ($event.target as HTMLInputElement).value })"
-      >
-    </label>
+    <MiraiCmsTextField
+      :model-value="field.label"
+      :field-key="`${field.id}-label`"
+      :field="{ type: 'text', label: 'Label', maxLength: 200 }"
+      @update:model-value="patch({ label: String($event ?? '') })"
+    />
 
-    <label
+    <MiraiCmsTextField
       v-if="field.type !== 'button'"
-      class="miraicms-form-settings__field"
-    >
-      <span>Name</span>
-      <input
-        :value="field.key"
-        type="text"
-        maxlength="64"
-        spellcheck="false"
-        @input="patch({ key: ($event.target as HTMLInputElement).value })"
-      >
-    </label>
+      :model-value="field.key"
+      :field-key="`${field.id}-key`"
+      :field="{ type: 'text', label: 'Name', maxLength: 64 }"
+      @update:model-value="patch({ key: String($event ?? '') })"
+    />
 
-    <label
-      v-if="textLike"
-      class="miraicms-form-settings__field"
-    >
-      <span>Placeholder</span>
-      <input
-        :value="field.placeholder"
-        type="text"
-        maxlength="200"
-        @input="patch({ placeholder: ($event.target as HTMLInputElement).value })"
-      >
-    </label>
+    <MiraiCmsTextField
+      v-if="textLike || field.type === 'select'"
+      :model-value="field.placeholder"
+      :field-key="`${field.id}-placeholder`"
+      :field="{ type: 'text', label: field.type === 'select' ? 'Empty option' : 'Placeholder', maxLength: 200 }"
+      @update:model-value="patch({ placeholder: String($event ?? '') })"
+    />
 
-    <label
-      v-if="field.type === 'select'"
-      class="miraicms-form-settings__field"
-    >
-      <span>Empty option</span>
-      <input
-        :value="field.placeholder"
-        type="text"
-        maxlength="200"
-        @input="patch({ placeholder: ($event.target as HTMLInputElement).value })"
-      >
-    </label>
-
-    <label
+    <MiraiCmsTrueFalseField
       v-if="field.type !== 'html' && field.type !== 'button' && field.type !== 'hidden'"
-      class="miraicms-form-settings__check"
-    >
-      <input
-        :checked="field.required"
-        type="checkbox"
-        @change="patch({ required: ($event.target as HTMLInputElement).checked })"
-      >
-      <span>Required</span>
-    </label>
+      :model-value="field.required"
+      :field-key="`${field.id}-required`"
+      :field="{ type: 'true_false', label: 'Required' }"
+      @update:model-value="patch({ required: $event === true })"
+    />
 
-    <label
+    <MiraiCmsTextField
       v-if="field.type !== 'hidden' && field.type !== 'html' && field.type !== 'button'"
-      class="miraicms-form-settings__field"
-    >
-      <span>Help text</span>
-      <input
-        :value="field.help"
-        type="text"
-        maxlength="400"
-        @input="patch({ help: ($event.target as HTMLInputElement).value })"
-      >
-    </label>
+      :model-value="field.help"
+      :field-key="`${field.id}-help`"
+      :field="{ type: 'text', label: 'Help text', maxLength: 400 }"
+      @update:model-value="patch({ help: String($event ?? '') })"
+    />
 
-    <label
+    <MiraiCmsNumberField
       v-if="field.type === 'textarea'"
-      class="miraicms-form-settings__field"
-    >
-      <span>Rows</span>
-      <input
-        :value="field.rows"
-        type="number"
-        min="2"
-        max="20"
-        @input="patch({ rows: Number(($event.target as HTMLInputElement).value) })"
-      >
-    </label>
+      :model-value="field.rows"
+      :field-key="`${field.id}-rows`"
+      :field="{ type: 'number', label: 'Rows', min: 2, max: 20, step: 1 }"
+      @update:model-value="setRows"
+    />
 
     <div
       v-if="field.type === 'number'"
       class="miraicms-form-settings__row"
     >
-      <label class="miraicms-form-settings__field">
-        <span>Min</span>
-        <input
-          :value="field.min"
-          type="text"
-          inputmode="decimal"
-          @input="patch({ min: ($event.target as HTMLInputElement).value })"
-        >
-      </label>
-      <label class="miraicms-form-settings__field">
-        <span>Max</span>
-        <input
-          :value="field.max"
-          type="text"
-          inputmode="decimal"
-          @input="patch({ max: ($event.target as HTMLInputElement).value })"
-        >
-      </label>
-      <label class="miraicms-form-settings__field">
-        <span>Step</span>
-        <input
-          :value="field.step"
-          type="text"
-          inputmode="decimal"
-          @input="patch({ step: ($event.target as HTMLInputElement).value })"
-        >
-      </label>
+      <MiraiCmsTextField
+        :model-value="field.min"
+        :field-key="`${field.id}-min`"
+        :field="{ type: 'text', label: 'Min' }"
+        @update:model-value="patch({ min: String($event ?? '') })"
+      />
+      <MiraiCmsTextField
+        :model-value="field.max"
+        :field-key="`${field.id}-max`"
+        :field="{ type: 'text', label: 'Max' }"
+        @update:model-value="patch({ max: String($event ?? '') })"
+      />
+      <MiraiCmsTextField
+        :model-value="field.step"
+        :field-key="`${field.id}-step`"
+        :field="{ type: 'text', label: 'Step' }"
+        @update:model-value="patch({ step: String($event ?? '') })"
+      />
     </div>
 
-    <label
+    <MiraiCmsTextField
       v-if="field.type === 'file'"
-      class="miraicms-form-settings__field"
-    >
-      <span>Accepted types</span>
-      <input
-        :value="field.accept"
-        type="text"
-        maxlength="200"
-        placeholder=".pdf,image/*"
-        @input="patch({ accept: ($event.target as HTMLInputElement).value })"
-      >
-    </label>
+      :model-value="field.accept"
+      :field-key="`${field.id}-accept`"
+      :field="{ type: 'text', label: 'Accepted types', placeholder: '.pdf,image/*', maxLength: 200 }"
+      @update:model-value="patch({ accept: String($event ?? '') })"
+    />
 
-    <label
+    <MiraiCmsTextField
       v-if="field.type === 'hidden'"
-      class="miraicms-form-settings__field"
-    >
-      <span>Value</span>
-      <input
-        :value="field.value"
-        type="text"
-        maxlength="2000"
-        @input="patch({ value: ($event.target as HTMLInputElement).value })"
-      >
-    </label>
+      :model-value="field.value"
+      :field-key="`${field.id}-value`"
+      :field="{ type: 'text', label: 'Value', maxLength: 2000 }"
+      @update:model-value="patch({ value: String($event ?? '') })"
+    />
 
-    <label
+    <MiraiCmsTextareaField
       v-if="field.type === 'html'"
-      class="miraicms-form-settings__field"
-    >
-      <span>HTML</span>
-      <textarea
-        :value="field.html"
-        rows="8"
-        @input="patch({ html: ($event.target as HTMLTextAreaElement).value })"
-      />
-    </label>
+      :model-value="field.html"
+      :field-key="`${field.id}-html`"
+      :field="{ type: 'textarea', label: 'HTML', rows: 8 }"
+      @update:model-value="patch({ html: String($event ?? '') })"
+    />
 
-    <label
+    <MiraiCmsTextField
       v-if="field.type === 'button'"
-      class="miraicms-form-settings__field"
-    >
-      <span>Button text</span>
-      <input
-        :value="field.buttonLabel"
-        type="text"
-        maxlength="80"
-        @input="patch({ buttonLabel: ($event.target as HTMLInputElement).value })"
-      >
-    </label>
+      :model-value="field.buttonLabel"
+      :field-key="`${field.id}-button`"
+      :field="{ type: 'text', label: 'Button text', maxLength: 80 }"
+      @update:model-value="patch({ buttonLabel: String($event ?? '') })"
+    />
 
     <div
       v-if="choice"
@@ -257,83 +187,69 @@ function removeOption(index: number) {
         :key="index"
         class="miraicms-form-settings__option"
       >
-        <input
-          :value="option.label"
-          type="text"
-          aria-label="Option label"
-          placeholder="Label"
-          @input="updateOption(index, { label: ($event.target as HTMLInputElement).value })"
-        >
-        <input
-          :value="option.value"
-          type="text"
-          aria-label="Option value"
-          placeholder="Value"
-          spellcheck="false"
-          @input="updateOption(index, { value: ($event.target as HTMLInputElement).value })"
-        >
-        <button
-          type="button"
+        <MiraiCmsTextField
+          :model-value="option.label"
+          :field-key="`${field.id}-option-label-${index}`"
+          :field="{ type: 'text', label: 'Label' }"
+          @update:model-value="updateOption(index, { label: String($event ?? '') })"
+        />
+        <MiraiCmsTextField
+          :model-value="option.value"
+          :field-key="`${field.id}-option-value-${index}`"
+          :field="{ type: 'text', label: 'Value' }"
+          @update:model-value="updateOption(index, { value: String($event ?? '') })"
+        />
+        <MiraiCmsUiButton
+          tag="button"
+          :variant="['red', 'small']"
           aria-label="Remove option"
           @click="removeOption(index)"
         >
-          ×
-        </button>
+          Remove
+        </MiraiCmsUiButton>
       </div>
-      <button
-        type="button"
-        class="miraicms-form-settings__add"
+      <MiraiCmsUiButton
+        tag="button"
+        variant="secondary"
         @click="addOption"
       >
         Add option
-      </button>
+      </MiraiCmsUiButton>
     </div>
 
     <div class="miraicms-form-settings__row">
-      <label class="miraicms-form-settings__field">
-        <span>Column</span>
-        <input
-          :value="item.x + 1"
-          type="number"
-          min="1"
-          :max="GRID_COLUMNS"
-          @change="setColumn(($event.target as HTMLInputElement).value)"
-        >
-      </label>
-      <label class="miraicms-form-settings__field">
-        <span>Row</span>
-        <input
-          :value="item.y + 1"
-          type="number"
-          min="1"
-          max="401"
-          @change="setRow(($event.target as HTMLInputElement).value)"
-        >
-      </label>
-      <label class="miraicms-form-settings__field">
-        <span>Width</span>
-        <input
-          :value="item.w"
-          type="number"
-          min="1"
-          :max="GRID_COLUMNS"
-          @change="setWidth(($event.target as HTMLInputElement).value)"
-        >
-      </label>
+      <MiraiCmsNumberField
+        :model-value="item.x + 1"
+        :field-key="`${field.id}-column`"
+        :field="{ type: 'number', label: 'Column', min: 1, max: GRID_COLUMNS, step: 1 }"
+        @update:model-value="setColumn"
+      />
+      <MiraiCmsNumberField
+        :model-value="item.y + 1"
+        :field-key="`${field.id}-row`"
+        :field="{ type: 'number', label: 'Row', min: 1, max: 401, step: 1 }"
+        @update:model-value="setRow"
+      />
+      <MiraiCmsNumberField
+        :model-value="item.w"
+        :field-key="`${field.id}-width`"
+        :field="{ type: 'number', label: 'Width', min: 1, max: GRID_COLUMNS, step: 1 }"
+        @update:model-value="setWidth"
+      />
     </div>
 
-    <button
-      type="button"
-      class="miraicms-form-settings__remove"
+    <MiraiCmsUiButton
+      tag="button"
+      variant="red"
       @click="emit('remove')"
     >
       Remove field
-    </button>
+    </MiraiCmsUiButton>
   </div>
 </template>
 
 <style scoped lang="scss">
-@use "../assets/admin" as *;
+@use "../assets/styles" as *;
 
 .miraicms-form-settings {
   display: flex;
@@ -347,41 +263,6 @@ function removeOption(index: number) {
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: $color-muted;
-  }
-
-  &__field,
-  &__check {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(4);
-    margin: 0;
-    font-size: math-rem(13);
-    color: $color-ink;
-
-    span {
-      font-weight: 600;
-    }
-
-    input,
-    textarea {
-      width: 100%;
-      padding: math-rem(8) math-rem(10);
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
-      background: $color-surface;
-      color: $color-ink;
-      font: inherit;
-    }
-  }
-
-  &__check {
-    flex-direction: row;
-    align-items: center;
-    gap: math-rem(8);
-
-    input {
-      width: auto;
-    }
   }
 
   &__row {
@@ -403,36 +284,9 @@ function removeOption(index: number) {
 
   &__option {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) math-rem(32);
-    gap: math-rem(6);
-
-    input,
-    button {
-      min-width: 0;
-      padding: math-rem(8);
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
-      background: $color-surface;
-      color: $color-ink;
-      font: inherit;
-    }
-  }
-
-  &__add,
-  &__remove {
-    align-self: flex-start;
-    padding: math-rem(6) math-rem(10);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background: $color-surface;
-    color: $color-ink;
-    font: inherit;
-    cursor: pointer;
-  }
-
-  &__remove {
-    color: $color-danger;
-    border-color: $color-danger;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    gap: math-rem(8);
+    align-items: end;
   }
 }
 </style>

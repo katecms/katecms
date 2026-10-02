@@ -249,43 +249,44 @@ onBeforeUnmount(endDrag)
     tabindex="0"
     @keydown="onKeydown"
   >
-    <aside class="miraicms-form-builder__palette">
-      <p class="miraicms-form-builder__heading">
+    <div class="miraicms-form-builder__palette">
+      <div class="miraicms-form-builder__heading">
         Fields
-      </p>
-      <button
+      </div>
+      <MiraiCmsUiButton
         v-for="type in FIELD_TYPES"
         :key="type"
-        type="button"
+        tag="button"
+        variant="secondary"
         class="miraicms-form-builder__add"
         @click="add(type)"
       >
         {{ FIELD_LABELS[type] }}
-      </button>
-    </aside>
+      </MiraiCmsUiButton>
+    </div>
 
-    <section class="miraicms-form-builder__stage">
+    <div class="miraicms-form-builder__stage">
       <div class="miraicms-form-builder__toolbar">
         <div class="miraicms-form-builder__breakpoints">
-          <button
+          <MiraiCmsUiButton
             v-for="item in BREAKPOINTS"
             :key="item"
-            type="button"
-            class="miraicms-form-builder__breakpoint"
-            :class="{ 'is-active': breakpoint === item }"
+            tag="button"
+            :variant="breakpoint === item ? undefined : 'secondary'"
+            :active="breakpoint === item"
             @click="breakpoint = item"
           >
             {{ item === 'desktop' ? 'Desktop' : item === 'tablet' ? 'Tablet' : 'Phone' }}
-          </button>
+          </MiraiCmsUiButton>
         </div>
-        <button
+        <MiraiCmsUiButton
           v-if="breakpoint !== 'desktop'"
-          type="button"
-          class="miraicms-form-builder__match"
+          tag="button"
+          variant="secondary"
           @click="matchDesktop"
         >
           Match desktop
-        </button>
+        </MiraiCmsUiButton>
         <span class="miraicms-form-builder__hint">60 columns. Drag to move, drag the edge to resize. Arrows nudge, Shift changes width.</span>
       </div>
       <div class="miraicms-form-builder__scroll">
@@ -324,9 +325,9 @@ onBeforeUnmount(endDrag)
           </div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <aside class="miraicms-form-builder__inspector">
+    <div class="miraicms-form-builder__inspector">
       <FieldSettings
         v-if="selected && selectedItem"
         :field="selected"
@@ -339,51 +340,46 @@ onBeforeUnmount(endDrag)
         v-else
         class="miraicms-form-builder__form"
       >
-        <p class="miraicms-form-builder__heading">
+        <div class="miraicms-form-builder__heading">
           Form
-        </p>
-        <label>
-          <span>Name</span>
-          <input
-            v-model="name"
-            type="text"
-            maxlength="160"
-          >
-        </label>
-        <label>
-          <span>Slug</span>
-          <input
-            v-model="slug"
-            type="text"
-            maxlength="80"
-            spellcheck="false"
-          >
-        </label>
-        <label>
-          <span>Status</span>
-          <select v-model="status">
-            <option value="draft">
-              Draft
-            </option>
-            <option value="published">
-              Published
-            </option>
-          </select>
-        </label>
-        <p class="miraicms-form-builder__usage">
-          Published forms render with <code>&lt;MiraiForm form="{{ slug }}" /&gt;</code>
-        </p>
+        </div>
+        <MiraiCmsTextField
+          v-model="name"
+          field-key="form-name"
+          :field="{ type: 'text', label: 'Name', maxLength: 160 }"
+        />
+        <MiraiCmsTextField
+          v-model="slug"
+          field-key="form-slug"
+          :field="{ type: 'text', label: 'Slug', maxLength: 80 }"
+        />
+        <MiraiCmsSelectField
+          v-model="status"
+          field-key="form-status"
+          :field="{
+            type: 'select',
+            label: 'Status',
+            returnFormat: 'value',
+            choices: [
+              { val: 'draft', lbl: 'Draft' },
+              { val: 'published', lbl: 'Published' },
+            ],
+          }"
+        />
+        <div class="miraicms-form-builder__usage">
+          Published forms render with <span>&lt;MiraiForm form="{{ slug }}" /&gt;</span>
+        </div>
       </div>
-    </aside>
+    </div>
   </div>
 </template>
 
 <style scoped lang="scss">
-@use "../assets/admin" as *;
+@use "../assets/styles" as *;
 
 .miraicms-form-builder {
   display: grid;
-  grid-template-columns: math-rem(196) minmax(0, 1fr) math-rem(300);
+  grid-template-columns: math-rem(200) minmax(0, 1fr) math-rem(300);
   flex: 1;
   min-height: 0;
   min-width: 0;
@@ -394,7 +390,7 @@ onBeforeUnmount(endDrag)
   &__inspector {
     min-height: 0;
     overflow: auto;
-    padding: math-rem(12);
+    padding: math-rem(8);
     background: $color-surface;
   }
 
@@ -416,22 +412,9 @@ onBeforeUnmount(endDrag)
   }
 
   &__add {
-    display: block;
     width: 100%;
     margin-bottom: math-rem(6);
-    padding: math-rem(8) math-rem(10);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background: $color-bg;
-    color: $color-ink;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-
-    &:hover {
-      border-color: $color-accent;
-      background: $color-accent-wash;
-    }
+    justify-content: flex-start;
   }
 
   &__stage {
@@ -454,32 +437,8 @@ onBeforeUnmount(endDrag)
 
   &__breakpoints {
     display: flex;
-    padding: math-rem(2);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background: $color-bg;
-  }
-
-  &__breakpoint,
-  &__match {
-    padding: math-rem(6) math-rem(10);
-    border: 0;
-    border-radius: math-rem(4);
-    background: transparent;
-    color: $color-ink;
-    font: inherit;
-    cursor: pointer;
-  }
-
-  &__breakpoint.is-active {
-    background: $color-surface;
-    color: $color-accent;
-    box-shadow: $shadow-sm;
-  }
-
-  &__match {
-    border: 1px solid $color-border;
-    background: $color-surface;
+    flex-wrap: wrap;
+    gap: math-rem(6);
   }
 
   &__hint {
@@ -591,26 +550,6 @@ onBeforeUnmount(endDrag)
     display: flex;
     flex-direction: column;
     gap: math-rem(12);
-
-    label {
-      display: flex;
-      flex-direction: column;
-      gap: math-rem(4);
-      font-size: math-rem(13);
-      font-weight: 600;
-    }
-
-    input,
-    select {
-      width: 100%;
-      padding: math-rem(8) math-rem(10);
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
-      background: $color-surface;
-      color: $color-ink;
-      font: inherit;
-      font-weight: 400;
-    }
   }
 
   &__usage {
@@ -620,7 +559,7 @@ onBeforeUnmount(endDrag)
     line-height: 1.5;
     font-weight: 400;
 
-    code {
+    span {
       color: $color-ink;
     }
   }

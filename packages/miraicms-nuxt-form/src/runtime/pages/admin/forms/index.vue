@@ -100,39 +100,38 @@ onMounted(load)
       @close="error = ''"
     />
 
-    <form
+    <div
       class="miraicms-form-list__create"
-      @submit.prevent="create"
+      @keydown.enter.prevent="create"
     >
-      <input
+      <MiraiCmsTextField
         v-model="name"
-        type="text"
-        maxlength="160"
-        placeholder="Form name"
-        aria-label="Form name"
-      >
+        field-key="form-create-name"
+        :field="{ type: 'text', label: 'Form name', placeholder: 'Form name', maxLength: 160 }"
+      />
       <MiraiCmsUiButton
         tag="button"
-        type="submit"
+        type="button"
         aria-label="Create form"
         :disabled="creating || !name.trim()"
+        @click="create"
       >
         {{ creating ? 'Creating…' : 'Create form' }}
       </MiraiCmsUiButton>
-    </form>
+    </div>
 
-    <p
+    <div
       v-if="loading"
       class="miraicms-form-list__hint"
     >
       Loading…
-    </p>
-    <p
+    </div>
+    <div
       v-else-if="!forms.length"
       class="miraicms-form-list__hint"
     >
       No forms yet.
-    </p>
+    </div>
     <div
       v-else
       class="miraicms-form-list__table"
@@ -154,7 +153,7 @@ onMounted(load)
         role="row"
       >
         <span role="cell">{{ form.name }}</span>
-        <span role="cell"><code>{{ form.slug }}</code></span>
+        <span role="cell"><span>{{ form.slug }}</span></span>
         <span role="cell">{{ form.status === 'published' ? 'Published' : 'Draft' }}</span>
         <span role="cell">{{ formatDate(form.updatedAt) }}</span>
         <span
@@ -182,7 +181,7 @@ onMounted(load)
 </template>
 
 <style scoped lang="scss">
-@use "../../../assets/admin" as *;
+@use "../../../assets/styles" as *;
 
 .miraicms-form-list {
   display: flex;
@@ -202,17 +201,11 @@ onMounted(load)
     display: flex;
     flex-wrap: wrap;
     gap: math-rem(8);
-    align-items: center;
+    align-items: end;
 
-    input {
-      width: math-rem(280);
-      max-width: 100%;
-      padding: math-rem(8) math-rem(10);
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
-      background: $color-surface;
-      color: $color-ink;
-      font: inherit;
+    :deep(.miraicms-field) {
+      flex: 1 1 math-rem(240);
+      max-width: math-rem(360);
     }
   }
 

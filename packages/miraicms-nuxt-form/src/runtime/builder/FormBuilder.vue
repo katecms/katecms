@@ -594,7 +594,7 @@ onBeforeUnmount(() => {
                 aria-hidden="true"
               >
                 <line
-                  stroke-width="2.5"
+                  stroke-width="3"
                   stroke-linecap="round"
                   x1="10.27"
                   y1="15"
@@ -602,7 +602,7 @@ onBeforeUnmount(() => {
                   y2="15"
                 />
                 <line
-                  stroke-width="2.5"
+                  stroke-width="3"
                   stroke-linecap="round"
                   x1="15"
                   y1="15"
@@ -610,7 +610,7 @@ onBeforeUnmount(() => {
                   y2="15"
                 />
                 <line
-                  stroke-width="2.5"
+                  stroke-width="3"
                   stroke-linecap="round"
                   x1="19.73"
                   y1="15"
@@ -915,7 +915,6 @@ onBeforeUnmount(() => {
     border-radius: $border-radius;
     background: $color-surface;
     color: $color-ink;
-    font: inherit;
     font-size: math-rem(13);
     cursor: pointer;
 
@@ -937,8 +936,6 @@ onBeforeUnmount(() => {
 
   &__step {
     position: relative;
-    gap: math-rem(6);
-    padding: 0 math-rem(6) 0 math-rem(10);
   }
 
   &__step-label,
@@ -951,14 +948,33 @@ onBeforeUnmount(() => {
   }
 
   &__step-label {
-    padding: 0;
+    padding: 0 math-rem(38) 0 math-rem(36);
+    line-height: math-rem(30);
+  }
+
+  &__step-menu,
+  &__step-handle {
+    position: absolute;
   }
 
   &__step-menu {
     display: flex;
     padding: 0;
+    width: 22px;
+    height: 22px;
+    border: 1px solid $color-border;
+    border-radius: $border-radius-inter;
+    transition: border .2s;
+    top: math-rem(4);
+    right: math-rem(8);
+
+    &:hover {
+      border-color: $color-muted;
+    }
 
     svg {
+      width: 100%;
+      height: auto;
       transform: rotate(90deg);
       transition: transform 0.2s;
     }
@@ -1006,8 +1022,13 @@ onBeforeUnmount(() => {
 
   &__step-handle {
     display: flex;
+    justify-content: center;
     color: $color-muted;
     cursor: grab;
+    width: 20px;
+    height: 20px;
+    top: math-rem(5);
+    left: math-rem(8);
   }
 
   &__step.is-floating {

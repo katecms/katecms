@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { $fetch } from '#imports'
 import type { FormField, LayoutItem, PublicForm, UploadedFile } from '../form/model'
 import { submissionErrors } from '../form/model'
+import { stepIconSvg } from '../form/icons'
 
 /**
  * Unstyled public form.
@@ -37,7 +38,23 @@ const cells = computed(() => {
       return { field, desktop, tablet, phone }
     })
     .filter((cell): cell is { field: FormField, desktop: LayoutItem, tablet: LayoutItem, phone: LayoutItem } => !!cell)
-    .sort((a, b) => a.desktop.y - b.desktop.y || a.desktop.x - b.desktop.x)
+    .sort((a, b) => {
+      const stepA = content.steps.findIndex(step => step.id === a.field.stepId)
+      const stepB = content.steps.findIndex(step => step.id === b.field.stepId)
+      return stepA - stepB || a.desktop.y - b.desktop.y || a.desktop.x - b.desktop.x
+    })
+})
+
+const stepGroups = computed(() => {
+  const content = definition.value?.content
+  if (!content) {
+    return []
+  }
+  return content.steps.map((step, index) => ({
+    step,
+    number: index + 1,
+    cells: cells.value.filter(cell => cell.field.stepId === step.id),
+  }))
 })
 
 watch(() => props.form, () => {
@@ -117,6 +134,11 @@ function findLayout(items: LayoutItem[], fieldId: string): LayoutItem | undefine
   return items.find(item => item.fieldId === fieldId)
 }
 
+function stepNumber(stepId: string): number {
+  const index = definition.value?.content.steps.findIndex(step => step.id === stepId) ?? -1
+  return index < 0 ? 1 : index + 1
+}
+
 function controlId(field: FormField): string {
   return `mirai-${field.id}`
 }
@@ -151,16 +173,63 @@ function isText(field: FormField): boolean {
     >
       {{ alertMessage }}
     </p>
-    <div
-      v-if="definition"
-      class="mirai-form__grid"
-    >
+    <template v-if="definition">
       <div
-        v-for="cell in cells"
+        v-for="group in stepGroups"
+        :key="group.step.id"
+        class="mirai-form__step"
+        :data-step="group.number"
+      >
+        <div
+          v-if="definition.content.stepHeader.show"
+          class="mirai-form__step-header"
+        >
+          <span
+            v-if="definition.content.stepHeader.showIcon && stepIconSvg(group.step.icon)"
+            class="mirai-form__step-icon"
+            v-html="stepIconSvg(group.step.icon)"
+          />
+          <span
+            v-if="definition.content.stepHeader.showLabel"
+            class="mirai-form__step-label"
+          >
+            <span
+              v-if="stepIconSvg(group.step.labelPrefix)"
+              class="mirai-form__step-affix"
+              v-html="stepIconSvg(group.step.labelPrefix)"
+            />
+            <span>{{ group.step.label }}</span>
+            <span
+              v-if="stepIconSvg(group.step.labelSuffix)"
+              class="mirai-form__step-affix"
+              v-html="stepIconSvg(group.step.labelSuffix)"
+            />
+          </span>
+          <span
+            v-if="definition.content.stepHeader.showSubtitle"
+            class="mirai-form__step-subtitle"
+          >
+            <span
+              v-if="stepIconSvg(group.step.subtitlePrefix)"
+              class="mirai-form__step-affix"
+              v-html="stepIconSvg(group.step.subtitlePrefix)"
+            />
+            <span>{{ group.step.subtitle }}</span>
+            <span
+              v-if="stepIconSvg(group.step.subtitleSuffix)"
+              class="mirai-form__step-affix"
+              v-html="stepIconSvg(group.step.subtitleSuffix)"
+            />
+          </span>
+        </div>
+        <div class="mirai-form__grid">
+          <div
+            v-for="cell in group.cells"
         :key="cell.field.id"
         class="mirai-form__cell"
         :data-field="cell.field.key"
         :data-type="cell.field.type"
+        :data-step="stepNumber(cell.field.stepId)"
         :data-required="cell.field.required ? 'true' : undefined"
         :data-invalid="fieldErrors[cell.field.key] ? 'true' : undefined"
         :data-x="cell.desktop.x"
@@ -339,7 +408,9 @@ function isText(field: FormField): boolean {
         >
           {{ fieldErrors[cell.field.key] }}
         </p>
+          </div>
+        </div>
       </div>
-    </div>
+    </template>
   </form>
 </template>

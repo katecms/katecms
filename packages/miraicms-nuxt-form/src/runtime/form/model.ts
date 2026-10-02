@@ -1,6 +1,7 @@
 export const GRID_COLUMNS = 60
 export const ROW_HEIGHT = 72
 export const MAX_FIELDS = 200
+export const MAX_STEPS = 20
 export const MAX_TEXT = 20000
 
 export const BREAKPOINTS = ['desktop', 'tablet', 'phone'] as const
@@ -44,9 +45,28 @@ export interface FormFieldOption {
   value: string
 }
 
+export interface FormStepHeader {
+  show: boolean
+  showLabel: boolean
+  showSubtitle: boolean
+  showIcon: boolean
+}
+
+export interface FormStep {
+  id: string
+  label: string
+  subtitle: string
+  icon: string
+  labelPrefix: string
+  labelSuffix: string
+  subtitlePrefix: string
+  subtitleSuffix: string
+}
+
 export interface FormField {
   id: string
   type: FieldType
+  stepId: string
   key: string
   label: string
   placeholder: string
@@ -71,6 +91,8 @@ export interface LayoutItem {
 }
 
 export interface FormContent {
+  steps: FormStep[]
+  stepHeader: FormStepHeader
   fields: FormField[]
   layouts: Record<Breakpoint, LayoutItem[]>
 }
@@ -212,25 +234,149 @@ export function defaultWidth(type: FieldType, breakpoint: Breakpoint): number {
 
 export function createEmptyContent(): FormContent {
   return addField({
+    steps: [createStep(1)],
+    stepHeader: defaultStepHeader(),
     fields: [],
     layouts: { desktop: [], tablet: [], phone: [] },
   }, 'button')
 }
 
-export function addField(content: FormContent, type: FieldType): FormContent {
-  if (content.fields.length >= MAX_FIELDS) {
+export function addStep(content: FormContent): FormContent {
+  const steps = content.steps.length ? content.steps : [createStep(1)]
+  if (steps.length >= MAX_STEPS) {
+    return { ...content, steps }
+  }
+  return {
+    ...content,
+    steps: [...steps, createStep(steps.length + 1)],
+  }
+}
+
+const AUTO_STEP_LABEL = /^Step \d+$/
+
+function renumberAutoStepLabels(steps: FormStep[]): FormStep[] {
+  return steps.map((step, index) => (
+    AUTO_STEP_LABEL.test(step.label) ? { ...step, label: `Step ${index + 1}` } : step
+  ))
+}
+
+export function reorderSteps(content: FormContent, from: number, insertAt: number): FormContent {
+  const length = content.steps.length
+  if (
+    from < 0 || from >= length
+    || insertAt < 0 || insertAt > length
+    || insertAt === from || insertAt === from + 1
+  ) {
     return content
   }
-  const field = createField(type, content.fields)
+  const steps = [...content.steps]
+  const [moved] = steps.splice(from, 1)
+  if (!moved) {
+    return content
+  }
+  const target = from < insertAt ? insertAt - 1 : insertAt
+  steps.splice(target, 0, moved)
+  return {
+    ...content,
+    steps: renumberAutoStepLabels(steps),
+  }
+}
+
+export function cloneStep(content: FormContent, stepId: string): FormContent {
+  const index = content.steps.findIndex(step => step.id === stepId)
+  const source = index < 0 ? undefined : content.steps[index]
+  const sourceFields = content.fields.filter(field => field.stepId === stepId)
+  if (!source || content.steps.length >= MAX_STEPS || content.fields.length + sourceFields.length > MAX_FIELDS) {
+    return content
+  }
+  const nextStep: FormStep = {
+    ...source,
+    id: `s_${crypto.randomUUID()}`,
+  }
+  const existing = [...content.fields]
+  const idMap = new Map<string, string>()
+  const clonedFields = sourceFields.map((field) => {
+    const id = `f_${crypto.randomUUID()}`
+    idMap.set(field.id, id)
+    const copy: FormField = {
+      ...field,
+      id,
+      stepId: nextStep.id,
+      key: uniqueKey(field.type, existing),
+      options: field.options.map(option => ({ ...option })),
+    }
+    existing.push(copy)
+    return copy
+  })
   const layouts = { ...content.layouts }
   for (const breakpoint of BREAKPOINTS) {
-    layouts[breakpoint] = placeField(content.layouts[breakpoint], field.id, defaultWidth(type, breakpoint))
+    const copies = content.layouts[breakpoint].flatMap((item) => {
+      const fieldId = idMap.get(item.fieldId)
+      return fieldId ? [{ ...item, fieldId }] : []
+    })
+    layouts[breakpoint] = [...content.layouts[breakpoint], ...copies]
   }
-  return { fields: [...content.fields, field], layouts }
+  const steps = [...content.steps]
+  steps.splice(index + 1, 0, nextStep)
+  return {
+    ...content,
+    steps: renumberAutoStepLabels(steps),
+    fields: [...content.fields, ...clonedFields],
+    layouts,
+  }
+}
+
+export function deleteStep(content: FormContent, stepId: string): FormContent {
+  if (content.steps.length < 2 || !content.steps.some(step => step.id === stepId)) {
+    return content
+  }
+  const removeIds = new Set(content.fields.filter(field => field.stepId === stepId).map(field => field.id))
+  const layouts = { ...content.layouts }
+  for (const breakpoint of BREAKPOINTS) {
+    layouts[breakpoint] = content.layouts[breakpoint].filter(item => !removeIds.has(item.fieldId))
+  }
+  return {
+    ...content,
+    steps: renumberAutoStepLabels(content.steps.filter(step => step.id !== stepId)),
+    fields: content.fields.filter(field => field.stepId !== stepId),
+    layouts,
+  }
+}
+
+export function updateStep(content: FormContent, stepId: string, partial: Partial<FormStep>): FormContent {
+  return {
+    ...content,
+    steps: content.steps.map(step => step.id === stepId ? { ...step, ...partial, id: step.id } : step),
+  }
+}
+
+export function updateStepHeader(content: FormContent, partial: Partial<FormStepHeader>): FormContent {
+  return {
+    ...content,
+    stepHeader: { ...content.stepHeader, ...partial },
+  }
+}
+
+export function addField(content: FormContent, type: FieldType, stepId?: string): FormContent {
+  const steps = content.steps.length ? content.steps : [createStep(1)]
+  const target = stepId && steps.some(step => step.id === stepId) ? stepId : steps[0]!.id
+  if (content.fields.length >= MAX_FIELDS) {
+    return { ...content, steps }
+  }
+  const field = createField(type, content.fields, target)
+  const layouts = { ...content.layouts }
+  for (const breakpoint of BREAKPOINTS) {
+    const current = content.layouts[breakpoint]
+    const sameStep = current.filter(item => stepIdOf(content, item.fieldId) === target)
+    const otherSteps = current.filter(item => stepIdOf(content, item.fieldId) !== target)
+    layouts[breakpoint] = [...otherSteps, ...placeField(sameStep, field.id, defaultWidth(type, breakpoint))]
+  }
+  return { ...content, steps, fields: [...content.fields, field], layouts }
 }
 
 export function removeField(content: FormContent, fieldId: string): FormContent {
   return {
+    ...content,
     fields: content.fields.filter(field => field.id !== fieldId),
     layouts: {
       desktop: content.layouts.desktop.filter(item => item.fieldId !== fieldId),
@@ -248,12 +394,16 @@ export function replaceField(content: FormContent, field: FormField): FormConten
 }
 
 export function setLayoutItem(content: FormContent, breakpoint: Breakpoint, item: LayoutItem, resolve = true): FormContent {
-  const items = content.layouts[breakpoint].map(current => current.fieldId === item.fieldId ? clampItem(item) : current)
+  const stepId = stepIdOf(content, item.fieldId)
+  const all = content.layouts[breakpoint]
+  const sameStep = all.filter(entry => entry.fieldId === item.fieldId || stepIdOf(content, entry.fieldId) === stepId)
+  const otherSteps = all.filter(entry => entry.fieldId !== item.fieldId && stepIdOf(content, entry.fieldId) !== stepId)
+  const nextSame = sameStep.map(current => current.fieldId === item.fieldId ? clampItem(item) : current)
   return {
     ...content,
     layouts: {
       ...content.layouts,
-      [breakpoint]: resolve ? resolveLayout(items, item.fieldId) : items,
+      [breakpoint]: [...otherSteps, ...(resolve ? resolveLayout(nextSame, item.fieldId) : nextSame)],
     },
   }
 }
@@ -262,21 +412,29 @@ export function copyDesktopLayout(content: FormContent, breakpoint: Breakpoint):
   if (breakpoint === 'desktop') {
     return content
   }
+  const copied = content.layouts.desktop.map(item => ({ ...item }))
+  const next: LayoutItem[] = []
+  for (const step of content.steps) {
+    next.push(...resolveLayout(copied.filter(item => stepIdOf(content, item.fieldId) === step.id)))
+  }
   return {
     ...content,
     layouts: {
       ...content.layouts,
-      [breakpoint]: resolveLayout(content.layouts.desktop.map(item => ({ ...item }))),
+      [breakpoint]: next,
     },
   }
 }
 
 export function normalizeFormContent(input: unknown): FormContent {
   const source = isRecord(input) ? input : {}
+  const steps = normalizeSteps(source.steps)
+  const stepIds = new Set(steps.map(step => step.id))
+  const fallbackStepId = steps[0]!.id
   const rawFields = Array.isArray(source.fields) ? source.fields : []
   const fields: FormField[] = []
   for (const raw of rawFields.slice(0, MAX_FIELDS)) {
-    const field = normalizeField(raw, fields)
+    const field = normalizeField(raw, fields, stepIds, fallbackStepId)
     if (field) {
       fields.push(field)
     }
@@ -285,27 +443,31 @@ export function normalizeFormContent(input: unknown): FormContent {
   const layouts = {} as FormContent['layouts']
   for (const breakpoint of BREAKPOINTS) {
     const rawItems = Array.isArray(rawLayouts[breakpoint]) ? rawLayouts[breakpoint] : []
-    let placed: LayoutItem[] = []
-    for (const field of fields) {
-      const raw = rawItems.find(item => isRecord(item) && item.fieldId === field.id)
-      if (raw && Number.isFinite(Number(raw.x)) && Number.isFinite(Number(raw.y)) && Number.isFinite(Number(raw.w))) {
-        placed = resolveLayout([
-          ...placed,
-          clampItem({
-            fieldId: field.id,
-            x: Number(raw.x),
-            y: Number(raw.y),
-            w: Number(raw.w),
-          }),
-        ], field.id)
+    const next: LayoutItem[] = []
+    for (const step of steps) {
+      let placed: LayoutItem[] = []
+      for (const field of fields.filter(entry => entry.stepId === step.id)) {
+        const raw = rawItems.find(item => isRecord(item) && item.fieldId === field.id)
+        if (raw && Number.isFinite(Number(raw.x)) && Number.isFinite(Number(raw.y)) && Number.isFinite(Number(raw.w))) {
+          placed = resolveLayout([
+            ...placed,
+            clampItem({
+              fieldId: field.id,
+              x: Number(raw.x),
+              y: Number(raw.y),
+              w: Number(raw.w),
+            }),
+          ], field.id)
+        }
+        else {
+          placed = placeField(placed, field.id, defaultWidth(field.type, breakpoint))
+        }
       }
-      else {
-        placed = placeField(placed, field.id, defaultWidth(field.type, breakpoint))
-      }
+      next.push(...placed)
     }
-    layouts[breakpoint] = placed
+    layouts[breakpoint] = next
   }
-  return { fields, layouts }
+  return { steps, stepHeader: normalizeStepHeader(source.stepHeader), fields, layouts }
 }
 
 export function parseContent(value: unknown): FormContent {
@@ -359,11 +521,81 @@ export function storesValue(field: FormField): boolean {
   return field.type !== 'html' && field.type !== 'button'
 }
 
-function createField(type: FieldType, existing: FormField[]): FormField {
+function defaultStepHeader(): FormStepHeader {
+  return {
+    show: false,
+    showLabel: true,
+    showSubtitle: false,
+    showIcon: false,
+  }
+}
+
+function createStep(index: number): FormStep {
+  return {
+    id: `s_${crypto.randomUUID()}`,
+    label: `Step ${index}`,
+    subtitle: '',
+    icon: '',
+    labelPrefix: '',
+    labelSuffix: '',
+    subtitlePrefix: '',
+    subtitleSuffix: '',
+  }
+}
+
+function normalizeStepHeader(raw: unknown): FormStepHeader {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    show: source.show === true,
+    showLabel: source.showLabel !== false,
+    showSubtitle: source.showSubtitle === true,
+    showIcon: source.showIcon === true,
+  }
+}
+
+function normalizeSteps(raw: unknown): FormStep[] {
+  const steps: FormStep[] = []
+  if (Array.isArray(raw)) {
+    for (const item of raw.slice(0, MAX_STEPS)) {
+      if (!isRecord(item)) {
+        continue
+      }
+      const id = typeof item.id === 'string' && item.id.trim()
+        ? item.id.trim().slice(0, 80)
+        : `s_${crypto.randomUUID()}`
+      if (steps.some(step => step.id === id)) {
+        continue
+      }
+      const base = createStep(steps.length + 1)
+      steps.push({
+        ...base,
+        id,
+        label: clip(item.label, 80) || base.label,
+        subtitle: clip(item.subtitle, 160),
+        icon: clip(item.icon, 40),
+        labelPrefix: clip(item.labelPrefix, 40),
+        labelSuffix: clip(item.labelSuffix, 40),
+        subtitlePrefix: clip(item.subtitlePrefix, 40),
+        subtitleSuffix: clip(item.subtitleSuffix, 40),
+      })
+    }
+  }
+  if (!steps.length) {
+    steps.push(createStep(1))
+  }
+  return steps
+}
+
+function stepIdOf(content: FormContent, fieldId: string): string {
+  return content.fields.find(field => field.id === fieldId)?.stepId || content.steps[0]?.id || ''
+}
+
+function createField(type: FieldType, existing: FormField[], stepId: string): FormField {
   const key = uniqueKey(type, existing)
   return {
     id: `f_${crypto.randomUUID()}`,
     type,
+    stepId,
     key,
     label: FIELD_LABELS[type],
     placeholder: '',
@@ -386,7 +618,7 @@ function createField(type: FieldType, existing: FormField[]): FormField {
   }
 }
 
-function normalizeField(raw: unknown, existing: FormField[]): FormField | null {
+function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string>, fallbackStepId: string): FormField | null {
   if (!isRecord(raw) || !isFieldType(raw.type)) {
     return null
   }
@@ -400,6 +632,7 @@ function normalizeField(raw: unknown, existing: FormField[]): FormField | null {
   return {
     id,
     type,
+    stepId: typeof raw.stepId === 'string' && stepIds.has(raw.stepId) ? raw.stepId : fallbackStepId,
     key,
     label: clip(raw.label, 200) || FIELD_LABELS[type],
     placeholder: clip(raw.placeholder, 200),

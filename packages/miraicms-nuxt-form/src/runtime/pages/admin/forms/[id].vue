@@ -136,8 +136,8 @@ watch(id, (formId) => {
     color: $color-muted;
   }
 
-  :deep(.miraicms-admin-header) {
-    flex-shrink: 0;
+  :deep(.miraicms-notice) {
+    margin-bottom: math-rem(8);
   }
 }
 </style>

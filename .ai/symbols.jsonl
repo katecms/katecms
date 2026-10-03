@@ -1,6 +1,7 @@
 {"n":"AccordionField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/fields/AccordionField.vue"}
 {"n":"ActualFieldIndex","k":"iface","p":"packages/core/src/indexes/types.ts"}
 {"n":"addField","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"addStep","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"ADMIN_ROLE","k":"const","p":"packages/core/src/config/resolve-roles.ts"}
 {"n":"AdminCollectionMeta","k":"iface","p":"packages/miraicms-nuxt/src/runtime/utils/collections.ts"}
 {"n":"AdminDictionaryMeta","k":"iface","p":"packages/miraicms-nuxt/src/runtime/utils/dictionaries.ts"}
@@ -61,6 +62,7 @@
 {"n":"clampItem","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"clampUtcOffsetMinutes","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/media-library-query.ts"}
 {"n":"clearUserSession","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/session.ts"}
+{"n":"cloneStep","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"cmsAdminChildPath","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/cms-paths.ts"}
 {"n":"cmsRoutePath","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/cms-paths.ts"}
 {"n":"collectDesiredFieldIndexes","k":"fn","p":"packages/core/src/indexes/definitions.ts"}
@@ -160,6 +162,7 @@
 {"n":"deleteMedia","k":"fn","p":"packages/core/src/database/queries/media.ts"}
 {"n":"deleteOption","k":"fn","p":"packages/core/src/database/queries/options.ts"}
 {"n":"deleteRedirects","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/server/utils/redirects.ts"}
+{"n":"deleteStep","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"deleteStoredFile","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/uploads.ts"}
 {"n":"deleteTrashedCollections","k":"fn","p":"packages/core/src/database/queries/collections.ts"}
 {"n":"deleteUser","k":"fn","p":"packages/core/src/database/queries/users.ts"}
@@ -255,6 +258,8 @@
 {"n":"FormListItem","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FormRecord","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FormStatus","k":"type","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FormStep","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FormStepHeader","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FormValues","k":"type","p":"packages/core/src/fields/visibility.ts"}
 {"n":"FULL_SIZE","k":"const","p":"packages/core/src/media/image.ts"}
 {"n":"GalleryField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/fields/GalleryField.vue"}
@@ -345,6 +350,7 @@
 {"n":"isValidBlockId","k":"fn","p":"packages/core/src/blocks.ts"}
 {"n":"isValidRole","k":"fn","p":"packages/core/src/permissions/can.ts"}
 {"n":"isVisible","k":"fn","p":"packages/core/src/fields/visibility.ts"}
+{"n":"knownStepIcon","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/icons.ts"}
 {"n":"LAYOUT_ONLY_FIELD_TYPES","k":"const","p":"packages/core/src/fields/layout.ts"}
 {"n":"LayoutItem","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"linkCollectionDictionary","k":"fn","p":"packages/core/src/database/queries/collection-dictionaries.ts"}
@@ -383,6 +389,7 @@
 {"n":"MAX_INDEX_NAME_BYTES","k":"const","p":"packages/core/src/indexes/definitions.ts"}
 {"n":"MAX_MATCHES_PATTERN_LENGTH","k":"const","p":"packages/core/src/fields/visibility.ts"}
 {"n":"MAX_PASSWORD_LENGTH","k":"const","p":"packages/core/src/auth/account.ts"}
+{"n":"MAX_STEPS","k":"const","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"MAX_TEXT","k":"const","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"maxFileBytes","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/db.ts"}
 {"n":"Media","k":"type","p":"packages/core/src/database/queries/media.ts"}
@@ -415,6 +422,7 @@
 {"n":"migrateSqlite","k":"fn","p":"packages/core/src/database/migrations/sqlite/migrate.ts"}
 {"n":"MigrationsTable","k":"iface","p":"packages/core/src/database/client/schema.ts"}
 {"n":"MIN_PASSWORD_LENGTH","k":"const","p":"packages/core/src/auth/account.ts"}
+{"n":"MIRAICMS_COLLECTION_HOOK","k":"const","p":"packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"}
 {"n":"MiraiCmsAccordionField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/fields/AccordionField.vue"}
 {"n":"MiraiCmsAdminHeader","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/admin/AdminHeader.vue"}
 {"n":"MiraiCmsAppMenu","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/admin/AppMenu.vue"}
@@ -457,6 +465,7 @@
 {"n":"MiraiCmsPageLinkField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/fields/PageLinkField.vue"}
 {"n":"MiraiCmsPasswordField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/fields/PasswordField.vue"}
 {"n":"MiraiCmsPostObjectField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/fields/PostObjectField.vue"}
+{"n":"MiraiCmsPublicPage","k":"iface","p":"packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"}
 {"n":"MiraiCmsRadioField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/fields/RadioField.vue"}
 {"n":"MiraiCmsRangeField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/fields/RangeField.vue"}
 {"n":"MiraiCmsRelationshipField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/fields/RelationshipField.vue"}
@@ -616,6 +625,7 @@
 {"n":"RelationTermValue","k":"iface","p":"packages/core/src/config/types/fields.ts"}
 {"n":"removeField","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"renderTitle","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/utils/title.ts"}
+{"n":"reorderSteps","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"RepeaterField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/fields/RepeaterField.vue"}
 {"n":"replaceField","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"requireCollection","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
@@ -717,6 +727,9 @@
 {"n":"slugify","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/slugify.ts"}
 {"n":"SPREADSHEET_MIME_TYPES","k":"const","p":"packages/miraicms-nuxt/src/runtime/utils/media-library-query.ts"}
 {"n":"SqliteValuePlugin","k":"class","p":"packages/core/src/database/client/values.ts"}
+{"n":"STEP_ICONS","k":"const","p":"packages/miraicms-nuxt-form/src/runtime/form/icons.ts"}
+{"n":"StepIcon","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/icons.ts"}
+{"n":"stepIconSvg","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/icons.ts"}
 {"n":"StoredMediaVariant","k":"iface","p":"packages/core/src/media/types.ts"}
 {"n":"storedVariants","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/media.ts"}
 {"n":"storesValue","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
@@ -768,6 +781,8 @@
 {"n":"updateDictionary","k":"fn","p":"packages/core/src/database/queries/dictionaries.ts"}
 {"n":"updateForm","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/forms.ts"}
 {"n":"updateMedia","k":"fn","p":"packages/core/src/database/queries/media.ts"}
+{"n":"updateStep","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"updateStepHeader","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"updateUser","k":"fn","p":"packages/core/src/database/queries/users.ts"}
 {"n":"UploadedFile","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"uploaderNames","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/media.ts"}
@@ -785,7 +800,6 @@
 {"n":"useMiraiCmsMenuItems","k":"fn","p":"packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"}
 {"n":"useMiraiCmsTermPanels","k":"fn","p":"packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"}
 {"n":"useMiraiSeoHead","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/composables/useMiraiSeoHead.ts"}
-{"n":"useMiraiSeoRedirect","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/composables/useMiraiSeoRedirect.ts"}
 {"n":"User","k":"type","p":"packages/core/src/database/queries/users.ts"}
 {"n":"UserAvatarField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/admin/UserAvatarField.vue"}
 {"n":"UserField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/components/fields/UserField.vue"}

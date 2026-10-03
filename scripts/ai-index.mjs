@@ -957,7 +957,9 @@ function extractHandlers(source) {
       || body.match(/route:\s*`([^`]+)`/)?.[1]
     const method = (body.match(/method:\s*['"]([^'"]+)['"]/)?.[1] || 'get').toUpperCase()
     const handler = body.match(/resolver\.resolve\(\s*['"]([^'"]+)['"]\s*\)/)?.[1]
-    if (route && handler)
+    if (handler && /middleware:\s*true/.test(body))
+      rows.push({ m: method, path: '', spec: handler, middleware: true })
+    else if (route && handler)
       rows.push({ m: method, path: route, spec: handler })
     m = re.exec(source)
   }
@@ -1298,7 +1300,10 @@ function build() {
       const p = resolveModuleSpec(file, row.spec, fileSet)
       if (!p)
         misses.push(`${file} -> ${row.spec}`)
-      routes.api.push({ m: row.m, path: row.path, p: p || row.spec })
+      if (row.middleware)
+        routes.middleware.push({ n: path.posix.basename(row.spec), global: true, p: p || row.spec })
+      else
+        routes.api.push({ m: row.m, path: row.path, p: p || row.spec })
     }
     for (const row of pages) {
       const p = resolveModuleSpec(file, row.spec, fileSet)

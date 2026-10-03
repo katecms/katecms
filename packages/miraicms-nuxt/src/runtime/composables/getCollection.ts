@@ -1,8 +1,20 @@
-import { computed } from 'vue'
-import { /* createError, */ useAsyncData, useRequestFetch, useRoute } from '#imports'
+import { computed, getCurrentInstance } from 'vue'
+import { /* createError, */ useAsyncData, useNuxtApp, useRequestFetch, useRoute } from '#imports'
 import { buildPublicPath, resolveArchivePath } from '@miraicms/core'
 import type { AdminEntry, ResolveResponse } from '../utils/collections'
 import { isTruthyQueryParam, parsePublicStatusParam } from '../utils/preview'
+import { MIRAICMS_COLLECTION_HOOK } from './useMiraiCmsExtensions'
+import type { MiraiCmsPublicPage } from './useMiraiCmsExtensions'
+
+const collectionHookTargets = new WeakSet<object>()
+
+function samePublicPath(left: string, right: string): boolean {
+  const normalize = (path: string) => {
+    const withSlash = path.startsWith('/') ? path : `/${path}`
+    return withSlash.length > 1 && withSlash.endsWith('/') ? withSlash.slice(0, -1) : withSlash
+  }
+  return normalize(left) === normalize(right)
+}
 
 function useCurrentPublicPath() {
   const route = useRoute()
@@ -98,6 +110,9 @@ export interface GetCollectionOptions {
  * `?preview=1`) and the visitor is signed in with read access.
  * Collections with `public: false` do not resolve.
  *
+ * A call for the current route emits `miraicms:collection` with the resolved
+ * page. Addons use that hook to apply document head.
+ *
  * @example
  * ```vue
  * <script setup lang="ts">
@@ -108,8 +123,11 @@ export interface GetCollectionOptions {
  * ```
  */
 export async function getCollection(options: GetCollectionOptions = {}) {
+  const nuxtApp = useNuxtApp()
+  const caller = getCurrentInstance()
   const route = useRoute()
   const currentPath = useCurrentPublicPath()
+  const tracksDocument = options.path == null || samePublicPath(options.path, currentPath.value)
   const path = computed(() => options.path || currentPath.value)
   const preview = computed(() => options.preview ?? isTruthyQueryParam(route.query.preview))
   const status = computed(() =>
@@ -161,8 +179,20 @@ export async function getCollection(options: GetCollectionOptions = {}) {
     }
     return []
   })
-  const collection = computed(() => data.value?.collection ?? null)
-  const isPreview = computed(() => data.value?.preview === true)
+  const collection = computed(() => {
+    const resolvedPage = data.value
+    if (resolvedPage?.kind === 'entry' || resolvedPage?.kind === 'archive') {
+      return resolvedPage.collection
+    }
+    return null
+  })
+  const isPreview = computed(() => {
+    const resolvedPage = data.value
+    if (resolvedPage?.kind === 'entry' || resolvedPage?.kind === 'archive') {
+      return resolvedPage.preview
+    }
+    return false
+  })
   const archivePage = computed(() => data.value?.kind === 'archive' ? data.value.page : 1)
   const archivePerPage = computed(() => data.value?.kind === 'archive' ? data.value.perPage : 0)
   const total = computed(() => data.value?.kind === 'archive' ? data.value.total : 0)
@@ -190,6 +220,14 @@ export async function getCollection(options: GetCollectionOptions = {}) {
       return null
     }
     return buildPublicPath(meta.rewrite, meta.slug, item.slugPath || item.slug)
+  }
+
+  if (tracksDocument && caller && !collectionHookTargets.has(caller)) {
+    collectionHookTargets.add(caller)
+    const page: MiraiCmsPublicPage = { isArchive, isTerm, entry, term, collection, link }
+    nuxtApp.runWithContext(() => {
+      void nuxtApp.callHook(MIRAICMS_COLLECTION_HOOK, page)
+    })
   }
 
   return {

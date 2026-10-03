@@ -811,7 +811,9 @@
     ],
     "nuxt": [],
     "nuxt/extensions": [
+      "MIRAICMS_COLLECTION_HOOK",
       "MiraiCmsMenuExtra",
+      "MiraiCmsPublicPage",
       "useMiraiCmsEntrySidebar",
       "useMiraiCmsMenuItems",
       "useMiraiCmsTermPanels"

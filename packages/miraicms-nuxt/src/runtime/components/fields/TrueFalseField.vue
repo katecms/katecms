@@ -21,37 +21,37 @@ const rootClass = 'miraicms-true-false-field'
     :field="field"
   >
     <div :class="rootClass">
-      <template v-if="field?.ui">
-        <button
-          :id="fieldKey"
-          type="button"
-          role="switch"
-          :aria-checked="!!model"
-          :class="[`${rootClass}__switch`, { 'is-on': model }]"
-          @click="model = !model"
-        >
-          <span :class="`${rootClass}__on`">{{ field?.uiOnText || 'Yes' }}</span>
-          <span :class="`${rootClass}__off`">{{ field?.uiOffText || 'No' }}</span>
-          <span :class="`${rootClass}__slider`" />
-        </button>
-      </template>
+      <button
+        v-if="field?.ui"
+        :id="fieldKey"
+        type="button"
+        role="switch"
+        :aria-checked="!!model"
+        :class="[`${rootClass}__switch`, { 'is-on': model }]"
+        @click="model = !model"
+      >
+        <span :class="`${rootClass}__on`">{{ field?.uiOnText || 'Yes' }}</span>
+        <span :class="`${rootClass}__off`">{{ field?.uiOffText || 'No' }}</span>
+        <span :class="`${rootClass}__slider`" />
+      </button>
+
+      <button
+        v-else
+        :id="fieldKey"
+        type="button"
+        role="checkbox"
+        :aria-checked="!!model"
+        :class="[`${rootClass}__checkbox`, { 'is-on': model }]"
+        @click="model = !model"
+      />
 
       <label
-        v-else
-        :class="`${rootClass}__checkbox`"
-      >
-        <input
-          :id="fieldKey"
-          v-model="model"
-          type="checkbox"
-          :name="fieldKey"
-        >
-      </label>
-
-      <span
         v-if="field?.message"
+        :for="fieldKey"
         :class="`${rootClass}__message`"
-      >{{ field.message }}</span>
+      >
+        {{ field.message }}
+      </label>
     </div>
   </MiraiCmsFieldWrapper>
 </template>
@@ -87,6 +87,21 @@ $root: '.miraicms-true-false-field';
     &:focus-visible {
       box-shadow: 0 0 0 2px rgba($color-accent, 0.35);
     }
+
+    &.is-on {
+      background-color: $color-accent;
+      border-color: $color-accent;
+
+      #{$root} {
+        &__slider {
+          left: calc(50% + 2px);
+        }
+        &__on,
+        &__off {
+          color: $color-surface;
+        }
+      }
+    }
   }
 
   &__on,
@@ -114,34 +129,53 @@ $root: '.miraicms-true-false-field';
     z-index: 2;
   }
 
-  &__switch.is-on {
-    background-color: $color-accent;
-    border-color: $color-accent;
-
-    #{$root} {
-      &__slider {
-        left: calc(50% + 2px);
-      }
-      &__on,
-      &__off {
-        color: $color-surface;
-      }
-    }
-  }
-
   &__checkbox {
-    display: flex;
-    align-items: center;
+    width: math-rem(44);
+    height: math-rem(23);
+    border-radius: math-rem(20);
+    background-color: $color-muted;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    cursor: pointer;
+    user-select: none;
+    overflow: hidden;
+    position: relative;
+    transition: background-color .3s;
 
-    input {
-      accent-color: $color-accent;
-      margin: 0;
+    &:focus {
+      outline: none;
+    }
+
+    &:focus-visible {
+      box-shadow: 0 0 0 2px rgba($color-accent, 0.35);
+    }
+
+    &:before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: math-rem(19);
+      height: math-rem(19);
+      border-radius: 50%;
+      transition: left .3s;
+      background-color: $color-surface;
+    }
+
+    &.is-on {
+      background-color: $color-accent;
+
+      &:before {
+        left: 23px;
+      }
     }
   }
 
   &__message {
     user-select: none;
     color: $color-ink;
+    cursor: pointer;
   }
 }
 </style>

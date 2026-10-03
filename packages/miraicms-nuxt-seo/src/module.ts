@@ -31,11 +31,11 @@ export default defineNuxtModule({
         name: 'useMiraiSeoHead',
         from: resolver.resolve('./runtime/composables/useMiraiSeoHead'),
       },
-      {
-        name: 'useMiraiSeoRedirect',
-        from: resolver.resolve('./runtime/composables/useMiraiSeoRedirect'),
-      },
     ])
+    addServerHandler({
+      middleware: true,
+      handler: resolver.resolve('./runtime/server/middleware/redirect'),
+    })
 
     addServerHandler({
       route: '/api/_miraicms/seo/site',

@@ -5,33 +5,59 @@ const props = defineProps<{
   title: string
   description: string
   url: string
-  image?: string
 }>()
 
 const rootClass = 'miraicms-seo-snippet'
 const shownTitle = computed(() => props.title.trim() || 'Untitled')
-const shownUrl = computed(() => props.url.replace(/^https?:\/\//, ''))
+
+const crumbs = computed(() => {
+  let host = ''
+  let path = props.url
+  try {
+    const parsed = new URL(props.url)
+    host = parsed.host
+    path = parsed.pathname
+  }
+  catch {
+    path = props.url
+  }
+  return [host, ...path.split('/').filter(Boolean)].filter(Boolean)
+})
 </script>
 
 <template>
   <div :class="rootClass">
-    <div :class="`${rootClass}__copy`">
-      <div :class="`${rootClass}__url`">
-        {{ shownUrl }}
-      </div>
-      <div :class="`${rootClass}__title`">
-        {{ shownTitle }}
-      </div>
-      <div :class="`${rootClass}__description`">
-        {{ description }}
-      </div>
+    <div :class="`${rootClass}__url`">
+      <span
+        v-for="(part, index) in crumbs"
+        :key="`${part}-${index}`"
+      >
+        <span
+          v-if="index > 0"
+          :class="`${rootClass}__sep`"
+        > › </span>
+        <span :class="{ [`${rootClass}__host`]: index === 0 }">{{ part }}</span>
+      </span>
     </div>
-    <img
-      v-if="image"
-      :class="`${rootClass}__image`"
-      :src="image"
-      alt=""
+    <a
+      :class="`${rootClass}__title`"
+      :href="url"
+      target="_blank"
+      rel="noopener noreferrer"
     >
+      {{ shownTitle }}
+    </a>
+    <p :class="`${rootClass}__description`">
+      {{ description }}
+    </p>
+    <div :class="`${rootClass}__meters`">
+      <span :class="{ [`${rootClass}__over`]: shownTitle.length > 60 }">
+        Title {{ shownTitle.length }}/60
+      </span>
+      <span :class="{ [`${rootClass}__over`]: description.length > 160 }">
+        Description {{ description.length }}/160
+      </span>
+    </div>
   </div>
 </template>
 
@@ -42,59 +68,60 @@ $root: '.miraicms-seo-snippet';
 
 #{$root} {
   display: flex;
-  gap: math-rem(12);
-  align-items: flex-start;
+  flex-direction: column;
+  gap: math-rem(4);
   padding: math-rem(12) math-rem(14);
   border: 1px solid $color-border;
   border-radius: math-rem(8);
   background: $color-surface;
   font-family: Arial, Helvetica, sans-serif;
 
-  &__copy {
-    min-width: 0;
-    flex: 1;
-  }
-
-  &__image {
-    width: math-rem(72);
-    height: math-rem(72);
-    flex: none;
-    object-fit: cover;
-    border-radius: math-rem(4);
-    background: #f3f4f6;
-  }
-
   &__url {
-    overflow: hidden;
-    color: #202124;
-    font-size: math-rem(12);
+    color: #4d5156;
+    font-size: math-rem(14);
     line-height: 1.3;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
+  }
+
+  &__host {
+    color: #202124;
+  }
+
+  &__sep {
+    color: #4d5156;
   }
 
   &__title {
-    display: -webkit-box;
-    overflow: hidden;
-    margin-top: math-rem(2);
     color: #1a0dab;
-    font-size: math-rem(18);
+    font-size: math-rem(20);
     line-height: 1.3;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   &__description {
-    display: -webkit-box;
-    overflow: hidden;
-    margin-top: math-rem(3);
+    margin: 0;
     color: #4d5156;
-    font-size: math-rem(13);
+    font-size: math-rem(14);
     line-height: 1.4;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    overflow-wrap: anywhere;
+  }
+
+  &__meters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: math-rem(12);
+    margin-top: math-rem(4);
+    color: $color-muted;
+    font-family: inherit;
+    font-size: math-rem(12);
+  }
+
+  &__over {
+    color: $color-danger;
   }
 }
 </style>

@@ -251,6 +251,16 @@ const fields: Fields = {
     defaultValue: true,
     columnWidth: 50,
   },
+  true_false_test_no_ui: {
+    type: 'true_false',
+    label: 'True / False',
+    instructions: 'True/False instructions',
+    required: true,
+    position: 'main',
+    message: 'Enable option',
+    defaultValue: true,
+    columnWidth: 50,
+  },
   select_test: {
     type: 'select',
     label: 'Select',

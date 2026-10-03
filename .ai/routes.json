@@ -427,6 +427,11 @@
   ],
   "middleware": [
     {
+      "n": "redirect",
+      "global": true,
+      "p": "packages/miraicms-nuxt-seo/src/runtime/server/middleware/redirect.ts"
+    },
+    {
       "n": "miraicms-auth-guard",
       "global": true,
       "p": "packages/miraicms-nuxt/src/runtime/middleware/auth-guard.ts"
@@ -472,10 +477,6 @@
     {
       "n": "useMiraiCmsTermPanels",
       "p": "packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"
-    },
-    {
-      "n": "useMiraiSeoRedirect",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/composables/useMiraiSeoRedirect.ts"
     }
   ],
   "components": [

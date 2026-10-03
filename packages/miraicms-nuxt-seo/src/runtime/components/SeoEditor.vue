@@ -75,20 +75,18 @@ const previewTitle = computed(() => {
 })
 
 const previewDescription = computed(() => form.description.trim() || site.value.description)
-const titleField = computed(() => ({
+const titleField = {
   type: 'text' as const,
   label: 'SEO title',
   placeholder: 'Defaults to the title template',
   maxLength: 200,
-  instructions: `${previewTitle.value.length}/60`,
-}))
-const descriptionField = computed(() => ({
+}
+const descriptionField = {
   type: 'textarea' as const,
   label: 'Meta description',
   rows: 4,
   maxLength: 320,
-  instructions: `${previewDescription.value.length}/160`,
-}))
+}
 const previewUrl = computed(() => {
   const canonical = form.canonical.trim()
   if (/^https?:\/\//i.test(canonical)) {
@@ -185,7 +183,6 @@ watch(() => props.url, () => {
       :title="previewTitle"
       :description="previewDescription"
       :url="previewUrl"
-      :image="form.image"
     />
     <MiraiCmsImageField
       :key="imageKey"
@@ -218,12 +215,12 @@ watch(() => props.url, () => {
     <MiraiCmsTrueFalseField
       v-model="form.noindex"
       field-key="seo-noindex"
-      :field="{ type: 'true_false', label: 'Hide from search engines', ui: true }"
+      :field="{ type: 'true_false', message: 'Hide from search engines', label: 'Hide from search engines' }"
     />
     <MiraiCmsTrueFalseField
       v-model="form.nofollow"
       field-key="seo-nofollow"
-      :field="{ type: 'true_false', label: 'Nofollow', ui: true }"
+      :field="{ type: 'true_false', message: 'Nofollow' }"
     />
     <p
       v-if="error"

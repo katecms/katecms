@@ -518,14 +518,13 @@ $root: '.miraicms-seo-settings';
     display: flex;
     flex-direction: column;
     gap: math-rem(16);
-    max-width: math-rem(1000);
+    max-width: math-rem(600);
   }
 
   &__redirects {
     display: flex;
     flex-direction: column;
     gap: math-rem(12);
-    max-width: math-rem(1000);
     margin-top: math-rem(8);
   }
 

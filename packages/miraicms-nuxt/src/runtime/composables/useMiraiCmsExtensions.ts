@@ -1,4 +1,25 @@
+import type { ComputedRef } from 'vue'
 import { useState } from '#imports'
+import type { AdminCollectionMeta, AdminEntry, PublicDictionaryTerm } from '../utils/collections'
+
+/** Nuxt hook fired by `getCollection()` for the current route. */
+export const MIRAICMS_COLLECTION_HOOK = 'miraicms:collection' as const
+
+/** Page resolved by `getCollection()` for the current route. */
+export interface MiraiCmsPublicPage {
+  isArchive: ComputedRef<boolean>
+  isTerm: ComputedRef<boolean>
+  entry: ComputedRef<AdminEntry | null>
+  term: ComputedRef<PublicDictionaryTerm | null>
+  collection: ComputedRef<AdminCollectionMeta | null>
+  link: ComputedRef<string | null>
+}
+
+declare module '#app' {
+  interface RuntimeNuxtHooks {
+    'miraicms:collection': (page: MiraiCmsPublicPage) => void
+  }
+}
 
 /** Extra admin sidebar panels, registered by addons as component names. */
 export interface MiraiCmsMenuExtra {

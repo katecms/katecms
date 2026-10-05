@@ -12,21 +12,21 @@ const entryId = computed(() => {
 </script>
 
 <template>
-  <section :class="rootClass">
+  <div :class="rootClass">
     <div :class="`${rootClass}__title`">
       SEO
     </div>
-    <p
+    <div
       v-if="!entryId"
       :class="`${rootClass}__hint`"
     >
       Save the entry before editing its SEO.
-    </p>
+    </div>
     <SeoEditor
       v-else
       :url="`/api/_miraicms/seo/entries/${entryId}`"
     />
-  </section>
+  </div>
 </template>
 
 <style scoped lang="scss">

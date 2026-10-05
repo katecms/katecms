@@ -1,0 +1,20 @@
+---
+description: CMS shell markup uses div and span, except links and form controls
+globs: packages/miraicms-nuxt/**/*.vue,packages/miraicms-nuxt/**/*.scss,packages/miraicms-nuxt-form/**/*.vue,packages/miraicms-nuxt-form/**/*.scss,packages/miraicms-nuxt-seo/**/*.vue,packages/miraicms-nuxt-seo/**/*.scss
+alwaysApply: false
+---
+
+# Shell markup
+
+In `miraicms-nuxt`, `miraicms-nuxt-form`, and `miraicms-nuxt-seo`, layout and text in templates are `div` and `span`. A host site's element CSS must not restyle the CMS shell.
+
+Do not use `p`, headings, `section`, `header`, `footer`, `main`, `nav`, `article`, `aside`, `ul`, `ol`, `li`, `blockquote`, `figure`, or `hr` in our templates. Style with classes, not those selectors.
+
+Leave these as real elements:
+
+- Links: `a`, `NuxtLink`
+- Form controls: `form`, `button`, `label`, `input`, `textarea`, `select`, `option`, `optgroup`
+- Media: `img`, `picture`, `source`, `svg` and SVG children
+- Vue: `template`, `slot`, `component`, `Teleport`
+
+Do not rewrite authored HTML (wysiwyg values, `v-html`) or third-party DOM (Leaflet) into `div`/`span`.

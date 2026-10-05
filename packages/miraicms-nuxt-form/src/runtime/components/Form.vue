@@ -166,13 +166,13 @@ function isText(field: FormField): boolean {
     novalidate
     @submit.prevent="onSubmit"
   >
-    <p
+    <div
       v-if="alertMessage"
       class="mirai-form__alert"
       data-alert="error"
     >
       {{ alertMessage }}
-    </p>
+    </div>
     <template v-if="definition">
       <div
         v-for="group in stepGroups"
@@ -396,18 +396,18 @@ function isText(field: FormField): boolean {
           {{ cell.field.buttonLabel || 'Submit' }}
         </button>
 
-        <p
+        <div
           v-if="cell.field.help && cell.field.type !== 'hidden' && cell.field.type !== 'html' && cell.field.type !== 'button'"
           class="mirai-form__help"
         >
           {{ cell.field.help }}
-        </p>
-        <p
+        </div>
+        <div
           v-if="fieldErrors[cell.field.key]"
           class="mirai-form__error"
         >
           {{ fieldErrors[cell.field.key] }}
-        </p>
+        </div>
           </div>
         </div>
       </div>

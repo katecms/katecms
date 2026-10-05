@@ -169,12 +169,12 @@ watch(() => props.url, () => {
 </script>
 
 <template>
-  <p
+  <div
     v-if="loading"
     :class="`${rootClass}__hint`"
   >
     Loading…
-  </p>
+  </div>
   <div
     v-else
     :class="[`${rootClass}__form`, { [`${rootClass}__form--flush`]: !padded }]"
@@ -222,18 +222,18 @@ watch(() => props.url, () => {
       field-key="seo-nofollow"
       :field="{ type: 'true_false', message: 'Nofollow' }"
     />
-    <p
+    <div
       v-if="error"
       :class="`${rootClass}__error`"
     >
       {{ error }}
-    </p>
-    <p
+    </div>
+    <div
       v-else-if="saved"
       :class="`${rootClass}__saved`"
     >
       SEO saved.
-    </p>
+    </div>
     <MiraiCmsUiButton
       tag="button"
       variant="full"

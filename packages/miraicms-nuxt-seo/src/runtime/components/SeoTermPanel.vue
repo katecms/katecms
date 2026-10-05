@@ -12,22 +12,22 @@ const termId = computed(() => {
 </script>
 
 <template>
-  <section :class="rootClass">
+  <div :class="rootClass">
     <div :class="`${rootClass}__title`">
       SEO
     </div>
-    <p
+    <div
       v-if="!termId"
       :class="`${rootClass}__hint`"
     >
       Save the term before editing its SEO.
-    </p>
+    </div>
     <SeoEditor
       v-else
       :url="`/api/_miraicms/seo/terms/${termId}`"
       :padded="false"
     />
-  </section>
+  </div>
 </template>
 
 <style scoped lang="scss">

@@ -47,9 +47,9 @@ const crumbs = computed(() => {
     >
       {{ shownTitle }}
     </a>
-    <p :class="`${rootClass}__description`">
+    <div :class="`${rootClass}__description`">
       {{ description }}
-    </p>
+    </div>
     <div :class="`${rootClass}__meters`">
       <span :class="{ [`${rootClass}__over`]: shownTitle.length > 60 }">
         Title {{ shownTitle.length }}/60

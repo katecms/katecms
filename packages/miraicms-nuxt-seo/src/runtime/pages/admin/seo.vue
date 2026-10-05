@@ -283,12 +283,12 @@ onMounted(load)
       message="SEO settings saved."
       @close="saved = false"
     />
-    <p
+    <div
       v-if="loading"
       :class="`${rootClass}__hint`"
     >
       Loading…
-    </p>
+    </div>
     <div
       v-else
       :class="`${rootClass}__form`"
@@ -325,7 +325,7 @@ onMounted(load)
       />
     </div>
 
-    <section
+    <div
       v-if="!loading"
       :class="`${rootClass}__redirects`"
     >
@@ -491,7 +491,7 @@ onMounted(load)
           </div>
         </div>
       </div>
-    </section>
+    </div>
   </div>
 </template>
 

@@ -45,9 +45,11 @@ const stepRefs = ref<Array<HTMLElement | null>>([])
 interface DragState {
   pointerId: number
   fieldId: string
-  mode: 'move' | 'resize'
+  mode: 'move' | 'resize-left' | 'resize-right'
   grabCol: number
   grabRow: number
+  startX: number
+  startW: number
 }
 
 const drag = ref<DragState | null>(null)
@@ -305,10 +307,12 @@ function onItemPointerDown(event: PointerEvent, item: LayoutItem) {
     mode: 'move',
     grabCol: point.col - item.x,
     grabRow: point.row - item.y,
+    startX: item.x,
+    startW: item.w,
   })
 }
 
-function onResizePointerDown(event: PointerEvent, item: LayoutItem) {
+function onResizePointerDown(event: PointerEvent, item: LayoutItem, edge: 'left' | 'right') {
   event.stopPropagation()
   selectedId.value = item.fieldId
   stepSettingsOpen.value = false
@@ -316,9 +320,11 @@ function onResizePointerDown(event: PointerEvent, item: LayoutItem) {
   beginDrag({
     pointerId: event.pointerId,
     fieldId: item.fieldId,
-    mode: 'resize',
+    mode: edge === 'left' ? 'resize-left' : 'resize-right',
     grabCol: 0,
     grabRow: 0,
+    startX: item.x,
+    startW: item.w,
   })
 }
 
@@ -340,10 +346,21 @@ function onPointerMove(event: PointerEvent) {
   }
   const point = cellFromEvent(event)
   dragRow.value = point.row
-  if (current.mode === 'resize') {
+  if (current.mode === 'resize-right') {
     content.value = setLayoutItem(content.value, breakpoint.value, {
       ...item,
-      w: clamp(point.col - item.x + 1, 1, GRID_COLUMNS - item.x),
+      x: current.startX,
+      w: clamp(point.col - current.startX + 1, 1, GRID_COLUMNS - current.startX),
+    }, false)
+    return
+  }
+  if (current.mode === 'resize-left') {
+    const right = current.startX + current.startW
+    const x = clamp(point.col, 0, right - 1)
+    content.value = setLayoutItem(content.value, breakpoint.value, {
+      ...item,
+      x,
+      w: right - x,
     }, false)
     return
   }
@@ -761,8 +778,12 @@ onBeforeUnmount(() => {
               <span class="miraicms-form-builder__item-label">{{ cardText(fieldById(item.fieldId)) }}</span>
               <span class="miraicms-form-builder__item-meta">{{ item.w }}</span>
               <span
-                class="miraicms-form-builder__resize"
-                @pointerdown="onResizePointerDown($event, item)"
+                class="miraicms-form-builder__resizable-handle miraicms-form-builder__resizable-handle--left"
+                @pointerdown="onResizePointerDown($event, item, 'left')"
+              />
+              <span
+                class="miraicms-form-builder__resizable-handle miraicms-form-builder__resizable-handle--right"
+                @pointerdown="onResizePointerDown($event, item, 'right')"
               />
             </div>
           </div>
@@ -1128,13 +1149,30 @@ onBeforeUnmount(() => {
     font-size: math-rem(11);
   }
 
-  &__resize {
+  &__resizable-handle {
     position: absolute;
-    top: 0;
-    right: 0;
-    width: math-rem(8);
-    height: 100%;
-    cursor: col-resize;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: math-rem(12);
+    height: math-rem(30) !important;
+    cursor: ew-resize;
+    opacity: 0;
+    border-radius: math-rem(7);
+    background-color: $color-accent;
+  }
+
+  &__resizable-handle--left {
+    left: -6px;
+  }
+
+  &__resizable-handle--right {
+    right: -6px;
+  }
+
+  &__item:hover .miraicms-form-builder__resizable-handle,
+  &__item.is-dragging .miraicms-form-builder__resizable-handle {
+    opacity: 1;
   }
 
   &__form {

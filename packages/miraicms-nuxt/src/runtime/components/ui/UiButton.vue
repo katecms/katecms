@@ -179,8 +179,10 @@ $root: '.miraicms-btn';
     svg,
     :deep(svg) {
       display: block;
-      width: 16px;
-      height: 16px;
+      width: math-rem(18);
+      height: math-rem(18) !important;
+      object-fit: contain;
+      object-position: center;
     }
   }
 
@@ -188,8 +190,10 @@ $root: '.miraicms-btn';
     svg,
     :deep(svg) {
       display: block;
-      width: 18px;
-      height: 18px;
+      width: math-rem(20);
+      height: math-rem(20) !important;
+      object-fit: contain;
+      object-position: center;
     }
   }
 
@@ -251,7 +255,7 @@ $root: '.miraicms-btn';
   }
 
   &--icon {
-    width: math-rem(40);
+    width: math-rem(38);
     padding: 0 !important;
 
     &#{$root}--small {

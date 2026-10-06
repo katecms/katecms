@@ -173,6 +173,8 @@ interface ImageField extends BaseField, MediaConstraints, ImageDimensions {
   returnFormat?: 'array' | 'url' | 'id'
   library?: 'all' | 'uploadedTo'
   cropType?: [number, number] | boolean
+  /** Compact add button: icon only, no “Add Image” label. */
+  iconMode?: boolean
 }
 
 interface FileField extends BaseField, MediaConstraints {

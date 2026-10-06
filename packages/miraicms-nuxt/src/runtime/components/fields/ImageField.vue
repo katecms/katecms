@@ -20,6 +20,7 @@ const model = defineModel<unknown>()
 const rootClass = 'miraicms-image-field'
 const returnFormat = computed(() => props.field?.returnFormat || 'array')
 const libraryEnabled = computed(() => props.field?.library !== 'uploadedTo')
+const iconMode = computed(() => !!props.field?.iconMode)
 
 const cropEnabled = computed(() => {
   const crop = props.field?.cropType
@@ -452,27 +453,90 @@ onBeforeUnmount(revokeCropUrl)
       <div :class="`${rootClass}__control`">
         <div
           v-if="hasValue"
-          :class="`${rootClass}__preview`"
+          :class="[
+            `${rootClass}__preview`,
+            { [`${rootClass}__preview--icon`]: iconMode },
+          ]"
         >
-          <img
-            :src="previewUrl"
-            :alt="selected?.alt || ''"
-            :class="`${rootClass}__image`"
+          <div
+            :class="[
+              `${rootClass}__image`,
+              { [`${rootClass}__image--icon`]: iconMode },
+            ]"
           >
-          <div :class="`${rootClass}__actions`">
+            <img
+              :src="previewUrl"
+              :alt="selected?.alt || ''"
+            >
+          </div>
+          <div
+            :class="[
+              `${rootClass}__actions`,
+              { [`${rootClass}__actions--icon`]: iconMode },
+            ]"
+          >
             <MiraiCmsUiButton
               tag="button"
-              :variant="['secondary', 'small']"
+              :variant="['secondary', 'small', 'icon']"
               @click="openModal"
             >
-              Replace
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M6.00033 4.66406H4.00033C3.6467 4.66406 3.30756 4.80454 3.05752 5.05459C2.80747 5.30464 2.66699 5.64377 2.66699 5.9974V11.9974C2.66699 12.351 2.80747 12.6902 3.05752 12.9402C3.30756 13.1903 3.6467 13.3307 4.00033 13.3307H10.0003C10.3539 13.3307 10.6931 13.1903 10.9431 12.9402C11.1932 12.6902 11.3337 12.351 11.3337 11.9974V9.9974"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M6 9.99885H8L13.6667 4.33218C13.9319 4.06697 14.0809 3.70726 14.0809 3.33218C14.0809 2.95711 13.9319 2.5974 13.6667 2.33218C13.4015 2.06697 13.0417 1.91797 12.6667 1.91797C12.2916 1.91797 11.9319 2.06697 11.6667 2.33218L6 7.99885V9.99885Z"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M10.667 3.33203L12.667 5.33203"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
             </MiraiCmsUiButton>
             <MiraiCmsUiButton
               tag="button"
-              :variant="['red', 'small']"
+              :variant="['red', 'small', 'icon']"
               @click="remove"
             >
-              Remove
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M2.13379 2.07031L13.8671 13.9316"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M13.8671 2.07031L2.13379 13.9316"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
             </MiraiCmsUiButton>
           </div>
         </div>
@@ -480,9 +544,44 @@ onBeforeUnmount(revokeCropUrl)
         <MiraiCmsUiButton
           v-else
           tag="button"
+          :variant="iconMode ? ['icon', 'secondary'] : undefined"
+          :aria-label="iconMode ? 'Add Image' : undefined"
+          :title="iconMode ? 'Add Image' : undefined"
           @click="openModal"
         >
-          Add Image
+          <svg
+            v-if="iconMode"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M6.00033 4.66406H4.00033C3.6467 4.66406 3.30756 4.80454 3.05752 5.05459C2.80747 5.30464 2.66699 5.64377 2.66699 5.9974V11.9974C2.66699 12.351 2.80747 12.6902 3.05752 12.9402C3.30756 13.1903 3.6467 13.3307 4.00033 13.3307H10.0003C10.3539 13.3307 10.6931 13.1903 10.9431 12.9402C11.1932 12.6902 11.3337 12.351 11.3337 11.9974V9.9974"
+              stroke="currentColor"
+              stroke-width="1.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M6 9.99885H8L13.6667 4.33218C13.9319 4.06697 14.0809 3.70726 14.0809 3.33218C14.0809 2.95711 13.9319 2.5974 13.6667 2.33218C13.4015 2.06697 13.0417 1.91797 12.6667 1.91797C12.2916 1.91797 11.9319 2.06697 11.6667 2.33218L6 7.99885V9.99885Z"
+              stroke="currentColor"
+              stroke-width="1.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M10.667 3.33203L12.667 5.33203"
+              stroke="currentColor"
+              stroke-width="1.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <template v-else>
+            Add Image
+          </template>
         </MiraiCmsUiButton>
       </div>
 
@@ -539,43 +638,62 @@ $root: '.miraicms-image-field';
   }
 
   &__preview {
-    position: relative;
-    width: 400px;
-    height: auto;
-    max-height: 400px;
-    max-width: 100%;
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    overflow: hidden;
-    background-color: $color-bg;
 
     &:hover {
       #{$root} {
-        &__actions {
+        &__actions:not(#{$root}__actions--icon) {
           opacity: 1;
           visibility: visible;
         }
       }
     }
+
+    &:not(#{$root}__preview--icon) {
+      position: relative;
+      width: 400px;
+      height: auto;
+      max-height: 400px;
+      max-width: 100%;
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
+      overflow: hidden;
+      background-color: $color-bg;
+    }
+
+    &--icon {
+      display: flex;
+      align-items: center;
+      column-gap: math-rem(16);
+    }
   }
 
   &__image {
-    display: block;
-    width: 100%;
-    height: 100%;
-    max-height: 400px;
-    object-fit: contain;
+    &--icon {
+      width: math-rem(38);
+      height: math-rem(38);
+    }
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100% !important;
+      max-height: 400px;
+      object-fit: contain;
+    }
   }
 
   &__actions {
-    position: absolute;
-    right: math-rem(8);
-    top: math-rem(8);
     display: flex;
     gap: math-rem(6);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity .2s, visibility .2s;
+
+    &:not(#{$root}__actions--icon) {
+      position: absolute;
+      right: math-rem(8);
+      top: math-rem(8);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .2s, visibility .2s;
+    }
   }
 }
 </style>

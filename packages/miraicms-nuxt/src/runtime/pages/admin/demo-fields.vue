@@ -526,6 +526,16 @@ const fields: Fields = {
     cropType: true,
     columnWidth: 50,
   },
+  image_icon_test: {
+    type: 'image',
+    label: 'Image (icon)',
+    instructions: 'Add Image is an icon button when iconMode is true.',
+    position: 'main',
+    returnFormat: 'array',
+    library: 'all',
+    iconMode: true,
+    columnWidth: 50,
+  },
   gallery_test: {
     type: 'gallery',
     label: 'Gallery',

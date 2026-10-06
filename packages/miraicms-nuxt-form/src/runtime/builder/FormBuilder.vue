@@ -603,18 +603,103 @@ onBeforeUnmount(() => {
           <MiraiCmsUiButton
             v-for="item in BREAKPOINTS"
             :key="item"
+            :class="['miraicms-form-builder__breakpoint-btn']"
             tag="button"
-            :variant="breakpoint === item ? undefined : 'secondary'"
+            :variant="breakpoint !== item ? ['icon', 'secondary'] : ['icon']"
             :active="breakpoint === item"
+            :aria-label="item === 'desktop' ? 'Desktop' : item === 'tablet' ? 'Tablet' : 'Phone'"
+            :title="item === 'desktop' ? 'Desktop' : item === 'tablet' ? 'Tablet' : 'Phone'"
             @click="breakpoint = item"
           >
-            {{ item === 'desktop' ? 'Desktop' : item === 'tablet' ? 'Tablet' : 'Phone' }}
+            <svg
+              v-if="item === 'desktop'"
+              width="29"
+              height="29"
+              viewBox="0 0 30 30"
+            ><rect
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-miterlimit="10"
+              stroke-width="1.6"
+              x="5.76"
+              y="7.71"
+              width="18.47"
+              height="11.61"
+              rx="1"
+            /><line
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-miterlimit="10"
+              stroke-width="1.6"
+              x1="4"
+              y1="22.29"
+              x2="26"
+              y2="22.29"
+            /></svg>
+            <svg
+              v-else-if="item === 'tablet'"
+              width="22"
+              height="22"
+              viewBox="0 0 30 30"
+            ><rect
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              x="5.81"
+              y="4"
+              width="18.38"
+              height="22"
+              rx="2"
+            /><line
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              x1="13.01"
+              y1="23.22"
+              x2="16.99"
+              y2="23.22"
+            /></svg>
+            <svg
+              v-else
+              width="23"
+              height="23"
+              viewBox="0 0 30 30"
+            ><rect
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              x="8.67"
+              y="4"
+              width="12.66"
+              height="22"
+              rx="3"
+            /><line
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              x1="15"
+              y1="23.22"
+              x2="15"
+              y2="23.22"
+            /></svg>
           </MiraiCmsUiButton>
         </div>
         <MiraiCmsUiButton
           v-if="breakpoint !== 'desktop'"
           tag="button"
-          variant="secondary"
+          :variant="['secondary']"
           @click="matchDesktop"
         >
           Match desktop
@@ -1043,6 +1128,11 @@ onBeforeUnmount(() => {
     display: flex;
     flex-wrap: wrap;
     gap: math-rem(6);
+  }
+
+  :deep(.miraicms-form-builder__breakpoint-btn.miraicms-btn:not(.miraicms-btn--small) svg) {
+    width: auto;
+    height: auto !important;
   }
 
   &__hint {

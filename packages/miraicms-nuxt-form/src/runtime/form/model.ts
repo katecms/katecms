@@ -4,7 +4,7 @@ export const MAX_FIELDS = 200
 export const MAX_STEPS = 20
 export const MAX_TEXT = 20000
 
-export const BREAKPOINTS = ['desktop', 'tablet', 'phone'] as const
+export const BREAKPOINTS = ['phone', 'tablet', 'desktop'] as const
 export type Breakpoint = typeof BREAKPOINTS[number]
 
 export const FIELD_TYPES = [
@@ -138,7 +138,7 @@ export interface MailSettings {
 const CHOICE_TYPES = new Set<FieldType>(['select', 'radio', 'checkbox'])
 const KEY_PATTERN = /^[\p{L}_][\p{L}\p{N}_-]{0,63}$/u
 const SLUG_PATTERN = /^[\p{L}\p{N}]+(?:[-_][\p{L}\p{N}]+)*$/u
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
 const PHONE_PATTERN = /^[0-9+().\-\s]{3,40}$/
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
@@ -153,7 +153,7 @@ export function isSlug(value: string): boolean {
 export function slugify(name: string): string {
   const slug = name
     .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\u0300-\u036F]/g, '')
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, '-')
     .replace(/^-+|-+$/g, '')
@@ -785,11 +785,11 @@ export function sanitizeHtml(html: string): string {
 }
 
 function cleanText(value: string): string {
-  return value.replace(/\u0000/g, '').slice(0, MAX_TEXT)
+  return value.replace(/\0/g, '').slice(0, MAX_TEXT)
 }
 
 function clip(value: unknown, max: number): string {
-  return typeof value === 'string' ? value.replace(/\u0000/g, '').slice(0, max) : ''
+  return typeof value === 'string' ? value.replace(/\0/g, '').slice(0, max) : ''
 }
 
 function clampInt(value: number, min: number, max: number): number {

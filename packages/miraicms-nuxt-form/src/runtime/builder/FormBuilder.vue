@@ -34,6 +34,8 @@ const stepSettingsOpen = ref(false)
 const openStepMenu = ref('')
 const selectedId = ref<string | null>(null)
 const drag = ref<DragState | null>(null)
+const dragGhost = ref<DragGhost | null>(null)
+const dragBase = ref<LayoutItem[] | null>(null)
 const isDraggingStep = ref(false)
 const draggingStepIndex = ref<number | null>(null)
 const dropStepIndex = ref(0)
@@ -50,6 +52,15 @@ interface DragState {
   grabRow: number
   startX: number
   startW: number
+}
+
+interface DragGhost {
+  left: number
+  top: number
+  width: number
+  height: number
+  offsetX: number
+  offsetY: number
 }
 
 const currentStepId = computed(() => {
@@ -258,12 +269,42 @@ function matchDesktop() {
   content.value = copyDesktopLayout(content.value, breakpoint.value)
 }
 
-function itemStyle(item: LayoutItem) {
+function itemStyle(item: LayoutItem): CSSProperties {
   return {
     gridColumn: `${item.x + 1} / span ${item.w}`,
     gridRow: `${item.y + 1}`,
   }
 }
+
+function itemVisualStyle(item: LayoutItem): CSSProperties {
+  const ghost = dragGhost.value
+  if (drag.value?.mode === 'move' && drag.value.fieldId === item.fieldId && ghost) {
+    return {
+      position: 'fixed',
+      left: `${ghost.left}px`,
+      top: `${ghost.top}px`,
+      width: `${ghost.width}px`,
+      height: `${ghost.height}px`,
+      zIndex: 1000,
+      margin: 0,
+    }
+  }
+  return itemStyle(item)
+}
+
+const dropPlaceholderStyle = computed((): CSSProperties | undefined => {
+  if (drag.value?.mode !== 'move' || !dragGhost.value) {
+    return undefined
+  }
+  const item = layout.value.find(entry => entry.fieldId === drag.value?.fieldId)
+  if (!item) {
+    return undefined
+  }
+  return {
+    ...itemStyle(item),
+    height: `${dragGhost.value.height}px`,
+  }
+})
 
 function fieldById(fieldId: string): FormField | undefined {
   return content.value.fields.find(field => field.id === fieldId)
@@ -294,6 +335,20 @@ function onItemPointerDown(event: PointerEvent, item: LayoutItem) {
   stepSettingsOpen.value = false
   focusBoard()
   const point = cellFromEvent(event)
+  const el = event.currentTarget
+  if (el instanceof HTMLElement) {
+    const rect = el.getBoundingClientRect()
+    dragGhost.value = {
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+    }
+  }
+  dragBase.value = content.value.layouts[breakpoint.value].map(entry => ({ ...entry }))
+  document.body.style.userSelect = 'none'
   beginDrag({
     pointerId: event.pointerId,
     fieldId: item.fieldId,
@@ -338,6 +393,22 @@ function onPointerMove(event: PointerEvent) {
     return
   }
   const point = cellFromEvent(event)
+  if (current.mode === 'move') {
+    const ghost = dragGhost.value
+    if (ghost) {
+      dragGhost.value = {
+        ...ghost,
+        left: event.clientX - ghost.offsetX,
+        top: event.clientY - ghost.offsetY,
+      }
+    }
+    previewMove({
+      ...item,
+      x: clamp(point.col - current.grabCol, 0, GRID_COLUMNS - item.w),
+      y: clamp(point.row - current.grabRow, 0, 400),
+    })
+    return
+  }
   if (current.mode === 'resize-right') {
     content.value = setLayoutItem(content.value, breakpoint.value, {
       ...item,
@@ -356,11 +427,20 @@ function onPointerMove(event: PointerEvent) {
     }, false)
     return
   }
-  content.value = setLayoutItem(content.value, breakpoint.value, {
-    ...item,
-    x: clamp(point.col - current.grabCol, 0, GRID_COLUMNS - item.w),
-    y: clamp(point.row - current.grabRow, 0, 400),
-  }, false)
+}
+
+function previewMove(item: LayoutItem) {
+  const base = dragBase.value
+  const source = base
+    ? {
+        ...content.value,
+        layouts: {
+          ...content.value.layouts,
+          [breakpoint.value]: base.map(entry => ({ ...entry })),
+        },
+      }
+    : content.value
+  content.value = setLayoutItem(source, breakpoint.value, item, true)
 }
 
 function onPointerUp(event: PointerEvent) {
@@ -377,6 +457,9 @@ function onPointerUp(event: PointerEvent) {
 
 function endDrag() {
   drag.value = null
+  dragGhost.value = null
+  dragBase.value = null
+  document.body.style.userSelect = ''
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)
   window.removeEventListener('pointercancel', onPointerUp)
@@ -398,7 +481,7 @@ function rowFromPointer(clientY: number, grid: HTMLElement): number {
   const gridTop = grid.getBoundingClientRect().top
   const offsetY = clientY - gridTop
   const bands: { row: number, top: number, bottom: number }[] = []
-  for (const el of grid.querySelectorAll<HTMLElement>(':scope > .miraicms-form-builder__item')) {
+  for (const el of grid.querySelectorAll<HTMLElement>(':scope > .miraicms-form-builder__item:not(.is-floating), :scope > .miraicms-form-builder__drop-placeholder')) {
     const raw = Number.parseInt(el.style.gridRow, 10)
     if (!Number.isFinite(raw)) {
       continue
@@ -785,11 +868,20 @@ onBeforeUnmount(() => {
             @pointerdown.self="selectedId = null"
           >
             <div
+              v-if="dropPlaceholderStyle"
+              class="miraicms-form-builder__drop-placeholder"
+              :style="dropPlaceholderStyle"
+            />
+            <div
               v-for="item in layout"
               :key="item.fieldId"
               class="miraicms-form-builder__item"
-              :class="{ 'is-selected': item.fieldId === selectedId, 'is-dragging': drag?.fieldId === item.fieldId }"
-              :style="itemStyle(item)"
+              :class="{
+                'is-selected': item.fieldId === selectedId,
+                'is-dragging': drag?.fieldId === item.fieldId && drag?.mode !== 'move',
+                'is-floating': drag?.fieldId === item.fieldId && drag?.mode === 'move',
+              }"
+              :style="itemVisualStyle(item)"
               @pointerdown="onItemPointerDown($event, item)"
             >
               <span class="miraicms-form-builder__item-label">{{ cardText(fieldById(item.fieldId)) }}</span>
@@ -1140,6 +1232,16 @@ onBeforeUnmount(() => {
     padding: math-rem(4) 0;
   }
 
+  &__drop-placeholder {
+    box-sizing: border-box;
+    align-self: start;
+    margin: math-rem(6);
+    border: 1px dashed $color-border;
+    border-radius: $border-radius;
+    background-color: $color-bg;
+    pointer-events: none;
+  }
+
   &__item {
     position: relative;
     display: flex;
@@ -1166,6 +1268,11 @@ onBeforeUnmount(() => {
     &.is-dragging {
       opacity: 0.85;
       z-index: 2;
+    }
+
+    &.is-floating {
+      box-shadow: $shadow-md;
+      cursor: grabbing;
     }
   }
 

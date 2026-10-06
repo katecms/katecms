@@ -478,6 +478,8 @@ onBeforeUnmount(revokeCropUrl)
             <MiraiCmsUiButton
               tag="button"
               :variant="['secondary', 'small', 'icon']"
+              aria-label="Change"
+              title="Change"
               @click="openModal"
             >
               <svg
@@ -513,6 +515,8 @@ onBeforeUnmount(revokeCropUrl)
             <MiraiCmsUiButton
               tag="button"
               :variant="['red', 'small', 'icon']"
+              aria-label="Remove"
+              title="Remove"
               @click="remove"
             >
               <svg

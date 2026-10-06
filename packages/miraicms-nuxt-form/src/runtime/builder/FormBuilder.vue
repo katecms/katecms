@@ -753,14 +753,6 @@ onBeforeUnmount(() => {
           class="miraicms-form-builder__frame"
           :style="frameStyle"
         >
-          <div class="miraicms-form-builder__ruler">
-            <span
-              v-for="mark in rulerMarks"
-              :key="mark"
-            >
-              {{ mark }}
-            </span>
-          </div>
           <div
             ref="gridRef"
             class="miraicms-form-builder__grid"
@@ -777,14 +769,40 @@ onBeforeUnmount(() => {
             >
               <span class="miraicms-form-builder__item-label">{{ cardText(fieldById(item.fieldId)) }}</span>
               <span class="miraicms-form-builder__item-meta">{{ item.w }}</span>
-              <span
+              <div
                 class="miraicms-form-builder__resizable-handle miraicms-form-builder__resizable-handle--left"
                 @pointerdown="onResizePointerDown($event, item, 'left')"
-              />
-              <span
+              >
+                <svg
+                  width="15"
+                  height="93"
+                  viewBox="0 0 15 93"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M15 7.3421C15 8.79424 14.5601 10.2138 13.736 11.4212C12.9119 12.6286 11.7406 13.5696 10.3701 14.1253C8.99968 14.681 7.49168 14.8264 6.03682 14.5431C4.58197 14.2598 3.2456 13.5606 2.1967 12.5338C1.14781 11.5069 0.433503 10.1987 0.144114 8.77448C-0.145275 7.35025 0.00324964 5.874 0.570907 4.5324C1.13856 3.19081 2.09986 2.04413 3.33323 1.23737C4.5666 0.430608 6.01664 0 7.5 0C9.48831 0.00259009 11.3944 0.776963 12.8004 2.15331C14.2063 3.52966 14.9974 5.39565 15 7.3421ZM7.5 39.1579C6.01664 39.1579 4.5666 39.5885 3.33323 40.3953C2.09986 41.202 1.13856 42.3487 0.570907 43.6903C0.00324964 45.0319 -0.145275 46.5081 0.144114 47.9324C0.433503 49.3566 1.14781 50.6648 2.1967 51.6917C3.2456 52.7185 4.58197 53.4177 6.03682 53.701C7.49168 53.9843 8.99968 53.8389 10.3701 53.2832C11.7406 52.7275 12.9119 51.7865 13.736 50.5791C14.5601 49.3717 15 47.9521 15 46.5C14.9974 44.5535 14.2063 42.6876 12.8004 41.3112C11.3944 39.9349 9.48831 39.1605 7.5 39.1579ZM7.5 78.3158C6.01664 78.3158 4.5666 78.7464 3.33323 79.5532C2.09986 80.3599 1.13856 81.5066 0.570907 82.8482C0.00324964 84.1898 -0.145275 85.666 0.144114 87.0903C0.433503 88.5145 1.14781 89.8227 2.1967 90.8495C3.2456 91.8764 4.58197 92.5756 6.03682 92.8589C7.49168 93.1422 8.99968 92.9968 10.3701 92.4411C11.7406 91.8854 12.9119 90.9444 13.736 89.7369C14.5601 88.5295 15 87.11 15 85.6579C14.9974 83.7114 14.2063 81.8455 12.8004 80.4691C11.3944 79.0928 9.48831 78.3184 7.5 78.3158Z"
+                    fill="white"
+                  />
+                </svg>
+              </div>
+              <div
                 class="miraicms-form-builder__resizable-handle miraicms-form-builder__resizable-handle--right"
                 @pointerdown="onResizePointerDown($event, item, 'right')"
-              />
+              >
+                <svg
+                  width="15"
+                  height="93"
+                  viewBox="0 0 15 93"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M15 7.3421C15 8.79424 14.5601 10.2138 13.736 11.4212C12.9119 12.6286 11.7406 13.5696 10.3701 14.1253C8.99968 14.681 7.49168 14.8264 6.03682 14.5431C4.58197 14.2598 3.2456 13.5606 2.1967 12.5338C1.14781 11.5069 0.433503 10.1987 0.144114 8.77448C-0.145275 7.35025 0.00324964 5.874 0.570907 4.5324C1.13856 3.19081 2.09986 2.04413 3.33323 1.23737C4.5666 0.430608 6.01664 0 7.5 0C9.48831 0.00259009 11.3944 0.776963 12.8004 2.15331C14.2063 3.52966 14.9974 5.39565 15 7.3421ZM7.5 39.1579C6.01664 39.1579 4.5666 39.5885 3.33323 40.3953C2.09986 41.202 1.13856 42.3487 0.570907 43.6903C0.00324964 45.0319 -0.145275 46.5081 0.144114 47.9324C0.433503 49.3566 1.14781 50.6648 2.1967 51.6917C3.2456 52.7185 4.58197 53.4177 6.03682 53.701C7.49168 53.9843 8.99968 53.8389 10.3701 53.2832C11.7406 52.7275 12.9119 51.7865 13.736 50.5791C14.5601 49.3717 15 47.9521 15 46.5C14.9974 44.5535 14.2063 42.6876 12.8004 41.3112C11.3944 39.9349 9.48831 39.1605 7.5 39.1579ZM7.5 78.3158C6.01664 78.3158 4.5666 78.7464 3.33323 79.5532C2.09986 80.3599 1.13856 81.5066 0.570907 82.8482C0.00324964 84.1898 -0.145275 85.666 0.144114 87.0903C0.433503 88.5145 1.14781 89.8227 2.1967 90.8495C3.2456 91.8764 4.58197 92.5756 6.03682 92.8589C7.49168 93.1422 8.99968 92.9968 10.3701 92.4411C11.7406 91.8854 12.9119 90.9444 13.736 89.7369C14.5601 88.5295 15 87.11 15 85.6579C14.9974 83.7114 14.2063 81.8455 12.8004 80.4691C11.3944 79.0928 9.48831 78.3184 7.5 78.3158Z"
+                    fill="white"
+                  />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
@@ -1082,14 +1100,6 @@ onBeforeUnmount(() => {
     margin-inline: auto;
   }
 
-  &__ruler {
-    position: relative;
-    color: $color-muted;
-    font-size: math-rem(11);
-    display: flex;
-    justify-content: space-between;
-  }
-
   &__grid {
     display: grid;
     grid-template-columns: repeat(60, minmax(0, 1fr));
@@ -1097,16 +1107,10 @@ onBeforeUnmount(() => {
     position: relative;
     width: 100%;
     background-color: $color-surface;
-    background-image: repeating-linear-gradient(
-      to right,
-      transparent 0,
-      transparent calc(100% / 60 * 10 - 1px),
-      $color-border calc(100% / 60 * 10 - 1px),
-      $color-border calc(100% / 60 * 10)
-    );
     border: 1px solid $color-border;
     box-shadow: $shadow-sm;
     border-radius: $border-radius;
+    padding: math-rem(4) 0;
   }
 
   &__item {
@@ -1115,7 +1119,7 @@ onBeforeUnmount(() => {
     align-items: center;
     gap: math-rem(6);
     min-width: 0;
-    margin: math-rem(4);
+    margin: math-rem(6);
     padding: 0 math-rem(12) 0 math-rem(8);
     border: 1px solid $color-border;
     border-radius: $border-radius;
@@ -1126,7 +1130,8 @@ onBeforeUnmount(() => {
 
     &.is-selected {
       border-color: $color-accent;
-      box-shadow: 0 0 0 1px $color-accent;
+      border-style: dashed;
+      background-color: rgba($color-accent-wash, .4);
     }
 
     &.is-dragging {
@@ -1150,6 +1155,9 @@ onBeforeUnmount(() => {
   }
 
   &__resizable-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -1160,6 +1168,12 @@ onBeforeUnmount(() => {
     opacity: 0;
     border-radius: math-rem(7);
     background-color: $color-accent;
+
+    svg {
+      display: block;
+      width: 4px;
+      height: 20px !important;
+    }
   }
 
   &__resizable-handle--left {

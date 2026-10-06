@@ -33,7 +33,7 @@ const activeStepId = ref('')
 const stepSettingsOpen = ref(false)
 const openStepMenu = ref('')
 const selectedId = ref<string | null>(null)
-const dragRow = ref(0)
+const drag = ref<DragState | null>(null)
 const isDraggingStep = ref(false)
 const draggingStepIndex = ref<number | null>(null)
 const dropStepIndex = ref(0)
@@ -52,8 +52,6 @@ interface DragState {
   startW: number
 }
 
-const drag = ref<DragState | null>(null)
-
 const currentStepId = computed(() => {
   if (content.value.steps.some(step => step.id === activeStepId.value)) {
     return activeStepId.value
@@ -65,10 +63,6 @@ const layout = computed(() => content.value.layouts[breakpoint.value].filter((it
 }))
 const selected = computed(() => content.value.fields.find(field => field.id === selectedId.value) ?? null)
 const selectedItem = computed(() => layout.value.find(item => item.fieldId === selectedId.value) ?? null)
-const rowCount = computed(() => {
-  const maxRow = layout.value.reduce((highest, item) => Math.max(highest, item.y), 0)
-  return Math.max(12, maxRow + 4, dragRow.value + 3)
-})
 const frameStyle = computed(() => {
   if (breakpoint.value === 'tablet') {
     return { maxWidth: '768px' }
@@ -78,7 +72,6 @@ const frameStyle = computed(() => {
   }
   return { maxWidth: 'none' }
 })
-const rulerMarks = [1, 10, 20, 30, 40, 50, 60]
 
 function add(type: FieldType) {
   const next = addField(content.value, type, currentStepId.value)
@@ -345,7 +338,6 @@ function onPointerMove(event: PointerEvent) {
     return
   }
   const point = cellFromEvent(event)
-  dragRow.value = point.row
   if (current.mode === 'resize-right') {
     content.value = setLayoutItem(content.value, breakpoint.value, {
       ...item,
@@ -385,7 +377,6 @@ function onPointerUp(event: PointerEvent) {
 
 function endDrag() {
   drag.value = null
-  dragRow.value = 0
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)
   window.removeEventListener('pointercancel', onPointerUp)
@@ -399,8 +390,43 @@ function cellFromEvent(event: PointerEvent): { col: number, row: number } {
   const rect = grid.getBoundingClientRect()
   const width = rect.width || 1
   const col = clamp(Math.floor((event.clientX - rect.left) / (width / GRID_COLUMNS)), 0, GRID_COLUMNS - 1)
-  const row = clamp(Math.floor((event.clientY - rect.top) / ROW_HEIGHT), 0, 400)
+  const row = rowFromPointer(event.clientY, grid)
   return { col, row }
+}
+
+function rowFromPointer(clientY: number, grid: HTMLElement): number {
+  const gridTop = grid.getBoundingClientRect().top
+  const offsetY = clientY - gridTop
+  const bands: { row: number, top: number, bottom: number }[] = []
+  for (const el of grid.querySelectorAll<HTMLElement>(':scope > .miraicms-form-builder__item')) {
+    const raw = Number.parseInt(el.style.gridRow, 10)
+    if (!Number.isFinite(raw)) {
+      continue
+    }
+    const row = raw - 1
+    const rect = el.getBoundingClientRect()
+    const top = rect.top - gridTop
+    const bottom = rect.bottom - gridTop
+    const existing = bands.find(band => band.row === row)
+    if (existing) {
+      existing.top = Math.min(existing.top, top)
+      existing.bottom = Math.max(existing.bottom, bottom)
+    }
+    else {
+      bands.push({ row, top, bottom })
+    }
+  }
+  bands.sort((a, b) => a.row - b.row)
+  if (!bands.length) {
+    return clamp(Math.floor(Math.max(0, offsetY) / ROW_HEIGHT), 0, 400)
+  }
+  for (const band of bands) {
+    if (offsetY <= band.bottom) {
+      return band.row
+    }
+  }
+  const last = bands[bands.length - 1]!
+  return clamp(last.row + 1 + Math.floor(Math.max(0, offsetY - last.bottom) / ROW_HEIGHT), 0, 400)
 }
 
 function onKeydown(event: KeyboardEvent) {
@@ -756,7 +782,6 @@ onBeforeUnmount(() => {
           <div
             ref="gridRef"
             class="miraicms-form-builder__grid"
-            :style="{ height: `${rowCount * ROW_HEIGHT}px` }"
             @pointerdown.self="selectedId = null"
           >
             <div
@@ -1103,9 +1128,11 @@ onBeforeUnmount(() => {
   &__grid {
     display: grid;
     grid-template-columns: repeat(60, minmax(0, 1fr));
-    grid-auto-rows: 72px;
+    grid-auto-rows: auto;
+    align-content: start;
     position: relative;
     width: 100%;
+    min-height: math-rem(240);
     background-color: $color-surface;
     border: 1px solid $color-border;
     box-shadow: $shadow-sm;
@@ -1119,8 +1146,10 @@ onBeforeUnmount(() => {
     align-items: center;
     gap: math-rem(6);
     min-width: 0;
+    height: auto;
+    align-self: start;
     margin: math-rem(6);
-    padding: 0 math-rem(12) 0 math-rem(8);
+    padding: math-rem(8) math-rem(12) math-rem(8) math-rem(8);
     border: 1px solid $color-border;
     border-radius: $border-radius;
     background: $color-surface;

@@ -1,11 +1,37 @@
+import type { FormTextOptions } from './text-options.ts'
+import { customErrorText, defaultTextOptions, normalizeTextOptions, textConstraintError } from './text-options.ts'
+
 export const GRID_COLUMNS = 60
 export const ROW_HEIGHT = 72
 export const MAX_FIELDS = 200
 export const MAX_STEPS = 20
 export const MAX_TEXT = 20000
 
-export const BREAKPOINTS = ['phone', 'tablet', 'desktop'] as const
-export type Breakpoint = typeof BREAKPOINTS[number]
+const DEFAULT_BREAKPOINT_NAMES = ['phone', 'tablet', 'desktop'] as const
+
+let activeBreakpoints: string[] = [...DEFAULT_BREAKPOINT_NAMES]
+
+/** Layout keys currently in use. Defaults match `miraicms.form.breakpoints`. */
+export function formBreakpoints(): readonly string[] {
+  return activeBreakpoints
+}
+
+/** Replace the layout keys used when creating and normalising forms. */
+export function setFormBreakpoints(names: readonly string[]) {
+  const next = [...new Set(names.map(name => name.trim().toLowerCase()).filter(name => /^[a-z][a-z0-9-]{0,31}$/.test(name)))]
+  activeBreakpoints = next.length ? next : [...DEFAULT_BREAKPOINT_NAMES]
+}
+
+/** Breakpoint that keeps partial column widths and unsuffixed data-x/y/w attributes. */
+export function baseBreakpoint(): string {
+  const names = formBreakpoints()
+  if (names.includes('desktop')) {
+    return 'desktop'
+  }
+  return names[names.length - 1] ?? 'desktop'
+}
+
+export type Breakpoint = string
 
 export const FIELD_TYPES = [
   'text',
@@ -26,7 +52,7 @@ export type FieldType = typeof FIELD_TYPES[number]
 
 export const FIELD_LABELS: Record<FieldType, string> = {
   text: 'Text',
-  textarea: 'Textarea',
+  textarea: 'Multiline Text',
   email: 'Email',
   phone: 'Phone',
   number: 'Number',
@@ -81,6 +107,7 @@ export interface FormField {
   min: string
   max: string
   step: string
+  text?: FormTextOptions
 }
 
 export interface LayoutItem {
@@ -220,7 +247,7 @@ export function placeField(layout: LayoutItem[], fieldId: string, width: number)
 }
 
 export function defaultWidth(type: FieldType, breakpoint: Breakpoint): number {
-  if (breakpoint !== 'desktop') {
+  if (breakpoint !== baseBreakpoint()) {
     return GRID_COLUMNS
   }
   if (type === 'button') {
@@ -233,11 +260,15 @@ export function defaultWidth(type: FieldType, breakpoint: Breakpoint): number {
 }
 
 export function createEmptyContent(): FormContent {
+  const layouts = {} as FormContent['layouts']
+  for (const name of formBreakpoints()) {
+    layouts[name] = []
+  }
   return addField({
     steps: [createStep(1)],
     stepHeader: defaultStepHeader(),
     fields: [],
-    layouts: { desktop: [], tablet: [], phone: [] },
+    layouts,
   }, 'button')
 }
 
@@ -298,23 +329,21 @@ export function cloneStep(content: FormContent, stepId: string): FormContent {
   const clonedFields = sourceFields.map((field) => {
     const id = `f_${crypto.randomUUID()}`
     idMap.set(field.id, id)
-    const copy: FormField = {
-      ...field,
-      id,
-      stepId: nextStep.id,
-      key: uniqueKey(field.type, existing),
-      options: field.options.map(option => ({ ...option })),
-    }
+    const copy: FormField = structuredClone(field)
+    copy.id = id
+    copy.stepId = nextStep.id
+    copy.key = uniqueKey(field.type, existing)
+    copy.options = field.options.map(option => ({ ...option }))
     existing.push(copy)
     return copy
   })
   const layouts = { ...content.layouts }
-  for (const breakpoint of BREAKPOINTS) {
-    const copies = content.layouts[breakpoint].flatMap((item) => {
+  for (const breakpoint of formBreakpoints()) {
+    const copies = (content.layouts[breakpoint] ?? []).flatMap((item) => {
       const fieldId = idMap.get(item.fieldId)
       return fieldId ? [{ ...item, fieldId }] : []
     })
-    layouts[breakpoint] = [...content.layouts[breakpoint], ...copies]
+    layouts[breakpoint] = [...(content.layouts[breakpoint] ?? []), ...copies]
   }
   const steps = [...content.steps]
   steps.splice(index + 1, 0, nextStep)
@@ -332,8 +361,8 @@ export function deleteStep(content: FormContent, stepId: string): FormContent {
   }
   const removeIds = new Set(content.fields.filter(field => field.stepId === stepId).map(field => field.id))
   const layouts = { ...content.layouts }
-  for (const breakpoint of BREAKPOINTS) {
-    layouts[breakpoint] = content.layouts[breakpoint].filter(item => !removeIds.has(item.fieldId))
+  for (const breakpoint of formBreakpoints()) {
+    layouts[breakpoint] = (content.layouts[breakpoint] ?? []).filter(item => !removeIds.has(item.fieldId))
   }
   return {
     ...content,
@@ -365,8 +394,8 @@ export function addField(content: FormContent, type: FieldType, stepId?: string)
   }
   const field = createField(type, content.fields, target)
   const layouts = { ...content.layouts }
-  for (const breakpoint of BREAKPOINTS) {
-    const current = content.layouts[breakpoint]
+  for (const breakpoint of formBreakpoints()) {
+    const current = content.layouts[breakpoint] ?? []
     const sameStep = current.filter(item => stepIdOf(content, item.fieldId) === target)
     const otherSteps = current.filter(item => stepIdOf(content, item.fieldId) !== target)
     layouts[breakpoint] = [...otherSteps, ...placeField(sameStep, field.id, defaultWidth(type, breakpoint))]
@@ -378,11 +407,10 @@ export function removeField(content: FormContent, fieldId: string): FormContent 
   return {
     ...content,
     fields: content.fields.filter(field => field.id !== fieldId),
-    layouts: {
-      desktop: content.layouts.desktop.filter(item => item.fieldId !== fieldId),
-      tablet: content.layouts.tablet.filter(item => item.fieldId !== fieldId),
-      phone: content.layouts.phone.filter(item => item.fieldId !== fieldId),
-    },
+    layouts: Object.fromEntries(formBreakpoints().map(name => [
+      name,
+      (content.layouts[name] ?? []).filter(item => item.fieldId !== fieldId),
+    ])),
   }
 }
 
@@ -395,7 +423,7 @@ export function replaceField(content: FormContent, field: FormField): FormConten
 
 export function setLayoutItem(content: FormContent, breakpoint: Breakpoint, item: LayoutItem, resolve = true): FormContent {
   const stepId = stepIdOf(content, item.fieldId)
-  const all = content.layouts[breakpoint]
+  const all = content.layouts[breakpoint] ?? []
   const sameStep = all.filter(entry => entry.fieldId === item.fieldId || stepIdOf(content, entry.fieldId) === stepId)
   const otherSteps = all.filter(entry => entry.fieldId !== item.fieldId && stepIdOf(content, entry.fieldId) !== stepId)
   const nextSame = sameStep.map(current => current.fieldId === item.fieldId ? clampItem(item) : current)
@@ -409,10 +437,11 @@ export function setLayoutItem(content: FormContent, breakpoint: Breakpoint, item
 }
 
 export function copyDesktopLayout(content: FormContent, breakpoint: Breakpoint): FormContent {
-  if (breakpoint === 'desktop') {
+  const source = baseBreakpoint()
+  if (breakpoint === source) {
     return content
   }
-  const copied = content.layouts.desktop.map(item => ({ ...item }))
+  const copied = (content.layouts[source] ?? []).map(item => ({ ...item }))
   const next: LayoutItem[] = []
   for (const step of content.steps) {
     next.push(...resolveLayout(copied.filter(item => stepIdOf(content, item.fieldId) === step.id)))
@@ -441,7 +470,7 @@ export function normalizeFormContent(input: unknown): FormContent {
   }
   const rawLayouts = isRecord(source.layouts) ? source.layouts : {}
   const layouts = {} as FormContent['layouts']
-  for (const breakpoint of BREAKPOINTS) {
+  for (const breakpoint of formBreakpoints()) {
     const rawItems = Array.isArray(rawLayouts[breakpoint]) ? rawLayouts[breakpoint] : []
     const next: LayoutItem[] = []
     for (const step of steps) {
@@ -615,6 +644,7 @@ function createField(type: FieldType, existing: FormField[], stepId: string): Fo
     min: '',
     max: '',
     step: '',
+    text: type === 'text' || type === 'textarea' ? defaultTextOptions(FIELD_LABELS[type]) : undefined,
   }
 }
 
@@ -629,24 +659,34 @@ function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string
     : `f_${crypto.randomUUID()}`
   const key = uniqueNormalizedKey(raw.key, type, existing)
   const options = CHOICE_TYPES.has(type) ? normalizeOptions(raw.options) : []
+  const text = type === 'text' || type === 'textarea'
+    ? normalizeTextOptions(raw.text, {
+        label: clip(raw.label, 200) || FIELD_LABELS[type],
+        placeholder: clip(raw.placeholder, 200),
+        help: clip(raw.help, 400),
+        required: raw.required === true,
+        value: clip(raw.value, 20000),
+      })
+    : undefined
   return {
     id,
     type,
     stepId: typeof raw.stepId === 'string' && stepIds.has(raw.stepId) ? raw.stepId : fallbackStepId,
     key,
-    label: clip(raw.label, 200) || FIELD_LABELS[type],
-    placeholder: clip(raw.placeholder, 200),
-    help: clip(raw.help, 400),
-    required: type !== 'html' && type !== 'button' && type !== 'hidden' && raw.required === true,
+    label: text?.label.text || clip(raw.label, 200) || FIELD_LABELS[type],
+    placeholder: text ? text.placeholder : clip(raw.placeholder, 200),
+    help: text ? (text.helper.enabled ? text.helper.text : '') : clip(raw.help, 400),
+    required: text ? text.required.enabled : type !== 'html' && type !== 'button' && type !== 'hidden' && raw.required === true,
     options,
     html: type === 'html' ? sanitizeHtml(clip(raw.html, 50000)) : '',
-    value: type === 'hidden' ? clip(raw.value, 2000) : '',
+    value: type === 'hidden' ? clip(raw.value, 2000) : (text?.defaultValue || ''),
     buttonLabel: type === 'button' ? (clip(raw.buttonLabel, 80) || 'Submit') : '',
     accept: type === 'file' ? clip(raw.accept, 200) : '',
     rows: type === 'textarea' ? clampInt(Number(raw.rows) || 4, 2, 20) : 4,
     min: type === 'number' ? clip(raw.min, 40) : '',
     max: type === 'number' ? clip(raw.max, 40) : '',
     step: type === 'number' ? clip(raw.step, 40) : '',
+    text,
   }
 }
 
@@ -722,7 +762,16 @@ function fieldError(field: FormField, raw: unknown, file: UploadedFile | null, m
   }
   const value = cleanText(typeof raw === 'string' ? raw : raw == null ? '' : String(raw)).trim()
   if (!value) {
-    return field.required ? 'This field is required.' : null
+    if (!field.required) {
+      return null
+    }
+    return customErrorText(field.text) || 'This field is required.'
+  }
+  if (field.text && (field.type === 'text' || field.type === 'textarea')) {
+    const constraint = textConstraintError(field.text, value)
+    if (constraint) {
+      return customErrorText(field.text) || constraint
+    }
   }
   if (field.type === 'email' && !EMAIL_PATTERN.test(value)) {
     return 'Enter a valid email address.'

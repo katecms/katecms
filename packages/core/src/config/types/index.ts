@@ -68,4 +68,10 @@ export type {
   ScopedRights,
 } from './roles'
 export type { Dictionaries, DictionaryDefinition, DictionaryLabels } from './dictionary'
+export type {
+  FormBreakpointConfig,
+  FormConfig,
+  ResolvedFormBreakpoint,
+  ResolvedFormConfig,
+} from './form'
 export type { OptionField, OptionFields, OptionPageDefinition, OptionPages } from './option'

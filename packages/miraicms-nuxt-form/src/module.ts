@@ -8,33 +8,14 @@ import {
   extendPages,
 } from '@nuxt/kit'
 
-export interface ModuleOptions {
-  /** Absolute directory for files submitted through forms. */
-  uploadDir?: string
-  /** Largest accepted upload, in bytes. */
-  maxFileBytes?: number
-}
-
-export default defineNuxtModule<ModuleOptions>({
+export default defineNuxtModule({
   meta: {
     name: 'miraicms-nuxt-form',
-    configKey: 'miraicmsForm',
   },
-  defaults: {
-    uploadDir: '',
-    maxFileBytes: 10 * 1024 * 1024,
-  },
-  setup(options, nuxt) {
+  setup(_options, nuxt) {
     const resolver = createResolver(import.meta.url)
     const adminPath = String(nuxt.options.runtimeConfig.miraicms?.adminPath || 'admin')
       .replace(/^\/+|\/+$/g, '') || 'admin'
-
-    nuxt.options.runtimeConfig.miraicmsForm = {
-      uploadDir: options.uploadDir?.trim() || '',
-      maxFileBytes: options.maxFileBytes && options.maxFileBytes > 0
-        ? options.maxFileBytes
-        : 10 * 1024 * 1024,
-    }
 
     addPlugin(resolver.resolve('./runtime/plugin'))
     addServerPlugin(resolver.resolve('./runtime/server/plugins/migrate'))

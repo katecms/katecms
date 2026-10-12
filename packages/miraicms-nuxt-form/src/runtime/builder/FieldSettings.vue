@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import TextFieldSettings from './settings/TextFieldSettings.vue'
 import type { FormField, LayoutItem } from '../form/model'
 import { FIELD_LABELS, GRID_COLUMNS } from '../form/model'
 
@@ -15,7 +16,8 @@ const emit = defineEmits<{
 }>()
 
 const choice = computed(() => props.field.type === 'select' || props.field.type === 'radio' || props.field.type === 'checkbox')
-const textLike = computed(() => ['text', 'textarea', 'email', 'phone', 'number'].includes(props.field.type))
+const richText = computed(() => props.field.type === 'text' || props.field.type === 'textarea')
+const textLike = computed(() => ['email', 'phone', 'number'].includes(props.field.type))
 
 function patch(partial: Partial<FormField>) {
   emit('update', { ...props.field, ...partial })
@@ -73,6 +75,17 @@ function removeOption(index: number) {
     <div class="miraicms-form-settings__type">
       {{ FIELD_LABELS[field.type] }}
     </div>
+
+    <TextFieldSettings
+      v-if="richText"
+      :key="field.id"
+      :field="field"
+      :item="item"
+      @update="emit('update', $event)"
+      @layout="emit('layout', $event)"
+    />
+
+    <template v-else>
 
     <MiraiCmsTextField
       :model-value="field.label"
@@ -237,6 +250,8 @@ function removeOption(index: number) {
         @update:model-value="setWidth"
       />
     </div>
+
+    </template>
 
     <MiraiCmsUiButton
       tag="button"

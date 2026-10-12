@@ -40,7 +40,7 @@ export function getFormDb(): ReturnType<typeof createSqliteDb> {
 }
 
 export function maxFileBytes(): number {
-  const configured = Number(useRuntimeConfig().miraicmsForm?.maxFileBytes)
+  const configured = Number(useRuntimeConfig().miraicms?.form?.maxFileBytes)
   if (Number.isFinite(configured) && configured > 0) {
     return configured
   }

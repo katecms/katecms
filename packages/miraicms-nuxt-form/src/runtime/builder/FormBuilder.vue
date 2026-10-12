@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import FieldFace from './FieldFace.vue'
 import FieldSettings from './FieldSettings.vue'
 import type { Breakpoint, FieldType, FormContent, FormField, FormStatus, LayoutItem } from '../form/model'
 import {
-  BREAKPOINTS,
   FIELD_LABELS,
   FIELD_TYPES,
   GRID_COLUMNS,
   ROW_HEIGHT,
   addField,
   addStep,
+  baseBreakpoint,
   cloneStep,
   copyDesktopLayout,
   deleteStep,
@@ -19,6 +20,7 @@ import {
   replaceField,
   setLayoutItem,
 } from '../form/model'
+import { clientFormBreakpoints } from '../form/runtime-config'
 import StepSettings from './StepSettings.vue'
 
 const name = defineModel<string>('name', { required: true })
@@ -28,7 +30,8 @@ const content = defineModel<FormContent>('content', { required: true })
 
 const rootRef = ref<HTMLElement | null>(null)
 const gridRef = ref<HTMLElement | null>(null)
-const breakpoint = ref<Breakpoint>('desktop')
+const formBreakpointList = clientFormBreakpoints()
+const breakpoint = ref<Breakpoint>(baseBreakpoint())
 const activeStepId = ref('')
 const stepSettingsOpen = ref(false)
 const openStepMenu = ref('')
@@ -75,14 +78,25 @@ const layout = computed(() => content.value.layouts[breakpoint.value].filter((it
 const selected = computed(() => content.value.fields.find(field => field.id === selectedId.value) ?? null)
 const selectedItem = computed(() => layout.value.find(item => item.fieldId === selectedId.value) ?? null)
 const frameStyle = computed(() => {
-  if (breakpoint.value === 'tablet') {
-    return { maxWidth: '768px' }
-  }
-  if (breakpoint.value === 'phone') {
-    return { maxWidth: '390px' }
+  const current = formBreakpointList.find(item => item.name === breakpoint.value)
+  if (current?.maxWidth) {
+    return { maxWidth: `${current.maxWidth}px` }
   }
   return { maxWidth: 'none' }
 })
+const baseName = computed(() => baseBreakpoint())
+const baseLabel = computed(() => {
+  return formBreakpointList.find(item => item.name === baseName.value)?.label ?? 'Desktop'
+})
+
+const palette = [
+  { title: 'Basic Fields', types: ['text', 'textarea'] as FieldType[] },
+  { title: 'Fields', types: FIELD_TYPES.filter(type => type !== 'text' && type !== 'textarea') },
+]
+
+function hasBreakpointIcon(name: string) {
+  return name === 'desktop' || name === 'tablet' || name === 'phone'
+}
 
 function add(type: FieldType) {
   const next = addField(content.value, type, currentStepId.value)
@@ -308,19 +322,6 @@ const dropPlaceholderStyle = computed((): CSSProperties | undefined => {
 
 function fieldById(fieldId: string): FormField | undefined {
   return content.value.fields.find(field => field.id === fieldId)
-}
-
-function cardText(field: FormField | undefined): string {
-  if (!field) {
-    return 'Field'
-  }
-  if (field.type === 'button') {
-    return field.buttonLabel || field.label
-  }
-  if (field.type === 'html') {
-    return field.label || 'HTML'
-  }
-  return field.label
 }
 
 function focusBoard() {
@@ -582,37 +583,45 @@ onBeforeUnmount(() => {
     @keydown="onKeydown"
   >
     <div class="miraicms-form-builder__palette">
-      <div class="miraicms-form-builder__heading">
-        Fields
-      </div>
-      <MiraiCmsUiButton
-        v-for="type in FIELD_TYPES"
-        :key="type"
-        tag="button"
-        variant="secondary"
-        class="miraicms-form-builder__add"
-        @click="add(type)"
+      <div
+        v-for="group in palette"
+        :key="group.title"
+        class="miraicms-form-builder__group"
       >
-        {{ FIELD_LABELS[type] }}
-      </MiraiCmsUiButton>
+        <div class="miraicms-form-builder__heading">
+          {{ group.title }}
+        </div>
+        <MiraiCmsUiButton
+          v-for="type in group.types"
+          :key="type"
+          tag="button"
+          variant="secondary"
+          class="miraicms-form-builder__add"
+          @click="add(type)"
+        >
+          {{ FIELD_LABELS[type] }}
+        </MiraiCmsUiButton>
+      </div>
     </div>
 
     <div class="miraicms-form-builder__stage">
       <div class="miraicms-form-builder__toolbar">
         <div class="miraicms-form-builder__breakpoints">
           <MiraiCmsUiButton
-            v-for="item in BREAKPOINTS"
-            :key="item"
+            v-for="item in formBreakpointList"
+            :key="item.name"
             :class="['miraicms-form-builder__breakpoint-btn']"
             tag="button"
-            :variant="breakpoint !== item ? ['icon', 'secondary'] : ['icon']"
-            :active="breakpoint === item"
-            :aria-label="item === 'desktop' ? 'Desktop' : item === 'tablet' ? 'Tablet' : 'Phone'"
-            :title="item === 'desktop' ? 'Desktop' : item === 'tablet' ? 'Tablet' : 'Phone'"
-            @click="breakpoint = item"
+            :variant="hasBreakpointIcon(item.name)
+              ? (breakpoint !== item.name ? ['icon', 'secondary'] : ['icon'])
+              : (breakpoint !== item.name ? ['secondary'] : [])"
+            :active="breakpoint === item.name"
+            :aria-label="item.label"
+            :title="item.label"
+            @click="breakpoint = item.name"
           >
             <svg
-              v-if="item === 'desktop'"
+              v-if="item.name === 'desktop'"
               width="29"
               height="29"
               viewBox="0 0 30 30"
@@ -641,7 +650,7 @@ onBeforeUnmount(() => {
               y2="22.29"
             /></svg>
             <svg
-              v-else-if="item === 'tablet'"
+              v-else-if="item.name === 'tablet'"
               width="22"
               height="22"
               viewBox="0 0 30 30"
@@ -668,7 +677,7 @@ onBeforeUnmount(() => {
               y2="23.22"
             /></svg>
             <svg
-              v-else
+              v-else-if="item.name === 'phone'"
               width="23"
               height="23"
               viewBox="0 0 30 30"
@@ -694,15 +703,16 @@ onBeforeUnmount(() => {
               x2="15"
               y2="23.22"
             /></svg>
+            <span v-else>{{ item.label }}</span>
           </MiraiCmsUiButton>
         </div>
         <MiraiCmsUiButton
-          v-if="breakpoint !== 'desktop'"
+          v-if="breakpoint !== baseName"
           tag="button"
           :variant="['secondary']"
           @click="matchDesktop"
         >
-          Match desktop
+          Match {{ baseLabel.toLowerCase() }}
         </MiraiCmsUiButton>
         <span class="miraicms-form-builder__hint">60 columns. Drag to move, drag the edge to resize. Arrows nudge, Shift changes width.</span>
       </div>
@@ -965,12 +975,16 @@ onBeforeUnmount(() => {
                 'is-selected': item.fieldId === selectedId,
                 'is-dragging': drag?.fieldId === item.fieldId && drag?.mode !== 'move',
                 'is-floating': drag?.fieldId === item.fieldId && drag?.mode === 'move',
+                'is-hidden': fieldById(item.fieldId)?.text?.hidden,
               }"
               :style="itemVisualStyle(item)"
               @pointerdown="onItemPointerDown($event, item)"
             >
-              <span class="miraicms-form-builder__item-label">{{ cardText(fieldById(item.fieldId)) }}</span>
-              <span class="miraicms-form-builder__item-meta">{{ item.w }}</span>
+              <FieldFace
+                v-if="fieldById(item.fieldId)"
+                :field="fieldById(item.fieldId)"
+                preview
+              />
               <div
                 class="miraicms-form-builder__resizable-handle miraicms-form-builder__resizable-handle--left"
                 @pointerdown="onResizePointerDown($event, item, 'left')"
@@ -1335,7 +1349,8 @@ onBeforeUnmount(() => {
   &__item {
     position: relative;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     gap: math-rem(6);
     min-width: 0;
     height: auto;
@@ -1363,6 +1378,10 @@ onBeforeUnmount(() => {
     &.is-floating {
       box-shadow: $shadow-md;
       cursor: grabbing;
+    }
+
+    &.is-hidden {
+      opacity: 0.55;
     }
   }
 

@@ -13,6 +13,7 @@ import {
   placeField,
   resolveLayout,
   setLayoutItem,
+  setFormBreakpoints,
   submissionErrors,
   textStoredValue,
 } from '../src/runtime/form/model.ts'
@@ -123,4 +124,42 @@ test('file size is rejected before the file is stored', () => {
   })
   const errors = submissionErrors(content, {}, { resume: { name: 'a.pdf', type: 'application/pdf', size: 50 } }, 10)
   assert.equal(errors.resume, 'File is too large.')
+})
+
+test('text options keep label settings and use a custom error', () => {
+  const content = normalizeFormContent({
+    fields: [{
+      id: 't',
+      type: 'text',
+      key: 'name',
+      label: 'Name',
+      required: true,
+      text: {
+        label: { enabled: true, text: 'Your name' },
+        required: { enabled: true, customError: true, errorText: 'Need a name', showError: true },
+        minLength: 3,
+      },
+    }],
+  })
+  const field = content.fields[0]
+  assert.equal(field?.label, 'Your name')
+  assert.equal(field?.text?.required.asteriskPosition, 'after')
+  assert.equal(field?.text?.label.enabled, true)
+  const errors = submissionErrors(content, { name: 'a' }, {}, 1024)
+  assert.equal(errors.name, 'Need a name')
+  const missing = submissionErrors(content, { name: '' }, {}, 1024)
+  assert.equal(missing.name, 'Need a name')
+})
+
+test('configured breakpoints replace the default layout keys', () => {
+  setFormBreakpoints(['desktop', 'wide'])
+  try {
+    const content = createEmptyContent()
+    assert.deepEqual(Object.keys(content.layouts).sort(), ['desktop', 'wide'])
+    assert.equal(content.layouts.desktop[0]?.w, 15)
+    assert.equal(content.layouts.wide[0]?.w, 60)
+  }
+  finally {
+    setFormBreakpoints(['phone', 'tablet', 'desktop'])
+  }
 })

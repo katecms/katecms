@@ -5,6 +5,7 @@ import type { MediaConfig, ResolvedMediaConfig } from './media'
 import type { OptionPages } from './option'
 import type { ResolvedRole, Roles } from './roles'
 import type { Dictionaries } from './dictionary'
+import type { FormConfig, ResolvedFormConfig } from './form'
 
 /** User-facing CMS configuration (framework-agnostic). */
 export interface MiraiCmsConfig {
@@ -38,6 +39,11 @@ export interface MiraiCmsConfig {
    * reserved and cannot be changed. `admin` cannot be hidden.
    */
   roles?: Roles
+  /**
+   * Form addon. Breakpoints, upload directory, and the max upload size.
+   * Used when `miraicms-nuxt-form` is installed.
+   */
+  form?: FormConfig
 }
 
 /** CMS config after defaults, role merge, media and database normalisation. */
@@ -53,5 +59,6 @@ export interface ResolvedMiraiCmsConfig {
   database: ResolvedDatabaseConfig
   media: ResolvedMediaConfig
   roles: Record<string, ResolvedRole>
+  form: ResolvedFormConfig
   warnings: string[]
 }

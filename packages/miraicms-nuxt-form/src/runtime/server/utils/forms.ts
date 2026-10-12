@@ -21,6 +21,7 @@ import {
   textStoredValue,
 } from '../../form/model'
 import { getFormDb, maxFileBytes } from './db'
+import { applyServerFormBreakpoints } from './breakpoints'
 import { deleteFormUploads, deleteStoredFile, saveFormFile } from './uploads'
 
 interface FormRow {
@@ -35,6 +36,11 @@ interface FormRow {
 
 const NAME_MAX = 160
 
+function readStoredContent(value: unknown) {
+  applyServerFormBreakpoints()
+  return parseContent(value)
+}
+
 export async function listForms(): Promise<FormListItem[]> {
   const result = await sql<Pick<FormRow, 'id' | 'name' | 'slug' | 'status' | 'content' | 'updated_at'>>`
     SELECT id, name, slug, status, content, updated_at
@@ -42,7 +48,7 @@ export async function listForms(): Promise<FormListItem[]> {
     ORDER BY updated_at DESC, id DESC
   `.execute(getFormDb())
   return result.rows.map((row) => {
-    const content = parseContent(row.content)
+    const content = readStoredContent(row.content)
     return {
       id: Number(row.id),
       name: row.name,
@@ -78,7 +84,7 @@ export async function readPublicForm(slug: string): Promise<PublicForm | null> {
     name: row.name,
     slug: row.slug,
     maxFileBytes: maxFileBytes(),
-    content: parseContent(row.content),
+    content: readStoredContent(row.content),
   }
 }
 
@@ -88,6 +94,7 @@ export async function createForm(name: string): Promise<FormRecord> {
     throw createError({ statusCode: 400, statusMessage: 'Enter a form name.' })
   }
   const slug = await uniqueSlug(slugify(cleanName))
+  applyServerFormBreakpoints()
   const content = JSON.stringify(createEmptyContent())
   const now = nowIso()
   const result = await sql<{ id: number }>`
@@ -126,6 +133,7 @@ export async function updateForm(id: number, body: unknown): Promise<FormRecord>
   const status: FormStatus = input.status === 'published' || input.status === 'draft'
     ? input.status
     : current.status
+  applyServerFormBreakpoints()
   const content = JSON.stringify(normalizeFormContent(input.content ?? current.content))
   if (content.length > 1_000_000) {
     throw createError({ statusCode: 400, statusMessage: 'This form is too large to save.' })
@@ -302,7 +310,7 @@ function rowToRecord(row: FormRow): FormRecord {
     name: row.name,
     slug: row.slug,
     status: asStatus(row.status),
-    content: parseContent(row.content),
+    content: readStoredContent(row.content),
     createdAt: asIso(row.created_at),
     updatedAt: asIso(row.updated_at),
   }

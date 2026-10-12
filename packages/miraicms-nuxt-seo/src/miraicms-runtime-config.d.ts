@@ -19,6 +19,13 @@ interface MiraiCmsPublicConfig {
     label: string
     icon: string
   }>
+  form: {
+    breakpoints: Array<{
+      name: string
+      label: string
+      maxWidth: number | null
+    }>
+  }
 }
 
 declare module '@nuxt/schema' {

@@ -19,15 +19,18 @@ interface MiraiCmsPublicConfig {
     label: string
     icon: string
   }>
+  form: {
+    breakpoints: Array<{
+      name: string
+      label: string
+      maxWidth: number | null
+    }>
+  }
 }
 
 declare module '@nuxt/schema' {
   interface RuntimeConfig {
     miraicms: ResolvedMiraiCmsConfig
-    miraicmsForm: {
-      uploadDir: string
-      maxFileBytes: number
-    }
   }
   interface PublicRuntimeConfig {
     miraicms: MiraiCmsPublicConfig
@@ -37,10 +40,6 @@ declare module '@nuxt/schema' {
 declare module 'nuxt/schema' {
   interface RuntimeConfig {
     miraicms: ResolvedMiraiCmsConfig
-    miraicmsForm: {
-      uploadDir: string
-      maxFileBytes: number
-    }
   }
   interface PublicRuntimeConfig {
     miraicms: MiraiCmsPublicConfig

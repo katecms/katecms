@@ -2,23 +2,28 @@
 import { computed, ref, watch } from 'vue'
 import { $fetch } from '#imports'
 import type { FormField, LayoutItem, PublicForm, UploadedFile } from '../form/model'
-import { submissionErrors } from '../form/model'
+import { baseBreakpoint, formBreakpoints, submissionErrors } from '../form/model'
+import { applyInputMask, defaultTextOptions, iconUrl } from '../form/text-options'
+import { clientFormBreakpoints } from '../form/runtime-config'
 import { stepIconSvg } from '../form/icons'
 
 /**
  * Unstyled public form.
- * Each cell carries a 60-column layout for three breakpoints:
- * data-x, data-y, data-w (desktop), data-x-tablet, data-y-tablet, data-w-tablet, data-x-phone, data-y-phone, data-w-phone.
+ * Each cell carries a 60-column layout. The base breakpoint (`desktop` by default)
+ * uses data-x, data-y, and data-w. Other breakpoints use data-x-{name}, data-y-{name}, and data-w-{name}.
  * Columns and rows are 0-based. data-state is loading, missing, idle, submitting, success, invalid, or error.
  */
 const props = defineProps<{
   form: string
 }>()
 
+clientFormBreakpoints()
+
 const definition = ref<PublicForm | null>(null)
 const state = ref<'loading' | 'missing' | 'idle' | 'submitting' | 'success' | 'invalid' | 'error'>('loading')
 const fieldErrors = ref<Record<string, string>>({})
 const alertMessage = ref('')
+const drafts = ref<Record<string, string>>({})
 
 const locked = computed(() => state.value === 'submitting' || state.value === 'success')
 
@@ -27,21 +32,27 @@ const cells = computed(() => {
   if (!content) {
     return []
   }
+  const names = formBreakpoints()
+  const base = baseBreakpoint()
   return content.fields
     .map((field) => {
-      const desktop = findLayout(content.layouts.desktop, field.id)
-      const tablet = findLayout(content.layouts.tablet, field.id)
-      const phone = findLayout(content.layouts.phone, field.id)
-      if (!desktop || !tablet || !phone) {
-        return null
+      const layouts: Record<string, LayoutItem> = {}
+      for (const name of names) {
+        const item = findLayout(content.layouts[name], field.id)
+        if (!item) {
+          return null
+        }
+        layouts[name] = item
       }
-      return { field, desktop, tablet, phone }
+      return { field, layouts }
     })
-    .filter((cell): cell is { field: FormField, desktop: LayoutItem, tablet: LayoutItem, phone: LayoutItem } => !!cell)
+    .filter((cell): cell is { field: FormField, layouts: Record<string, LayoutItem> } => !!cell)
     .sort((a, b) => {
       const stepA = content.steps.findIndex(step => step.id === a.field.stepId)
       const stepB = content.steps.findIndex(step => step.id === b.field.stepId)
-      return stepA - stepB || a.desktop.y - b.desktop.y || a.desktop.x - b.desktop.x
+      const baseA = a.layouts[base]
+      const baseB = b.layouts[base]
+      return stepA - stepB || (baseA?.y ?? 0) - (baseB?.y ?? 0) || (baseA?.x ?? 0) - (baseB?.x ?? 0)
     })
 })
 
@@ -72,6 +83,13 @@ async function load() {
   }
   try {
     definition.value = await $fetch<PublicForm>(`/api/_miraicms/forms/view/${encodeURIComponent(props.form)}`)
+    const next: Record<string, string> = {}
+    for (const field of definition.value.content.fields) {
+      if (field.type === 'text' || field.type === 'textarea') {
+        next[field.id] = field.text?.defaultValue || ''
+      }
+    }
+    drafts.value = next
     state.value = 'idle'
   }
   catch {
@@ -130,8 +148,24 @@ async function onSubmit(event: Event) {
   }
 }
 
-function findLayout(items: LayoutItem[], fieldId: string): LayoutItem | undefined {
-  return items.find(item => item.fieldId === fieldId)
+function findLayout(items: LayoutItem[] | undefined, fieldId: string): LayoutItem | undefined {
+  return items?.find(item => item.fieldId === fieldId)
+}
+
+function layoutAttrs(layouts: Record<string, LayoutItem>) {
+  const attrs: Record<string, number> = {}
+  const base = baseBreakpoint()
+  for (const name of formBreakpoints()) {
+    const item = layouts[name]
+    if (!item) {
+      continue
+    }
+    const suffix = name === base ? '' : `-${name}`
+    attrs[`data-x${suffix}`] = item.x
+    attrs[`data-y${suffix}`] = item.y
+    attrs[`data-w${suffix}`] = item.w
+  }
+  return attrs
 }
 
 function stepNumber(stepId: string): number {
@@ -154,7 +188,23 @@ function inputType(type: FormField['type']): string {
 }
 
 function isText(field: FormField): boolean {
-  return field.type === 'text' || field.type === 'email' || field.type === 'phone' || field.type === 'number' || field.type === 'date'
+  return field.type === 'email' || field.type === 'phone' || field.type === 'number' || field.type === 'date'
+}
+
+function textOptions(field: FormField) {
+  return field.text ?? defaultTextOptions(field.label)
+}
+
+function onDraft(field: FormField, event: Event) {
+  const el = event.target
+  if (!(el instanceof HTMLInputElement) && !(el instanceof HTMLTextAreaElement)) {
+    return
+  }
+  const next = applyInputMask(el.value, textOptions(field).mask)
+  drafts.value = { ...drafts.value, [field.id]: next }
+  if (el.value !== next) {
+    el.value = next
+  }
 }
 </script>
 
@@ -232,17 +282,165 @@ function isText(field: FormField): boolean {
         :data-step="stepNumber(cell.field.stepId)"
         :data-required="cell.field.required ? 'true' : undefined"
         :data-invalid="fieldErrors[cell.field.key] ? 'true' : undefined"
-        :data-x="cell.desktop.x"
-        :data-y="cell.desktop.y"
-        :data-w="cell.desktop.w"
-        :data-x-tablet="cell.tablet.x"
-        :data-y-tablet="cell.tablet.y"
-        :data-w-tablet="cell.tablet.w"
-        :data-x-phone="cell.phone.x"
-        :data-y-phone="cell.phone.y"
-        :data-w-phone="cell.phone.w"
+        v-bind="layoutAttrs(cell.layouts)"
+        :hidden="(cell.field.type === 'text' || cell.field.type === 'textarea') && textOptions(cell.field).hidden ? true : undefined"
       >
-        <template v-if="isText(cell.field)">
+        <template v-if="cell.field.type === 'text' || cell.field.type === 'textarea'">
+          <div
+            v-if="textOptions(cell.field).label.enabled"
+            class="mirai-form__label"
+          >
+            <img
+              v-if="iconUrl(textOptions(cell.field).label.prefix)"
+              class="mirai-form__icon"
+              :src="iconUrl(textOptions(cell.field).label.prefix)"
+              alt=""
+            >
+            <span
+              v-if="textOptions(cell.field).required.enabled && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'left'"
+              class="mirai-form__required"
+            >*</span>
+            <label :for="controlId(cell.field)">
+              <span
+                v-if="textOptions(cell.field).required.enabled && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'before'"
+                class="mirai-form__required"
+              >*</span>
+              <span>{{ textOptions(cell.field).label.text }}</span>
+              <span
+                v-if="textOptions(cell.field).required.enabled && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'after'"
+                class="mirai-form__required"
+              >*</span>
+            </label>
+            <img
+              v-if="iconUrl(textOptions(cell.field).label.suffix)"
+              class="mirai-form__icon"
+              :src="iconUrl(textOptions(cell.field).label.suffix)"
+              alt=""
+            >
+            <span
+              v-if="textOptions(cell.field).required.enabled && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'right'"
+              class="mirai-form__required"
+            >*</span>
+          </div>
+          <div
+            v-if="textOptions(cell.field).subtitle.enabled && textOptions(cell.field).subtitle.text"
+            class="mirai-form__subtitle"
+          >
+            <img
+              v-if="iconUrl(textOptions(cell.field).subtitle.prefix)"
+              class="mirai-form__icon"
+              :src="iconUrl(textOptions(cell.field).subtitle.prefix)"
+              alt=""
+            >
+            <span>{{ textOptions(cell.field).subtitle.text }}</span>
+            <img
+              v-if="iconUrl(textOptions(cell.field).subtitle.suffix)"
+              class="mirai-form__icon"
+              :src="iconUrl(textOptions(cell.field).subtitle.suffix)"
+              alt=""
+            >
+          </div>
+          <span class="mirai-form__control-row">
+            <img
+              v-if="iconUrl(textOptions(cell.field).prefix)"
+              class="mirai-form__icon"
+              :src="iconUrl(textOptions(cell.field).prefix)"
+              alt=""
+            >
+            <textarea
+              v-if="cell.field.type === 'textarea'"
+              :id="controlId(cell.field)"
+              class="mirai-form__control"
+              :name="cell.field.key"
+              :rows="cell.field.rows"
+              :value="drafts[cell.field.id]"
+              :placeholder="textOptions(cell.field).placeholder || undefined"
+              :required="textOptions(cell.field).required.enabled"
+              :readonly="textOptions(cell.field).readOnly"
+              :disabled="locked || textOptions(cell.field).disabled"
+              :maxlength="textOptions(cell.field).maxLength ?? undefined"
+              :minlength="textOptions(cell.field).minLength ?? undefined"
+              :autocomplete="textOptions(cell.field).autocomplete || undefined"
+              :inputmode="textOptions(cell.field).inputMode || undefined"
+              :list="textOptions(cell.field).suggestions.length ? `mirai-suggest-${cell.field.id}` : undefined"
+              @input="onDraft(cell.field, $event)"
+            />
+            <input
+              v-else
+              :id="controlId(cell.field)"
+              class="mirai-form__control"
+              type="text"
+              :name="cell.field.key"
+              :value="drafts[cell.field.id]"
+              :placeholder="textOptions(cell.field).placeholder || undefined"
+              :required="textOptions(cell.field).required.enabled"
+              :readonly="textOptions(cell.field).readOnly"
+              :disabled="locked || textOptions(cell.field).disabled"
+              :maxlength="textOptions(cell.field).maxLength ?? undefined"
+              :minlength="textOptions(cell.field).minLength ?? undefined"
+              :autocomplete="textOptions(cell.field).autocomplete || undefined"
+              :inputmode="textOptions(cell.field).inputMode || undefined"
+              :pattern="textOptions(cell.field).pattern || undefined"
+              :list="textOptions(cell.field).suggestions.length ? `mirai-suggest-${cell.field.id}` : undefined"
+              @input="onDraft(cell.field, $event)"
+            >
+            <img
+              v-if="iconUrl(textOptions(cell.field).suffix)"
+              class="mirai-form__icon"
+              :src="iconUrl(textOptions(cell.field).suffix)"
+              alt=""
+            >
+            <datalist
+              v-if="textOptions(cell.field).suggestions.length"
+              :id="`mirai-suggest-${cell.field.id}`"
+            >
+              <option
+                v-for="item in textOptions(cell.field).suggestions"
+                :key="item.id"
+                :value="item.value"
+                :label="item.label || undefined"
+              />
+            </datalist>
+          </span>
+          <div
+            v-if="textOptions(cell.field).helper.enabled && textOptions(cell.field).helper.text"
+            class="mirai-form__help"
+          >
+            <img
+              v-if="iconUrl(textOptions(cell.field).helper.prefix)"
+              class="mirai-form__icon"
+              :src="iconUrl(textOptions(cell.field).helper.prefix)"
+              alt=""
+            >
+            <span>{{ textOptions(cell.field).helper.text }}</span>
+            <img
+              v-if="iconUrl(textOptions(cell.field).helper.suffix)"
+              class="mirai-form__icon"
+              :src="iconUrl(textOptions(cell.field).helper.suffix)"
+              alt=""
+            >
+          </div>
+          <div
+            v-if="fieldErrors[cell.field.key] && textOptions(cell.field).required.showError"
+            class="mirai-form__error"
+          >
+            <img
+              v-if="iconUrl(textOptions(cell.field).required.errorPrefix)"
+              class="mirai-form__icon"
+              :src="iconUrl(textOptions(cell.field).required.errorPrefix)"
+              alt=""
+            >
+            <span>{{ fieldErrors[cell.field.key] }}</span>
+            <img
+              v-if="iconUrl(textOptions(cell.field).required.errorSuffix)"
+              class="mirai-form__icon"
+              :src="iconUrl(textOptions(cell.field).required.errorSuffix)"
+              alt=""
+            >
+          </div>
+        </template>
+
+        <template v-else-if="isText(cell.field)">
           <label
             class="mirai-form__label"
             :for="controlId(cell.field)"
@@ -265,28 +463,6 @@ function isText(field: FormField): boolean {
             :max="cell.field.type === 'number' && cell.field.max ? cell.field.max : undefined"
             :step="cell.field.type === 'number' && cell.field.step ? cell.field.step : undefined"
           >
-        </template>
-
-        <template v-else-if="cell.field.type === 'textarea'">
-          <label
-            class="mirai-form__label"
-            :for="controlId(cell.field)"
-          >
-            {{ cell.field.label }}
-            <span
-              v-if="cell.field.required"
-              class="mirai-form__required"
-            >*</span>
-          </label>
-          <textarea
-            :id="controlId(cell.field)"
-            class="mirai-form__control"
-            :name="cell.field.key"
-            :rows="cell.field.rows"
-            :placeholder="cell.field.placeholder || undefined"
-            :required="cell.field.required"
-            :disabled="locked"
-          />
         </template>
 
         <template v-else-if="cell.field.type === 'select'">
@@ -397,13 +573,13 @@ function isText(field: FormField): boolean {
         </button>
 
         <div
-          v-if="cell.field.help && cell.field.type !== 'hidden' && cell.field.type !== 'html' && cell.field.type !== 'button'"
+          v-if="cell.field.help && cell.field.type !== 'text' && cell.field.type !== 'textarea' && cell.field.type !== 'hidden' && cell.field.type !== 'html' && cell.field.type !== 'button'"
           class="mirai-form__help"
         >
           {{ cell.field.help }}
         </div>
         <div
-          v-if="fieldErrors[cell.field.key]"
+          v-if="fieldErrors[cell.field.key] && cell.field.type !== 'text' && cell.field.type !== 'textarea'"
           class="mirai-form__error"
         >
           {{ fieldErrors[cell.field.key] }}

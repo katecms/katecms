@@ -126,6 +126,9 @@ export default defineNuxtModule<MiraiCmsConfig>({
       collections: toPublicCollections(resolved.collections),
       dictionaries: toPublicDictionaries(resolved.dictionaries),
       options: toPublicOptions(resolved.options),
+      form: {
+        breakpoints: resolved.form.breakpoints,
+      },
     }
 
     addServerPlugin(resolver.resolve('./runtime/server/plugins/auto-migrate'))
@@ -467,6 +470,13 @@ declare module '@nuxt/schema' {
         label: string
         icon: string
       }>
+      form: {
+        breakpoints: Array<{
+          name: string
+          label: string
+          maxWidth: number | null
+        }>
+      }
     }
   }
 }
@@ -498,6 +508,13 @@ declare module 'nuxt/schema' {
         label: string
         icon: string
       }>
+      form: {
+        breakpoints: Array<{
+          name: string
+          label: string
+          maxWidth: number | null
+        }>
+      }
     }
   }
 }

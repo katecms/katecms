@@ -167,6 +167,33 @@ describe('resolveMiraiCmsConfig', () => {
     expect(resolveMiraiCmsConfig({ registration: false }).registration).toBe(false)
   })
 
+  it('resolves form defaults and custom breakpoints', () => {
+    const resolved = resolveMiraiCmsConfig()
+    expect(resolved.form.uploadDir).toBe('')
+    expect(resolved.form.maxFileBytes).toBe(10 * 1024 * 1024)
+    expect(resolved.form.breakpoints.map(item => item.name)).toEqual(['phone', 'tablet', 'desktop'])
+    expect(resolved.form.breakpoints[0]?.maxWidth).toBe(390)
+    expect(resolved.form.breakpoints[2]?.maxWidth).toBeNull()
+
+    const custom = resolveMiraiCmsConfig({
+      form: {
+        maxFileBytes: 1024,
+        uploadDir: ' /var/forms ',
+        breakpoints: [
+          { name: 'Desktop' },
+          { name: 'mobile', label: 'Mobile', maxWidth: 480 },
+        ],
+      },
+    })
+    expect(custom.form.maxFileBytes).toBe(1024)
+    expect(custom.form.uploadDir).toBe('/var/forms')
+    expect(custom.form.breakpoints).toEqual([
+      { name: 'desktop', label: 'Desktop', maxWidth: null },
+      { name: 'mobile', label: 'Mobile', maxWidth: 480 },
+    ])
+    expect(custom.warnings).toEqual([])
+  })
+
   it('keeps option pages from config', () => {
     const resolved = resolveMiraiCmsConfig({
       options: {

@@ -35,4 +35,13 @@ export const defaults = {
     imageSizes: [] as ImageSize[],
     maxInputPixels: 50_000_000,
   },
+  form: {
+    uploadDir: '',
+    maxFileBytes: 10 * 1024 * 1024,
+    breakpoints: [
+      { name: 'phone', label: 'Phone', maxWidth: 390 },
+      { name: 'tablet', label: 'Tablet', maxWidth: 768 },
+      { name: 'desktop', label: 'Desktop', maxWidth: null },
+    ],
+  },
 } satisfies MiraiCmsConfig

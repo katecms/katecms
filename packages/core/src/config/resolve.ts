@@ -3,13 +3,15 @@ import { mergeMiraiCmsConfig } from './merge'
 import { resolveDatabaseConfig } from './resolve-database'
 import { resolveMediaConfig } from './resolve-media'
 import { resolveRoles } from './resolve-roles'
+import { resolveFormConfig } from './resolve-form'
 
-/** Merge user CMS config with defaults, then resolve roles, media, and database. */
+/** Merge user CMS config with defaults, then resolve roles, media, database, and forms. */
 export function resolveMiraiCmsConfig(config: MiraiCmsConfig = {}): ResolvedMiraiCmsConfig {
   const merged = mergeMiraiCmsConfig(config)
   const roles = resolveRoles(merged.roles)
   const media = resolveMediaConfig(merged.media)
   const database = resolveDatabaseConfig(merged.database)
+  const form = resolveFormConfig(merged.form)
 
   return {
     adminPath: merged.adminPath,
@@ -23,6 +25,7 @@ export function resolveMiraiCmsConfig(config: MiraiCmsConfig = {}): ResolvedMira
     database: database.database,
     media: media.media,
     roles: roles.roles,
-    warnings: [...roles.warnings, ...media.warnings, ...database.warnings],
+    form: form.form,
+    warnings: [...roles.warnings, ...media.warnings, ...database.warnings, ...form.warnings],
   }
 }

@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto'
 import { useRuntimeConfig } from '#imports'
 
 export function uploadRoot(): string {
-  const configured = useRuntimeConfig().miraicmsForm?.uploadDir
+  const configured = useRuntimeConfig().miraicms?.form?.uploadDir
   if (typeof configured === 'string' && configured.trim()) {
     return resolve(configured.trim())
   }

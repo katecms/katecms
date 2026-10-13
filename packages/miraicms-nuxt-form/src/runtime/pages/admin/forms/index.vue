@@ -162,7 +162,7 @@ onMounted(load)
         >
           <MiraiCmsUiButton
             tag="a"
-            variant="secondary"
+            :variant="['secondary', 'small']"
             :link="{ url: paths.edit(form.id), title: 'Edit' }"
           >
             Edit

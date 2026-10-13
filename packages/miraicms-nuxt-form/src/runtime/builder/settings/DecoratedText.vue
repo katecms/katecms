@@ -40,24 +40,28 @@ function iconValue(value: unknown): FormIcon | null {
 
 <template>
   <div class="miraicms-decorated-text">
-    <MiraiCmsTextField
+    <MiraiCmsTextareaField
       :model-value="model.text"
       :field-key="`${fieldKey}-text`"
-      :field="{ type: 'text', label: textLabel || 'Text', maxLength: 400 }"
+      :field="{ type: 'textarea', label: textLabel || 'Text', maxLength: 400, rows: 3 }"
       @update:model-value="patch({ text: String($event ?? '') })"
     />
-    <MiraiCmsImageField
-      :model-value="model.prefix"
-      :field-key="`${fieldKey}-prefix`"
-      :field="{ type: 'image', label: 'Prefix Icon', iconMode: true, returnFormat: 'array' }"
-      @update:model-value="setIcon('prefix', $event)"
-    />
-    <MiraiCmsImageField
-      :model-value="model.suffix"
-      :field-key="`${fieldKey}-suffix`"
-      :field="{ type: 'image', label: 'Suffix Icon', iconMode: true, returnFormat: 'array' }"
-      @update:model-value="setIcon('suffix', $event)"
-    />
+    <div class="miraicms-decorated-text__icons">
+      <MiraiCmsImageField
+        class="miraicms-decorated-text__icon"
+        :model-value="model.prefix"
+        :field-key="`${fieldKey}-prefix`"
+        :field="{ type: 'image', label: 'Prefix Icon', iconMode: true, returnFormat: 'array' }"
+        @update:model-value="setIcon('prefix', $event)"
+      />
+      <MiraiCmsImageField
+        class="miraicms-decorated-text__icon"
+        :model-value="model.suffix"
+        :field-key="`${fieldKey}-suffix`"
+        :field="{ type: 'image', label: 'Suffix Icon', iconMode: true, returnFormat: 'array' }"
+        @update:model-value="setIcon('suffix', $event)"
+      />
+    </div>
   </div>
 </template>
 
@@ -65,9 +69,19 @@ function iconValue(value: unknown): FormIcon | null {
 @use "../../assets/styles" as *;
 
 .miraicms-decorated-text {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  display: flex;
+  flex-direction: column;
   gap: math-rem(8);
-  align-items: end;
+
+  &__icons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: math-rem(8);
+  }
+
+  &__icon {
+    width: 100%;
+    min-width: 0;
+  }
 }
 </style>

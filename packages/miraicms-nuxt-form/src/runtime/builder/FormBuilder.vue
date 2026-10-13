@@ -72,7 +72,7 @@ const currentStepId = computed(() => {
   }
   return content.value.steps[0]?.id ?? ''
 })
-const layout = computed(() => content.value.layouts[breakpoint.value].filter((item) => {
+const layout = computed(() => (content.value.layouts[breakpoint.value] ?? []).filter((item) => {
   return content.value.fields.find(field => field.id === item.fieldId)?.stepId === currentStepId.value
 }))
 const selected = computed(() => content.value.fields.find(field => field.id === selectedId.value) ?? null)
@@ -348,7 +348,7 @@ function onItemPointerDown(event: PointerEvent, item: LayoutItem) {
       offsetY: event.clientY - rect.top,
     }
   }
-  dragBase.value = content.value.layouts[breakpoint.value].map(entry => ({ ...entry }))
+  dragBase.value = (content.value.layouts[breakpoint.value] ?? []).map(entry => ({ ...entry }))
   document.body.style.userSelect = 'none'
   beginDrag({
     pointerId: event.pointerId,
@@ -389,7 +389,7 @@ function onPointerMove(event: PointerEvent) {
   if (!current || event.pointerId !== current.pointerId) {
     return
   }
-  const item = content.value.layouts[breakpoint.value].find(entry => entry.fieldId === current.fieldId)
+  const item = (content.value.layouts[breakpoint.value] ?? []).find(entry => entry.fieldId === current.fieldId)
   if (!item) {
     return
   }
@@ -449,7 +449,7 @@ function onPointerUp(event: PointerEvent) {
   if (!current || event.pointerId !== current.pointerId) {
     return
   }
-  const item = content.value.layouts[breakpoint.value].find(entry => entry.fieldId === current.fieldId)
+  const item = (content.value.layouts[breakpoint.value] ?? []).find(entry => entry.fieldId === current.fieldId)
   endDrag()
   if (item) {
     content.value = setLayoutItem(content.value, breakpoint.value, item, true)

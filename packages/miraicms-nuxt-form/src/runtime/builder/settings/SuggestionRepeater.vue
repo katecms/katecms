@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import type { CSSProperties } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import type { FormSuggestion } from '../../form/text-options'
 
 const props = defineProps<{
@@ -12,7 +13,12 @@ const emit = defineEmits<{
 }>()
 
 const rowRefs = ref<Array<HTMLElement | null>>([])
-const dragIndex = ref<number | null>(null)
+const isDragging = ref(false)
+const draggingIndex = ref<number | null>(null)
+const dropIndex = ref(0)
+const dragOffset = ref({ x: 0, y: 0 })
+const dragSize = ref({ width: 0, height: 0 })
+const dragPosition = ref({ left: 0, top: 0 })
 
 function setRowRef(el: Element | null, index: number) {
   rowRefs.value[index] = el instanceof HTMLElement ? el : null
@@ -30,6 +36,25 @@ function remove(index: number) {
   emit('update', props.model.filter((_, itemIndex) => itemIndex !== index))
 }
 
+const placeholderStyle = computed(() => ({
+  width: `${dragSize.value.width}px`,
+  height: `${dragSize.value.height}px`,
+}))
+
+function rowStyle(index: number): CSSProperties | undefined {
+  if (!isDragging.value || draggingIndex.value !== index) {
+    return undefined
+  }
+  return {
+    position: 'fixed',
+    left: `${dragPosition.value.left}px`,
+    top: `${dragPosition.value.top}px`,
+    width: `${dragSize.value.width}px`,
+    height: `${dragSize.value.height}px`,
+    zIndex: 1000,
+  }
+}
+
 function reorder(from: number, insertAt: number) {
   if (insertAt === from || insertAt === from + 1) {
     return
@@ -41,8 +66,60 @@ function reorder(from: number, insertAt: number) {
   }
   const target = from < insertAt ? insertAt - 1 : insertAt
   next.splice(target, 0, moved)
-  dragIndex.value = target
   emit('update', next)
+}
+
+function updateDropIndex(clientY: number) {
+  const from = draggingIndex.value
+  if (from === null) {
+    return
+  }
+  let insertAt = props.model.length
+  for (let i = 0; i < props.model.length; i++) {
+    if (i === from) {
+      continue
+    }
+    const el = rowRefs.value[i]
+    if (!el) {
+      continue
+    }
+    const rect = el.getBoundingClientRect()
+    if (clientY < rect.top + rect.height / 2) {
+      insertAt = i
+      break
+    }
+    insertAt = i + 1
+  }
+  dropIndex.value = Math.max(0, Math.min(insertAt, props.model.length))
+}
+
+function onMouseMove(event: MouseEvent) {
+  if (!isDragging.value) {
+    return
+  }
+  dragPosition.value = {
+    left: event.clientX - dragOffset.value.x,
+    top: event.clientY - dragOffset.value.y,
+  }
+  updateDropIndex(event.clientY)
+}
+
+function resetDrag() {
+  isDragging.value = false
+  draggingIndex.value = null
+  dropIndex.value = 0
+  dragSize.value = { width: 0, height: 0 }
+  document.body.style.userSelect = ''
+  document.removeEventListener('mousemove', onMouseMove)
+  document.removeEventListener('mouseup', onMouseUp)
+}
+
+function onMouseUp() {
+  if (!isDragging.value || draggingIndex.value === null) {
+    return
+  }
+  reorder(draggingIndex.value, dropIndex.value)
+  resetDrag()
 }
 
 function onHandleDown(index: number, event: MouseEvent) {
@@ -50,48 +127,56 @@ function onHandleDown(index: number, event: MouseEvent) {
     return
   }
   event.preventDefault()
-  dragIndex.value = index
-  const move = (moveEvent: MouseEvent) => {
-    const from = dragIndex.value
-    if (from == null) {
-      return
-    }
-    let insertAt = props.model.length
-    for (let i = 0; i < props.model.length; i++) {
-      if (i === from) {
-        continue
-      }
-      const el = rowRefs.value[i]
-      if (!el) {
-        continue
-      }
-      const rect = el.getBoundingClientRect()
-      if (moveEvent.clientY < rect.top + rect.height / 2) {
-        insertAt = i
-        break
-      }
-      insertAt = i + 1
-    }
-    reorder(from, insertAt)
+  event.stopPropagation()
+  const handle = event.currentTarget
+  if (!(handle instanceof HTMLElement)) {
+    return
   }
-  const up = () => {
-    dragIndex.value = null
-    document.removeEventListener('mousemove', move)
-    document.removeEventListener('mouseup', up)
+  const row = handle.closest<HTMLElement>('.miraicms-suggestion-list__row')
+  if (!row) {
+    return
   }
-  document.addEventListener('mousemove', move)
-  document.addEventListener('mouseup', up)
+  const rect = row.getBoundingClientRect()
+  draggingIndex.value = index
+  dropIndex.value = index
+  dragOffset.value = {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top,
+  }
+  dragSize.value = {
+    width: rect.width,
+    height: rect.height,
+  }
+  dragPosition.value = {
+    left: rect.left,
+    top: rect.top,
+  }
+  isDragging.value = true
+  document.body.style.userSelect = 'none'
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
 }
+
+onBeforeUnmount(resetDrag)
 </script>
 
 <template>
   <div class="miraicms-suggestion-list">
-    <div
+    <template
       v-for="(item, index) in model"
       :key="item.id"
-      :ref="(el) => setRowRef(el as Element | null, index)"
-      class="miraicms-suggestion-list__row"
     >
+      <div
+        v-if="isDragging && dropIndex === index"
+        class="miraicms-suggestion-list__placeholder"
+        :style="placeholderStyle"
+      />
+      <div
+        :ref="(el) => setRowRef(el as Element | null, index)"
+        class="miraicms-suggestion-list__row"
+        :class="{ 'is-floating': isDragging && draggingIndex === index }"
+        :style="rowStyle(index)"
+      >
       <button
         type="button"
         class="miraicms-suggestion-list__handle"
@@ -135,7 +220,13 @@ function onHandleDown(index: number, event: MouseEvent) {
       >
         Remove
       </MiraiCmsUiButton>
-    </div>
+      </div>
+    </template>
+    <div
+      v-if="isDragging && dropIndex === model.length"
+      class="miraicms-suggestion-list__placeholder"
+      :style="placeholderStyle"
+    />
     <MiraiCmsUiButton
       tag="button"
       variant="secondary"
@@ -159,6 +250,20 @@ function onHandleDown(index: number, event: MouseEvent) {
     grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
     gap: math-rem(8);
     align-items: end;
+
+    &.is-floating {
+      z-index: 1000;
+      box-shadow: $shadow-md;
+      background: $color-surface;
+      cursor: grabbing;
+    }
+  }
+
+  &__placeholder {
+    box-sizing: border-box;
+    border: 1px dashed $color-border;
+    border-radius: $border-radius;
+    background: $color-bg;
   }
 
   &__handle {

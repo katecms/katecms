@@ -667,7 +667,7 @@ $root: '.miraicms-image-field';
     &--icon {
       display: flex;
       align-items: center;
-      column-gap: math-rem(16);
+      column-gap: math-rem(8);
     }
   }
 

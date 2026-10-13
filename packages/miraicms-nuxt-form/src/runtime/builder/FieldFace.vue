@@ -246,11 +246,11 @@ function onInput(event: Event) {
         <span>{{ option.label }}</span>
       </label>
     </div>
-      <input
-        v-else-if="field.type === 'file'"
-        class="miraicms-field-face__input"
-        type="file"
-      >
+    <input
+      v-else-if="field.type === 'file'"
+      class="miraicms-field-face__input"
+      type="file"
+    >
     <input
       v-else-if="field.type === 'email' || field.type === 'phone' || field.type === 'number' || field.type === 'date'"
       class="miraicms-field-face__input"

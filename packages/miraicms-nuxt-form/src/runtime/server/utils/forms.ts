@@ -70,21 +70,16 @@ export async function readForm(id: number): Promise<FormRecord | null> {
   return row ? rowToRecord(row) : null
 }
 
-export async function readPublicForm(slug: string): Promise<PublicForm | null> {
-  const result = await sql<Pick<FormRow, 'name' | 'slug' | 'status' | 'content'>>`
-    SELECT name, slug, status, content
-    FROM miraicms_forms
-    WHERE slug = ${slug} AND status = 'published'
-  `.execute(getFormDb())
-  const row = result.rows[0]
-  if (!row) {
+export async function readPublicForm(key: string): Promise<PublicForm | null> {
+  const record = await readFormByKey(key)
+  if (!record || record.status !== 'published') {
     return null
   }
   return {
-    name: row.name,
-    slug: row.slug,
+    name: record.name,
+    slug: record.slug,
     maxFileBytes: maxFileBytes(),
-    content: readStoredContent(row.content),
+    content: record.content,
   }
 }
 
@@ -170,7 +165,7 @@ export async function deleteForm(id: number): Promise<void> {
 }
 
 export async function submitForm(event: H3Event, slug: string): Promise<{ ok: true, id: number }> {
-  const form = await readFormBySlug(slug)
+  const form = await readFormByKey(slug)
   if (!form || form.status !== 'published') {
     throw createError({ statusCode: 404, statusMessage: 'Form not found.' })
   }
@@ -228,6 +223,21 @@ export async function submitForm(event: H3Event, slug: string): Promise<{ ok: tr
     throw error
   }
   return { ok: true, id: submissionId }
+}
+
+async function readFormByKey(key: string): Promise<FormRecord | null> {
+  const bySlug = await readFormBySlug(key)
+  if (bySlug) {
+    return bySlug
+  }
+  if (!/^[1-9]\d*$/.test(key)) {
+    return null
+  }
+  const id = Number(key)
+  if (!Number.isSafeInteger(id)) {
+    return null
+  }
+  return readForm(id)
 }
 
 async function readFormBySlug(slug: string): Promise<FormRecord | null> {

@@ -371,6 +371,11 @@ function setWidth(raw: number | null) {
 
   &__icon-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    :deep(.miraicms-field) {
+      width: 100%;
+      min-width: 0;
+    }
   }
 }
 </style>

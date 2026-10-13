@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { FormField } from '../form/model'
-import { applyInputMask, defaultTextOptions, iconUrl } from '../form/text-options'
+import { applyInputMask, defaultTextOptions, iconUrl, isRichFieldType, passwordRuleStates } from '../form/text-options'
 
 const props = withDefaults(defineProps<{
   field?: FormField
@@ -17,7 +17,9 @@ const props = withDefaults(defineProps<{
 })
 
 const options = computed(() => props.field?.text ?? defaultTextOptions(props.field?.label || ''))
-const rich = computed(() => props.field?.type === 'text' || props.field?.type === 'textarea')
+const rich = computed(() => isRichFieldType(props.field?.type || ''))
+const revealed = ref(false)
+const rules = computed(() => props.field?.type === 'password' ? passwordRuleStates(options.value, draft.value) : [])
 const draft = ref(props.field?.value || '')
 
 watch(() => props.field?.id, () => {
@@ -34,6 +36,18 @@ const listId = computed(() => `mirai-suggest-${props.field?.id || 'field'}`)
 const controlId = computed(() => `mirai-${props.field?.id || 'field'}`)
 const showError = computed(() => props.invalid && options.value.required.showError && !!props.error)
 
+function controlType() {
+  if (props.field?.type === 'email') {
+    return 'email'
+  }
+  if (props.field?.type === 'number') {
+    return 'number'
+  }
+  if (props.field?.type === 'password') {
+    return revealed.value ? 'text' : 'password'
+  }
+  return 'text'
+}
 function onInput(event: Event) {
   const el = event.target
   if (!(el instanceof HTMLInputElement) && !(el instanceof HTMLTextAreaElement)) {
@@ -51,7 +65,11 @@ function onInput(event: Event) {
   <div
     v-if="field && rich"
     class="miraicms-field-face"
-    :class="{ 'is-preview': preview, 'is-hidden': options.hidden && preview }"
+    :class="{
+      'is-preview': preview,
+      'is-hidden': options.hidden && preview,
+      'is-inline': options.confirm.enabled && options.confirm.placement === 'inline',
+    }"
     :hidden="options.hidden && !preview ? true : undefined"
     :data-invalid="invalid ? 'true' : undefined"
   >
@@ -144,7 +162,7 @@ function onInput(event: Event) {
         :id="controlId"
         v-model="draft"
         class="miraicms-field-face__input"
-        type="text"
+        :type="controlType()"
         :name="preview ? undefined : field?.key"
         :placeholder="options.placeholder || undefined"
         :required="options.required.enabled"
@@ -155,9 +173,20 @@ function onInput(event: Event) {
         :autocomplete="options.autocomplete || undefined"
         :inputmode="options.inputMode || undefined"
         :pattern="options.pattern || undefined"
+        :min="field?.type === 'number' ? options.valueMin ?? undefined : undefined"
+        :max="field?.type === 'number' ? options.valueMax ?? undefined : undefined"
         :list="options.suggestions.length ? listId : undefined"
         @input="onInput"
       >
+      <button
+        v-if="field?.type === 'password' && options.showPassword"
+        type="button"
+        class="miraicms-field-face__reveal"
+        :aria-label="revealed ? 'Hide password' : 'Show password'"
+        @click="revealed = !revealed"
+      >
+        {{ revealed ? 'Hide' : 'Show' }}
+      </button>
       <img
         v-if="iconUrl(options.suffix)"
         class="miraicms-field-face__icon"
@@ -178,22 +207,28 @@ function onInput(event: Event) {
     </div>
 
     <div
-      v-if="options.helper.enabled && options.helper.text"
+      v-if="(options.helper.enabled && options.helper.text) || rules.length"
       class="miraicms-field-face__note"
     >
       <img
-        v-if="iconUrl(options.helper.prefix)"
+        v-if="options.helper.enabled && iconUrl(options.helper.prefix)"
         class="miraicms-field-face__icon"
         :src="iconUrl(options.helper.prefix)"
         alt=""
       >
-      <span>{{ options.helper.text }}</span>
+      <span v-if="options.helper.enabled && options.helper.text">{{ options.helper.text }}</span>
       <img
-        v-if="iconUrl(options.helper.suffix)"
+        v-if="options.helper.enabled && iconUrl(options.helper.suffix)"
         class="miraicms-field-face__icon"
         :src="iconUrl(options.helper.suffix)"
         alt=""
       >
+      <span
+        v-for="(rule, index) in rules"
+        :key="index"
+        class="miraicms-field-face__rule"
+        :style="{ color: rule.ok ? 'green' : 'red', marginRight: '20px' }"
+      >{{ rule.ok ? '✔' : '✖' }} {{ rule.label }}</span>
     </div>
 
     <div
@@ -213,6 +248,29 @@ function onInput(event: Event) {
         :src="iconUrl(options.required.errorSuffix)"
         alt=""
       >
+    </div>
+    <div
+      v-if="options.confirm.enabled"
+      class="miraicms-field-face__confirm"
+    >
+      <div
+        v-if="options.confirm.label.enabled"
+        class="miraicms-field-face__label"
+      >
+        {{ options.confirm.label.text }}
+      </div>
+      <input
+        class="miraicms-field-face__input"
+        :type="field?.type === 'password' && !revealed ? 'password' : field?.type === 'email' ? 'email' : 'text'"
+        :placeholder="options.confirm.placeholder || undefined"
+        :readonly="preview"
+      >
+      <div
+        v-if="options.confirm.helper.enabled && options.confirm.helper.text"
+        class="miraicms-field-face__note"
+      >
+        {{ options.confirm.helper.text }}
+      </div>
     </div>
   </div>
 
@@ -300,6 +358,21 @@ function onInput(event: Event) {
     opacity: 0.45;
   }
 
+  &.is-inline {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: math-rem(8);
+  }
+
+  &.is-inline > :not(.miraicms-field-face__confirm) {
+    grid-column: 1;
+  }
+
+  &.is-inline > .miraicms-field-face__confirm {
+    grid-column: 2;
+    grid-row: 1 / span 8;
+  }
+
   &__label-row,
   &__note,
   &__control,
@@ -355,6 +428,18 @@ function onInput(event: Event) {
     flex-direction: column;
     gap: math-rem(4);
     font-size: math-rem(13);
+  }
+
+  &__reveal {
+    pointer-events: auto;
+    flex: 0 0 auto;
+    border: 1px solid $color-border;
+    border-radius: $border-radius;
+    background: $color-bg;
+    color: $color-ink;
+    font: inherit;
+    font-size: math-rem(12);
+    cursor: pointer;
   }
 
   &__button {

@@ -151,6 +151,37 @@ test('text options keep label settings and use a custom error', () => {
   assert.equal(missing.name, 'Need a name')
 })
 
+test('email confirm and password rules are stored and checked', () => {
+  const email = normalizeFormContent({
+    fields: [{
+      id: 'e',
+      type: 'email',
+      key: 'email',
+      label: 'Email',
+      required: true,
+      text: { confirm: { enabled: true } },
+    }],
+  })
+  assert.equal(email.fields[0]?.text?.confirm.enabled, true)
+  const mismatch = submissionErrors(email, { email: 'a@b.com', email__confirm: 'c@d.com' }, {}, 1024)
+  assert.equal(mismatch.email, 'The values do not match.')
+
+  const password = normalizeFormContent({
+    fields: [{
+      id: 'p',
+      type: 'password',
+      key: 'password',
+      label: 'Password',
+      required: true,
+      text: { passwordRules: { digit: true } },
+    }],
+  })
+  const weak = submissionErrors(password, { password: 'abcdef' }, {}, 1024)
+  assert.equal(weak.password, 'Password does not meet the requirements.')
+  const strong = submissionErrors(password, { password: 'abcdef1' }, {}, 1024)
+  assert.equal(strong.password, undefined)
+})
+
 test('configured breakpoints replace the default layout keys', () => {
   setFormBreakpoints(['desktop', 'wide'])
   try {

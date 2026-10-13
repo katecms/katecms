@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import TextFieldSettings from './settings/TextFieldSettings.vue'
 import type { FormField, LayoutItem } from '../form/model'
 import { FIELD_LABELS, GRID_COLUMNS } from '../form/model'
+import { isRichFieldType } from '../form/text-options'
 
 const props = defineProps<{
   field: FormField
@@ -16,8 +17,8 @@ const emit = defineEmits<{
 }>()
 
 const choice = computed(() => props.field.type === 'select' || props.field.type === 'radio' || props.field.type === 'checkbox')
-const richText = computed(() => props.field.type === 'text' || props.field.type === 'textarea')
-const textLike = computed(() => ['email', 'phone', 'number'].includes(props.field.type))
+const richText = computed(() => isRichFieldType(props.field.type))
+const textLike = computed(() => props.field.type === 'phone')
 
 function patch(partial: Partial<FormField>) {
   emit('update', { ...props.field, ...partial })

@@ -90,8 +90,8 @@ const baseLabel = computed(() => {
 })
 
 const palette = [
-  { title: 'Basic Fields', types: ['text', 'textarea'] as FieldType[] },
-  { title: 'Fields', types: FIELD_TYPES.filter(type => type !== 'text' && type !== 'textarea') },
+  { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'number', 'password'] as FieldType[] },
+  { title: 'Fields', types: FIELD_TYPES.filter(type => !['text', 'textarea', 'email', 'number', 'password'].includes(type)) },
 ]
 
 function hasBreakpointIcon(name: string) {

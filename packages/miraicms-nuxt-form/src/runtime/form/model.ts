@@ -1,5 +1,5 @@
 import type { FormTextOptions } from './text-options.ts'
-import { customErrorText, defaultTextOptions, normalizeTextOptions, textConstraintError } from './text-options.ts'
+import { customErrorText, defaultTextOptions, invalidErrorText, isRichFieldType, normalizeTextOptions, passwordRuleStates, textConstraintError } from './text-options.ts'
 
 export const GRID_COLUMNS = 60
 export const ROW_HEIGHT = 72
@@ -39,6 +39,7 @@ export const FIELD_TYPES = [
   'email',
   'phone',
   'number',
+  'password',
   'select',
   'radio',
   'checkbox',
@@ -56,6 +57,7 @@ export const FIELD_LABELS: Record<FieldType, string> = {
   email: 'Email',
   phone: 'Phone',
   number: 'Number',
+  password: 'Password',
   select: 'Select',
   radio: 'Radio',
   checkbox: 'Checkbox',
@@ -528,6 +530,15 @@ export function submissionErrors(
     const message = fieldError(field, input[field.key], files[field.key] ?? null, maxFileBytes)
     if (message) {
       errors[field.key] = message
+      continue
+    }
+    if (field.text?.confirm.enabled) {
+      const entered = cleanText(typeof input[field.key] === 'string' ? input[field.key] : input[field.key] == null ? '' : String(input[field.key])).trim()
+      const confirmKey = `${field.key}__confirm`
+      const confirm = cleanText(typeof input[confirmKey] === 'string' ? input[confirmKey] : '').trim()
+      if (entered !== confirm) {
+        errors[field.key] = 'The values do not match.'
+      }
     }
   }
   return errors
@@ -644,7 +655,7 @@ function createField(type: FieldType, existing: FormField[], stepId: string): Fo
     min: '',
     max: '',
     step: '',
-    text: type === 'text' || type === 'textarea' ? defaultTextOptions(FIELD_LABELS[type]) : undefined,
+    text: isRichFieldType(type) ? defaultTextOptions(FIELD_LABELS[type]) : undefined,
   }
 }
 
@@ -659,13 +670,15 @@ function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string
     : `f_${crypto.randomUUID()}`
   const key = uniqueNormalizedKey(raw.key, type, existing)
   const options = CHOICE_TYPES.has(type) ? normalizeOptions(raw.options) : []
-  const text = type === 'text' || type === 'textarea'
+  const text = isRichFieldType(type)
     ? normalizeTextOptions(raw.text, {
         label: clip(raw.label, 200) || FIELD_LABELS[type],
         placeholder: clip(raw.placeholder, 200),
         help: clip(raw.help, 400),
         required: raw.required === true,
         value: clip(raw.value, 20000),
+        min: clip(raw.min, 40),
+        max: clip(raw.max, 40),
       })
     : undefined
   return {
@@ -683,8 +696,8 @@ function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string
     buttonLabel: type === 'button' ? (clip(raw.buttonLabel, 80) || 'Submit') : '',
     accept: type === 'file' ? clip(raw.accept, 200) : '',
     rows: type === 'textarea' ? clampInt(Number(raw.rows) || 4, 2, 20) : 4,
-    min: type === 'number' ? clip(raw.min, 40) : '',
-    max: type === 'number' ? clip(raw.max, 40) : '',
+    min: text?.valueMin != null ? String(text.valueMin) : (type === 'number' ? clip(raw.min, 40) : ''),
+    max: text?.valueMax != null ? String(text.valueMax) : (type === 'number' ? clip(raw.max, 40) : ''),
     step: type === 'number' ? clip(raw.step, 40) : '',
     text,
   }
@@ -767,14 +780,17 @@ function fieldError(field: FormField, raw: unknown, file: UploadedFile | null, m
     }
     return customErrorText(field.text) || 'This field is required.'
   }
-  if (field.text && (field.type === 'text' || field.type === 'textarea')) {
+  if (field.text && isRichFieldType(field.type)) {
     const constraint = textConstraintError(field.text, value)
     if (constraint) {
-      return customErrorText(field.text) || constraint
+      return invalidErrorText(field.text) || customErrorText(field.text) || constraint
     }
   }
   if (field.type === 'email' && !EMAIL_PATTERN.test(value)) {
-    return 'Enter a valid email address.'
+    return invalidErrorText(field.text) || 'Enter a valid email address.'
+  }
+  if (field.type === 'password' && field.text && passwordRuleStates(field.text, value).some(rule => !rule.ok)) {
+    return invalidErrorText(field.text) || 'Password does not meet the requirements.'
   }
   if (field.type === 'phone' && !PHONE_PATTERN.test(value)) {
     return 'Enter a valid phone number.'
@@ -790,7 +806,7 @@ function fieldError(field: FormField, raw: unknown, file: UploadedFile | null, m
     const min = field.min.trim() === '' ? null : Number(field.min)
     const max = field.max.trim() === '' ? null : Number(field.max)
     if ((min != null && Number.isFinite(min) && numeric < min) || (max != null && Number.isFinite(max) && numeric > max)) {
-      return 'Enter a number in the allowed range.'
+      return invalidErrorText(field.text) || 'Enter a number in the allowed range.'
     }
   }
   if ((field.type === 'select' || field.type === 'radio') && !field.options.some(option => option.value === value)) {

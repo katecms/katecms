@@ -33,6 +33,33 @@ export interface FormSuggestion {
   value: string
 }
 
+export interface FormInvalidError {
+  enabled: boolean
+  showError: boolean
+  customError: boolean
+  errorText: string
+  errorPrefix: FormIcon | null
+  errorSuffix: FormIcon | null
+}
+
+export interface FormConfirmField {
+  enabled: boolean
+  label: FormMarkedText
+  placeholder: string
+  helper: FormMarkedText
+  placement: 'below' | 'inline'
+}
+
+export interface FormPasswordRules {
+  digit: boolean
+  lowercase: boolean
+  uppercase: boolean
+  special: boolean
+  limitLength: boolean
+  min: number | null
+  max: number | null
+}
+
 export interface FormTextOptions {
   label: FormMarkedText
   required: FormRequiredOptions
@@ -55,6 +82,12 @@ export interface FormTextOptions {
   readOnly: boolean
   hidden: boolean
   disabled: boolean
+  confirm: FormConfirmField
+  invalid: FormInvalidError
+  valueMin: number | null
+  valueMax: number | null
+  showPassword: boolean
+  passwordRules: FormPasswordRules
 }
 
 export interface PatternPreset {
@@ -192,7 +225,60 @@ export function defaultTextOptions(label = ''): FormTextOptions {
     readOnly: false,
     hidden: false,
     disabled: false,
+    confirm: defaultConfirmField(),
+    invalid: defaultInvalidError(),
+    valueMin: null,
+    valueMax: null,
+    showPassword: false,
+    passwordRules: {
+      digit: false,
+      lowercase: false,
+      uppercase: false,
+      special: false,
+      limitLength: false,
+      min: 8,
+      max: 32,
+    },
   }
+}
+
+function defaultConfirmField(): FormConfirmField {
+  return {
+    enabled: false,
+    label: emptyMarkedText(),
+    placeholder: '',
+    helper: emptyMarkedText(),
+    placement: 'below',
+  }
+}
+
+function defaultInvalidError(): FormInvalidError {
+  return {
+    enabled: false,
+    showError: true,
+    customError: false,
+    errorText: '',
+    errorPrefix: null,
+    errorSuffix: null,
+  }
+}
+
+const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password'])
+
+const FIELD_OPTIONS: Record<string, number[]> = {
+  text: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+  textarea: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+  email: [1, 2, 3, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16, 17, 18, 19, 20],
+  number: [1, 2, 3, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16, 17, 18, 20, 21],
+  password: [1, 2, 3, 4, 6, 7, 13, 14, 15, 16, 17, 18, 22, 23, 24],
+}
+
+export function isRichFieldType(type: string): boolean {
+  return RICH_FIELD_TYPES.has(type)
+}
+
+export function fieldHasOption(type: string, id: number): boolean {
+  return FIELD_OPTIONS[type]?.includes(id) ?? false
 }
 
 export function iconUrl(icon: FormIcon | null | undefined): string {
@@ -238,12 +324,17 @@ function clip(value: unknown, max: number): string {
   return typeof value === 'string' ? value.trim().slice(0, max) : ''
 }
 
-function optionalCount(value: unknown): number | null {
+function optionalNumber(value: unknown): number | null {
   if (value == null || value === '') {
     return null
   }
   const number = Number(value)
-  if (!Number.isFinite(number) || number < 0) {
+  return Number.isFinite(number) ? number : null
+}
+
+function optionalCount(value: unknown): number | null {
+  const number = optionalNumber(value)
+  if (number == null || number < 0) {
     return null
   }
   return Math.min(100000, Math.floor(number))
@@ -278,7 +369,7 @@ function normalizeMarked(raw: unknown, fallbackText = ''): FormMarkedText {
   }
 }
 
-export function normalizeTextOptions(raw: unknown, fallback: { label?: string, placeholder?: string, help?: string, required?: boolean, value?: string } = {}): FormTextOptions {
+export function normalizeTextOptions(raw: unknown, fallback: { label?: string, placeholder?: string, help?: string, required?: boolean, value?: string, min?: string, max?: string } = {}): FormTextOptions {
   if (!isRecord(raw)) {
     const options = defaultTextOptions(fallback.label || '')
     options.placeholder = clip(fallback.placeholder, 200)
@@ -327,7 +418,90 @@ export function normalizeTextOptions(raw: unknown, fallback: { label?: string, p
     readOnly: source.readOnly === true,
     hidden: source.hidden === true,
     disabled: source.disabled === true,
+    confirm: normalizeConfirm(source.confirm),
+    invalid: normalizeInvalid(source.invalid),
+    valueMin: source.valueMin == null ? optionalNumber(fallback.min) : optionalNumber(source.valueMin),
+    valueMax: source.valueMax == null ? optionalNumber(fallback.max) : optionalNumber(source.valueMax),
+    showPassword: source.showPassword === true,
+    passwordRules: normalizePasswordRules(source.passwordRules),
   }
+}
+
+function normalizeConfirm(raw: unknown): FormConfirmField {
+  const source = isRecord(raw) ? raw : {}
+  const placement = source.placement === 'inline' ? 'inline' : 'below'
+  return {
+    enabled: source.enabled === true,
+    label: normalizeMarked(source.label),
+    placeholder: clip(source.placeholder, 200),
+    helper: normalizeMarked(source.helper),
+    placement,
+  }
+}
+
+function normalizeInvalid(raw: unknown): FormInvalidError {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    enabled: source.enabled === true,
+    showError: source.showError !== false,
+    customError: source.customError === true,
+    errorText: clip(source.errorText, 400),
+    errorPrefix: normalizeIcon(source.errorPrefix),
+    errorSuffix: normalizeIcon(source.errorSuffix),
+  }
+}
+
+function normalizePasswordRules(raw: unknown): FormPasswordRules {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    digit: source.digit === true,
+    lowercase: source.lowercase === true,
+    uppercase: source.uppercase === true,
+    special: source.special === true,
+    limitLength: source.limitLength === true,
+    min: optionalCount(source.min) ?? 8,
+    max: optionalCount(source.max) ?? 32,
+  }
+}
+
+const PASSWORD_SPECIAL = /[~!@#$%^&*(){}[\]<>+\-_=\\/|;:,.]/
+
+export interface PasswordRuleState {
+  ok: boolean
+  label: string
+}
+
+export function passwordRuleStates(options: FormTextOptions, value: string): PasswordRuleState[] {
+  const rules = options.passwordRules
+  const states: PasswordRuleState[] = []
+  if (rules.digit) {
+    states.push({ ok: /[0-9]/.test(value), label: 'One number' })
+  }
+  if (rules.lowercase) {
+    states.push({ ok: /[a-z]/.test(value), label: 'One lowercase character' })
+  }
+  if (rules.uppercase) {
+    states.push({ ok: /[A-Z]/.test(value), label: 'One uppercase character' })
+  }
+  if (rules.special) {
+    states.push({ ok: PASSWORD_SPECIAL.test(value), label: 'One special character' })
+  }
+  if (rules.limitLength) {
+    const min = rules.min ?? 8
+    const max = rules.max ?? 32
+    states.push({
+      ok: value.length >= min && value.length <= max,
+      label: `${min} to ${max} characters`,
+    })
+  }
+  return states
+}
+
+export function invalidErrorText(options: FormTextOptions | undefined): string {
+  if (options?.invalid.enabled && options.invalid.showError && options.invalid.customError && options.invalid.errorText.trim()) {
+    return options.invalid.errorText.trim()
+  }
+  return ''
 }
 
 function normalizeSuggestions(raw: unknown): FormSuggestion[] {

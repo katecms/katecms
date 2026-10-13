@@ -3,17 +3,21 @@ import { ref, watch } from 'vue'
 
 const props = defineProps<{
   title: string
-  enabled: boolean
+  enabled?: boolean
+  plain?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:enabled': [value: boolean]
 }>()
 
-const open = ref(props.enabled)
+const open = ref(props.plain ? false : props.enabled)
 
 watch(() => props.enabled, (value) => {
-  open.value = value
+  if (props.plain) {
+    return
+  }
+  open.value = !!value
 })
 
 function onCheck(event: Event) {
@@ -23,7 +27,7 @@ function onCheck(event: Event) {
 }
 
 function toggle() {
-  if (!props.enabled) {
+  if (!props.plain && !props.enabled) {
     return
   }
   open.value = !open.value
@@ -33,10 +37,11 @@ function toggle() {
 <template>
   <div
     class="miraicms-option-accordion"
-    :class="{ 'is-on': enabled, 'is-open': enabled && open }"
+    :class="{ 'is-on': plain || enabled, 'is-open': (plain || enabled) && open }"
   >
     <div class="miraicms-option-accordion__bar">
       <input
+        v-if="!plain"
         class="miraicms-option-accordion__check"
         type="checkbox"
         :checked="enabled"
@@ -46,8 +51,8 @@ function toggle() {
       <button
         type="button"
         class="miraicms-option-accordion__toggle"
-        :disabled="!enabled"
-        :aria-expanded="enabled && open"
+        :disabled="!plain && !enabled"
+        :aria-expanded="(plain || enabled) && open"
         @click="toggle"
       >
         <span>{{ title }}</span>
@@ -55,7 +60,7 @@ function toggle() {
       </button>
     </div>
     <div
-      v-if="enabled && open"
+      v-if="(plain || enabled) && open"
       class="miraicms-option-accordion__body"
     >
       <slot />

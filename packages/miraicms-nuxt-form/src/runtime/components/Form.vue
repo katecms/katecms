@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { $fetch } from '#imports'
 import type { FormField, LayoutItem, PublicForm, UploadedFile } from '../form/model'
 import { baseBreakpoint, formBreakpoints, submissionErrors } from '../form/model'
-import { applyInputMask, defaultTextOptions, iconUrl } from '../form/text-options'
+import { applyInputMask, defaultTextOptions, iconUrl, isRichFieldType, passwordRuleStates } from '../form/text-options'
 import { clientFormBreakpoints } from '../form/runtime-config'
 import { stepIconSvg } from '../form/icons'
 
@@ -24,6 +24,7 @@ const state = ref<'loading' | 'missing' | 'idle' | 'submitting' | 'success' | 'i
 const fieldErrors = ref<Record<string, string>>({})
 const alertMessage = ref('')
 const drafts = ref<Record<string, string>>({})
+const revealed = ref<Record<string, boolean>>({})
 
 const locked = computed(() => state.value === 'submitting' || state.value === 'success')
 
@@ -85,7 +86,7 @@ async function load() {
     definition.value = await $fetch<PublicForm>(`/api/_miraicms/forms/view/${encodeURIComponent(props.form)}`)
     const next: Record<string, string> = {}
     for (const field of definition.value.content.fields) {
-      if (field.type === 'text' || field.type === 'textarea') {
+      if (isRichFieldType(field.type)) {
         next[field.id] = field.text?.defaultValue || ''
       }
     }
@@ -118,6 +119,9 @@ async function onSubmit(event: Event) {
     }
     else if (field.type !== 'html' && field.type !== 'button') {
       input[field.key] = String(data.get(field.key) ?? '')
+      if (field.text?.confirm.enabled) {
+        input[`${field.key}__confirm`] = String(data.get(`${field.key}__confirm`) ?? '')
+      }
     }
   }
   const errors = submissionErrors(current.content, input, files, current.maxFileBytes)
@@ -188,7 +192,24 @@ function inputType(type: FormField['type']): string {
 }
 
 function isText(field: FormField): boolean {
-  return field.type === 'email' || field.type === 'phone' || field.type === 'number' || field.type === 'date'
+  return field.type === 'phone' || field.type === 'date'
+}
+
+function richField(field: FormField) {
+  return isRichFieldType(field.type)
+}
+
+function liveInputType(field: FormField, revealed: boolean) {
+  if (field.type === 'textarea') {
+    return 'textarea'
+  }
+  if (field.type === 'password') {
+    return revealed ? 'text' : 'password'
+  }
+  if (field.type === 'email' || field.type === 'number') {
+    return field.type
+  }
+  return 'text'
 }
 
 function textOptions(field: FormField) {
@@ -283,9 +304,9 @@ function onDraft(field: FormField, event: Event) {
         :data-required="cell.field.required ? 'true' : undefined"
         :data-invalid="fieldErrors[cell.field.key] ? 'true' : undefined"
         v-bind="layoutAttrs(cell.layouts)"
-        :hidden="(cell.field.type === 'text' || cell.field.type === 'textarea') && textOptions(cell.field).hidden ? true : undefined"
+        :hidden="richField(cell.field) && textOptions(cell.field).hidden ? true : undefined"
       >
-        <template v-if="cell.field.type === 'text' || cell.field.type === 'textarea'">
+        <template v-if="richField(cell.field)">
           <div
             v-if="textOptions(cell.field).label.enabled"
             class="mirai-form__label"
@@ -369,7 +390,7 @@ function onDraft(field: FormField, event: Event) {
               v-else
               :id="controlId(cell.field)"
               class="mirai-form__control"
-              type="text"
+              :type="liveInputType(cell.field, revealed[cell.field.id] === true)"
               :name="cell.field.key"
               :value="drafts[cell.field.id]"
               :placeholder="textOptions(cell.field).placeholder || undefined"
@@ -378,12 +399,22 @@ function onDraft(field: FormField, event: Event) {
               :disabled="locked || textOptions(cell.field).disabled"
               :maxlength="textOptions(cell.field).maxLength ?? undefined"
               :minlength="textOptions(cell.field).minLength ?? undefined"
-              :autocomplete="textOptions(cell.field).autocomplete || undefined"
+              :autocomplete="cell.field.type === 'password' ? 'new-password' : (textOptions(cell.field).autocomplete || undefined)"
               :inputmode="textOptions(cell.field).inputMode || undefined"
               :pattern="textOptions(cell.field).pattern || undefined"
+              :min="cell.field.type === 'number' ? textOptions(cell.field).valueMin ?? undefined : undefined"
+              :max="cell.field.type === 'number' ? textOptions(cell.field).valueMax ?? undefined : undefined"
               :list="textOptions(cell.field).suggestions.length ? `mirai-suggest-${cell.field.id}` : undefined"
               @input="onDraft(cell.field, $event)"
             >
+            <button
+              v-if="cell.field.type === 'password' && textOptions(cell.field).showPassword"
+              type="button"
+              :aria-label="revealed[cell.field.id] ? 'Hide password' : 'Show password'"
+              @click="revealed[cell.field.id] = !revealed[cell.field.id]"
+            >
+              {{ revealed[cell.field.id] ? 'Hide' : 'Show' }}
+            </button>
             <img
               v-if="iconUrl(textOptions(cell.field).suffix)"
               class="mirai-form__icon"
@@ -403,22 +434,27 @@ function onDraft(field: FormField, event: Event) {
             </datalist>
           </span>
           <div
-            v-if="textOptions(cell.field).helper.enabled && textOptions(cell.field).helper.text"
+            v-if="(textOptions(cell.field).helper.enabled && textOptions(cell.field).helper.text) || passwordRuleStates(textOptions(cell.field), drafts[cell.field.id] || '').length"
             class="mirai-form__help"
           >
             <img
-              v-if="iconUrl(textOptions(cell.field).helper.prefix)"
+              v-if="textOptions(cell.field).helper.enabled && iconUrl(textOptions(cell.field).helper.prefix)"
               class="mirai-form__icon"
               :src="iconUrl(textOptions(cell.field).helper.prefix)"
               alt=""
             >
-            <span>{{ textOptions(cell.field).helper.text }}</span>
+            <span v-if="textOptions(cell.field).helper.enabled">{{ textOptions(cell.field).helper.text }}</span>
             <img
-              v-if="iconUrl(textOptions(cell.field).helper.suffix)"
+              v-if="textOptions(cell.field).helper.enabled && iconUrl(textOptions(cell.field).helper.suffix)"
               class="mirai-form__icon"
               :src="iconUrl(textOptions(cell.field).helper.suffix)"
               alt=""
             >
+            <span
+              v-for="(rule, index) in passwordRuleStates(textOptions(cell.field), drafts[cell.field.id] || '')"
+              :key="index"
+              :style="{ color: rule.ok ? 'green' : 'red', marginRight: '20px' }"
+            >{{ rule.ok ? '✔' : '✖' }} {{ rule.label }}</span>
           </div>
           <div
             v-if="fieldErrors[cell.field.key] && textOptions(cell.field).required.showError"
@@ -438,6 +474,29 @@ function onDraft(field: FormField, event: Event) {
               alt=""
             >
           </div>
+          <span
+            v-if="textOptions(cell.field).confirm.enabled"
+            class="mirai-form__confirm"
+            :data-placement="textOptions(cell.field).confirm.placement"
+          >
+            <label
+              v-if="textOptions(cell.field).confirm.label.enabled"
+              :for="`${controlId(cell.field)}-confirm`"
+            >
+              {{ textOptions(cell.field).confirm.label.text }}
+            </label>
+            <input
+              :id="`${controlId(cell.field)}-confirm`"
+              class="mirai-form__control"
+              :type="liveInputType(cell.field, revealed[cell.field.id] === true)"
+              :name="`${cell.field.key}__confirm`"
+              :placeholder="textOptions(cell.field).confirm.placeholder || undefined"
+              :disabled="locked || textOptions(cell.field).disabled"
+            >
+            <span v-if="textOptions(cell.field).confirm.helper.enabled">
+              {{ textOptions(cell.field).confirm.helper.text }}
+            </span>
+          </span>
         </template>
 
         <template v-else-if="isText(cell.field)">
@@ -573,13 +632,13 @@ function onDraft(field: FormField, event: Event) {
         </button>
 
         <div
-          v-if="cell.field.help && cell.field.type !== 'text' && cell.field.type !== 'textarea' && cell.field.type !== 'hidden' && cell.field.type !== 'html' && cell.field.type !== 'button'"
+          v-if="cell.field.help && !richField(cell.field) && cell.field.type !== 'hidden' && cell.field.type !== 'html' && cell.field.type !== 'button'"
           class="mirai-form__help"
         >
           {{ cell.field.help }}
         </div>
         <div
-          v-if="fieldErrors[cell.field.key] && cell.field.type !== 'text' && cell.field.type !== 'textarea'"
+          v-if="fieldErrors[cell.field.key] && !richField(cell.field)"
           class="mirai-form__error"
         >
           {{ fieldErrors[cell.field.key] }}

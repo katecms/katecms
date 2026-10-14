@@ -50,6 +50,18 @@ export interface FormConfirmField {
   placement: 'below' | 'inline'
 }
 
+export type RatingPosition = 'left' | 'center' | 'right'
+export type ButtonAlign = 'left' | 'center' | 'right'
+export type ButtonKind = 'submit' | 'button' | 'reset'
+
+export interface FormRatingOption {
+  id: string
+  icon: FormIcon | null
+  label: string
+  value: string
+  checked: boolean
+}
+
 export interface FormPasswordRules {
   digit: boolean
   lowercase: boolean
@@ -88,6 +100,16 @@ export interface FormTextOptions {
   valueMax: number | null
   showPassword: boolean
   passwordRules: FormPasswordRules
+  step: number | null
+  ratingIcon: FormIcon | null
+  ratingOptions: FormRatingOption[]
+  ratingPosition: RatingPosition
+  ratingHoverMessage: boolean
+  ratingSelectedMessage: boolean
+  buttonText: FormMarkedText
+  buttonType: ButtonKind
+  fullWidth: boolean
+  buttonAlign: ButtonAlign
 }
 
 export interface PatternPreset {
@@ -239,6 +261,16 @@ export function defaultTextOptions(label = ''): FormTextOptions {
       min: 8,
       max: 32,
     },
+    step: 1,
+    ratingIcon: null,
+    ratingOptions: defaultRatingOptions(),
+    ratingPosition: 'left',
+    ratingHoverMessage: false,
+    ratingSelectedMessage: false,
+    buttonText: { enabled: true, text: 'Submit', prefix: null, suffix: null },
+    buttonType: 'submit',
+    fullWidth: false,
+    buttonAlign: 'left',
   }
 }
 
@@ -263,7 +295,7 @@ function defaultInvalidError(): FormInvalidError {
   }
 }
 
-const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password'])
+const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button'])
 
 const FIELD_OPTIONS: Record<string, number[]> = {
   text: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
@@ -271,6 +303,11 @@ const FIELD_OPTIONS: Record<string, number[]> = {
   email: [1, 2, 3, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16, 17, 18, 19, 20],
   number: [1, 2, 3, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16, 17, 18, 20, 21],
   password: [1, 2, 3, 4, 6, 7, 13, 14, 15, 16, 17, 18, 22, 23, 24],
+  range: [1, 2, 3, 21, 25, 5, 7, 15, 17, 16, 18],
+  url: [1, 2, 3, 4, 5, 6, 7, 9, 10, 12, 13, 20, 14, 15, 16, 17, 18],
+  color: [1, 2, 3, 5, 6, 7, 14, 15, 16, 17, 18],
+  rating: [1, 2, 3, 26, 27, 28, 29, 30, 7, 15, 17, 18],
+  button: [31, 32, 33, 34, 7, 15, 17, 18],
 }
 
 export function isRichFieldType(type: string): boolean {
@@ -279,6 +316,19 @@ export function isRichFieldType(type: string): boolean {
 
 export function fieldHasOption(type: string, id: number): boolean {
   return FIELD_OPTIONS[type]?.includes(id) ?? false
+}
+
+export const DEFAULT_RATING_ICON = new URL('../assets/img/star.svg', import.meta.url).href
+
+export const RATING_FILTER_OFF = 'invert(95%) sepia(12%) saturate(155%) hue-rotate(6deg) brightness(85%) contrast(84%)'
+export const RATING_FILTER_ON = 'invert(73%) sepia(30%) saturate(3712%) hue-rotate(3deg) brightness(108%) contrast(96%)'
+
+export function ratingIconSrc(optionIcon: FormIcon | null | undefined, fallbackIcon: FormIcon | null | undefined): string {
+  return iconUrl(optionIcon) || iconUrl(fallbackIcon) || DEFAULT_RATING_ICON
+}
+
+export function ratingSelectedIndex(options: FormRatingOption[], value: string): number {
+  return options.findIndex(item => item.value === value)
 }
 
 export function iconUrl(icon: FormIcon | null | undefined): string {
@@ -369,12 +419,15 @@ function normalizeMarked(raw: unknown, fallbackText = ''): FormMarkedText {
   }
 }
 
-export function normalizeTextOptions(raw: unknown, fallback: { label?: string, placeholder?: string, help?: string, required?: boolean, value?: string, min?: string, max?: string } = {}): FormTextOptions {
+export function normalizeTextOptions(raw: unknown, fallback: { label?: string, placeholder?: string, help?: string, required?: boolean, value?: string, min?: string, max?: string, buttonLabel?: string } = {}): FormTextOptions {
   if (!isRecord(raw)) {
     const options = defaultTextOptions(fallback.label || '')
     options.placeholder = clip(fallback.placeholder, 200)
     options.defaultValue = clip(fallback.value, 20000)
     options.required.enabled = fallback.required === true
+    if (fallback.buttonLabel) {
+      options.buttonText = { enabled: true, text: clip(fallback.buttonLabel, 400), prefix: null, suffix: null }
+    }
     if (fallback.help) {
       options.helper = { enabled: true, text: clip(fallback.help, 400), prefix: null, suffix: null }
     }
@@ -424,6 +477,16 @@ export function normalizeTextOptions(raw: unknown, fallback: { label?: string, p
     valueMax: source.valueMax == null ? optionalNumber(fallback.max) : optionalNumber(source.valueMax),
     showPassword: source.showPassword === true,
     passwordRules: normalizePasswordRules(source.passwordRules),
+    step: optionalNumber(source.step) ?? 1,
+    ratingIcon: normalizeIcon(source.ratingIcon),
+    ratingOptions: normalizeRatingOptions(source.ratingOptions),
+    ratingPosition: source.ratingPosition === 'center' || source.ratingPosition === 'right' ? source.ratingPosition : 'left',
+    ratingHoverMessage: source.ratingHoverMessage === true,
+    ratingSelectedMessage: source.ratingSelectedMessage === true,
+    buttonText: normalizeMarked(source.buttonText, clip(fallback.buttonLabel, 400) || 'Submit'),
+    buttonType: source.buttonType === 'button' || source.buttonType === 'reset' ? source.buttonType : 'submit',
+    fullWidth: source.fullWidth === true,
+    buttonAlign: source.buttonAlign === 'center' || source.buttonAlign === 'right' ? source.buttonAlign : 'left',
   }
 }
 
@@ -449,6 +512,41 @@ function normalizeInvalid(raw: unknown): FormInvalidError {
     errorPrefix: normalizeIcon(source.errorPrefix),
     errorSuffix: normalizeIcon(source.errorSuffix),
   }
+}
+
+function defaultRatingOptions(): FormRatingOption[] {
+  return [1, 2, 3, 4, 5].map(index => ({
+    id: `rt_${index}`,
+    icon: null,
+    label: String(index),
+    value: String(index),
+    checked: false,
+  }))
+}
+
+function normalizeRatingOptions(raw: unknown): FormRatingOption[] {
+  if (!Array.isArray(raw) || !raw.length) {
+    return defaultRatingOptions()
+  }
+  const options: FormRatingOption[] = []
+  for (const item of raw.slice(0, 20)) {
+    if (!isRecord(item)) {
+      continue
+    }
+    const label = clip(item.label, 80)
+    const value = clip(item.value, 80) || label
+    if (!value) {
+      continue
+    }
+    options.push({
+      id: clip(item.id, 80) || `rt_${crypto.randomUUID()}`,
+      icon: normalizeIcon(item.icon),
+      label,
+      value,
+      checked: item.checked === true,
+    })
+  }
+  return options.length ? options : defaultRatingOptions()
 }
 
 function normalizePasswordRules(raw: unknown): FormPasswordRules {

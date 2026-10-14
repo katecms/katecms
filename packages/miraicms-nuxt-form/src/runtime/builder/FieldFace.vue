@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { FormField } from '../form/model'
-import { applyInputMask, defaultTextOptions, iconUrl, isRichFieldType, passwordRuleStates } from '../form/text-options'
+import { applyInputMask, defaultTextOptions, iconUrl, isRichFieldType, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON } from '../form/text-options'
 
 const props = withDefaults(defineProps<{
   field?: FormField
@@ -18,7 +18,16 @@ const props = withDefaults(defineProps<{
 
 const options = computed(() => props.field?.text ?? defaultTextOptions(props.field?.label || ''))
 const rich = computed(() => isRichFieldType(props.field?.type || ''))
-const revealed = ref(false)
+const hoverRating = ref('')
+const ratingMessage = computed(() => {
+  if (options.value.ratingHoverMessage && hoverRating.value) {
+    return hoverRating.value
+  }
+  if (!options.value.ratingSelectedMessage) {
+    return ''
+  }
+  return options.value.ratingOptions.find(item => item.value === draft.value)?.label || ''
+})
 const rules = computed(() => props.field?.type === 'password' ? passwordRuleStates(options.value, draft.value) : [])
 const draft = ref(props.field?.value || '')
 
@@ -43,11 +52,29 @@ function controlType() {
   if (props.field?.type === 'number') {
     return 'number'
   }
+  if (props.field?.type === 'url') {
+    return 'url'
+  }
+  if (props.field?.type === 'color') {
+    return 'color'
+  }
+  if (props.field?.type === 'range') {
+    return 'range'
+  }
   if (props.field?.type === 'password') {
     return revealed.value ? 'text' : 'password'
   }
   return 'text'
 }
+function chooseRating(index: number) {
+  const list = options.value.ratingOptions
+  if (ratingSelectedIndex(list, draft.value) === index) {
+    draft.value = ''
+    return
+  }
+  draft.value = list[index]?.value || ''
+}
+
 function onInput(event: Event) {
   const el = event.target
   if (!(el instanceof HTMLInputElement) && !(el instanceof HTMLTextAreaElement)) {
@@ -139,8 +166,59 @@ function onInput(event: Event) {
         :src="iconUrl(options.prefix)"
         alt=""
       >
+      <div
+        v-if="field.type === 'rating'"
+        class="miraicms-field-face__rating"
+        :data-position="options.ratingPosition"
+        @pointerdown.stop
+      >
+        <button
+          v-for="(option, index) in options.ratingOptions"
+          :key="option.id"
+          type="button"
+          class="miraicms-field-face__star"
+          :class="{ 'is-on': ratingSelectedIndex(options.ratingOptions, draft) >= index }"
+          @mouseenter="hoverRating = option.label"
+          @mouseleave="hoverRating = ''"
+          @click="chooseRating(index)"
+        >
+          <img
+            class="miraicms-field-face__icon"
+            :src="ratingIconSrc(option.icon, options.ratingIcon)"
+            alt=""
+            :style="{ filter: ratingSelectedIndex(options.ratingOptions, draft) >= index ? RATING_FILTER_ON : RATING_FILTER_OFF }"
+          >
+        </button>
+        <span v-if="ratingMessage">{{ ratingMessage }}</span>
+        <input
+          type="hidden"
+          :name="preview ? undefined : field.key"
+          :value="draft"
+        >
+      </div>
+      <button
+        v-else-if="field.type === 'button'"
+        class="miraicms-field-face__button"
+        :type="preview ? 'button' : options.buttonType"
+        :disabled="disabled || options.disabled"
+        :style="{ width: options.fullWidth ? '100%' : undefined, alignSelf: options.buttonAlign === 'center' ? 'center' : options.buttonAlign === 'right' ? 'flex-end' : 'flex-start' }"
+      >
+        <img
+          v-if="iconUrl(options.buttonText.prefix)"
+          class="miraicms-field-face__icon"
+          :src="iconUrl(options.buttonText.prefix)"
+          alt=""
+        >
+        <span>{{ options.buttonText.text }}</span>
+        <img
+          v-if="iconUrl(options.buttonText.suffix)"
+          class="miraicms-field-face__icon"
+          :src="iconUrl(options.buttonText.suffix)"
+          alt=""
+        >
+      </button>
       <textarea
-        v-if="field.type === 'textarea'"
+        v-else-if="field.type === 'textarea'"
         :id="controlId"
         v-model="draft"
         class="miraicms-field-face__input"
@@ -173,11 +251,13 @@ function onInput(event: Event) {
         :autocomplete="options.autocomplete || undefined"
         :inputmode="options.inputMode || undefined"
         :pattern="options.pattern || undefined"
-        :min="field?.type === 'number' ? options.valueMin ?? undefined : undefined"
-        :max="field?.type === 'number' ? options.valueMax ?? undefined : undefined"
+        :min="field?.type === 'number' || field?.type === 'range' ? options.valueMin ?? undefined : undefined"
+        :max="field?.type === 'number' || field?.type === 'range' ? options.valueMax ?? undefined : undefined"
+        :step="field?.type === 'range' ? options.step ?? undefined : undefined"
         :list="options.suggestions.length ? listId : undefined"
         @input="onInput"
       >
+      <span v-if="field?.type === 'range'">{{ draft }}</span>
       <button
         v-if="field?.type === 'password' && options.showPassword"
         type="button"
@@ -428,6 +508,39 @@ function onInput(event: Event) {
     flex-direction: column;
     gap: math-rem(4);
     font-size: math-rem(13);
+  }
+
+  &__rating {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: math-rem(4);
+    pointer-events: auto;
+
+    &[data-position='center'] {
+      justify-content: center;
+    }
+
+    &[data-position='right'] {
+      justify-content: flex-end;
+    }
+  }
+
+  &__star {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: math-rem(28);
+    height: math-rem(28);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+
+    img {
+      width: math-rem(20);
+      height: math-rem(20);
+    }
   }
 
   &__reveal {

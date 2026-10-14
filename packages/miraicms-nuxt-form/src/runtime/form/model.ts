@@ -40,6 +40,10 @@ export const FIELD_TYPES = [
   'phone',
   'number',
   'password',
+  'range',
+  'url',
+  'color',
+  'rating',
   'select',
   'radio',
   'checkbox',
@@ -58,6 +62,10 @@ export const FIELD_LABELS: Record<FieldType, string> = {
   phone: 'Phone',
   number: 'Number',
   password: 'Password',
+  range: 'Slider',
+  url: 'URL',
+  color: 'Color Picker',
+  rating: 'Rating',
   select: 'Select',
   radio: 'Radio',
   checkbox: 'Checkbox',
@@ -533,9 +541,10 @@ export function submissionErrors(
       continue
     }
     if (field.text?.confirm.enabled) {
-      const entered = cleanText(typeof input[field.key] === 'string' ? input[field.key] : input[field.key] == null ? '' : String(input[field.key])).trim()
-      const confirmKey = `${field.key}__confirm`
-      const confirm = cleanText(typeof input[confirmKey] === 'string' ? input[confirmKey] : '').trim()
+      const rawEntered = input[field.key]
+      const rawConfirm = input[`${field.key}__confirm`]
+      const entered = cleanText(typeof rawEntered === 'string' ? rawEntered : rawEntered == null ? '' : String(rawEntered)).trim()
+      const confirm = cleanText(typeof rawConfirm === 'string' ? rawConfirm : '').trim()
       if (entered !== confirm) {
         errors[field.key] = 'The values do not match.'
       }
@@ -649,14 +658,40 @@ function createField(type: FieldType, existing: FormField[], stepId: string): Fo
       : [],
     html: '',
     value: '',
-    buttonLabel: type === 'button' ? 'Submit' : '',
+    buttonLabel: type === 'button' && existing.some(field => field.type === 'button') ? 'Button' : type === 'button' ? 'Submit' : '',
     accept: '',
     rows: 4,
     min: '',
     max: '',
     step: '',
-    text: isRichFieldType(type) ? defaultTextOptions(FIELD_LABELS[type]) : undefined,
+    text: textOptionsFor(type, existing),
   }
+}
+
+function textOptionsFor(type: FieldType, existing: FormField[]) {
+  if (!isRichFieldType(type)) {
+    return undefined
+  }
+  const text = defaultTextOptions(FIELD_LABELS[type])
+  if (type === 'button') {
+    const another = existing.some(field => field.type === 'button')
+    text.label.enabled = false
+    text.buttonText = { enabled: true, text: another ? 'Button' : 'Submit', prefix: null, suffix: null }
+    text.buttonType = another ? 'button' : 'submit'
+  }
+  if (type === 'range') {
+    text.valueMin = 0
+    text.valueMax = 100
+    text.step = 1
+    text.defaultValue = '50'
+  }
+  if (type === 'color') {
+    text.defaultValue = '#000000'
+  }
+  if (type === 'url') {
+    text.autocomplete = 'url'
+  }
+  return text
 }
 
 function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string>, fallbackStepId: string): FormField | null {
@@ -679,6 +714,7 @@ function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string
         value: clip(raw.value, 20000),
         min: clip(raw.min, 40),
         max: clip(raw.max, 40),
+        buttonLabel: clip(raw.buttonLabel, 400),
       })
     : undefined
   return {
@@ -693,12 +729,12 @@ function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string
     options,
     html: type === 'html' ? sanitizeHtml(clip(raw.html, 50000)) : '',
     value: type === 'hidden' ? clip(raw.value, 2000) : (text?.defaultValue || ''),
-    buttonLabel: type === 'button' ? (clip(raw.buttonLabel, 80) || 'Submit') : '',
+    buttonLabel: type === 'button' ? (text?.buttonText.text || clip(raw.buttonLabel, 400) || 'Submit') : '',
     accept: type === 'file' ? clip(raw.accept, 200) : '',
     rows: type === 'textarea' ? clampInt(Number(raw.rows) || 4, 2, 20) : 4,
     min: text?.valueMin != null ? String(text.valueMin) : (type === 'number' ? clip(raw.min, 40) : ''),
     max: text?.valueMax != null ? String(text.valueMax) : (type === 'number' ? clip(raw.max, 40) : ''),
-    step: type === 'number' ? clip(raw.step, 40) : '',
+    step: text?.step != null && (type === 'range' || type === 'number') ? String(text.step) : '',
     text,
   }
 }
@@ -798,7 +834,7 @@ function fieldError(field: FormField, raw: unknown, file: UploadedFile | null, m
   if (field.type === 'date' && !isValidDate(value)) {
     return 'Enter a valid date.'
   }
-  if (field.type === 'number') {
+  if (field.type === 'number' || field.type === 'range') {
     const numeric = Number(value)
     if (!Number.isFinite(numeric)) {
       return 'Enter a valid number.'
@@ -807,6 +843,26 @@ function fieldError(field: FormField, raw: unknown, file: UploadedFile | null, m
     const max = field.max.trim() === '' ? null : Number(field.max)
     if ((min != null && Number.isFinite(min) && numeric < min) || (max != null && Number.isFinite(max) && numeric > max)) {
       return invalidErrorText(field.text) || 'Enter a number in the allowed range.'
+    }
+  }
+  if (field.type === 'url') {
+    try {
+      const url = new URL(value)
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        return invalidErrorText(field.text) || 'Enter a valid URL.'
+      }
+    }
+    catch {
+      return invalidErrorText(field.text) || 'Enter a valid URL.'
+    }
+  }
+  if (field.type === 'color' && !/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(value)) {
+    return invalidErrorText(field.text) || 'Choose a color.'
+  }
+  if (field.type === 'rating') {
+    const allowed = new Set(field.text?.ratingOptions.map(item => item.value) ?? [])
+    if (allowed.size > 0 && !allowed.has(value)) {
+      return invalidErrorText(field.text) || 'Choose a rating.'
     }
   }
   if ((field.type === 'select' || field.type === 'radio') && !field.options.some(option => option.value === value)) {
@@ -843,10 +899,28 @@ function isValidDate(value: string): boolean {
 }
 
 export function sanitizeHtml(html: string): string {
-  return html
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+  return stripScripts(html)
     .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
     .replace(/javascript:/gi, '')
+}
+
+function stripScripts(html: string): string {
+  const lower = html.toLowerCase()
+  let result = ''
+  let index = 0
+  while (index < html.length) {
+    const start = lower.indexOf('<script', index)
+    if (start < 0) {
+      return result + html.slice(index)
+    }
+    const end = lower.indexOf('</script>', start + 7)
+    result += html.slice(index, start)
+    if (end < 0) {
+      return result + html.slice(start)
+    }
+    index = end + '</script>'.length
+  }
+  return result
 }
 
 function cleanText(value: string): string {

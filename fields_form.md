@@ -120,7 +120,7 @@
   -- Inline
 24) аккордеон "Validations"
 находится под "Helper Text"
-конструкции по типу ${isNumberExistIcn}, можно заменить на другие которые посчитаешь нужными, эти конструкции будут выводить символы <span style="color: red;">✖</span> или <span style="color: green;">✔</span>
+конструкции по типу ${isNumberExistIcn}, можно заменить на другие, которые посчитаешь нужными, эти конструкции будут выводить символы <span style="color: red;">✖</span> или <span style="color: green;">✔</span>
 - чекбокс At least one digit (0-9) - value: (?=.*[0-9]) вставляет в "Helper Text": <span style="margin-right:20px;">${isNumberExistIcn} One number</span>
 - чекбокс At least one lowercase character (a-z) - value: (?=.*[a-z]) вставляет в "Helper Text": <span style="margin-right:20px;">${isLowercaseExistIcn} One lowercase character</span>
 - чекбокс At least one uppercase character (A-Z) - value: (?=.*[A-Z]) вставляет в "Helper Text": <span style="margin-right:20px;">${isUppercaseExistIcn} One uppercase character</span>
@@ -128,3 +128,29 @@
 - чекбокс "Limit Password Length": вставляет в "Helper Text": <span style="margin-right:20px;">${isLimitValidIcn} 8 to 32 characters</span>
 -- number "Min"
 -- number "Max"
+25) number "Step"
+26) "Rating Icon" - ImageField с "iconMode: true" (это иконка по дефолту)
+27) "Options" репитер, так же нужен handle:
+- "Icon" - ImageField с "iconMode: true"
+- text "Label"
+- text "Value"
+- checkbox "Check"
+28) select "Rating Position"
+- Left
+- Center
+- Right
+29) checkbox "Show rating message on hover" (Info: This allows to show the rating message on hover. You can toggle this option to show or hide the rating message on hover.)
+30) checkbox "Show Rating Message On Selected" (Info: This allows to show the rating message on rating selected. You can toggle this option to show or hide the rating message on rating selected.)
+31) "Button Text":
+- textarea
+- Prefix Icon
+- Suffix Icon
+32) select "Button Type":
+- Reset
+- Button
+- Submit
+33) checkbox "Full Width"
+34) select "Button Align":
+- Left
+- Center
+- Right

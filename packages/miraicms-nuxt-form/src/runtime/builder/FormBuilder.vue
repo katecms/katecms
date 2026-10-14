@@ -90,8 +90,8 @@ const baseLabel = computed(() => {
 })
 
 const palette = [
-  { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'number', 'password'] as FieldType[] },
-  { title: 'Fields', types: FIELD_TYPES.filter(type => !['text', 'textarea', 'email', 'number', 'password'].includes(type)) },
+  { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button'] as FieldType[] },
+  { title: 'Fields', types: FIELD_TYPES.filter(type => !['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button'].includes(type)) },
 ]
 
 function hasBreakpointIcon(name: string) {
@@ -1070,7 +1070,7 @@ onBeforeUnmount(() => {
           }"
         />
         <div class="miraicms-form-builder__usage">
-          Published forms render with <span>&lt;MiraiForm form="{{ slug }}" /&gt;</span>
+          Published forms render with <span>&lt;MiraiCmsForm form="{{ slug }}" /&gt;</span>
         </div>
       </div>
     </div>

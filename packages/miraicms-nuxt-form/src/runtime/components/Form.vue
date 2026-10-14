@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { $fetch } from '#imports'
 import type { FormField, LayoutItem, PublicForm, UploadedFile } from '../form/model'
 import { baseBreakpoint, formBreakpoints, submissionErrors } from '../form/model'
-import { applyInputMask, defaultTextOptions, iconUrl, isRichFieldType, passwordRuleStates } from '../form/text-options'
+import { applyInputMask, defaultTextOptions, iconUrl, isRichFieldType, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON } from '../form/text-options'
 import { clientFormBreakpoints } from '../form/runtime-config'
 import { stepIconSvg } from '../form/icons'
 
@@ -25,6 +25,7 @@ const fieldErrors = ref<Record<string, string>>({})
 const alertMessage = ref('')
 const drafts = ref<Record<string, string>>({})
 const revealed = ref<Record<string, boolean>>({})
+const hoverRating = ref<Record<string, string>>({})
 
 const locked = computed(() => state.value === 'submitting' || state.value === 'success')
 
@@ -87,7 +88,7 @@ async function load() {
     const next: Record<string, string> = {}
     for (const field of definition.value.content.fields) {
       if (isRichFieldType(field.type)) {
-        next[field.id] = field.text?.defaultValue || ''
+        next[field.id] = field.text?.defaultValue || field.text?.ratingOptions.find(item => item.checked)?.value || ''
       }
     }
     drafts.value = next
@@ -206,7 +207,7 @@ function liveInputType(field: FormField, revealed: boolean) {
   if (field.type === 'password') {
     return revealed ? 'text' : 'password'
   }
-  if (field.type === 'email' || field.type === 'number') {
+  if (field.type === 'email' || field.type === 'number' || field.type === 'url' || field.type === 'color' || field.type === 'range') {
     return field.type
   }
   return 'text'
@@ -214,6 +215,26 @@ function liveInputType(field: FormField, revealed: boolean) {
 
 function textOptions(field: FormField) {
   return field.text ?? defaultTextOptions(field.label)
+}
+
+function ratingLabel(field: FormField) {
+  const options = textOptions(field)
+  if (options.ratingHoverMessage && hoverRating.value[field.id]) {
+    return hoverRating.value[field.id]
+  }
+  if (!options.ratingSelectedMessage) {
+    return ''
+  }
+  return options.ratingOptions.find(item => item.value === drafts.value[field.id])?.label || ''
+}
+
+function chooseRating(field: FormField, index: number) {
+  const list = textOptions(field).ratingOptions
+  const current = drafts.value[field.id] || ''
+  drafts.value = {
+    ...drafts.value,
+    [field.id]: ratingSelectedIndex(list, current) === index ? '' : (list[index]?.value || ''),
+  }
 }
 
 function onDraft(field: FormField, event: Event) {
@@ -368,8 +389,57 @@ function onDraft(field: FormField, event: Event) {
               :src="iconUrl(textOptions(cell.field).prefix)"
               alt=""
             >
+            <div
+              v-if="cell.field.type === 'rating'"
+              class="mirai-form__rating"
+              :data-position="textOptions(cell.field).ratingPosition"
+            >
+              <button
+                v-for="(option, index) in textOptions(cell.field).ratingOptions"
+                :key="option.id"
+                type="button"
+                @mouseenter="hoverRating[cell.field.id] = option.label"
+                @mouseleave="hoverRating[cell.field.id] = ''"
+                @click="chooseRating(cell.field, index)"
+              >
+                <img
+                  class="mirai-form__icon"
+                  :src="ratingIconSrc(option.icon, textOptions(cell.field).ratingIcon)"
+                  alt=""
+                  :style="{ filter: ratingSelectedIndex(textOptions(cell.field).ratingOptions, drafts[cell.field.id] || '') >= index ? RATING_FILTER_ON : RATING_FILTER_OFF }"
+                >
+              </button>
+              <span v-if="ratingLabel(cell.field)">{{ ratingLabel(cell.field) }}</span>
+              <input
+                type="hidden"
+                :name="cell.field.key"
+                :value="drafts[cell.field.id] || ''"
+              >
+            </div>
+            <button
+              v-else-if="cell.field.type === 'button'"
+              class="mirai-form__button"
+              :type="textOptions(cell.field).buttonType"
+              :disabled="locked || textOptions(cell.field).disabled"
+              :data-align="textOptions(cell.field).buttonAlign"
+              :data-full-width="textOptions(cell.field).fullWidth ? 'true' : undefined"
+            >
+              <img
+                v-if="iconUrl(textOptions(cell.field).buttonText.prefix)"
+                class="mirai-form__icon"
+                :src="iconUrl(textOptions(cell.field).buttonText.prefix)"
+                alt=""
+              >
+              <span>{{ textOptions(cell.field).buttonText.text }}</span>
+              <img
+                v-if="iconUrl(textOptions(cell.field).buttonText.suffix)"
+                class="mirai-form__icon"
+                :src="iconUrl(textOptions(cell.field).buttonText.suffix)"
+                alt=""
+              >
+            </button>
             <textarea
-              v-if="cell.field.type === 'textarea'"
+              v-else-if="cell.field.type === 'textarea'"
               :id="controlId(cell.field)"
               class="mirai-form__control"
               :name="cell.field.key"
@@ -402,11 +472,13 @@ function onDraft(field: FormField, event: Event) {
               :autocomplete="cell.field.type === 'password' ? 'new-password' : (textOptions(cell.field).autocomplete || undefined)"
               :inputmode="textOptions(cell.field).inputMode || undefined"
               :pattern="textOptions(cell.field).pattern || undefined"
-              :min="cell.field.type === 'number' ? textOptions(cell.field).valueMin ?? undefined : undefined"
-              :max="cell.field.type === 'number' ? textOptions(cell.field).valueMax ?? undefined : undefined"
+              :min="cell.field.type === 'number' || cell.field.type === 'range' ? textOptions(cell.field).valueMin ?? undefined : undefined"
+              :max="cell.field.type === 'number' || cell.field.type === 'range' ? textOptions(cell.field).valueMax ?? undefined : undefined"
+              :step="cell.field.type === 'range' ? textOptions(cell.field).step ?? undefined : undefined"
               :list="textOptions(cell.field).suggestions.length ? `mirai-suggest-${cell.field.id}` : undefined"
               @input="onDraft(cell.field, $event)"
             >
+            <span v-if="cell.field.type === 'range'">{{ drafts[cell.field.id] }}</span>
             <button
               v-if="cell.field.type === 'password' && textOptions(cell.field).showPassword"
               type="button"

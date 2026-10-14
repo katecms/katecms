@@ -21,7 +21,7 @@ export default defineNuxtModule({
     addServerPlugin(resolver.resolve('./runtime/server/plugins/migrate'))
     addComponentsDir({
       path: resolver.resolve('./runtime/components'),
-      prefix: 'Mirai',
+      prefix: 'MiraiCms',
       pathPrefix: false,
     })
 

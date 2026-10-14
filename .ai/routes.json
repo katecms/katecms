@@ -481,11 +481,11 @@
   ],
   "components": [
     {
-      "prefix": "Mirai",
+      "prefix": "MiraiCms",
       "dir": "packages/miraicms-nuxt-form/src/runtime/components"
     },
     {
-      "prefix": "Mirai",
+      "prefix": "MiraiCms",
       "dir": "packages/miraicms-nuxt-seo/src/runtime/components"
     },
     {

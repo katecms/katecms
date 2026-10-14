@@ -8,6 +8,6 @@ const slug = computed(() => String(route.params.slug ?? ''))
 
 <template>
   <main>
-    <MiraiForm :form="slug" />
+    <MiraiCmsForm :form="slug" />
   </main>
 </template>

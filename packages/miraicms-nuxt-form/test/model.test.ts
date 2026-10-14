@@ -194,3 +194,14 @@ test('configured breakpoints replace the default layout keys', () => {
     setFormBreakpoints(['phone', 'tablet', 'desktop'])
   }
 })
+
+test('the first button is submit and later buttons default to button', () => {
+  let content = createEmptyContent()
+  const first = content.fields.find(field => field.type === 'button')
+  assert.equal(first?.text?.buttonType, 'submit')
+  assert.equal(first?.text?.buttonText.text, 'Submit')
+  content = addField(content, 'button')
+  const added = content.fields.filter(field => field.type === 'button').at(-1)
+  assert.equal(added?.text?.buttonType, 'button')
+  assert.equal(added?.text?.buttonText.text, 'Button')
+})

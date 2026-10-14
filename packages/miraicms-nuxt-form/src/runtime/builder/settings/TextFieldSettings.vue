@@ -7,6 +7,7 @@ import { AUTOCOMPLETE_CHOICES, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultTextO
 import DecoratedText from './DecoratedText.vue'
 import OptionAccordion from './OptionAccordion.vue'
 import SuggestionRepeater from './SuggestionRepeater.vue'
+import RatingOptions from './RatingOptions.vue'
 
 const props = defineProps<{
   field: FormField
@@ -37,8 +38,10 @@ function commit(text: FormTextOptions) {
     required: text.required.enabled,
     help: text.helper.enabled ? text.helper.text : '',
     value: text.defaultValue,
-    min: props.field.type === 'number' ? (text.valueMin == null ? '' : String(text.valueMin)) : props.field.min,
-    max: props.field.type === 'number' ? (text.valueMax == null ? '' : String(text.valueMax)) : props.field.max,
+    min: props.field.type === 'number' || props.field.type === 'range' ? (text.valueMin == null ? '' : String(text.valueMin)) : props.field.min,
+    max: props.field.type === 'number' || props.field.type === 'range' ? (text.valueMax == null ? '' : String(text.valueMax)) : props.field.max,
+    step: text.step == null ? '' : String(text.step),
+    buttonLabel: props.field.type === 'button' ? text.buttonText.text : props.field.buttonLabel,
   })
 }
 
@@ -530,6 +533,126 @@ function setWidth(raw: number | null) {
       :field-key="`${field.id}-show-password`"
       :field="{ type: 'true_false', label: 'Include show/hide password icon', instructions: 'This allows to show the password icon. You can toggle this option to show or hide the password icon.' }"
       @update:model-value="patch({ showPassword: $event === true })"
+    />
+
+    <MiraiCmsNumberField
+      v-if="has(25)"
+      :model-value="options.step"
+      :field-key="`${field.id}-step`"
+      :field="{ type: 'number', label: 'Step', step: 1 }"
+      @update:model-value="patch({ step: $event == null || !Number.isFinite($event) ? null : $event })"
+    />
+
+    <div
+      v-if="has(26)"
+      class="miraicms-text-settings__group"
+    >
+      <MiraiCmsImageField
+        :model-value="options.ratingIcon"
+        :field-key="`${field.id}-rating-icon`"
+        :field="{ type: 'image', label: 'Rating Icon', iconMode: true, returnFormat: 'array' }"
+        @update:model-value="patch({ ratingIcon: normalizeIcon($event) })"
+      />
+    </div>
+
+    <div
+      v-if="has(27)"
+      class="miraicms-text-settings__group"
+    >
+      <span class="miraicms-text-settings__heading">Options</span>
+      <RatingOptions
+        :field-key="`${field.id}-rating-options`"
+        :model="options.ratingOptions"
+        @update="patch({ ratingOptions: $event, defaultValue: $event.find(item => item.checked)?.value || options.defaultValue })"
+      />
+    </div>
+
+    <MiraiCmsSelectField
+      v-if="has(28)"
+      :model-value="options.ratingPosition"
+      :field-key="`${field.id}-rating-position`"
+      :field="{
+        type: 'select',
+        label: 'Rating Position',
+        returnFormat: 'value',
+        choices: [
+          { val: 'left', lbl: 'Left' },
+          { val: 'center', lbl: 'Center' },
+          { val: 'right', lbl: 'Right' },
+        ],
+      }"
+      @update:model-value="patch({ ratingPosition: $event === 'center' || $event === 'right' ? $event : 'left' })"
+    />
+
+    <MiraiCmsTrueFalseField
+      v-if="has(29)"
+      :model-value="options.ratingHoverMessage"
+      :field-key="`${field.id}-rating-hover`"
+      :field="{ type: 'true_false', label: 'Show rating message on hover', instructions: 'This allows to show the rating message on hover. You can toggle this option to show or hide the rating message on hover.' }"
+      @update:model-value="patch({ ratingHoverMessage: $event === true })"
+    />
+
+    <MiraiCmsTrueFalseField
+      v-if="has(30)"
+      :model-value="options.ratingSelectedMessage"
+      :field-key="`${field.id}-rating-selected`"
+      :field="{ type: 'true_false', label: 'Show Rating Message On Selected', instructions: 'This allows to show the rating message on rating selected. You can toggle this option to show or hide the rating message on rating selected.' }"
+      @update:model-value="patch({ ratingSelectedMessage: $event === true })"
+    />
+
+    <div
+      v-if="has(31)"
+      class="miraicms-text-settings__group"
+    >
+      <span class="miraicms-text-settings__heading">Button Text</span>
+      <DecoratedText
+        :field-key="`${field.id}-button-text`"
+        :model="options.buttonText"
+        text-label="Text"
+        @update="patch({ buttonText: { ...$event, enabled: true } })"
+      />
+    </div>
+
+    <MiraiCmsSelectField
+      v-if="has(32)"
+      :model-value="options.buttonType"
+      :field-key="`${field.id}-button-type`"
+      :field="{
+        type: 'select',
+        label: 'Button Type',
+        returnFormat: 'value',
+        choices: [
+          { val: 'submit', lbl: 'Submit' },
+          { val: 'button', lbl: 'Button' },
+          { val: 'reset', lbl: 'Reset' },
+        ],
+      }"
+      @update:model-value="patch({ buttonType: $event === 'button' || $event === 'reset' ? $event : 'submit' })"
+    />
+
+    <MiraiCmsTrueFalseField
+      v-if="has(33)"
+      :model-value="options.fullWidth"
+      :field-key="`${field.id}-full-width`"
+      :field="{ type: 'true_false', label: 'Full Width' }"
+      @update:model-value="patch({ fullWidth: $event === true })"
+    />
+
+    <MiraiCmsSelectField
+      v-if="has(34)"
+      :model-value="options.buttonAlign"
+      :field-key="`${field.id}-button-align`"
+      :field="{
+        type: 'select',
+        label: 'Button Align',
+        returnFormat: 'value',
+        choices: [
+          { val: 'left', lbl: 'Left' },
+          { val: 'center', lbl: 'Center' },
+          { val: 'right', lbl: 'Right' },
+        ],
+      }"
+      @update:model-value="patch({ buttonAlign: $event === 'center' || $event === 'right' ? $event : 'left' })"
     />
   </div>
 </template>

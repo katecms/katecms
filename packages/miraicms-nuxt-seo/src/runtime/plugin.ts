@@ -27,15 +27,15 @@ export default defineNuxtPlugin((nuxtApp) => {
     useMiraiSeoHead(computed(() => headInput(page)))
   })
 
-  nuxtApp.vueApp.component('MiraiSeoEntryPanel', SeoEntryPanel)
+  nuxtApp.vueApp.component('MiraiCmsSeoEntryPanel', SeoEntryPanel)
   const sidebar = useMiraiCmsEntrySidebar()
-  if (!sidebar.value.includes('MiraiSeoEntryPanel')) {
-    sidebar.value.push('MiraiSeoEntryPanel')
+  if (!sidebar.value.includes('MiraiCmsSeoEntryPanel')) {
+    sidebar.value.push('MiraiCmsSeoEntryPanel')
   }
-  nuxtApp.vueApp.component('MiraiSeoTermPanel', SeoTermPanel)
+  nuxtApp.vueApp.component('MiraiCmsSeoTermPanel', SeoTermPanel)
   const terms = useMiraiCmsTermPanels()
-  if (!terms.value.includes('MiraiSeoTermPanel')) {
-    terms.value.push('MiraiSeoTermPanel')
+  if (!terms.value.includes('MiraiCmsSeoTermPanel')) {
+    terms.value.push('MiraiCmsSeoTermPanel')
   }
 
   const config = useRuntimeConfig().public.miraicms

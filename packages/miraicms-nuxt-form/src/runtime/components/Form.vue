@@ -382,7 +382,20 @@ function onDraft(field: FormField, event: Event) {
               alt=""
             >
           </div>
-          <span class="mirai-form__control-row">
+          <span
+            class="mirai-form__control-row"
+            :style="cell.field.type === 'button' ? {
+              display: 'flex',
+              width: '100%',
+              justifyContent: textOptions(cell.field).fullWidth
+                ? 'flex-start'
+                : textOptions(cell.field).buttonAlign === 'center'
+                  ? 'center'
+                  : textOptions(cell.field).buttonAlign === 'right'
+                    ? 'flex-end'
+                    : 'flex-start',
+            } : undefined"
+          >
             <img
               v-if="iconUrl(textOptions(cell.field).prefix)"
               class="mirai-form__icon"
@@ -421,8 +434,9 @@ function onDraft(field: FormField, event: Event) {
               class="mirai-form__button"
               :type="textOptions(cell.field).buttonType"
               :disabled="locked || textOptions(cell.field).disabled"
-              :data-align="textOptions(cell.field).buttonAlign"
+              :data-align="textOptions(cell.field).fullWidth ? undefined : textOptions(cell.field).buttonAlign"
               :data-full-width="textOptions(cell.field).fullWidth ? 'true' : undefined"
+              :style="{ width: textOptions(cell.field).fullWidth ? '100%' : undefined }"
             >
               <img
                 v-if="iconUrl(textOptions(cell.field).buttonText.prefix)"

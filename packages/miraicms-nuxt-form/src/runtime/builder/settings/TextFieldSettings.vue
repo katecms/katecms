@@ -639,7 +639,7 @@ function setWidth(raw: number | null) {
     />
 
     <MiraiCmsSelectField
-      v-if="has(34)"
+      v-if="has(34) && !options.fullWidth"
       :model-value="options.buttonAlign"
       :field-key="`${field.id}-button-align`"
       :field="{

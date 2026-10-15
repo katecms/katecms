@@ -159,7 +159,10 @@ function onInput(event: Event) {
       >
     </div>
 
-    <div class="miraicms-field-face__control">
+    <div
+      class="miraicms-field-face__control"
+      :data-align="field.type === 'button' && !options.fullWidth ? options.buttonAlign : undefined"
+    >
       <img
         v-if="iconUrl(options.prefix)"
         class="miraicms-field-face__icon"
@@ -201,7 +204,7 @@ function onInput(event: Event) {
         class="miraicms-field-face__button"
         :type="preview ? 'button' : options.buttonType"
         :disabled="disabled || options.disabled"
-        :style="{ width: options.fullWidth ? '100%' : undefined, alignSelf: options.buttonAlign === 'center' ? 'center' : options.buttonAlign === 'right' ? 'flex-end' : 'flex-start' }"
+        :style="{ width: options.fullWidth ? '100%' : undefined }"
       >
         <img
           v-if="iconUrl(options.buttonText.prefix)"
@@ -463,6 +466,14 @@ function onInput(event: Event) {
     min-width: 0;
   }
 
+  &__control[data-align='center'] {
+    justify-content: center;
+  }
+
+  &__control[data-align='right'] {
+    justify-content: flex-end;
+  }
+
   &__label {
     min-width: 0;
     font-size: math-rem(13);
@@ -556,7 +567,10 @@ function onInput(event: Event) {
   }
 
   &__button {
-    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: math-rem(6);
+    align-self: center;
     padding: math-rem(8) math-rem(14);
     border: 1px solid $color-accent;
     border-radius: $border-radius;

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import FieldFace from './FieldFace.vue'
 import FieldSettings from './FieldSettings.vue'
 import type { Breakpoint, FieldType, FormContent, FormField, FormStatus, LayoutItem } from '../form/model'
@@ -43,6 +43,8 @@ const openMoveMenu = ref('')
 const moveMenuStyle = ref<{ top: string, left?: string, right?: string }>({ top: '0px' })
 let moveMenuTimer: ReturnType<typeof setTimeout> | undefined
 const selectedId = ref<string | null>(null)
+const editorMode = ref<'builder' | 'settings'>('builder')
+const sidebarTab = ref<'fields' | 'options'>('fields')
 const drag = ref<DragState | null>(null)
 const dragGhost = ref<DragGhost | null>(null)
 const dragBase = ref<LayoutItem[] | null>(null)
@@ -82,6 +84,18 @@ const currentStepId = computed(() => {
 const layout = computed(() => (content.value.layouts[breakpoint.value] ?? []).filter((item) => {
   return content.value.fields.find(field => field.id === item.fieldId)?.stepId === currentStepId.value
 }))
+watch(selectedId, (id) => {
+  if (id) {
+    sidebarTab.value = 'options'
+  }
+})
+
+watch(stepSettingsOpen, (open) => {
+  if (open) {
+    sidebarTab.value = 'options'
+  }
+})
+
 const selected = computed(() => content.value.fields.find(field => field.id === selectedId.value) ?? null)
 const selectedItem = computed(() => layout.value.find(item => item.fieldId === selectedId.value) ?? null)
 const frameStyle = computed(() => {
@@ -667,695 +681,849 @@ onBeforeUnmount(() => {
     tabindex="0"
     @keydown="onKeydown"
   >
-    <div class="miraicms-form-builder__palette">
-      <div
-        v-for="group in palette"
-        :key="group.title"
-        class="miraicms-form-builder__group"
+    <div class="miraicms-form-builder__modes">
+      <MiraiCmsUiButton
+        tag="button"
+        :variant="editorMode === 'builder' ? ['small'] : ['secondary', 'small']"
+        :active="editorMode === 'builder'"
+        @click="editorMode = 'builder'"
       >
-        <div class="miraicms-form-builder__heading">
-          {{ group.title }}
-        </div>
-        <MiraiCmsUiButton
-          v-for="type in group.types"
-          :key="type"
-          tag="button"
-          variant="secondary"
-          class="miraicms-form-builder__add"
-          @click="add(type)"
-        >
-          {{ FIELD_LABELS[type] }}
-        </MiraiCmsUiButton>
-      </div>
+        Builder
+      </MiraiCmsUiButton>
+      <MiraiCmsUiButton
+        tag="button"
+        :variant="editorMode === 'settings' ? ['small'] : ['secondary', 'small']"
+        :active="editorMode === 'settings'"
+        @click="editorMode = 'settings'"
+      >
+        Settings
+      </MiraiCmsUiButton>
     </div>
 
-    <div class="miraicms-form-builder__stage">
-      <div class="miraicms-form-builder__toolbar">
-        <div class="miraicms-form-builder__breakpoints">
-          <MiraiCmsUiButton
-            v-for="item in formBreakpointList"
-            :key="item.name"
-            :class="['miraicms-form-builder__breakpoint-btn']"
-            tag="button"
-            :variant="hasBreakpointIcon(item.name)
-              ? (breakpoint !== item.name ? ['icon', 'secondary'] : ['icon'])
-              : (breakpoint !== item.name ? ['secondary'] : [])"
-            :active="breakpoint === item.name"
-            :aria-label="item.label"
-            :title="item.label"
-            @click="breakpoint = item.name"
+    <div
+      v-if="editorMode === 'builder'"
+      class="miraicms-form-builder__workspace"
+    >
+      <div class="miraicms-form-builder__sidebar">
+        <div class="miraicms-form-builder__tabs">
+          <button
+            type="button"
+            class="miraicms-form-builder__tab"
+            :class="{ 'is-active': sidebarTab === 'fields' }"
+            aria-label="Add Fields"
+            title="Add Fields"
+            @click="sidebarTab = 'fields'"
           >
             <svg
-              v-if="item.name === 'desktop'"
-              width="29"
-              height="29"
-              viewBox="0 0 30 30"
-            ><rect
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-miterlimit="10"
-              stroke-width="1.6"
-              x="5.76"
-              y="7.71"
-              width="18.47"
-              height="11.61"
-              rx="1"
-            /><line
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-miterlimit="10"
-              stroke-width="1.6"
-              x1="4"
-              y1="22.29"
-              x2="26"
-              y2="22.29"
-            /></svg>
-            <svg
-              v-else-if="item.name === 'tablet'"
               width="22"
               height="22"
               viewBox="0 0 30 30"
-            ><rect
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              x="5.81"
-              y="4"
-              width="18.38"
-              height="22"
-              rx="2"
-            /><line
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              x1="13.01"
-              y1="23.22"
-              x2="16.99"
-              y2="23.22"
-            /></svg>
-            <svg
-              v-else-if="item.name === 'phone'"
-              width="23"
-              height="23"
-              viewBox="0 0 30 30"
-            ><rect
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              x="8.67"
-              y="4"
-              width="12.66"
-              height="22"
-              rx="3"
-            /><line
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              x1="15"
-              y1="23.22"
-              x2="15"
-              y2="23.22"
-            /></svg>
-            <span v-else>{{ item.label }}</span>
-          </MiraiCmsUiButton>
-        </div>
-        <MiraiCmsUiButton
-          v-if="breakpoint !== baseName"
-          tag="button"
-          :variant="['secondary']"
-          @click="matchDesktop"
-        >
-          Match {{ baseLabel.toLowerCase() }}
-        </MiraiCmsUiButton>
-        <span class="miraicms-form-builder__hint">60 columns. Drag to move, drag the edge to resize. Arrows nudge, Shift changes width.</span>
-      </div>
-      <div class="miraicms-form-builder__steps">
-        <template
-          v-for="(step, index) in content.steps"
-          :key="step.id"
-        >
-          <div
-            v-if="isDraggingStep && dropStepIndex === index"
-            class="miraicms-form-builder__step-placeholder"
-            :style="stepPlaceholderStyle"
-          />
-          <div
-            :ref="(el) => setStepRef(el as Element | null, index)"
-            class="miraicms-form-builder__step"
-            :class="{
-              'is-active': step.id === currentStepId,
-              'is-floating': isDraggingStep && draggingStepIndex === index,
-            }"
-            :style="stepDragStyle(index)"
-          >
-            <span
-              v-if="content.steps.length > 1"
-              class="miraicms-form-builder__step-handle"
-              @mousedown="onStepHandleMouseDown(index, $event)"
+              aria-hidden="true"
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <g
-                  fill="currentColor"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <circle
-                    cx="8"
-                    cy="4"
-                    r="1"
-                    transform="rotate(90 8 4)"
-                  />
-                  <circle
-                    cx="16"
-                    cy="4"
-                    r="1"
-                    transform="rotate(90 16 4)"
-                  />
-                  <circle
-                    cx="8"
-                    cy="12"
-                    r="1"
-                    transform="rotate(90 8 12)"
-                  />
-                  <circle
-                    cx="16"
-                    cy="12"
-                    r="1"
-                    transform="rotate(90 16 12)"
-                  />
-                  <circle
-                    cx="8"
-                    cy="20"
-                    r="1"
-                    transform="rotate(90 8 20)"
-                  />
-                  <circle
-                    cx="16"
-                    cy="20"
-                    r="1"
-                    transform="rotate(90 16 20)"
-                  />
-                </g>
-              </svg>
-            </span>
-            <button
-              type="button"
-              class="miraicms-form-builder__step-label"
-              @click="selectStep(step.id)"
-            >
-              {{ step.label }}
-            </button>
-            <button
-              type="button"
-              class="miraicms-form-builder__step-menu"
-              :class="{ 'is-open': openStepMenu === step.id }"
-              aria-label="Step options"
-              aria-haspopup="menu"
-              :aria-expanded="openStepMenu === step.id"
-              @click.stop="toggleStepMenu(step.id)"
-            >
-              <svg
+              <path
                 fill="none"
                 stroke="currentColor"
-                width="20"
-                height="20"
-                viewBox="0 0 30 30"
-                aria-hidden="true"
-              >
-                <line
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  x1="10.27"
-                  y1="15"
-                  x2="10.27"
-                  y2="15"
-                />
-                <line
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  x1="15"
-                  y1="15"
-                  x2="15"
-                  y2="15"
-                />
-                <line
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  x1="19.73"
-                  y1="15"
-                  x2="19.73"
-                  y2="15"
-                />
-              </svg>
-            </button>
-            <div
-              v-if="openStepMenu === step.id"
-              class="miraicms-form-builder__step-options"
-              role="menu"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6.4,4.16H23.6a2.43,2.43,0,0,1,2.45,2.41V23.43a2.43,2.43,0,0,1-2.45,2.41H6.4A2.43,2.43,0,0,1,4,23.43V6.57A2.43,2.43,0,0,1,6.4,4.16Z"
+              />
+              <line
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                x1="15"
+                y1="10.18"
+                x2="15"
+                y2="19.82"
+              />
+              <line
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                x1="10.09"
+                y1="15"
+                x2="19.91"
+                y2="15"
+              />
+            </svg>
+            <span>Add Fields</span>
+          </button>
+          <button
+            type="button"
+            class="miraicms-form-builder__tab"
+            :class="{ 'is-active': sidebarTab === 'options' }"
+            aria-label="Field Options"
+            title="Field Options"
+            @click="sidebarTab = 'options'"
+          >
+            <svg
+              viewBox="0 0 30 30"
+              height="22"
+              width="22"
+              fill="none"
+              aria-hidden="true"
             >
-              <button
-                type="button"
-                role="menuitem"
-                @click="onCloneStep(step.id)"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 30 30"
-                  fill="none"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    stroke-width="2"
-                    d="M13.89,11.7h10a2.2,2.2,0,0,1,2.22,2.2v9.9A2.2,2.2,0,0,1,23.88,26h-10a2.2,2.2,0,0,1-2.22-2.2V13.9A2.2,2.2,0,0,1,13.89,11.7Z"
-                  />
-                  <path
-                    stroke-width="2"
-                    d="M7.23,18.3H6.12A2.2,2.2,0,0,1,3.9,16.1V6.2A2.2,2.2,0,0,1,6.12,4h10a2.2,2.2,0,0,1,2.22,2.2V7.3"
-                  />
-                </svg>
-                <span>Clone Step</span>
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                :disabled="content.steps.length < 2"
-                @click="onDeleteStep(step.id)"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M4 7h16" />
-                  <path d="M10 11v6" />
-                  <path d="M14 11v6" />
-                  <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12" />
-                  <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
-                </svg>
-                <span>Delete Step</span>
-              </button>
-            </div>
-          </div>
-        </template>
+              <path
+                d="M23.4 25.4v-9.1M23.4 10.5V4.6M15 25.4V22M15 16.1V4.6M6.6 25.4v-9.1M6.6 10.5V4.6"
+                stroke-width="2"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle
+                cx="6.6"
+                cy="13.4"
+                r="2.6"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle
+                cx="15"
+                cy="19.1"
+                r="2.6"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle
+                cx="23.4"
+                cy="13.4"
+                r="2.6"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span>Field Options</span>
+          </button>
+        </div>
         <div
-          v-if="isDraggingStep && dropStepIndex === content.steps.length"
-          class="miraicms-form-builder__step-placeholder"
-          :style="stepPlaceholderStyle"
-        />
-        <button
-          type="button"
-          class="miraicms-form-builder__step-icon"
-          aria-label="Add step"
-          :disabled="content.steps.length >= 20"
-          @click="createStep"
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-        </button>
-        <button
-          v-if="content.steps.length > 1"
-          type="button"
-          class="miraicms-form-builder__step-icon"
-          :class="{ 'is-active': stepSettingsOpen }"
-          aria-label="Step settings"
-          @click="stepSettingsOpen = !stepSettingsOpen"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 30 30"
-            fill="none"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <ellipse
-              stroke-width="2"
-              cx="15"
-              cy="15"
-              rx="3.07"
-              ry="3.07"
-            />
-            <path
-              stroke-width="2"
-              d="M22.57,18.07a1.69,1.69,0,0,0,.34,1.87L23,20a2.05,2.05,0,0,1,0,2.9h0a2.05,2.05,0,0,1-2.9,0h0L20,22.84A1.7,1.7,0,0,0,17.13,24v.18a2,2,0,1,1-4.09,0v-.09a1.7,1.7,0,0,0-1.11-1.55,1.67,1.67,0,0,0-1.86.34L10,23a2,2,0,0,1-2.89,0h0a2.06,2.06,0,0,1,0-2.9h0L7.18,20A1.71,1.71,0,0,0,6,17.13H5.8a2,2,0,0,1,0-4.1h.09a1.77,1.77,0,0,0,1.2-3L7,10A2.05,2.05,0,0,1,7,7.1H7a2.05,2.05,0,0,1,2.9,0h0l.06.06a1.67,1.67,0,0,0,1.86.34h.08A1.67,1.67,0,0,0,13,6V5.78a2.05,2.05,0,1,1,4.1,0v.09a1.7,1.7,0,0,0,2.88,1.21L20,7a2,2,0,0,1,2.89,0h0a2.06,2.06,0,0,1,0,2.9h0l-.07.06a1.7,1.7,0,0,0-.33,1.87v.08A1.67,1.67,0,0,0,24,13h.17a2.05,2.05,0,1,1,0,4.1h-.09A1.67,1.67,0,0,0,22.57,18.07Z"
-            />
-          </svg>
-        </button>
-      </div>
-      <div class="miraicms-form-builder__scroll">
-        <div
-          class="miraicms-form-builder__frame"
-          :style="frameStyle"
+          v-if="sidebarTab === 'fields'"
+          class="miraicms-form-builder__panel"
         >
           <div
-            ref="gridRef"
-            class="miraicms-form-builder__grid"
-            @pointerdown.self="selectedId = null"
+            v-for="group in palette"
+            :key="group.title"
+            class="miraicms-form-builder__group"
+          >
+            <div class="miraicms-form-builder__heading">
+              {{ group.title }}
+            </div>
+            <MiraiCmsUiButton
+              v-for="type in group.types"
+              :key="type"
+              tag="button"
+              variant="secondary"
+              class="miraicms-form-builder__add"
+              @click="add(type)"
+            >
+              {{ FIELD_LABELS[type] }}
+            </MiraiCmsUiButton>
+          </div>
+        </div>
+        <div
+          v-else
+          class="miraicms-form-builder__panel"
+        >
+          <StepSettings
+            v-if="stepSettingsOpen && content.steps.length > 1"
+            :content="content"
+            @update="content = $event"
+          />
+          <FieldSettings
+            v-else-if="selected && selectedItem"
+            :field="selected"
+            :item="selectedItem"
+            @update="onUpdateField"
+            @layout="onUpdateLayout"
+          />
+          <div
+            v-else
+            class="miraicms-form-builder__empty"
+          >
+            Select a field
+          </div>
+        </div>
+      </div>
+
+      <div class="miraicms-form-builder__stage">
+        <div class="miraicms-form-builder__toolbar">
+          <div class="miraicms-form-builder__breakpoints">
+            <MiraiCmsUiButton
+              v-for="item in formBreakpointList"
+              :key="item.name"
+              :class="['miraicms-form-builder__breakpoint-btn']"
+              tag="button"
+              :variant="hasBreakpointIcon(item.name)
+                ? (breakpoint !== item.name ? ['icon', 'secondary'] : ['icon'])
+                : (breakpoint !== item.name ? ['secondary'] : [])"
+              :active="breakpoint === item.name"
+              :aria-label="item.label"
+              :title="item.label"
+              @click="breakpoint = item.name"
+            >
+              <svg
+                v-if="item.name === 'desktop'"
+                width="29"
+                height="29"
+                viewBox="0 0 30 30"
+              ><rect
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-miterlimit="10"
+                stroke-width="1.6"
+                x="5.76"
+                y="7.71"
+                width="18.47"
+                height="11.61"
+                rx="1"
+              /><line
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-miterlimit="10"
+                stroke-width="1.6"
+                x1="4"
+                y1="22.29"
+                x2="26"
+                y2="22.29"
+              /></svg>
+              <svg
+                v-else-if="item.name === 'tablet'"
+                width="22"
+                height="22"
+                viewBox="0 0 30 30"
+              ><rect
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                x="5.81"
+                y="4"
+                width="18.38"
+                height="22"
+                rx="2"
+              /><line
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                x1="13.01"
+                y1="23.22"
+                x2="16.99"
+                y2="23.22"
+              /></svg>
+              <svg
+                v-else-if="item.name === 'phone'"
+                width="23"
+                height="23"
+                viewBox="0 0 30 30"
+              ><rect
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                x="8.67"
+                y="4"
+                width="12.66"
+                height="22"
+                rx="3"
+              /><line
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                x1="15"
+                y1="23.22"
+                x2="15"
+                y2="23.22"
+              /></svg>
+              <span v-else>{{ item.label }}</span>
+            </MiraiCmsUiButton>
+          </div>
+          <MiraiCmsUiButton
+            v-if="breakpoint !== baseName"
+            tag="button"
+            :variant="['secondary']"
+            @click="matchDesktop"
+          >
+            Match {{ baseLabel.toLowerCase() }}
+          </MiraiCmsUiButton>
+          <span class="miraicms-form-builder__hint">60 columns. Drag to move, drag the edge to resize. Arrows nudge, Shift changes width.</span>
+        </div>
+        <div class="miraicms-form-builder__steps">
+          <template
+            v-for="(step, index) in content.steps"
+            :key="step.id"
           >
             <div
-              v-if="dropPlaceholderStyle"
-              class="miraicms-form-builder__drop-placeholder"
-              :style="dropPlaceholderStyle"
+              v-if="isDraggingStep && dropStepIndex === index"
+              class="miraicms-form-builder__step-placeholder"
+              :style="stepPlaceholderStyle"
             />
             <div
-              v-for="item in layout"
-              :key="item.fieldId"
-              class="miraicms-form-builder__item"
+              :ref="(el) => setStepRef(el as Element | null, index)"
+              class="miraicms-form-builder__step"
               :class="{
-                'is-selected': item.fieldId === selectedId,
-                'is-dragging': drag?.fieldId === item.fieldId && drag?.mode !== 'move',
-                'is-floating': drag?.fieldId === item.fieldId && drag?.mode === 'move',
-                'is-hidden': fieldById(item.fieldId)?.text?.hidden,
-                'is-menu-open': openFieldMenu === item.fieldId,
+                'is-active': step.id === currentStepId,
+                'is-floating': isDraggingStep && draggingStepIndex === index,
               }"
-              :style="itemVisualStyle(item)"
-              @pointerdown="onItemPointerDown($event, item)"
+              :style="stepDragStyle(index)"
             >
-              <FieldFace
-                v-if="fieldById(item.fieldId)"
-                :field="fieldById(item.fieldId)"
-                preview
-              />
+              <span
+                v-if="content.steps.length > 1"
+                class="miraicms-form-builder__step-handle"
+                @mousedown="onStepHandleMouseDown(index, $event)"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <g
+                    fill="currentColor"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <circle
+                      cx="8"
+                      cy="4"
+                      r="1"
+                      transform="rotate(90 8 4)"
+                    />
+                    <circle
+                      cx="16"
+                      cy="4"
+                      r="1"
+                      transform="rotate(90 16 4)"
+                    />
+                    <circle
+                      cx="8"
+                      cy="12"
+                      r="1"
+                      transform="rotate(90 8 12)"
+                    />
+                    <circle
+                      cx="16"
+                      cy="12"
+                      r="1"
+                      transform="rotate(90 16 12)"
+                    />
+                    <circle
+                      cx="8"
+                      cy="20"
+                      r="1"
+                      transform="rotate(90 8 20)"
+                    />
+                    <circle
+                      cx="16"
+                      cy="20"
+                      r="1"
+                      transform="rotate(90 16 20)"
+                    />
+                  </g>
+                </svg>
+              </span>
+              <button
+                type="button"
+                class="miraicms-form-builder__step-label"
+                @click="selectStep(step.id)"
+              >
+                {{ step.label }}
+              </button>
+              <button
+                type="button"
+                class="miraicms-form-builder__step-menu"
+                :class="{ 'is-open': openStepMenu === step.id }"
+                aria-label="Step options"
+                aria-haspopup="menu"
+                :aria-expanded="openStepMenu === step.id"
+                @click.stop="toggleStepMenu(step.id)"
+              >
+                <svg
+                  fill="none"
+                  stroke="currentColor"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 30 30"
+                  aria-hidden="true"
+                >
+                  <line
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    x1="10.27"
+                    y1="15"
+                    x2="10.27"
+                    y2="15"
+                  />
+                  <line
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    x1="15"
+                    y1="15"
+                    x2="15"
+                    y2="15"
+                  />
+                  <line
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    x1="19.73"
+                    y1="15"
+                    x2="19.73"
+                    y2="15"
+                  />
+                </svg>
+              </button>
               <div
-                class="miraicms-form-builder__item-actions"
-                @pointerdown.stop
+                v-if="openStepMenu === step.id"
+                class="miraicms-form-builder__step-options"
+                role="menu"
               >
                 <button
                   type="button"
-                  class="miraicms-form-builder__item-action"
-                  aria-label="Clone"
-                  title="Clone"
-                  @click="onCloneField(item.fieldId)"
+                  role="menuitem"
+                  @click="onCloneStep(step.id)"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="17"
-                    height="17"
+                    width="18"
+                    height="18"
                     viewBox="0 0 30 30"
+                    fill="none"
+                    stroke="currentColor"
                     aria-hidden="true"
                   >
                     <path
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
                       stroke-width="2"
                       d="M13.89,11.7h10a2.2,2.2,0,0,1,2.22,2.2v9.9A2.2,2.2,0,0,1,23.88,26h-10a2.2,2.2,0,0,1-2.22-2.2V13.9A2.2,2.2,0,0,1,13.89,11.7Z"
                     />
                     <path
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
                       stroke-width="2"
                       d="M7.23,18.3H6.12A2.2,2.2,0,0,1,3.9,16.1V6.2A2.2,2.2,0,0,1,6.12,4h10a2.2,2.2,0,0,1,2.22,2.2V7.3"
                     />
                   </svg>
+                  <span>Clone Step</span>
                 </button>
                 <button
                   type="button"
-                  class="miraicms-form-builder__item-action"
-                  aria-label="Remove"
-                  title="Remove"
-                  @click="onRemove(item.fieldId)"
+                  role="menuitem"
+                  :disabled="content.steps.length < 2"
+                  @click="onDeleteStep(step.id)"
                 >
                   <svg
-                    width="19"
-                    height="19"
+                    width="18"
+                    height="18"
                     viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                     aria-hidden="true"
                   >
-                    <g
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <path d="M4 7h16" />
-                      <path d="M10 11v6" />
-                      <path d="M14 11v6" />
-                      <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12" />
-                      <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
-                    </g>
+                    <path d="M4 7h16" />
+                    <path d="M10 11v6" />
+                    <path d="M14 11v6" />
+                    <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12" />
+                    <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
                   </svg>
+                  <span>Delete Step</span>
                 </button>
-                <div class="miraicms-form-builder__more">
+              </div>
+            </div>
+          </template>
+          <div
+            v-if="isDraggingStep && dropStepIndex === content.steps.length"
+            class="miraicms-form-builder__step-placeholder"
+            :style="stepPlaceholderStyle"
+          />
+          <button
+            type="button"
+            class="miraicms-form-builder__step-icon"
+            aria-label="Add step"
+            :disabled="content.steps.length >= 20"
+            @click="createStep"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+          <button
+            v-if="content.steps.length > 1"
+            type="button"
+            class="miraicms-form-builder__step-icon"
+            :class="{ 'is-active': stepSettingsOpen }"
+            aria-label="Step settings"
+            @click="stepSettingsOpen = !stepSettingsOpen"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 30 30"
+              fill="none"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <ellipse
+                stroke-width="2"
+                cx="15"
+                cy="15"
+                rx="3.07"
+                ry="3.07"
+              />
+              <path
+                stroke-width="2"
+                d="M22.57,18.07a1.69,1.69,0,0,0,.34,1.87L23,20a2.05,2.05,0,0,1,0,2.9h0a2.05,2.05,0,0,1-2.9,0h0L20,22.84A1.7,1.7,0,0,0,17.13,24v.18a2,2,0,1,1-4.09,0v-.09a1.7,1.7,0,0,0-1.11-1.55,1.67,1.67,0,0,0-1.86.34L10,23a2,2,0,0,1-2.89,0h0a2.06,2.06,0,0,1,0-2.9h0L7.18,20A1.71,1.71,0,0,0,6,17.13H5.8a2,2,0,0,1,0-4.1h.09a1.77,1.77,0,0,0,1.2-3L7,10A2.05,2.05,0,0,1,7,7.1H7a2.05,2.05,0,0,1,2.9,0h0l.06.06a1.67,1.67,0,0,0,1.86.34h.08A1.67,1.67,0,0,0,13,6V5.78a2.05,2.05,0,1,1,4.1,0v.09a1.7,1.7,0,0,0,2.88,1.21L20,7a2,2,0,0,1,2.89,0h0a2.06,2.06,0,0,1,0,2.9h0l-.07.06a1.7,1.7,0,0,0-.33,1.87v.08A1.67,1.67,0,0,0,24,13h.17a2.05,2.05,0,1,1,0,4.1h-.09A1.67,1.67,0,0,0,22.57,18.07Z"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="miraicms-form-builder__scroll">
+          <div
+            class="miraicms-form-builder__frame"
+            :style="frameStyle"
+          >
+            <div
+              ref="gridRef"
+              class="miraicms-form-builder__grid"
+              @pointerdown.self="selectedId = null"
+            >
+              <div
+                v-if="dropPlaceholderStyle"
+                class="miraicms-form-builder__drop-placeholder"
+                :style="dropPlaceholderStyle"
+              />
+              <div
+                v-for="item in layout"
+                :key="item.fieldId"
+                class="miraicms-form-builder__item"
+                :class="{
+                  'is-selected': item.fieldId === selectedId,
+                  'is-dragging': drag?.fieldId === item.fieldId && drag?.mode !== 'move',
+                  'is-floating': drag?.fieldId === item.fieldId && drag?.mode === 'move',
+                  'is-hidden': fieldById(item.fieldId)?.text?.hidden,
+                  'is-menu-open': openFieldMenu === item.fieldId,
+                }"
+                :style="itemVisualStyle(item)"
+                @pointerdown="onItemPointerDown($event, item)"
+              >
+                <FieldFace
+                  v-if="fieldById(item.fieldId)"
+                  :field="fieldById(item.fieldId)"
+                  preview
+                />
+                <div
+                  class="miraicms-form-builder__item-actions"
+                  @pointerdown.stop
+                >
                   <button
                     type="button"
                     class="miraicms-form-builder__item-action"
-                    aria-label="More Options"
-                    title="More Options"
-                    :aria-expanded="openFieldMenu === item.fieldId"
-                    @click="toggleFieldMenu(item.fieldId, $event)"
+                    aria-label="Clone"
+                    title="Clone"
+                    @click="onCloneField(item.fieldId)"
                   >
                     <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="17"
+                      height="17"
+                      viewBox="0 0 30 30"
                       aria-hidden="true"
                     >
-                      <circle
-                        cx="5"
-                        cy="12"
-                        r="1.6"
-                        fill="currentColor"
+                      <path
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13.89,11.7h10a2.2,2.2,0,0,1,2.22,2.2v9.9A2.2,2.2,0,0,1,23.88,26h-10a2.2,2.2,0,0,1-2.22-2.2V13.9A2.2,2.2,0,0,1,13.89,11.7Z"
                       />
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="1.6"
-                        fill="currentColor"
-                      />
-                      <circle
-                        cx="19"
-                        cy="12"
-                        r="1.6"
-                        fill="currentColor"
+                      <path
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M7.23,18.3H6.12A2.2,2.2,0,0,1,3.9,16.1V6.2A2.2,2.2,0,0,1,6.12,4h10a2.2,2.2,0,0,1,2.22,2.2V7.3"
                       />
                     </svg>
                   </button>
-                  <div
-                    v-if="openFieldMenu === item.fieldId"
-                    class="miraicms-form-builder__item-menu"
-                    :class="{ 'is-left': fieldMenuSide === 'left' }"
+                  <button
+                    type="button"
+                    class="miraicms-form-builder__item-action"
+                    aria-label="Remove"
+                    title="Remove"
+                    @click="onRemove(item.fieldId)"
                   >
+                    <svg
+                      width="19"
+                      height="19"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <g
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M4 7h16" />
+                        <path d="M10 11v6" />
+                        <path d="M14 11v6" />
+                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12" />
+                        <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
+                      </g>
+                    </svg>
+                  </button>
+                  <div class="miraicms-form-builder__more">
                     <button
                       type="button"
-                      @click="selectedId = null; openFieldMenu = ''"
+                      class="miraicms-form-builder__item-action"
+                      aria-label="More Options"
+                      title="More Options"
+                      :aria-expanded="openFieldMenu === item.fieldId"
+                      @click="toggleFieldMenu(item.fieldId, $event)"
                     >
                       <svg
-                        width="17"
-                        height="17"
-                        viewBox="0 0 30 30"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M6.4,4.16H23.6a2.43,2.43,0,0,1,2.45,2.41V23.43a2.43,2.43,0,0,1-2.45,2.41H6.4A2.43,2.43,0,0,1,4,23.43V6.57A2.43,2.43,0,0,1,6.4,4.16Z"
-                        />
-                        <path
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12.4,20.7H10.3a1,1,0,0,1-1-1V17.6"
-                        />
-                        <path
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M20.7,17.6v2.1a1,1,0,0,1-1,1H17.6"
-                        />
-                        <path
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M17.6,9.3h2.1a1,1,0,0,1,1,1v2.1"
-                        />
-                        <path
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9.3,12.4V10.3a1,1,0,0,1,1-1h2.1"
-                        />
-                      </svg>
-                      <span>Deselect</span>
-                    </button>
-                    <button
-                      type="button"
-                      @click="onCloneField(item.fieldId)"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="17"
-                        height="17"
-                        viewBox="0 0 30 30"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M13.89,11.7h10a2.2,2.2,0,0,1,2.22,2.2v9.9A2.2,2.2,0,0,1,23.88,26h-10a2.2,2.2,0,0,1-2.22-2.2V13.9A2.2,2.2,0,0,1,13.89,11.7Z"
-                        />
-                        <path
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M7.23,18.3H6.12A2.2,2.2,0,0,1,3.9,16.1V6.2A2.2,2.2,0,0,1,6.12,4h10a2.2,2.2,0,0,1,2.22,2.2V7.3"
-                        />
-                      </svg>
-                      <span>Clone</span>
-                    </button>
-                    <div
-                      v-if="content.steps.length > 1"
-                      class="miraicms-form-builder__move"
-                      @mouseenter="showMoveMenu(item.fieldId, $event)"
-                      @mouseleave="hideMoveMenu"
-                    >
-                      <button type="button">
-                        <svg
-                          height="15"
-                          width="15"
-                          viewBox="0 0 20 20"
-                          aria-hidden="true"
-                        >
-                          <path
-                            fill="currentColor"
-                            d="M6.97 4.78a.75.75 0 0 0 1.06 0l1.22-1.22v3.19a.75.75 0 0 0 1.5 0V3.56l1.22 1.22a.75.75 0 1 0 1.06-1.06l-2.5-2.5a.75.75 0 0 0-1.06 0l-2.5 2.5a.75.75 0 0 0 0 1.06zM4.78 8.03a.75.75 0 0 0-1.06-1.06l-2.5 2.5a.75.75 0 0 0 0 1.06l2.5 2.5a.75.75 0 0 0 1.06-1.06l-1.22-1.22h3.19a.75.75 0 0 0 0-1.5H3.56l1.22-1.22zm10.44-1.06a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 0 1 0 1.06l-2.5 2.5a.75.75 0 1 1-1.06-1.06l1.22-1.22h-3.19a.75.75 0 0 1 0-1.5h3.19l-1.22-1.22a.75.75 0 0 1 0-1.06zm-5.97 9.47l-1.22-1.22a.75.75 0 0 0-1.06 1.06l2.5 2.5a.75.75 0 0 0 1.06 0l2.5-2.5a.75.75 0 1 0-1.06-1.06l-1.22 1.22v-3.19a.75.75 0 0 0-1.5 0v3.19z"
-                          />
-                        </svg>
-                        <span>Move to</span>
-                      </button>
-                      <div
-                        class="miraicms-form-builder__move-steps"
-                        :class="{ 'is-open': openMoveMenu === item.fieldId }"
-                        :style="openMoveMenu === item.fieldId ? moveMenuStyle : undefined"
-                        @mouseenter="keepMoveMenu"
-                      >
-                        <button
-                          v-for="step in otherSteps(item.fieldId)"
-                          :key="step.id"
-                          type="button"
-                          @click="onMoveField(item.fieldId, step.id)"
-                        >
-                          {{ step.label }}
-                        </button>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      @click="onRemove(item.fieldId)"
-                    >
-                      <svg
-                        width="17"
-                        height="17"
+                        width="16"
+                        height="16"
                         viewBox="0 0 24 24"
                         aria-hidden="true"
                       >
-                        <g
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        >
-                          <path d="M4 7h16" />
-                          <path d="M10 11v6" />
-                          <path d="M14 11v6" />
-                          <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12" />
-                          <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
-                        </g>
+                        <circle
+                          cx="5"
+                          cy="12"
+                          r="1.6"
+                          fill="currentColor"
+                        />
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="1.6"
+                          fill="currentColor"
+                        />
+                        <circle
+                          cx="19"
+                          cy="12"
+                          r="1.6"
+                          fill="currentColor"
+                        />
                       </svg>
-                      <span>Remove</span>
                     </button>
+                    <div
+                      v-if="openFieldMenu === item.fieldId"
+                      class="miraicms-form-builder__item-menu"
+                      :class="{ 'is-left': fieldMenuSide === 'left' }"
+                    >
+                      <button
+                        type="button"
+                        @click="selectedId = null; openFieldMenu = ''"
+                      >
+                        <svg
+                          width="17"
+                          height="17"
+                          viewBox="0 0 30 30"
+                          aria-hidden="true"
+                        >
+                          <path
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6.4,4.16H23.6a2.43,2.43,0,0,1,2.45,2.41V23.43a2.43,2.43,0,0,1-2.45,2.41H6.4A2.43,2.43,0,0,1,4,23.43V6.57A2.43,2.43,0,0,1,6.4,4.16Z"
+                          />
+                          <path
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12.4,20.7H10.3a1,1,0,0,1-1-1V17.6"
+                          />
+                          <path
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M20.7,17.6v2.1a1,1,0,0,1-1,1H17.6"
+                          />
+                          <path
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M17.6,9.3h2.1a1,1,0,0,1,1,1v2.1"
+                          />
+                          <path
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9.3,12.4V10.3a1,1,0,0,1,1-1h2.1"
+                          />
+                        </svg>
+                        <span>Deselect</span>
+                      </button>
+                      <button
+                        type="button"
+                        @click="onCloneField(item.fieldId)"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="17"
+                          height="17"
+                          viewBox="0 0 30 30"
+                          aria-hidden="true"
+                        >
+                          <path
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13.89,11.7h10a2.2,2.2,0,0,1,2.22,2.2v9.9A2.2,2.2,0,0,1,23.88,26h-10a2.2,2.2,0,0,1-2.22-2.2V13.9A2.2,2.2,0,0,1,13.89,11.7Z"
+                          />
+                          <path
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M7.23,18.3H6.12A2.2,2.2,0,0,1,3.9,16.1V6.2A2.2,2.2,0,0,1,6.12,4h10a2.2,2.2,0,0,1,2.22,2.2V7.3"
+                          />
+                        </svg>
+                        <span>Clone</span>
+                      </button>
+                      <div
+                        v-if="content.steps.length > 1"
+                        class="miraicms-form-builder__move"
+                        @mouseenter="showMoveMenu(item.fieldId, $event)"
+                        @mouseleave="hideMoveMenu"
+                      >
+                        <button type="button">
+                          <svg
+                            height="15"
+                            width="15"
+                            viewBox="0 0 20 20"
+                            aria-hidden="true"
+                          >
+                            <path
+                              fill="currentColor"
+                              d="M6.97 4.78a.75.75 0 0 0 1.06 0l1.22-1.22v3.19a.75.75 0 0 0 1.5 0V3.56l1.22 1.22a.75.75 0 1 0 1.06-1.06l-2.5-2.5a.75.75 0 0 0-1.06 0l-2.5 2.5a.75.75 0 0 0 0 1.06zM4.78 8.03a.75.75 0 0 0-1.06-1.06l-2.5 2.5a.75.75 0 0 0 0 1.06l2.5 2.5a.75.75 0 0 0 1.06-1.06l-1.22-1.22h3.19a.75.75 0 0 0 0-1.5H3.56l1.22-1.22zm10.44-1.06a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 0 1 0 1.06l-2.5 2.5a.75.75 0 1 1-1.06-1.06l1.22-1.22h-3.19a.75.75 0 0 1 0-1.5h3.19l-1.22-1.22a.75.75 0 0 1 0-1.06zm-5.97 9.47l-1.22-1.22a.75.75 0 0 0-1.06 1.06l2.5 2.5a.75.75 0 0 0 1.06 0l2.5-2.5a.75.75 0 1 0-1.06-1.06l-1.22 1.22v-3.19a.75.75 0 0 0-1.5 0v3.19z"
+                            />
+                          </svg>
+                          <span>Move to</span>
+                        </button>
+                        <div
+                          class="miraicms-form-builder__move-steps"
+                          :class="{ 'is-open': openMoveMenu === item.fieldId }"
+                          :style="openMoveMenu === item.fieldId ? moveMenuStyle : undefined"
+                          @mouseenter="keepMoveMenu"
+                        >
+                          <button
+                            v-for="step in otherSteps(item.fieldId)"
+                            :key="step.id"
+                            type="button"
+                            @click="onMoveField(item.fieldId, step.id)"
+                          >
+                            {{ step.label }}
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        @click="onRemove(item.fieldId)"
+                      >
+                        <svg
+                          width="17"
+                          height="17"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <g
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <path d="M4 7h16" />
+                            <path d="M10 11v6" />
+                            <path d="M14 11v6" />
+                            <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12" />
+                            <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
+                          </g>
+                        </svg>
+                        <span>Remove</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div
-                class="miraicms-form-builder__resizable-handle miraicms-form-builder__resizable-handle--left"
-                @pointerdown="onResizePointerDown($event, item, 'left')"
-              >
-                <svg
-                  width="15"
-                  height="93"
-                  viewBox="0 0 15 93"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+                <div
+                  class="miraicms-form-builder__resizable-handle miraicms-form-builder__resizable-handle--left"
+                  @pointerdown="onResizePointerDown($event, item, 'left')"
                 >
-                  <path
-                    d="M15 7.3421C15 8.79424 14.5601 10.2138 13.736 11.4212C12.9119 12.6286 11.7406 13.5696 10.3701 14.1253C8.99968 14.681 7.49168 14.8264 6.03682 14.5431C4.58197 14.2598 3.2456 13.5606 2.1967 12.5338C1.14781 11.5069 0.433503 10.1987 0.144114 8.77448C-0.145275 7.35025 0.00324964 5.874 0.570907 4.5324C1.13856 3.19081 2.09986 2.04413 3.33323 1.23737C4.5666 0.430608 6.01664 0 7.5 0C9.48831 0.00259009 11.3944 0.776963 12.8004 2.15331C14.2063 3.52966 14.9974 5.39565 15 7.3421ZM7.5 39.1579C6.01664 39.1579 4.5666 39.5885 3.33323 40.3953C2.09986 41.202 1.13856 42.3487 0.570907 43.6903C0.00324964 45.0319 -0.145275 46.5081 0.144114 47.9324C0.433503 49.3566 1.14781 50.6648 2.1967 51.6917C3.2456 52.7185 4.58197 53.4177 6.03682 53.701C7.49168 53.9843 8.99968 53.8389 10.3701 53.2832C11.7406 52.7275 12.9119 51.7865 13.736 50.5791C14.5601 49.3717 15 47.9521 15 46.5C14.9974 44.5535 14.2063 42.6876 12.8004 41.3112C11.3944 39.9349 9.48831 39.1605 7.5 39.1579ZM7.5 78.3158C6.01664 78.3158 4.5666 78.7464 3.33323 79.5532C2.09986 80.3599 1.13856 81.5066 0.570907 82.8482C0.00324964 84.1898 -0.145275 85.666 0.144114 87.0903C0.433503 88.5145 1.14781 89.8227 2.1967 90.8495C3.2456 91.8764 4.58197 92.5756 6.03682 92.8589C7.49168 93.1422 8.99968 92.9968 10.3701 92.4411C11.7406 91.8854 12.9119 90.9444 13.736 89.7369C14.5601 88.5295 15 87.11 15 85.6579C14.9974 83.7114 14.2063 81.8455 12.8004 80.4691C11.3944 79.0928 9.48831 78.3184 7.5 78.3158Z"
-                    fill="white"
-                  />
-                </svg>
-              </div>
-              <div
-                class="miraicms-form-builder__resizable-handle miraicms-form-builder__resizable-handle--right"
-                @pointerdown="onResizePointerDown($event, item, 'right')"
-              >
-                <svg
-                  width="15"
-                  height="93"
-                  viewBox="0 0 15 93"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+                  <svg
+                    width="15"
+                    height="93"
+                    viewBox="0 0 15 93"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15 7.3421C15 8.79424 14.5601 10.2138 13.736 11.4212C12.9119 12.6286 11.7406 13.5696 10.3701 14.1253C8.99968 14.681 7.49168 14.8264 6.03682 14.5431C4.58197 14.2598 3.2456 13.5606 2.1967 12.5338C1.14781 11.5069 0.433503 10.1987 0.144114 8.77448C-0.145275 7.35025 0.00324964 5.874 0.570907 4.5324C1.13856 3.19081 2.09986 2.04413 3.33323 1.23737C4.5666 0.430608 6.01664 0 7.5 0C9.48831 0.00259009 11.3944 0.776963 12.8004 2.15331C14.2063 3.52966 14.9974 5.39565 15 7.3421ZM7.5 39.1579C6.01664 39.1579 4.5666 39.5885 3.33323 40.3953C2.09986 41.202 1.13856 42.3487 0.570907 43.6903C0.00324964 45.0319 -0.145275 46.5081 0.144114 47.9324C0.433503 49.3566 1.14781 50.6648 2.1967 51.6917C3.2456 52.7185 4.58197 53.4177 6.03682 53.701C7.49168 53.9843 8.99968 53.8389 10.3701 53.2832C11.7406 52.7275 12.9119 51.7865 13.736 50.5791C14.5601 49.3717 15 47.9521 15 46.5C14.9974 44.5535 14.2063 42.6876 12.8004 41.3112C11.3944 39.9349 9.48831 39.1605 7.5 39.1579ZM7.5 78.3158C6.01664 78.3158 4.5666 78.7464 3.33323 79.5532C2.09986 80.3599 1.13856 81.5066 0.570907 82.8482C0.00324964 84.1898 -0.145275 85.666 0.144114 87.0903C0.433503 88.5145 1.14781 89.8227 2.1967 90.8495C3.2456 91.8764 4.58197 92.5756 6.03682 92.8589C7.49168 93.1422 8.99968 92.9968 10.3701 92.4411C11.7406 91.8854 12.9119 90.9444 13.736 89.7369C14.5601 88.5295 15 87.11 15 85.6579C14.9974 83.7114 14.2063 81.8455 12.8004 80.4691C11.3944 79.0928 9.48831 78.3184 7.5 78.3158Z"
+                      fill="white"
+                    />
+                  </svg>
+                </div>
+                <div
+                  class="miraicms-form-builder__resizable-handle miraicms-form-builder__resizable-handle--right"
+                  @pointerdown="onResizePointerDown($event, item, 'right')"
                 >
-                  <path
-                    d="M15 7.3421C15 8.79424 14.5601 10.2138 13.736 11.4212C12.9119 12.6286 11.7406 13.5696 10.3701 14.1253C8.99968 14.681 7.49168 14.8264 6.03682 14.5431C4.58197 14.2598 3.2456 13.5606 2.1967 12.5338C1.14781 11.5069 0.433503 10.1987 0.144114 8.77448C-0.145275 7.35025 0.00324964 5.874 0.570907 4.5324C1.13856 3.19081 2.09986 2.04413 3.33323 1.23737C4.5666 0.430608 6.01664 0 7.5 0C9.48831 0.00259009 11.3944 0.776963 12.8004 2.15331C14.2063 3.52966 14.9974 5.39565 15 7.3421ZM7.5 39.1579C6.01664 39.1579 4.5666 39.5885 3.33323 40.3953C2.09986 41.202 1.13856 42.3487 0.570907 43.6903C0.00324964 45.0319 -0.145275 46.5081 0.144114 47.9324C0.433503 49.3566 1.14781 50.6648 2.1967 51.6917C3.2456 52.7185 4.58197 53.4177 6.03682 53.701C7.49168 53.9843 8.99968 53.8389 10.3701 53.2832C11.7406 52.7275 12.9119 51.7865 13.736 50.5791C14.5601 49.3717 15 47.9521 15 46.5C14.9974 44.5535 14.2063 42.6876 12.8004 41.3112C11.3944 39.9349 9.48831 39.1605 7.5 39.1579ZM7.5 78.3158C6.01664 78.3158 4.5666 78.7464 3.33323 79.5532C2.09986 80.3599 1.13856 81.5066 0.570907 82.8482C0.00324964 84.1898 -0.145275 85.666 0.144114 87.0903C0.433503 88.5145 1.14781 89.8227 2.1967 90.8495C3.2456 91.8764 4.58197 92.5756 6.03682 92.8589C7.49168 93.1422 8.99968 92.9968 10.3701 92.4411C11.7406 91.8854 12.9119 90.9444 13.736 89.7369C14.5601 88.5295 15 87.11 15 85.6579C14.9974 83.7114 14.2063 81.8455 12.8004 80.4691C11.3944 79.0928 9.48831 78.3184 7.5 78.3158Z"
-                    fill="white"
-                  />
-                </svg>
+                  <svg
+                    width="15"
+                    height="93"
+                    viewBox="0 0 15 93"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15 7.3421C15 8.79424 14.5601 10.2138 13.736 11.4212C12.9119 12.6286 11.7406 13.5696 10.3701 14.1253C8.99968 14.681 7.49168 14.8264 6.03682 14.5431C4.58197 14.2598 3.2456 13.5606 2.1967 12.5338C1.14781 11.5069 0.433503 10.1987 0.144114 8.77448C-0.145275 7.35025 0.00324964 5.874 0.570907 4.5324C1.13856 3.19081 2.09986 2.04413 3.33323 1.23737C4.5666 0.430608 6.01664 0 7.5 0C9.48831 0.00259009 11.3944 0.776963 12.8004 2.15331C14.2063 3.52966 14.9974 5.39565 15 7.3421ZM7.5 39.1579C6.01664 39.1579 4.5666 39.5885 3.33323 40.3953C2.09986 41.202 1.13856 42.3487 0.570907 43.6903C0.00324964 45.0319 -0.145275 46.5081 0.144114 47.9324C0.433503 49.3566 1.14781 50.6648 2.1967 51.6917C3.2456 52.7185 4.58197 53.4177 6.03682 53.701C7.49168 53.9843 8.99968 53.8389 10.3701 53.2832C11.7406 52.7275 12.9119 51.7865 13.736 50.5791C14.5601 49.3717 15 47.9521 15 46.5C14.9974 44.5535 14.2063 42.6876 12.8004 41.3112C11.3944 39.9349 9.48831 39.1605 7.5 39.1579ZM7.5 78.3158C6.01664 78.3158 4.5666 78.7464 3.33323 79.5532C2.09986 80.3599 1.13856 81.5066 0.570907 82.8482C0.00324964 84.1898 -0.145275 85.666 0.144114 87.0903C0.433503 88.5145 1.14781 89.8227 2.1967 90.8495C3.2456 91.8764 4.58197 92.5756 6.03682 92.8589C7.49168 93.1422 8.99968 92.9968 10.3701 92.4411C11.7406 91.8854 12.9119 90.9444 13.736 89.7369C14.5601 88.5295 15 87.11 15 85.6579C14.9974 83.7114 14.2063 81.8455 12.8004 80.4691C11.3944 79.0928 9.48831 78.3184 7.5 78.3158Z"
+                      fill="white"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
@@ -1363,23 +1531,12 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div class="miraicms-form-builder__inspector">
-      <StepSettings
-        v-if="stepSettingsOpen && content.steps.length > 1"
-        :content="content"
-        @update="content = $event"
-      />
-      <FieldSettings
-        v-else-if="selected && selectedItem"
-        :field="selected"
-        :item="selectedItem"
-        @update="onUpdateField"
-        @layout="onUpdateLayout"
-      />
-      <div
-        v-else
-        class="miraicms-form-builder__form"
-      >
+    <div
+      v-else
+      class="miraicms-form-builder__settings"
+    >
+      <!--
+      <div class="miraicms-form-builder__form">
         <div class="miraicms-form-builder__heading">
           Form
         </div>
@@ -1410,6 +1567,7 @@ onBeforeUnmount(() => {
           Published forms render with <span>&lt;MiraiCmsForm form="{{ slug }}" /&gt;</span>
         </div>
       </div>
+      -->
     </div>
   </div>
 </template>
@@ -1419,28 +1577,83 @@ onBeforeUnmount(() => {
 $root: '.miraicms-form-builder';
 
 #{$root} {
-  display: grid;
-  grid-template-columns: math-rem(200) minmax(0, 1fr) math-rem(300);
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 0;
   min-width: 0;
   outline: none;
   border-top: 1px solid $color-border;
 
-  &__palette,
-  &__inspector {
+  &__modes {
+    display: flex;
+    gap: math-rem(6);
+    padding: math-rem(8) 0;
+    border-bottom: 1px solid $color-border;
+  }
+
+  &__workspace {
+    display: grid;
+    grid-template-columns: math-rem(400) minmax(0, 1fr);
+    flex: 1;
+    min-height: 0;
+  }
+
+  &__sidebar {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    border-right: 1px solid $color-border;
+    background: $color-surface;
+  }
+
+  &__tabs {
+    display: flex;
+    border-bottom: 1px solid $color-border;
+  }
+
+  &__tab {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    gap: math-rem(8);
+    padding: math-rem(8) math-rem(4);
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    color: $color-muted;
+    font: inherit;
+    font-size: math-rem(12);
+    cursor: pointer;
+
+    svg {
+      display: block;
+    }
+
+    &.is-active {
+      color: $color-accent;
+      border-bottom-color: $color-accent;
+    }
+  }
+
+  &__panel {
+    flex: 1;
     min-height: 0;
     overflow: auto;
+    padding: math-rem(8);
   }
 
-  &__palette {
-    padding: math-rem(8) math-rem(8) math-rem(8) 0;
-    border-right: 1px solid $color-border;
+  &__empty {
+    padding: math-rem(16) math-rem(4);
+    color: $color-muted;
+    font-size: math-rem(13);
   }
 
-  &__inspector {
-    padding: math-rem(8) 0 math-rem(8) math-rem(8);
-    border-left: 1px solid $color-border;
+  &__settings {
+    flex: 1;
+    min-height: 0;
   }
 
   &__heading {

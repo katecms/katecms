@@ -256,6 +256,23 @@ export function placeField(layout: LayoutItem[], fieldId: string, width: number)
   return [...layout, { fieldId, x: 0, y: layout.length, w }]
 }
 
+function placeAfter(layout: LayoutItem[], source: LayoutItem | undefined, fieldId: string, width: number): LayoutItem[] {
+  const w = clampInt(width, 1, GRID_COLUMNS)
+  if (!source) {
+    return placeField(layout, fieldId, w)
+  }
+  const besideX = source.x + source.w
+  if (besideX + w <= GRID_COLUMNS) {
+    const beside = { fieldId, x: besideX, y: source.y, w }
+    if (!layout.some(item => overlaps(beside, item))) {
+      return [...layout, beside]
+    }
+  }
+  const shifted = layout.map(item => item.y > source.y ? { ...item, y: item.y + 1 } : item)
+  const x = source.x + w <= GRID_COLUMNS ? source.x : 0
+  return [...shifted, { fieldId, x, y: source.y + 1, w }]
+}
+
 export function defaultWidth(type: FieldType, breakpoint: Breakpoint): number {
   if (breakpoint !== baseBreakpoint()) {
     return GRID_COLUMNS
@@ -339,7 +356,7 @@ export function cloneStep(content: FormContent, stepId: string): FormContent {
   const clonedFields = sourceFields.map((field) => {
     const id = `f_${crypto.randomUUID()}`
     idMap.set(field.id, id)
-    const copy: FormField = structuredClone(field)
+    const copy: FormField = JSON.parse(JSON.stringify(field)) as FormField
     copy.id = id
     copy.stepId = nextStep.id
     copy.key = uniqueKey(field.type, existing)
@@ -411,6 +428,50 @@ export function addField(content: FormContent, type: FieldType, stepId?: string)
     layouts[breakpoint] = [...otherSteps, ...placeField(sameStep, field.id, defaultWidth(type, breakpoint))]
   }
   return { ...content, steps, fields: [...content.fields, field], layouts }
+}
+
+export function cloneField(content: FormContent, fieldId: string): FormContent {
+  const source = content.fields.find(field => field.id === fieldId)
+  if (!source || content.fields.length >= MAX_FIELDS) {
+    return content
+  }
+  const copy = JSON.parse(JSON.stringify(source)) as FormField
+  copy.id = `f_${crypto.randomUUID()}`
+  copy.key = uniqueKey(source.type, content.fields)
+  const index = content.fields.findIndex(field => field.id === fieldId)
+  const fields = [
+    ...content.fields.slice(0, index + 1),
+    copy,
+    ...content.fields.slice(index + 1),
+  ]
+  const layouts = { ...content.layouts }
+  for (const breakpoint of formBreakpoints()) {
+    const current = content.layouts[breakpoint] ?? []
+    const sourceItem = current.find(item => item.fieldId === fieldId)
+    const width = sourceItem?.w ?? defaultWidth(source.type, breakpoint)
+    const sameStep = current.filter(item => stepIdOf(content, item.fieldId) === source.stepId)
+    const otherSteps = current.filter(item => stepIdOf(content, item.fieldId) !== source.stepId)
+    layouts[breakpoint] = [...otherSteps, ...placeAfter(sameStep, sourceItem, copy.id, width)]
+  }
+  return { ...content, fields, layouts }
+}
+
+export function moveFieldToStep(content: FormContent, fieldId: string, stepId: string): FormContent {
+  const source = content.fields.find(field => field.id === fieldId)
+  if (!source || source.stepId === stepId || !content.steps.some(step => step.id === stepId)) {
+    return content
+  }
+  let next: FormContent = {
+    ...content,
+    fields: content.fields.map(field => field.id === fieldId ? { ...field, stepId } : field),
+  }
+  for (const breakpoint of formBreakpoints()) {
+    const item = next.layouts[breakpoint]?.find(entry => entry.fieldId === fieldId)
+    if (item) {
+      next = setLayoutItem(next, breakpoint, item, true)
+    }
+  }
+  return next
 }
 
 export function removeField(content: FormContent, fieldId: string): FormContent {

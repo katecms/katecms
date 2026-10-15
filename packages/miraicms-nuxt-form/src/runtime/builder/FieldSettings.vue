@@ -13,7 +13,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   update: [field: FormField]
   layout: [item: LayoutItem]
-  remove: []
 }>()
 
 const choice = computed(() => props.field.type === 'select' || props.field.type === 'radio' || props.field.type === 'checkbox')
@@ -253,14 +252,6 @@ function removeOption(index: number) {
     </div>
 
     </template>
-
-    <MiraiCmsUiButton
-      tag="button"
-      variant="red"
-      @click="emit('remove')"
-    >
-      Remove field
-    </MiraiCmsUiButton>
   </div>
 </template>
 

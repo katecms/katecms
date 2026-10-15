@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { reactive } from 'vue'
 import {
   addField,
+  cloneField,
   cloneStep,
   deleteStep,
   addStep,
@@ -204,4 +206,36 @@ test('the first button is submit and later buttons default to button', () => {
   const added = content.fields.filter(field => field.type === 'button').at(-1)
   assert.equal(added?.text?.buttonType, 'button')
   assert.equal(added?.text?.buttonText.text, 'Button')
+})
+
+test('cloneField copies a reactive field', () => {
+  let content = createEmptyContent()
+  content = addField(content, 'email')
+  const source = content.fields.find(field => field.type === 'email')!
+  const live = reactive(content)
+  const cloned = cloneField(live, source.id)
+  const copy = cloned.fields.find(field => field.type === 'email' && field.id !== source.id)
+  assert.ok(copy)
+  assert.notEqual(copy.key, source.key)
+  assert.equal(copy.stepId, source.stepId)
+  assert.equal(cloned.fields.length, content.fields.length + 1)
+  const sourceIndex = cloned.fields.findIndex(field => field.id === source.id)
+  assert.equal(cloned.fields[sourceIndex + 1]?.id, copy.id)
+  const sourceItem = cloned.layouts.desktop.find(item => item.fieldId === source.id)
+  const copyItem = cloned.layouts.desktop.find(item => item.fieldId === copy.id)
+  assert.ok(sourceItem && copyItem)
+  const after = copyItem.y > sourceItem.y || (copyItem.y === sourceItem.y && copyItem.x >= sourceItem.x + sourceItem.w)
+  assert.equal(after, true)
+})
+
+test('cloneField keeps a gap in front of the source empty', () => {
+  let content = createEmptyContent()
+  content = addField(content, 'text')
+  const source = content.fields.find(field => field.type === 'text')!
+  content = setLayoutItem(content, 'desktop', { fieldId: source.id, x: 30, y: 0, w: 30 }, true)
+  const cloned = cloneField(content, source.id)
+  const copy = cloned.fields.find(field => field.id !== source.id && field.type === 'text')!
+  const copyItem = cloned.layouts.desktop.find(item => item.fieldId === copy.id)
+  assert.equal(copyItem?.y, 1)
+  assert.equal(copyItem?.x, 30)
 })

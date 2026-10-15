@@ -2,8 +2,8 @@ import { computed } from 'vue'
 import { defineNuxtPlugin, useRuntimeConfig } from '#imports'
 import { MIRAICMS_COLLECTION_HOOK, useMiraiCmsEntrySidebar, useMiraiCmsMenuItems, useMiraiCmsTermPanels } from 'miraicms-nuxt/extensions'
 import type { MiraiCmsPublicPage } from 'miraicms-nuxt/extensions'
-import SeoEntryPanel from './components/SeoEntryPanel.vue'
-import SeoTermPanel from './components/SeoTermPanel.vue'
+import SeoEntryPanel from './internal/SeoEntryPanel.vue'
+import SeoTermPanel from './internal/SeoTermPanel.vue'
 import { useMiraiSeoHead } from './composables/useMiraiSeoHead'
 
 function headInput(page: MiraiCmsPublicPage) {

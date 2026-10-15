@@ -486,11 +486,8 @@
     },
     {
       "prefix": "MiraiCms",
-      "dir": "packages/miraicms-nuxt-seo/src/runtime/components"
-    },
-    {
-      "prefix": "MiraiCms",
-      "dir": "packages/miraicms-nuxt/src/runtime/components"
+      "dir": "packages/miraicms-nuxt/src/runtime/internal",
+      "internal": true
     }
   ]
 }

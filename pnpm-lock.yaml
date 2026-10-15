@@ -102,6 +102,9 @@ importers:
       leaflet.locatecontrol:
         specifier: ^0.90.0
         version: 0.90.0(leaflet@1.9.4)
+      magic-string:
+        specifier: ^1.1.0
+        version: 1.1.0
     devDependencies:
       '@nuxt/devtools':
         specifier: ^3.4.1

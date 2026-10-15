@@ -1,7 +1,7 @@
 import type { Component } from 'vue'
 
 const fieldModules = import.meta.glob<{ default: Component }>(
-  '../components/fields/*.vue',
+  '../internal/fields/*.vue',
   { eager: true },
 )
 
@@ -12,7 +12,7 @@ const fieldComponents: Record<string, Component> = Object.fromEntries(
   }),
 )
 
-/** Maps field `type` to `TypeField` from the glob of `components/fields/*.vue`. */
+/** Maps field `type` to `TypeField` from the glob of `internal/fields/*.vue`. */
 function toPascalCase(str: string): string {
   return str
     .split(/[_\-\s]+/)

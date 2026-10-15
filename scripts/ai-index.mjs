@@ -456,7 +456,7 @@ function kindOf(file) {
     return 'plugin'
   if (file.includes('/composables/'))
     return 'composable'
-  if (file.includes('/components/fields/'))
+  if (file.includes('/internal/fields/'))
     return 'field-ui'
   if (file.endsWith('.vue'))
     return 'component'
@@ -996,13 +996,14 @@ function extractCalls(source) {
     m = reMw.exec(source)
   }
   const components = []
-  const reCmp = /addComponentsDir\(\s*\{([\s\S]*?)\}\s*\)/g
+  const reCmp = /add(?:ComponentsDir|AdminComponents)\(\s*\{([\s\S]*?)\}\s*\)/g
   m = reCmp.exec(source)
   while (m) {
     const body = m[1]
     components.push({
       spec: body.match(/resolver\.resolve\(\s*['"]([^'"]+)['"]\s*\)/)?.[1] || '',
       prefix: body.match(/prefix:\s*['"]([^'"]+)['"]/)?.[1] || '',
+      internal: m[0].startsWith('addAdminComponents'),
     })
     m = reCmp.exec(source)
   }
@@ -1325,7 +1326,7 @@ function build() {
     }
     for (const row of calls.components) {
       const p = resolveModuleSpec(file, row.spec, fileSet)
-      routes.components.push({ prefix: row.prefix, dir: p || row.spec })
+      routes.components.push({ prefix: row.prefix, dir: p || row.spec, ...(row.internal ? { internal: true } : {}) })
     }
   }
   for (const file of files) {
@@ -1533,7 +1534,7 @@ function build() {
   }
   const fieldsOut = [...fieldTypes].sort().map((type) => {
     const uiName = `${pascal(type)}Field.vue`
-    const ui = files.find(file => file.endsWith(`/components/fields/${uiName}`)) || null
+    const ui = files.find(file => file.endsWith(`/internal/fields/${uiName}`)) || null
     return compact({ type, ui })
   })
 
@@ -1543,7 +1544,7 @@ function build() {
     tables,
     ddl,
     fields: fieldsOut,
-    fieldRule: 'Config type snake_case maps to PascalCase + Field.vue. resolveField() globs components/fields/*.vue.',
+    fieldRule: 'Config type snake_case maps to PascalCase + Field.vue. resolveField() globs internal/fields/*.vue.',
   }
   if (missingDdl.length)
     throw new Error(`Database tables missing from DDL: ${missingDdl.join(', ')}`)
@@ -1613,7 +1614,7 @@ function assertIndex(fileRows, symbolRows, routes, domain, misses) {
   const slug = routes.pages.find(row => row.p.endsWith('/pages/[...slug].vue'))
   if (slug?.path !== '/:slug(.*)*')
     throw new Error(`playground slug path: ${slug?.path}`)
-  const link = fileRows.find(row => row.p.endsWith('components/fields/LinkField.vue'))
+  const link = fileRows.find(row => row.p.endsWith('internal/fields/LinkField.vue'))
   if (!link?.im.includes('packages/core/src/browser.ts'))
     throw new Error('client field did not resolve @miraicms/core to browser.ts')
   if (link.im.includes('packages/core/src/index.ts'))
@@ -1622,12 +1623,12 @@ function assertIndex(fileRows, symbolRows, routes, domain, misses) {
   if (!mediaApi?.im.includes('packages/core/src/index.ts'))
     throw new Error('server handler did not resolve @miraicms/core to index.ts')
   const helpers = fileRows.find(row => row.p.endsWith('runtime/utils/helpers.ts'))
-  if (!helpers?.im.some(item => item.endsWith('/components/fields/TextField.vue')))
+  if (!helpers?.im.some(item => item.endsWith('/internal/fields/TextField.vue')))
     throw new Error('resolveField glob missed TextField.vue')
   const register = fileRows.find(row => row.p.endsWith('pages/admin/register.vue'))
   if (!register?.im.some(item => item.endsWith('/assets/styles/_index.scss')))
     throw new Error('register.vue missed styles import')
-  if (!register.im.some(item => item.endsWith('/components/fields/PasswordField.vue')))
+  if (!register.im.some(item => item.endsWith('/internal/fields/PasswordField.vue')))
     throw new Error('register.vue missed MiraiCmsPasswordField')
   const redirects = domain.tables.find(row => row.n === 'seo_redirects')
   if (!redirects?.cols.includes('from_path'))
@@ -1678,8 +1679,8 @@ Public entry surfaces are name lists in \`domain.json\` under \`public\` (\`core
 - Server, tests, and \`module.ts\` import \`@miraicms/core\` from \`packages/core/src/index.ts\`.
 - Admin pages and \`/api/_miraicms/*\` handlers are registered in each package \`module.ts\`, not by Nuxt file-system routing. Paths are in \`routes.json\`. \`{adminPath}\` defaults to \`admin\`.
 - App \`pages/*.vue\` outside \`runtime/pages\` (the playground) use Nuxt file routes, also listed in \`routes.json\`.
-- Field config \`type\` maps to a widget: snake_case to PascalCase plus \`Field.vue\` (\`image_select\` to \`ImageSelectField.vue\`). \`resolveField()\` globs \`components/fields/*.vue\`.
-- Template tags \`MiraiCms*\` / \`Mirai*\` are edges in \`im\` even without a script import.
+- Field config \`type\` maps to a widget: snake_case to PascalCase plus \`Field.vue\` (\`image_select\` to \`ImageSelectField.vue\`). \`resolveField()\` globs \`internal/fields/*.vue\`.
+- Template tags \`MiraiCms*\` / \`Mirai*\` are edges in \`im\` even without a script import. \`addAdminComponents()\` dirs are internal: the tags resolve in admin and addon templates, and they are not host components.
 - A named call that matches a unique composable or util export is also an \`im\` edge.
 
 ## Tables

@@ -7,7 +7,6 @@ import {
   addRouteMiddleware,
   addImports,
   extendPages,
-  addComponentsDir,
 } from '@nuxt/kit'
 import type {
   MiraiCmsConfig,
@@ -17,6 +16,7 @@ import {
   mergeMiraiCmsConfig,
   resolveMiraiCmsConfig,
 } from '@miraicms/core'
+import { addAdminComponents } from './admin-components'
 
 function resolveModuleSqliteFilename(rootDir: string, filename: string): string {
   const value = filename.trim()
@@ -348,10 +348,9 @@ export default defineNuxtModule<MiraiCmsConfig>({
       },
     ])
 
-    addComponentsDir({
-      path: resolver.resolve('./runtime/components'),
+    addAdminComponents({
+      path: resolver.resolve('./runtime/internal'),
       prefix: 'MiraiCms',
-      pathPrefix: false,
     })
 
     // Pages

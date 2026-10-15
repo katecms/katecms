@@ -100,7 +100,8 @@
         "c12",
         "leaflet",
         "leaflet-control-geocoder",
-        "leaflet.locatecontrol"
+        "leaflet.locatecontrol",
+        "magic-string"
       ],
       "dev": [
         "@nuxt/devtools",
@@ -914,147 +915,147 @@
   "fields": [
     {
       "type": "accordion",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/AccordionField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/AccordionField.vue"
     },
     {
       "type": "button_group",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/ButtonGroupField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/ButtonGroupField.vue"
     },
     {
       "type": "checkbox",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/CheckboxField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/CheckboxField.vue"
     },
     {
       "type": "color_picker",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/ColorPickerField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/ColorPickerField.vue"
     },
     {
       "type": "date_picker",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/DatePickerField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/DatePickerField.vue"
     },
     {
       "type": "date_time_picker",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/DateTimePickerField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/DateTimePickerField.vue"
     },
     {
       "type": "dictionary",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/DictionaryField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/DictionaryField.vue"
     },
     {
       "type": "email",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/EmailField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/EmailField.vue"
     },
     {
       "type": "file",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/FileField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/FileField.vue"
     },
     {
       "type": "flexible_content",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/FlexibleContentField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/FlexibleContentField.vue"
     },
     {
       "type": "gallery",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/GalleryField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/GalleryField.vue"
     },
     {
       "type": "group",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/GroupField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/GroupField.vue"
     },
     {
       "type": "image",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/ImageField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/ImageField.vue"
     },
     {
       "type": "image_select",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/ImageSelectField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/ImageSelectField.vue"
     },
     {
       "type": "link",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/LinkField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/LinkField.vue"
     },
     {
       "type": "message"
     },
     {
       "type": "number",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/NumberField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/NumberField.vue"
     },
     {
       "type": "oembed",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/OembedField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/OembedField.vue"
     },
     {
       "type": "open_street_map",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/OpenStreetMapField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/OpenStreetMapField.vue"
     },
     {
       "type": "page_link",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/PageLinkField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/PageLinkField.vue"
     },
     {
       "type": "password",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/PasswordField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/PasswordField.vue"
     },
     {
       "type": "post_object",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/PostObjectField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/PostObjectField.vue"
     },
     {
       "type": "radio",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/RadioField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/RadioField.vue"
     },
     {
       "type": "range",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/RangeField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/RangeField.vue"
     },
     {
       "type": "relationship",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/RelationshipField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/RelationshipField.vue"
     },
     {
       "type": "repeater",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/RepeaterField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/RepeaterField.vue"
     },
     {
       "type": "select",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/SelectField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/SelectField.vue"
     },
     {
       "type": "separator",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/SeparatorField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/SeparatorField.vue"
     },
     {
       "type": "tab",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/TabField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/TabField.vue"
     },
     {
       "type": "text",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/TextField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/TextField.vue"
     },
     {
       "type": "textarea",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/TextareaField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/TextareaField.vue"
     },
     {
       "type": "time_picker",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/TimePickerField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/TimePickerField.vue"
     },
     {
       "type": "true_false",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/TrueFalseField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/TrueFalseField.vue"
     },
     {
       "type": "url",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/UrlField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/UrlField.vue"
     },
     {
       "type": "user",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/UserField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/UserField.vue"
     },
     {
       "type": "wysiwyg",
-      "ui": "packages/miraicms-nuxt/src/runtime/components/fields/WysiwygField.vue"
+      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/WysiwygField.vue"
     }
   ],
-  "fieldRule": "Config type snake_case maps to PascalCase + Field.vue. resolveField() globs components/fields/*.vue."
+  "fieldRule": "Config type snake_case maps to PascalCase + Field.vue. resolveField() globs internal/fields/*.vue."
 }

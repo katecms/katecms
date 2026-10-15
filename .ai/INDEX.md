@@ -4,7 +4,7 @@ Read this file first. Grep `.ai/` instead of scanning `packages/` for imports, s
 
 Refresh after code changes: `pnpm ai:index`
 
-Counts: 364 files, 875 symbols, 57 handlers, 23 pages, 15 tables, 36 field types.
+Counts: 366 files, 872 symbols, 57 handlers, 23 pages, 15 tables, 36 field types.
 
 ## Files
 
@@ -35,8 +35,8 @@ Public entry surfaces are name lists in `domain.json` under `public` (`core`, `c
 - Server, tests, and `module.ts` import `@miraicms/core` from `packages/core/src/index.ts`.
 - Admin pages and `/api/_miraicms/*` handlers are registered in each package `module.ts`, not by Nuxt file-system routing. Paths are in `routes.json`. `{adminPath}` defaults to `admin`.
 - App `pages/*.vue` outside `runtime/pages` (the playground) use Nuxt file routes, also listed in `routes.json`.
-- Field config `type` maps to a widget: snake_case to PascalCase plus `Field.vue` (`image_select` to `ImageSelectField.vue`). `resolveField()` globs `components/fields/*.vue`.
-- Template tags `MiraiCms*` / `Mirai*` are edges in `im` even without a script import.
+- Field config `type` maps to a widget: snake_case to PascalCase plus `Field.vue` (`image_select` to `ImageSelectField.vue`). `resolveField()` globs `internal/fields/*.vue`.
+- Template tags `MiraiCms*` / `Mirai*` are edges in `im` even without a script import. `addAdminComponents()` dirs are internal: the tags resolve in admin and addon templates, and they are not host components.
 - A named call that matches a unique composable or util export is also an `im` edge.
 
 ## Tables

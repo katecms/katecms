@@ -1,5 +1,4 @@
 import {
-  addComponentsDir,
   addImports,
   addPlugin,
   addServerHandler,
@@ -21,11 +20,6 @@ export default defineNuxtModule({
 
     addPlugin(resolver.resolve('./runtime/plugin'))
     addServerPlugin(resolver.resolve('./runtime/server/plugins/migrate'))
-    addComponentsDir({
-      path: resolver.resolve('./runtime/components'),
-      prefix: 'MiraiCms',
-      pathPrefix: false,
-    })
     addImports([
       {
         name: 'useMiraiSeoHead',

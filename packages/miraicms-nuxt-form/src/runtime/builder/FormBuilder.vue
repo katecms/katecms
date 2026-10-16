@@ -6,7 +6,6 @@ import FieldSettings from './FieldSettings.vue'
 import type { Breakpoint, FieldType, FormContent, FormField, FormStatus, LayoutItem } from '../form/model'
 import {
   FIELD_LABELS,
-  FIELD_TYPES,
   GRID_COLUMNS,
   ROW_HEIGHT,
   addField,
@@ -113,7 +112,7 @@ const baseLabel = computed(() => {
 const palette = [
   { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month'] as FieldType[] },
   { title: 'Option/Choice Fields', types: ['image_select', 'select', 'rating', 'radio', 'checkbox'] as FieldType[] },
-  { title: 'Fields', types: FIELD_TYPES.filter(type => !['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'image_select', 'select', 'radio', 'checkbox'].includes(type)) },
+  { title: 'Elements', types: ['title', 'image', 'divider', 'html', 'spacer'] as FieldType[] },
 ]
 
 function hasBreakpointIcon(name: string) {
@@ -1240,6 +1239,7 @@ onBeforeUnmount(() => {
                 <FieldFace
                   v-if="fieldById(item.fieldId)"
                   :field="fieldById(item.fieldId)"
+                  :height="item.h"
                   preview
                 />
                 <div

@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import type { SelectChoice, SelectModelValue } from '@miraicms/core'
 import type { FormField } from '../form/model'
-import { applyInputMask, checkPositionStyle, defaultTextOptions, fileAccept, iconUrl, isRichFieldType, isTemporalType, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, temporalInputType } from '../form/text-options'
+import { applyInputMask, checkPositionStyle, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, temporalInputType } from '../form/text-options'
 
 const props = withDefaults(defineProps<{
   field?: FormField
@@ -10,6 +10,7 @@ const props = withDefaults(defineProps<{
   disabled?: boolean
   invalid?: boolean
   error?: string
+  height?: number
 }>(), {
   preview: false,
   disabled: false,
@@ -194,6 +195,68 @@ function onInput(event: Event) {
     </div>
 
     <div
+      v-if="field.type === 'title'"
+      :style="layoutFlexStyle(options.layoutDirection, options.layoutAlign)"
+    >
+      <component
+        :is="headingTag(options.heading.tag)"
+        v-if="options.heading.enabled"
+      >
+        <img
+          v-if="iconUrl(options.heading.prefix)"
+          class="miraicms-field-face__icon"
+          :src="iconUrl(options.heading.prefix)"
+          alt=""
+        >
+        <span>{{ options.heading.text }}</span>
+        <img
+          v-if="iconUrl(options.heading.suffix)"
+          class="miraicms-field-face__icon"
+          :src="iconUrl(options.heading.suffix)"
+          alt=""
+        >
+      </component>
+      <component
+        :is="headingTag(options.subheading.tag)"
+        v-if="options.subheading.enabled"
+      >
+        <img
+          v-if="iconUrl(options.subheading.prefix)"
+          class="miraicms-field-face__icon"
+          :src="iconUrl(options.subheading.prefix)"
+          alt=""
+        >
+        <span>{{ options.subheading.text }}</span>
+        <img
+          v-if="iconUrl(options.subheading.suffix)"
+          class="miraicms-field-face__icon"
+          :src="iconUrl(options.subheading.suffix)"
+          alt=""
+        >
+      </component>
+    </div>
+    <template v-else-if="field.type === 'image'">
+      <img
+        v-if="iconUrl(options.elementImage)"
+        :src="iconUrl(options.elementImage)"
+        :alt="options.imageAlt"
+        :style="{ width: options.imageWidth ? `${options.imageWidth}px` : undefined, height: options.imageHeight ? `${options.imageHeight}px` : undefined }"
+      >
+    </template>
+    <div
+      v-else-if="field.type === 'divider'"
+      class="miraicms-field-face__divider"
+    />
+    <div
+      v-else-if="field.type === 'spacer'"
+      :style="{ height: `${height ?? options.spacerHeight ?? 40}px` }"
+    />
+    <div
+      v-else-if="field.type === 'html'"
+      v-html="field.html"
+    />
+    <div
+      v-else
       class="miraicms-field-face__control"
       :data-align="field.type === 'button' && !options.fullWidth ? options.buttonAlign : undefined"
     >
@@ -567,6 +630,11 @@ function onInput(event: Event) {
   gap: math-rem(6);
   min-width: 0;
   width: 100%;
+
+  &__divider {
+    width: 100%;
+    border-top: 1px solid currentColor;
+  }
 
   &.is-hidden {
     opacity: 0.45;

@@ -1,0 +1,28 @@
+# Generated copies of src
+**/dist/
+**/.nuxt/
+**/.output/
+**/.data/
+**/.cache/
+**/.temp/
+**/.tmp/
+
+# Dependencies
+**/node_modules/
+
+# Local data and secrets
+**/.env
+**/.env.*
+**/*.db
+**/*.db-wal
+**/*.db-shm
+**/data/miraicms-nuxt-form/
+**/public/uploads/
+
+# Tool output
+coverage/
+reports/
+*.lcov
+
+# Empty placeholder package
+playground-next/

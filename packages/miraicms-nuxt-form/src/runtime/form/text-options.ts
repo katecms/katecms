@@ -57,6 +57,17 @@ export type FileKind = '' | 'image' | 'audio' | 'video' | 'document' | 'zip' | '
 export type TemporalType = 'date' | 'time' | 'datetime' | 'week' | 'month'
 
 export type CheckPosition = 'top-left' | 'top-right' | 'center' | 'bottom-left' | 'bottom-right'
+export type HeadingTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'div' | 'span' | 'p'
+export type LayoutAlign = 'left' | 'center' | 'right'
+export type LayoutDirection = 'vertical' | 'vertical-reverse' | 'horizontal' | 'horizontal-reverse'
+
+export interface FormHeading {
+  enabled: boolean
+  text: string
+  tag: HeadingTag
+  prefix: FormIcon | null
+  suffix: FormIcon | null
+}
 
 export interface FormChoiceOption {
   id: string
@@ -195,6 +206,15 @@ export interface FormTextOptions {
   searchPlaceholder: string
   searchClearable: boolean
   selectedClearable: boolean
+  heading: FormHeading
+  subheading: FormHeading
+  layoutAlign: LayoutAlign
+  layoutDirection: LayoutDirection
+  elementImage: FormIcon | null
+  imageWidth: number | null
+  imageHeight: number | null
+  imageAlt: string
+  spacerHeight: number | null
 }
 
 export interface PatternPreset {
@@ -399,6 +419,15 @@ export function defaultTextOptions(label = ''): FormTextOptions {
     searchPlaceholder: '',
     searchClearable: false,
     selectedClearable: false,
+    heading: defaultHeading('Title', 'h2', true),
+    subheading: defaultHeading('', 'p', false),
+    layoutAlign: 'left',
+    layoutDirection: 'vertical',
+    elementImage: null,
+    imageWidth: null,
+    imageHeight: null,
+    imageAlt: '',
+    spacerHeight: 40,
   }
 }
 
@@ -438,6 +467,10 @@ function defaultBoundError(errorText: string): FormBoundError {
   }
 }
 
+function defaultHeading(text: string, tag: HeadingTag, enabled: boolean): FormHeading {
+  return { enabled, text, tag, prefix: null, suffix: null }
+}
+
 export function defaultChoiceOptions(): FormChoiceOption[] {
   return [1, 2].map(index => ({
     id: `opt_${index}`,
@@ -450,7 +483,7 @@ export function defaultChoiceOptions(): FormChoiceOption[] {
   }))
 }
 
-const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'image_select', 'select', 'radio', 'checkbox'])
+const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'image_select', 'select', 'radio', 'checkbox', 'title', 'image', 'divider', 'html', 'spacer'])
 
 const FIELD_OPTIONS: Record<string, number[]> = {
   text: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
@@ -473,6 +506,11 @@ const FIELD_OPTIONS: Record<string, number[]> = {
   select: [1, 2, 3, 4, 61, 44, 54, 7, 55, 56, 57, 58, 14, 15, 17, 18],
   radio: [1, 2, 3, 44, 7, 51, 15, 17, 18],
   checkbox: [1, 2, 3, 44, 7, 51, 52, 53, 15, 17, 18],
+  title: [62, 63, 65, 66, 16],
+  image: [67, 68, 69, 16],
+  divider: [16],
+  html: [15],
+  spacer: [16],
 }
 
 export const FILE_TYPE_ACCEPT: Record<Exclude<FileKind, ''>, { label: string, accept: string }> = {
@@ -507,6 +545,32 @@ export function temporalInputType(type: string): string {
     return type
   }
   return 'text'
+}
+
+export function headingTag(tag: string): HeadingTag {
+  const allowed = new Set<HeadingTag>(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'])
+  return allowed.has(tag as HeadingTag) ? tag as HeadingTag : 'div'
+}
+
+export function layoutFlexStyle(direction: LayoutDirection, align: LayoutAlign): Record<string, string> {
+  const horizontal = direction === 'horizontal' || direction === 'horizontal-reverse'
+  const cross = align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start'
+  const flexDirection = direction === 'vertical-reverse'
+    ? 'column-reverse'
+    : direction === 'horizontal'
+      ? 'row'
+      : direction === 'horizontal-reverse'
+        ? 'row-reverse'
+        : 'column'
+  return {
+    display: 'flex',
+    flexDirection,
+    alignItems: horizontal ? 'center' : cross,
+    justifyContent: horizontal ? cross : 'flex-start',
+    textAlign: align,
+    width: '100%',
+    gap: '8px',
+  }
 }
 
 export function checkPositionStyle(position: CheckPosition): Record<string, string> {
@@ -733,6 +797,15 @@ export function normalizeTextOptions(raw: unknown, fallback: { label?: string, p
     searchPlaceholder: clip(source.searchPlaceholder, 200),
     searchClearable: source.searchClearable === true,
     selectedClearable: source.selectedClearable === true,
+    heading: normalizeHeading(source.heading, 'Title', 'h2', true),
+    subheading: normalizeHeading(source.subheading, '', 'p', false),
+    layoutAlign: source.layoutAlign === 'center' || source.layoutAlign === 'right' ? source.layoutAlign : 'left',
+    layoutDirection: isLayoutDirection(source.layoutDirection) ? source.layoutDirection : 'vertical',
+    elementImage: normalizeIcon(source.elementImage),
+    imageWidth: optionalCount(source.imageWidth),
+    imageHeight: optionalCount(source.imageHeight),
+    imageAlt: clip(source.imageAlt, 200),
+    spacerHeight: optionalCount(source.spacerHeight) ?? 40,
   }
 }
 
@@ -764,6 +837,21 @@ const CHECK_POSITIONS = new Set<CheckPosition>(['top-left', 'top-right', 'center
 
 function isCheckPosition(value: unknown): value is CheckPosition {
   return typeof value === 'string' && CHECK_POSITIONS.has(value as CheckPosition)
+}
+
+function normalizeHeading(raw: unknown, text: string, tag: HeadingTag, enabled: boolean): FormHeading {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    enabled: source.enabled == null ? enabled : source.enabled === true,
+    text: source.text == null ? text : clip(source.text, 2000),
+    tag: headingTag(typeof source.tag === 'string' ? source.tag : tag),
+    prefix: normalizeIcon(source.prefix),
+    suffix: normalizeIcon(source.suffix),
+  }
+}
+
+function isLayoutDirection(value: unknown): value is LayoutDirection {
+  return value === 'vertical' || value === 'vertical-reverse' || value === 'horizontal' || value === 'horizontal-reverse'
 }
 
 function normalizeBoundError(raw: unknown, errorText: string): FormBoundError {

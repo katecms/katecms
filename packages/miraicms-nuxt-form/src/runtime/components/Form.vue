@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { $fetch } from '#imports'
 import type { FormField, LayoutItem, PublicForm, UploadedFile } from '../form/model'
 import { baseBreakpoint, formBreakpoints, submissionErrors } from '../form/model'
-import { applyInputMask, checkPositionStyle, choiceMatches, defaultTextOptions, fileAccept, iconUrl, isRichFieldType, isTemporalType, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, temporalInputType } from '../form/text-options'
+import { applyInputMask, checkPositionStyle, choiceMatches, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, temporalInputType } from '../form/text-options'
 import { clientFormBreakpoints } from '../form/runtime-config'
 import { stepIconSvg } from '../form/icons'
 
@@ -173,6 +173,9 @@ function layoutAttrs(layouts: Record<string, LayoutItem>) {
     attrs[`data-x${suffix}`] = item.x
     attrs[`data-y${suffix}`] = item.y
     attrs[`data-w${suffix}`] = item.w
+    if (item.h != null) {
+      attrs[`data-h${suffix}`] = item.h
+    }
   }
   return attrs
 }
@@ -202,6 +205,10 @@ function isText(field: FormField): boolean {
 
 function richField(field: FormField) {
   return isRichFieldType(field.type)
+}
+
+function isDisplay(type: FormField['type']) {
+  return type === 'title' || type === 'image' || type === 'divider' || type === 'html' || type === 'spacer'
 }
 
 function liveInputType(field: FormField, revealed: boolean) {
@@ -378,7 +385,64 @@ function formatBytes(size: number): string {
           >
             <template v-if="richField(cell.field)">
               <div
-                v-if="textOptions(cell.field).label.enabled"
+                v-if="cell.field.type === 'title'"
+                :style="layoutFlexStyle(textOptions(cell.field).layoutDirection, textOptions(cell.field).layoutAlign)"
+              >
+                <component
+                  :is="headingTag(textOptions(cell.field).heading.tag)"
+                  v-if="textOptions(cell.field).heading.enabled"
+                >
+                  <img
+                    v-if="iconUrl(textOptions(cell.field).heading.prefix)"
+                    :src="iconUrl(textOptions(cell.field).heading.prefix)"
+                    alt=""
+                  >
+                  <span>{{ textOptions(cell.field).heading.text }}</span>
+                  <img
+                    v-if="iconUrl(textOptions(cell.field).heading.suffix)"
+                    :src="iconUrl(textOptions(cell.field).heading.suffix)"
+                    alt=""
+                  >
+                </component>
+                <component
+                  :is="headingTag(textOptions(cell.field).subheading.tag)"
+                  v-if="textOptions(cell.field).subheading.enabled"
+                >
+                  <img
+                    v-if="iconUrl(textOptions(cell.field).subheading.prefix)"
+                    :src="iconUrl(textOptions(cell.field).subheading.prefix)"
+                    alt=""
+                  >
+                  <span>{{ textOptions(cell.field).subheading.text }}</span>
+                  <img
+                    v-if="iconUrl(textOptions(cell.field).subheading.suffix)"
+                    :src="iconUrl(textOptions(cell.field).subheading.suffix)"
+                    alt=""
+                  >
+                </component>
+              </div>
+              <template v-else-if="cell.field.type === 'image'">
+                <img
+                  v-if="iconUrl(textOptions(cell.field).elementImage)"
+                  :src="iconUrl(textOptions(cell.field).elementImage)"
+                  :alt="textOptions(cell.field).imageAlt"
+                  :style="{ width: textOptions(cell.field).imageWidth ? `${textOptions(cell.field).imageWidth}px` : undefined, height: textOptions(cell.field).imageHeight ? `${textOptions(cell.field).imageHeight}px` : undefined }"
+                >
+              </template>
+              <div
+                v-else-if="cell.field.type === 'divider'"
+                style="width: 100%; border-top: 1px solid currentColor"
+              />
+              <div
+                v-else-if="cell.field.type === 'spacer'"
+                :style="{ height: `${cell.layouts[baseBreakpoint()]?.h ?? textOptions(cell.field).spacerHeight ?? 40}px` }"
+              />
+              <div
+                v-else-if="cell.field.type === 'html'"
+                v-html="cell.field.html"
+              />
+              <div
+                v-if="!isDisplay(cell.field.type) && textOptions(cell.field).label.enabled"
                 class="mirai-form__label"
               >
                 <img
@@ -432,6 +496,7 @@ function formatBytes(size: number): string {
                 >
               </div>
               <span
+                v-if="!isDisplay(cell.field.type)"
                 class="mirai-form__control-row"
                 :style="cell.field.type === 'button' ? {
                   display: 'flex',

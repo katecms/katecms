@@ -1,0 +1,13 @@
+---
+description: How admin pages and API handlers are registered and guarded
+globs: packages/miraicms-nuxt/**/module.ts,packages/miraicms-nuxt-form/**/module.ts,packages/miraicms-nuxt-seo/**/module.ts,packages/**/runtime/server/**/*.ts
+alwaysApply: false
+---
+
+# Module server
+
+Admin pages are not Nuxt file routes. Register them with `extendPages` on the `admin` parent (`runtime/pages/index.vue`, `layout: false`). Register handlers with `addServerHandler` under `/api/_miraicms/*`. Only `playground-nuxt/pages/` are file routes.
+
+A mutating handler calls `requireUser`, then `requirePermission` or `requireEntryPermission`. Return `SafeUser`, never `password_hash`.
+
+Schema changes go through `@miraicms/core` and update both SQLite and Postgres migrations in `packages/core/src/database/migrations`.

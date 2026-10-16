@@ -48,6 +48,10 @@ export const FIELD_TYPES = [
   'image_select',
   'radio',
   'checkbox',
+  'title',
+  'image',
+  'divider',
+  'spacer',
   'date',
   'time',
   'datetime',
@@ -75,6 +79,10 @@ export const FIELD_LABELS: Record<FieldType, string> = {
   image_select: 'Image Select',
   radio: 'Radio Button',
   checkbox: 'Check Box',
+  title: 'Title',
+  image: 'Image',
+  divider: 'Divider',
+  spacer: 'Spacer',
   date: 'Date',
   time: 'Time',
   datetime: 'Date-Time',
@@ -135,6 +143,7 @@ export interface LayoutItem {
   x: number
   y: number
   w: number
+  h?: number
 }
 
 export interface FormContent {
@@ -212,7 +221,11 @@ export function clampItem(item: LayoutItem): LayoutItem {
   const w = clampInt(item.w, 1, GRID_COLUMNS)
   const x = clampInt(item.x, 0, GRID_COLUMNS - w)
   const y = clampInt(item.y, 0, 400)
-  return { fieldId: item.fieldId, x, y, w }
+  const next: LayoutItem = { fieldId: item.fieldId, x, y, w }
+  if (item.h != null && Number.isFinite(item.h)) {
+    next.h = Math.max(0, Math.round(item.h))
+  }
+  return next
 }
 
 export function overlaps(a: LayoutItem, b: LayoutItem): boolean {
@@ -290,7 +303,7 @@ export function defaultWidth(type: FieldType, breakpoint: Breakpoint): number {
   if (type === 'button') {
     return 15
   }
-  if (type === 'html' || type === 'textarea' || type === 'checkbox' || type === 'radio') {
+  if (type === 'html' || type === 'textarea' || type === 'checkbox' || type === 'radio' || type === 'title' || type === 'divider' || type === 'spacer') {
     return GRID_COLUMNS
   }
   return 30
@@ -566,6 +579,7 @@ export function normalizeFormContent(input: unknown): FormContent {
               x: Number(raw.x),
               y: Number(raw.y),
               w: Number(raw.w),
+              h: Number.isFinite(Number(raw.h)) ? Number(raw.h) : undefined,
             }),
           ], field.id)
         }
@@ -638,7 +652,7 @@ export function textStoredValue(field: FormField, input: unknown): string {
 }
 
 export function storesValue(field: FormField): boolean {
-  return field.type !== 'html' && field.type !== 'button'
+  return field.type !== 'html' && field.type !== 'button' && field.type !== 'title' && field.type !== 'image' && field.type !== 'divider' && field.type !== 'spacer'
 }
 
 function defaultStepHeader(): FormStepHeader {
@@ -765,6 +779,9 @@ function textOptionsFor(type: FieldType, existing: FormField[]) {
   if (type === 'select' || type === 'radio' || type === 'checkbox' || type === 'image_select') {
     text.choiceOptions = defaultChoiceOptions()
   }
+  if (type === 'title' || type === 'image' || type === 'divider' || type === 'spacer' || type === 'html') {
+    text.label.enabled = false
+  }
   return text
 }
 
@@ -865,7 +882,7 @@ function uniqueKey(type: FieldType, existing: FormField[]): string {
 }
 
 function fieldError(field: FormField, raw: unknown, file: UploadedFile | UploadedFile[] | null, maxFileBytes: number): string | null {
-  if (field.type === 'html' || field.type === 'button' || field.type === 'hidden') {
+  if (field.type === 'html' || field.type === 'button' || field.type === 'hidden' || field.type === 'title' || field.type === 'image' || field.type === 'divider' || field.type === 'spacer') {
     return null
   }
   if (field.type === 'file') {

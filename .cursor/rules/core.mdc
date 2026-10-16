@@ -1,0 +1,13 @@
+---
+description: Framework-agnostic core boundaries
+globs: packages/core/**/*.ts
+alwaysApply: false
+---
+
+# Core
+
+`packages/core` has no Vue, Nuxt, or h3. Config types, permissions, field rules, and database access live here. The Nuxt module calls them.
+
+`src/index.ts` is the Node entry. `src/browser.ts` is the client subset. An export used by admin Vue must be added to `browser.ts` and must not pull Node-only modules.
+
+Keep the SQLite and Postgres schemas in step. Cover behavior in `packages/core/test`.

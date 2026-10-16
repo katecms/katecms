@@ -2,8 +2,8 @@
 import { computed } from 'vue'
 import type { FormField, LayoutItem } from '../../form/model'
 import { GRID_COLUMNS } from '../../form/model'
-import type { CheckPosition, FormMarkedText, FormTextOptions } from '../../form/text-options'
-import { AUTOCOMPLETE_CHOICES, FILE_TYPE_ACCEPT, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultChoiceOptions, defaultTextOptions, fieldHasOption, fileAccept, flatChoiceOptions, isTemporalType, normalizeIcon, temporalInputType } from '../../form/text-options'
+import { AUTOCOMPLETE_CHOICES, FILE_TYPE_ACCEPT, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultChoiceOptions, defaultTextOptions, fieldHasOption, fileAccept, flatChoiceOptions, headingTag, isTemporalType, normalizeIcon, temporalInputType } from '../../form/text-options'
+import type { CheckPosition, FormMarkedText, FormTextOptions, HeadingTag, LayoutAlign, LayoutDirection } from '../../form/text-options'
 import ChoiceOptions from './ChoiceOptions.vue'
 import DecoratedText from './DecoratedText.vue'
 import OptionAccordion from './OptionAccordion.vue'
@@ -32,6 +32,31 @@ const checkPositions: { id: CheckPosition, svg: string }[] = [
   { id: 'center', svg: '<svg width="22" height="22" viewBox="0 0 30 30"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.4,4.16H23.6a2.43,2.43,0,0,1,2.45,2.41V23.43a2.43,2.43,0,0,1-2.45,2.41H6.4A2.43,2.43,0,0,1,4,23.43V6.57A2.43,2.43,0,0,1,6.4,4.16Z"></path><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x1="15" y1="10.18" x2="15" y2="19.82"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x1="10.09" y1="15" x2="19.91" y2="15"></line></svg>' },
   { id: 'bottom-left', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4h16v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm6 6v4m0 0h4m-4 0l4-4"></path></svg>' },
   { id: 'bottom-right', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4h16v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm6 10h4m0 0v-4m0 4l-4-4"></path></svg>' },
+]
+
+const headingTagChoices = [
+  { val: 'h1', lbl: 'H1' },
+  { val: 'h2', lbl: 'H2' },
+  { val: 'h3', lbl: 'H3' },
+  { val: 'h4', lbl: 'H4' },
+  { val: 'h5', lbl: 'H5' },
+  { val: 'h6', lbl: 'H6' },
+  { val: 'div', lbl: 'Div' },
+  { val: 'span', lbl: 'Span' },
+  { val: 'p', lbl: 'p' },
+]
+
+const alignChoices: { id: LayoutAlign, svg: string }[] = [
+  { id: 'left', svg: '<svg width="17" height="17" viewBox="0 0 30 30"><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="2" y1="6.81" x2="21.1" y2="6.81"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="2" y1="15" x2="28" y2="15"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="2" y1="23.19" x2="21.1" y2="23.19"></line></svg>' },
+  { id: 'center', svg: '<svg width="17" height="17" viewBox="0 0 30 30"><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="5.45" y1="6.81" x2="24.55" y2="6.81"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="2" y1="15" x2="28" y2="15"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="5.45" y1="23.19" x2="24.55" y2="23.19"></line></svg>' },
+  { id: 'right', svg: '<svg width="17" height="17" viewBox="0 0 30 30"><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="8.9" y1="6.81" x2="28" y2="6.81"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="2" y1="15" x2="28" y2="15"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="8.9" y1="23.19" x2="28" y2="23.19"></line></svg>' },
+]
+
+const directionChoices: { id: LayoutDirection, label: string, rotate: string }[] = [
+  { id: 'vertical', label: 'Vertical', rotate: 'rotate(0deg)' },
+  { id: 'vertical-reverse', label: 'Vertical Reverse', rotate: 'rotate(180deg)' },
+  { id: 'horizontal', label: 'Horizontal', rotate: 'rotate(-90deg)' },
+  { id: 'horizontal-reverse', label: 'Horizontal Reverse', rotate: 'rotate(90deg)' },
 ]
 
 const patternPreset = computed(() => {
@@ -91,6 +116,10 @@ function setWidth(raw: number | null) {
   emit('layout', { ...props.item, w: raw })
 }
 
+function setHeight(raw: number | null) {
+  emit('layout', { ...props.item, h: raw == null || !Number.isFinite(raw) ? 0 : Math.max(0, Math.floor(raw)) })
+}
+
 function addGroup() {
   const n = options.value.choiceGroups.length + 1
   patch({
@@ -115,6 +144,167 @@ function removeGroup(index: number) {
 
 <template>
   <div class="miraicms-text-settings">
+    <MiraiCmsWysiwygField
+      v-if="field.type === 'html'"
+      :model-value="field.html"
+      :field-key="`${field.id}-content`"
+      :field="{ type: 'wysiwyg', label: 'Content' }"
+      @update:model-value="emit('update', { ...field, html: String($event ?? '') })"
+    />
+
+    <OptionAccordion
+      v-if="has(62)"
+      title="Title"
+      :enabled="options.heading.enabled"
+      @update:enabled="patch({ heading: { ...options.heading, enabled: $event } })"
+    >
+      <MiraiCmsTextareaField
+        :model-value="options.heading.text"
+        :field-key="`${field.id}-heading-text`"
+        :field="{ type: 'textarea', label: 'Text', rows: 3 }"
+        @update:model-value="patch({ heading: { ...options.heading, text: String($event ?? '') } })"
+      />
+      <MiraiCmsSelectField
+        :model-value="options.heading.tag"
+        :field-key="`${field.id}-heading-tag`"
+        :field="{ type: 'select', label: 'HTML Tag', returnFormat: 'value', choices: headingTagChoices }"
+        @update:model-value="patch({ heading: { ...options.heading, tag: headingTag(String($event ?? '')) } })"
+      />
+      <div class="miraicms-text-settings__icon-row">
+        <MiraiCmsImageField
+          :model-value="options.heading.prefix"
+          :field-key="`${field.id}-heading-prefix`"
+          :field="{ type: 'image', label: 'Prefix Icon', iconMode: true, returnFormat: 'array' }"
+          @update:model-value="patch({ heading: { ...options.heading, prefix: normalizeIcon($event) } })"
+        />
+        <MiraiCmsImageField
+          :model-value="options.heading.suffix"
+          :field-key="`${field.id}-heading-suffix`"
+          :field="{ type: 'image', label: 'Suffix Icon', iconMode: true, returnFormat: 'array' }"
+          @update:model-value="patch({ heading: { ...options.heading, suffix: normalizeIcon($event) } })"
+        />
+      </div>
+    </OptionAccordion>
+
+    <OptionAccordion
+      v-if="has(63)"
+      title="Subtitle"
+      :enabled="options.subheading.enabled"
+      @update:enabled="patch({ subheading: { ...options.subheading, enabled: $event } })"
+    >
+      <MiraiCmsTextareaField
+        :model-value="options.subheading.text"
+        :field-key="`${field.id}-subheading-text`"
+        :field="{ type: 'textarea', label: 'Text', rows: 3 }"
+        @update:model-value="patch({ subheading: { ...options.subheading, text: String($event ?? '') } })"
+      />
+      <MiraiCmsSelectField
+        :model-value="options.subheading.tag"
+        :field-key="`${field.id}-subheading-tag`"
+        :field="{ type: 'select', label: 'HTML Tag', returnFormat: 'value', choices: headingTagChoices }"
+        @update:model-value="patch({ subheading: { ...options.subheading, tag: headingTag(String($event ?? '')) } })"
+      />
+      <div class="miraicms-text-settings__icon-row">
+        <MiraiCmsImageField
+          :model-value="options.subheading.prefix"
+          :field-key="`${field.id}-subheading-prefix`"
+          :field="{ type: 'image', label: 'Prefix Icon', iconMode: true, returnFormat: 'array' }"
+          @update:model-value="patch({ subheading: { ...options.subheading, prefix: normalizeIcon($event) } })"
+        />
+        <MiraiCmsImageField
+          :model-value="options.subheading.suffix"
+          :field-key="`${field.id}-subheading-suffix`"
+          :field="{ type: 'image', label: 'Suffix Icon', iconMode: true, returnFormat: 'array' }"
+          @update:model-value="patch({ subheading: { ...options.subheading, suffix: normalizeIcon($event) } })"
+        />
+      </div>
+    </OptionAccordion>
+
+    <div
+      v-if="has(65)"
+      class="miraicms-text-settings__group"
+    >
+      <span class="miraicms-text-settings__heading">Label Alignment</span>
+      <div class="miraicms-text-settings__positions">
+        <MiraiCmsUiButton
+          v-for="item in alignChoices"
+          :key="item.id"
+          tag="button"
+          :variant="options.layoutAlign === item.id ? ['icon'] : ['icon', 'secondary']"
+          :active="options.layoutAlign === item.id"
+          :aria-label="item.id"
+          @click="patch({ layoutAlign: item.id })"
+        >
+          <span v-html="item.svg" />
+        </MiraiCmsUiButton>
+      </div>
+    </div>
+
+    <div
+      v-if="has(66)"
+      class="miraicms-text-settings__group"
+    >
+      <span class="miraicms-text-settings__heading">Layout Direction</span>
+      <div class="miraicms-text-settings__positions">
+        <MiraiCmsUiButton
+          v-for="item in directionChoices"
+          :key="item.id"
+          tag="button"
+          :variant="options.layoutDirection === item.id ? ['icon'] : ['icon', 'secondary']"
+          :active="options.layoutDirection === item.id"
+          :aria-label="item.label"
+          @click="patch({ layoutDirection: item.id })"
+        >
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            :style="{ transform: item.rotate }"
+            aria-hidden="true"
+          >
+            <path
+              fill="currentColor"
+              d="M5 21q-.425 0-.713-.288Q4 20.425 4 20t.287-.712Q4.575 19 5 19h14q.425 0 .712.288q.288.287.288.712t-.288.712Q19.425 21 19 21Zm7-4.425q-.2 0-.375-.063q-.175-.062-.325-.212l-3.625-3.625Q7.4 12.4 7.4 12t.3-.7q.275-.275.7-.275q.425 0 .7.275l1.9 1.9V4q0-.425.288-.713Q11.575 3 12 3t.713.287Q13 3.575 13 4v9.2l1.925-1.925Q15.2 11 15.6 11t.7.3q.275.275.275.7q0 .425-.275.7l-3.6 3.6q-.15.15-.325.212q-.175.063-.375.063Z"
+            />
+          </svg>
+        </MiraiCmsUiButton>
+      </div>
+    </div>
+
+    <MiraiCmsImageField
+      v-if="has(67)"
+      :model-value="options.elementImage"
+      :field-key="`${field.id}-element-image`"
+      :field="{ type: 'image', label: 'Image', returnFormat: 'array' }"
+      @update:model-value="patch({ elementImage: normalizeIcon($event) })"
+    />
+
+    <div
+      v-if="has(68)"
+      class="miraicms-text-settings__grid"
+    >
+      <MiraiCmsNumberField
+        :model-value="options.imageWidth"
+        :field-key="`${field.id}-image-width`"
+        :field="{ type: 'number', label: 'Width', min: 1, step: 1 }"
+        @update:model-value="patch({ imageWidth: $event == null || !Number.isFinite($event) ? null : Math.max(1, Math.floor($event)) })"
+      />
+      <MiraiCmsNumberField
+        :model-value="options.imageHeight"
+        :field-key="`${field.id}-image-height`"
+        :field="{ type: 'number', label: 'Height', min: 1, step: 1 }"
+        @update:model-value="patch({ imageHeight: $event == null || !Number.isFinite($event) ? null : Math.max(1, Math.floor($event)) })"
+      />
+    </div>
+
+    <MiraiCmsTextareaField
+      v-if="has(69)"
+      :model-value="options.imageAlt"
+      :field-key="`${field.id}-image-alt`"
+      :field="{ type: 'textarea', label: 'Image Alt Text', rows: 3 }"
+      @update:model-value="patch({ imageAlt: String($event ?? '') })"
+    />
+
     <OptionAccordion
       v-if="has(1)"
       title="Label"
@@ -942,6 +1132,14 @@ function removeGroup(index: number) {
         />
       </div>
     </div>
+
+    <MiraiCmsNumberField
+      v-if="field.type === 'spacer'"
+      :model-value="item.h ?? options.spacerHeight ?? 40"
+      :field-key="`${field.id}-spacer-height-${item.fieldId}`"
+      :field="{ type: 'number', label: 'Height', min: 0, step: 1 }"
+      @update:model-value="setHeight"
+    />
 
     <MiraiCmsTrueFalseField
       v-if="has(17)"

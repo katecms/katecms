@@ -3,6 +3,7 @@ import type { CSSProperties } from 'vue'
 import { computed, onBeforeUnmount, ref } from 'vue'
 import type { FormIcon, FormRatingOption } from '../../form/text-options'
 import { normalizeIcon } from '../../form/text-options'
+import OptionPopup from './OptionPopup.vue'
 
 const props = defineProps<{
   fieldKey: string
@@ -12,6 +13,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   update: [value: FormRatingOption[]]
 }>()
+
+const open = ref(false)
 
 const rowRefs = ref<Array<HTMLElement | null>>([])
 const isDragging = ref(false)
@@ -188,10 +191,22 @@ onBeforeUnmount(resetDrag)
 
 <template>
   <div class="miraicms-rating-options">
-    <template
-      v-for="(item, index) in model"
-      :key="item.id"
+    <MiraiCmsUiButton
+      tag="button"
+      variant="secondary"
+      @click="open = true"
     >
+      Edit Options
+    </MiraiCmsUiButton>
+    <span class="miraicms-rating-options__count">{{ model.length }}</span>
+    <OptionPopup
+      v-model:open="open"
+      title="Options"
+    >
+      <template
+        v-for="(item, index) in model"
+        :key="item.id"
+      >
       <div
         v-if="isDragging && dropIndex === index"
         class="miraicms-rating-options__placeholder"
@@ -288,6 +303,7 @@ onBeforeUnmount(resetDrag)
     >
       Add Option
     </MiraiCmsUiButton>
+    </OptionPopup>
   </div>
 </template>
 
@@ -300,17 +316,29 @@ onBeforeUnmount(resetDrag)
   gap: math-rem(8);
 
   &__row {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-end;
     gap: math-rem(8);
-    align-items: end;
+    min-width: max-content;
     padding: math-rem(8);
     border: 1px solid $color-border;
     border-radius: $border-radius;
     background: $color-surface;
 
+    :deep(> *) {
+      flex: 1 0 math-rem(150);
+      min-width: math-rem(140);
+    }
+
+    > .miraicms-rating-options__handle,
+    > .miraicms-rating-options__actions {
+      flex: 0 0 auto;
+      min-width: 0;
+    }
+
     &.is-floating {
-      z-index: 1000;
+      z-index: 1100;
       box-shadow: $shadow-md;
     }
   }
@@ -338,9 +366,15 @@ onBeforeUnmount(resetDrag)
 
   &__actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: math-rem(6);
-    grid-column: 1 / -1;
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+
+  &__count {
+    color: $color-muted;
+    font-size: math-rem(12);
   }
 }
 </style>

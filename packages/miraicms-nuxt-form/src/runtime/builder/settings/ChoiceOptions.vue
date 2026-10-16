@@ -3,6 +3,7 @@ import type { CSSProperties } from 'vue'
 import { computed, onBeforeUnmount, ref } from 'vue'
 import type { FormChoiceOption, FormIcon } from '../../form/text-options'
 import { normalizeIcon } from '../../form/text-options'
+import OptionPopup from './OptionPopup.vue'
 
 const props = withDefaults(defineProps<{
   fieldKey: string
@@ -11,16 +12,23 @@ const props = withDefaults(defineProps<{
   showRequired?: boolean
   showDisabled?: boolean
   singleCheck?: boolean
+  embedded?: boolean
+  showAddGroup?: boolean
 }>(), {
   showImage: false,
   showRequired: false,
   showDisabled: false,
   singleCheck: false,
+  embedded: false,
+  showAddGroup: false,
 })
 
 const emit = defineEmits<{
   update: [value: FormChoiceOption[]]
+  addGroup: []
 }>()
+
+const open = ref(false)
 
 const rowRefs = ref<Array<HTMLElement | null>>([])
 const isDragging = ref(false)
@@ -203,10 +211,25 @@ onBeforeUnmount(resetDrag)
 
 <template>
   <div class="miraicms-choice-options">
-    <template
-      v-for="(item, index) in model"
-      :key="item.id"
+    <template v-if="!embedded">
+      <MiraiCmsUiButton
+        tag="button"
+        variant="secondary"
+        @click="open = true"
+      >
+        Edit Options
+      </MiraiCmsUiButton>
+      <span class="miraicms-choice-options__count">{{ model.length }}</span>
+    </template>
+    <component
+      :is="embedded ? 'div' : OptionPopup"
+      v-bind="embedded ? { class: 'miraicms-choice-options__inline' } : { open, title: 'Options' }"
+      @update:open="open = $event"
     >
+      <template
+        v-for="(item, index) in model"
+        :key="item.id"
+      >
       <div
         v-if="isDragging && dropIndex === index"
         class="miraicms-choice-options__placeholder"
@@ -310,14 +333,28 @@ onBeforeUnmount(resetDrag)
       class="miraicms-choice-options__placeholder"
       :style="placeholderStyle"
     />
-    <MiraiCmsUiButton
-      v-if="!model.length"
-      tag="button"
-      variant="secondary"
-      @click="addAt(-1)"
+    <slot name="extra" />
+    <div
+      v-if="!embedded"
+      class="miraicms-choice-options__footer"
     >
-      Add Option
-    </MiraiCmsUiButton>
+      <MiraiCmsUiButton
+        tag="button"
+        variant="secondary"
+        @click="addAt(model.length - 1)"
+      >
+        Add Option
+      </MiraiCmsUiButton>
+      <MiraiCmsUiButton
+        v-if="showAddGroup"
+        tag="button"
+        variant="secondary"
+        @click="emit('addGroup')"
+      >
+        Add Group
+      </MiraiCmsUiButton>
+    </div>
+    </component>
   </div>
 </template>
 
@@ -330,17 +367,29 @@ onBeforeUnmount(resetDrag)
   gap: math-rem(8);
 
   &__row {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-end;
     gap: math-rem(8);
-    align-items: end;
+    min-width: max-content;
     padding: math-rem(8);
     border: 1px solid $color-border;
     border-radius: $border-radius;
     background: $color-surface;
 
+    :deep(> *) {
+      flex: 1 0 math-rem(150);
+      min-width: math-rem(140);
+    }
+
+    > .miraicms-choice-options__handle,
+    > .miraicms-choice-options__actions {
+      flex: 0 0 auto;
+      min-width: 0;
+    }
+
     &.is-floating {
-      z-index: 1000;
+      z-index: 1100;
       box-shadow: $shadow-md;
     }
   }
@@ -361,9 +410,22 @@ onBeforeUnmount(resetDrag)
 
   &__actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: math-rem(6);
-    grid-column: 1 / -1;
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+
+  &__count {
+    color: $color-muted;
+    font-size: math-rem(12);
+  }
+
+  &__footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: math-rem(8);
+    margin-top: math-rem(8);
   }
 
   &__placeholder {

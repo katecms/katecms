@@ -490,45 +490,45 @@ function removeGroup(index: number) {
         :show-required="field.type === 'image_select' || field.type === 'checkbox' || field.type === 'select'"
         :show-disabled="has(44)"
         :single-check="field.type === 'radio' || (field.type === 'select' && !options.selectMultiple.enabled) || (field.type === 'image_select' && !options.allowMultiple)"
+        :show-add-group="field.type === 'select'"
         @update="patch({ choiceOptions: $event })"
-      />
-      <template v-if="field.type === 'select'">
-        <div
-          v-for="(group, index) in options.choiceGroups"
-          :key="group.id"
-          class="miraicms-text-settings__group"
+        @add-group="addGroup"
+      >
+        <template
+          v-if="field.type === 'select'"
+          #extra
         >
-          <MiraiCmsTextField
-            :model-value="group.label"
-            :field-key="`${field.id}-group-${group.id}`"
-            :field="{ type: 'text', label: 'Group', maxLength: 200 }"
-            @update:model-value="patchGroup(index, { label: String($event ?? '') })"
-          />
-          <ChoiceOptions
-            :field-key="`${field.id}-group-options-${group.id}`"
-            :model="group.options"
-            :show-image="options.optionIcon"
-            :show-required="true"
-            :show-disabled="true"
-            :single-check="!options.selectMultiple.enabled"
-            @update="patchGroup(index, { options: $event })"
-          />
-          <MiraiCmsUiButton
-            tag="button"
-            :variant="['red', 'small']"
-            @click="removeGroup(index)"
+          <div
+            v-for="(group, index) in options.choiceGroups"
+            :key="group.id"
+            class="miraicms-text-settings__group"
           >
-            Delete Group
-          </MiraiCmsUiButton>
-        </div>
-        <MiraiCmsUiButton
-          tag="button"
-          variant="secondary"
-          @click="addGroup"
-        >
-          Add Group
-        </MiraiCmsUiButton>
-      </template>
+            <MiraiCmsTextField
+              :model-value="group.label"
+              :field-key="`${field.id}-group-${group.id}`"
+              :field="{ type: 'text', label: 'Group', maxLength: 200 }"
+              @update:model-value="patchGroup(index, { label: String($event ?? '') })"
+            />
+            <ChoiceOptions
+              :field-key="`${field.id}-group-options-${group.id}`"
+              :model="group.options"
+              :show-image="options.optionIcon"
+              :show-required="true"
+              :show-disabled="true"
+              :single-check="!options.selectMultiple.enabled"
+              embedded
+              @update="patchGroup(index, { options: $event })"
+            />
+            <MiraiCmsUiButton
+              tag="button"
+              :variant="['red', 'small']"
+              @click="removeGroup(index)"
+            >
+              Delete Group
+            </MiraiCmsUiButton>
+          </div>
+        </template>
+      </ChoiceOptions>
     </div>
 
     <div

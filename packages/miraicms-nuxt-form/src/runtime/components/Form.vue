@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { $fetch } from '#imports'
 import type { FormField, LayoutItem, PublicForm, UploadedFile } from '../form/model'
 import { baseBreakpoint, formBreakpoints, submissionErrors } from '../form/model'
-import { applyInputMask, defaultTextOptions, fileAccept, iconUrl, isRichFieldType, isTemporalType, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, temporalInputType } from '../form/text-options'
+import { applyInputMask, checkPositionStyle, choiceMatches, defaultTextOptions, fileAccept, iconUrl, isRichFieldType, isTemporalType, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, temporalInputType } from '../form/text-options'
 import { clientFormBreakpoints } from '../form/runtime-config'
 import { stepIconSvg } from '../form/icons'
 
@@ -24,6 +24,7 @@ const state = ref<'loading' | 'missing' | 'idle' | 'submitting' | 'success' | 'i
 const fieldErrors = ref<Record<string, string>>({})
 const alertMessage = ref('')
 const drafts = ref<Record<string, string>>({})
+const selectQuery = ref<Record<string, string>>({})
 const chosenFiles = ref<Record<string, { name: string, size: number, url: string }[]>>({})
 const revealed = ref<Record<string, boolean>>({})
 const hoverRating = ref<Record<string, string>>({})
@@ -110,7 +111,7 @@ async function onSubmit(event: Event) {
   const input: Record<string, unknown> = {}
   const files: Record<string, UploadedFile | null> = {}
   for (const field of current.content.fields) {
-    if (field.type === 'checkbox') {
+    if (field.type === 'checkbox' || (field.type === 'image_select' && field.text?.allowMultiple) || (field.type === 'select' && field.text?.selectMultiple.enabled)) {
       input[field.key] = data.getAll(field.key).map(value => String(value))
     }
     else if (field.type === 'file') {
@@ -241,6 +242,19 @@ function chooseRating(field: FormField, index: number) {
     ...drafts.value,
     [field.id]: ratingSelectedIndex(list, current) === index ? '' : (list[index]?.value || ''),
   }
+}
+
+function clearSelect(id: string) {
+  const el = document.getElementById(id)
+  if (el instanceof HTMLSelectElement) {
+    for (const option of el.options) {
+      option.selected = false
+    }
+    el.value = ''
+  }
+  document.querySelectorAll<HTMLInputElement>(`[data-select="${id}"] input`).forEach((input) => {
+    input.checked = false
+  })
 }
 
 function onDraft(field: FormField, event: Event) {
@@ -487,6 +501,162 @@ function formatBytes(size: number): string {
                     alt=""
                   >
                 </button>
+                <div
+                  v-else-if="cell.field.type === 'select'"
+                  :data-select="controlId(cell.field)"
+                >
+                  <input
+                    v-if="textOptions(cell.field).showSearch"
+                    type="search"
+                    :placeholder="textOptions(cell.field).searchPlaceholder || undefined"
+                    :value="selectQuery[cell.field.id] || ''"
+                    @input="selectQuery[cell.field.id] = ($event.target as HTMLInputElement).value"
+                  >
+                  <button
+                    v-if="textOptions(cell.field).showSearch && textOptions(cell.field).searchClearable && selectQuery[cell.field.id]"
+                    type="button"
+                    @click="selectQuery[cell.field.id] = ''"
+                  >
+                    Clear
+                  </button>
+                  <select
+                    v-if="!textOptions(cell.field).optionIcon"
+                    :id="controlId(cell.field)"
+                    class="mirai-form__control"
+                    :name="cell.field.key"
+                    :multiple="textOptions(cell.field).selectMultiple.enabled || undefined"
+                    :required="textOptions(cell.field).required.enabled"
+                    :disabled="locked || textOptions(cell.field).disabled || textOptions(cell.field).readOnly"
+                  >
+                    <option
+                      v-if="!textOptions(cell.field).selectMultiple.enabled"
+                      value=""
+                    >
+                      {{ textOptions(cell.field).placeholder }}
+                    </option>
+                    <option
+                      v-for="option in textOptions(cell.field).choiceOptions.filter(item => choiceMatches(item, selectQuery[cell.field.id] || ''))"
+                      :key="option.id"
+                      :value="option.value"
+                      :selected="option.checked"
+                      :disabled="option.disabled"
+                    >
+                      {{ option.label }}
+                    </option>
+                    <optgroup
+                      v-for="group in textOptions(cell.field).choiceGroups"
+                      :key="group.id"
+                      :label="group.label"
+                    >
+                      <option
+                        v-for="option in group.options.filter(item => choiceMatches(item, selectQuery[cell.field.id] || ''))"
+                        :key="option.id"
+                        :value="option.value"
+                        :selected="option.checked"
+                        :disabled="option.disabled"
+                      >
+                        {{ option.label }}
+                      </option>
+                    </optgroup>
+                  </select>
+                  <div v-else>
+                    <label
+                      v-for="option in textOptions(cell.field).choiceOptions.filter(item => choiceMatches(item, selectQuery[cell.field.id] || ''))"
+                      :key="option.id"
+                    >
+                      <input
+                        :type="textOptions(cell.field).selectMultiple.enabled ? 'checkbox' : 'radio'"
+                        :name="cell.field.key"
+                        :value="option.value"
+                        :checked="option.checked"
+                        :disabled="locked || option.disabled || textOptions(cell.field).disabled"
+                      >
+                      <img
+                        v-if="iconUrl(option.image)"
+                        :src="iconUrl(option.image)"
+                        alt=""
+                      >
+                      <span>{{ option.label }}</span>
+                    </label>
+                    <div
+                      v-for="group in textOptions(cell.field).choiceGroups"
+                      :key="group.id"
+                    >
+                      <span>{{ group.label }}</span>
+                      <label
+                        v-for="option in group.options.filter(item => choiceMatches(item, selectQuery[cell.field.id] || ''))"
+                        :key="option.id"
+                      >
+                        <input
+                          :type="textOptions(cell.field).selectMultiple.enabled ? 'checkbox' : 'radio'"
+                          :name="cell.field.key"
+                          :value="option.value"
+                          :checked="option.checked"
+                          :disabled="locked || option.disabled || textOptions(cell.field).disabled"
+                        >
+                        <img
+                          v-if="iconUrl(option.image)"
+                          :src="iconUrl(option.image)"
+                          alt=""
+                        >
+                        <span>{{ option.label }}</span>
+                      </label>
+                    </div>
+                  </div>
+                  <button
+                    v-if="textOptions(cell.field).selectedClearable"
+                    type="button"
+                    @click="clearSelect(controlId(cell.field))"
+                  >
+                    Clear
+                  </button>
+                </div>
+                <div
+                  v-else-if="cell.field.type === 'radio' || cell.field.type === 'checkbox'"
+                  :style="{ display: 'grid', gridTemplateColumns: `repeat(${textOptions(cell.field).optionsColumn || 1}, minmax(0, 1fr))`, gap: '8px' }"
+                >
+                  <label
+                    v-for="option in textOptions(cell.field).choiceOptions"
+                    :key="option.id"
+                  >
+                    <input
+                      :type="cell.field.type"
+                      :name="cell.field.key"
+                      :value="option.value"
+                      :checked="option.checked"
+                      :disabled="locked || option.disabled || textOptions(cell.field).disabled"
+                      :required="cell.field.type === 'checkbox' ? option.required : textOptions(cell.field).required.enabled"
+                    >
+                    <span>{{ option.label }}</span>
+                  </label>
+                </div>
+                <div
+                  v-else-if="cell.field.type === 'image_select'"
+                  :style="{ display: 'flex', flexWrap: 'wrap', gap: '8px' }"
+                >
+                  <label
+                    v-for="option in textOptions(cell.field).choiceOptions"
+                    :key="option.id"
+                    :style="{ position: 'relative', width: `${textOptions(cell.field).itemSize || 200}px` }"
+                  >
+                    <input
+                      :type="textOptions(cell.field).allowMultiple ? 'checkbox' : 'radio'"
+                      :name="cell.field.key"
+                      :value="option.value"
+                      :checked="option.checked"
+                      :disabled="locked || option.disabled || textOptions(cell.field).disabled"
+                      :required="option.required"
+                      :style="checkPositionStyle(textOptions(cell.field).checkPosition)"
+                    >
+                    <img
+                      v-if="iconUrl(option.image)"
+                      :src="iconUrl(option.image)"
+                      alt=""
+                      :style="{ display: 'block', width: '100%' }"
+                    >
+                    <span v-if="!textOptions(cell.field).hideImageLabel">{{ option.label }}</span>
+                  </label>
+                </div>
                 <input
                   v-else-if="cell.field.type === 'file'"
                   :id="controlId(cell.field)"

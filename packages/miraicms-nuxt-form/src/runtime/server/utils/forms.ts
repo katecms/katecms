@@ -304,7 +304,7 @@ async function readSubmission(event: H3Event, content: FormContent): Promise<{
       lists.set(part.name, list)
     }
     for (const field of content.fields) {
-      if (field.type === 'checkbox') {
+      if (field.type === 'checkbox' || (field.type === 'image_select' && field.text?.allowMultiple) || (field.type === 'select' && field.text?.selectMultiple.enabled)) {
         input[field.key] = lists.get(field.key) ?? []
       }
       else if (field.type === 'file') {

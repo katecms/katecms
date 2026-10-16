@@ -2,8 +2,9 @@
 import { computed } from 'vue'
 import type { FormField, LayoutItem } from '../../form/model'
 import { GRID_COLUMNS } from '../../form/model'
-import type { FormMarkedText, FormTextOptions } from '../../form/text-options'
-import { AUTOCOMPLETE_CHOICES, FILE_TYPE_ACCEPT, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultTextOptions, fieldHasOption, fileAccept, isTemporalType, normalizeIcon, temporalInputType } from '../../form/text-options'
+import type { CheckPosition, FormMarkedText, FormTextOptions } from '../../form/text-options'
+import { AUTOCOMPLETE_CHOICES, FILE_TYPE_ACCEPT, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultChoiceOptions, defaultTextOptions, fieldHasOption, fileAccept, flatChoiceOptions, isTemporalType, normalizeIcon, temporalInputType } from '../../form/text-options'
+import ChoiceOptions from './ChoiceOptions.vue'
 import DecoratedText from './DecoratedText.vue'
 import OptionAccordion from './OptionAccordion.vue'
 import SuggestionRepeater from './SuggestionRepeater.vue'
@@ -25,6 +26,14 @@ function has(id: number) {
   return fieldHasOption(props.field.type, id)
 }
 
+const checkPositions: { id: CheckPosition, svg: string }[] = [
+  { id: 'top-left', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4h16v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm10 6h-4m0 0v4m0-4l4 4"></path></svg>' },
+  { id: 'top-right', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4h16v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm10 10v-4m0 0h-4m4 0l-4 4"></path></svg>' },
+  { id: 'center', svg: '<svg width="22" height="22" viewBox="0 0 30 30"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.4,4.16H23.6a2.43,2.43,0,0,1,2.45,2.41V23.43a2.43,2.43,0,0,1-2.45,2.41H6.4A2.43,2.43,0,0,1,4,23.43V6.57A2.43,2.43,0,0,1,6.4,4.16Z"></path><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x1="15" y1="10.18" x2="15" y2="19.82"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x1="10.09" y1="15" x2="19.91" y2="15"></line></svg>' },
+  { id: 'bottom-left', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4h16v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm6 6v4m0 0h4m-4 0l4-4"></path></svg>' },
+  { id: 'bottom-right', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4h16v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm6 10h4m0 0v-4m0 4l-4-4"></path></svg>' },
+]
+
 const patternPreset = computed(() => {
   return PATTERN_PRESETS.find(preset => preset.expression === options.value.pattern)?.id ?? ''
 })
@@ -44,6 +53,9 @@ function commit(text: FormTextOptions) {
     step: text.step == null ? '' : String(text.step),
     buttonLabel: props.field.type === 'button' ? text.buttonText.text : props.field.buttonLabel,
     accept: props.field.type === 'file' ? (fileAccept(text.fileType) || props.field.accept) : props.field.accept,
+    options: flatChoiceOptions(text.choiceOptions, text.choiceGroups).length
+      ? flatChoiceOptions(text.choiceOptions, text.choiceGroups).map(item => ({ label: item.label, value: item.value }))
+      : props.field.options,
   })
 }
 
@@ -77,6 +89,27 @@ function setWidth(raw: number | null) {
     return
   }
   emit('layout', { ...props.item, w: raw })
+}
+
+function addGroup() {
+  const n = options.value.choiceGroups.length + 1
+  patch({
+    choiceGroups: [...options.value.choiceGroups, {
+      id: `grp_${crypto.randomUUID()}`,
+      label: `Group ${n}`,
+      options: defaultChoiceOptions().slice(0, 1),
+    }],
+  })
+}
+
+function patchGroup(index: number, partial: Partial<FormTextOptions['choiceGroups'][number]>) {
+  patch({
+    choiceGroups: options.value.choiceGroups.map((group, groupIndex) => groupIndex === index ? { ...group, ...partial } : group),
+  })
+}
+
+function removeGroup(index: number) {
+  patch({ choiceGroups: options.value.choiceGroups.filter((_, groupIndex) => groupIndex !== index) })
 }
 </script>
 
@@ -247,6 +280,163 @@ function setWidth(raw: number | null) {
       @update:model-value="patch({ placeholder: String($event ?? '') })"
     />
 
+    <MiraiCmsTrueFalseField
+      v-if="has(61)"
+      :model-value="options.optionIcon"
+      :field-key="`${field.id}-option-icon`"
+      :field="{ type: 'true_false', label: 'Option Icon/Image', instructions: 'By disabling this option, the field option icon will be hidden.' }"
+      @update:model-value="patch({ optionIcon: $event === true })"
+    />
+
+    <div
+      v-if="has(44) || has(50)"
+      class="miraicms-text-settings__group"
+    >
+      <span class="miraicms-text-settings__heading">Options</span>
+      <ChoiceOptions
+        :field-key="`${field.id}-choices`"
+        :model="options.choiceOptions"
+        :show-image="field.type === 'image_select' || (field.type === 'select' && options.optionIcon)"
+        :show-required="field.type === 'image_select' || field.type === 'checkbox' || field.type === 'select'"
+        :show-disabled="has(44)"
+        :single-check="field.type === 'radio' || (field.type === 'select' && !options.selectMultiple.enabled) || (field.type === 'image_select' && !options.allowMultiple)"
+        @update="patch({ choiceOptions: $event })"
+      />
+      <template v-if="field.type === 'select'">
+        <div
+          v-for="(group, index) in options.choiceGroups"
+          :key="group.id"
+          class="miraicms-text-settings__group"
+        >
+          <MiraiCmsTextField
+            :model-value="group.label"
+            :field-key="`${field.id}-group-${group.id}`"
+            :field="{ type: 'text', label: 'Group', maxLength: 200 }"
+            @update:model-value="patchGroup(index, { label: String($event ?? '') })"
+          />
+          <ChoiceOptions
+            :field-key="`${field.id}-group-options-${group.id}`"
+            :model="group.options"
+            :show-image="options.optionIcon"
+            :show-required="true"
+            :show-disabled="true"
+            :single-check="!options.selectMultiple.enabled"
+            @update="patchGroup(index, { options: $event })"
+          />
+          <MiraiCmsUiButton
+            tag="button"
+            :variant="['red', 'small']"
+            @click="removeGroup(index)"
+          >
+            Delete Group
+          </MiraiCmsUiButton>
+        </div>
+        <MiraiCmsUiButton
+          tag="button"
+          variant="secondary"
+          @click="addGroup"
+        >
+          Add Group
+        </MiraiCmsUiButton>
+      </template>
+    </div>
+
+    <div
+      v-if="has(54)"
+      class="miraicms-text-settings__group"
+    >
+      <MiraiCmsTrueFalseField
+        :model-value="options.selectMultiple.enabled"
+        :field-key="`${field.id}-select-multiple`"
+        :field="{ type: 'true_false', label: 'Allow Multiple Select' }"
+        @update:model-value="patch({ selectMultiple: { ...options.selectMultiple, enabled: $event === true } })"
+      />
+      <template v-if="options.selectMultiple.enabled">
+        <MiraiCmsNumberField
+          :model-value="options.selectMultiple.minimum.value"
+          :field-key="`${field.id}-select-min`"
+          :field="{ type: 'number', label: 'Minimum Option', min: 0, step: 1 }"
+          @update:model-value="patch({ selectMultiple: { ...options.selectMultiple, minimum: { ...options.selectMultiple.minimum, value: $event == null || !Number.isFinite($event) ? null : Math.max(0, Math.floor($event)) } } })"
+        />
+        <template v-if="(options.selectMultiple.minimum.value ?? 0) > 0">
+          <MiraiCmsTrueFalseField
+            :model-value="options.selectMultiple.minimum.showError"
+            :field-key="`${field.id}-select-min-show`"
+            :field="{ type: 'true_false', label: 'Show Error Message' }"
+            @update:model-value="patch({ selectMultiple: { ...options.selectMultiple, minimum: { ...options.selectMultiple.minimum, showError: $event === true } } })"
+          />
+          <MiraiCmsTrueFalseField
+            v-if="options.selectMultiple.minimum.showError"
+            :model-value="options.selectMultiple.minimum.customError"
+            :field-key="`${field.id}-select-min-custom`"
+            :field="{ type: 'true_false', label: 'Custom Error Message' }"
+            @update:model-value="patch({ selectMultiple: { ...options.selectMultiple, minimum: { ...options.selectMultiple.minimum, customError: $event === true } } })"
+          />
+          <MiraiCmsTextField
+            v-if="options.selectMultiple.minimum.showError && options.selectMultiple.minimum.customError"
+            :model-value="options.selectMultiple.minimum.errorText"
+            :field-key="`${field.id}-select-min-text`"
+            :field="{ type: 'text', label: 'Error message', maxLength: 400 }"
+            @update:model-value="patch({ selectMultiple: { ...options.selectMultiple, minimum: { ...options.selectMultiple.minimum, errorText: String($event ?? '') } } })"
+          />
+        </template>
+        <MiraiCmsNumberField
+          :model-value="options.selectMultiple.maximum.value"
+          :field-key="`${field.id}-select-max`"
+          :field="{ type: 'number', label: 'Maximum Option', min: 0, step: 1 }"
+          @update:model-value="patch({ selectMultiple: { ...options.selectMultiple, maximum: { ...options.selectMultiple.maximum, value: $event == null || !Number.isFinite($event) ? null : Math.max(0, Math.floor($event)) } } })"
+        />
+        <template v-if="(options.selectMultiple.maximum.value ?? 0) > 0">
+          <MiraiCmsTrueFalseField
+            :model-value="options.selectMultiple.maximum.showError"
+            :field-key="`${field.id}-select-max-show`"
+            :field="{ type: 'true_false', label: 'Show Error Message' }"
+            @update:model-value="patch({ selectMultiple: { ...options.selectMultiple, maximum: { ...options.selectMultiple.maximum, showError: $event === true } } })"
+          />
+          <MiraiCmsTrueFalseField
+            v-if="options.selectMultiple.maximum.showError"
+            :model-value="options.selectMultiple.maximum.customError"
+            :field-key="`${field.id}-select-max-custom`"
+            :field="{ type: 'true_false', label: 'Custom Error Message' }"
+            @update:model-value="patch({ selectMultiple: { ...options.selectMultiple, maximum: { ...options.selectMultiple.maximum, customError: $event === true } } })"
+          />
+          <MiraiCmsTextField
+            v-if="options.selectMultiple.maximum.showError && options.selectMultiple.maximum.customError"
+            :model-value="options.selectMultiple.maximum.errorText"
+            :field-key="`${field.id}-select-max-text`"
+            :field="{ type: 'text', label: 'Error message', maxLength: 400 }"
+            @update:model-value="patch({ selectMultiple: { ...options.selectMultiple, maximum: { ...options.selectMultiple.maximum, errorText: String($event ?? '') } } })"
+          />
+        </template>
+      </template>
+    </div>
+
+    <MiraiCmsTrueFalseField
+      v-if="has(45)"
+      :model-value="options.allowMultiple"
+      :field-key="`${field.id}-allow-multiple`"
+      :field="{ type: 'true_false', label: 'Allow Multiple' }"
+      @update:model-value="patch({ allowMultiple: $event === true })"
+    />
+
+    <div
+      v-if="has(46) && options.allowMultiple"
+      class="miraicms-text-settings__grid"
+    >
+      <MiraiCmsNumberField
+        :model-value="options.choiceMin"
+        :field-key="`${field.id}-choice-min`"
+        :field="{ type: 'number', label: 'Minimum', min: 0, step: 1 }"
+        @update:model-value="patch({ choiceMin: $event == null || !Number.isFinite($event) ? null : Math.max(0, Math.floor($event)) })"
+      />
+      <MiraiCmsNumberField
+        :model-value="options.choiceMax"
+        :field-key="`${field.id}-choice-max`"
+        :field="{ type: 'number', label: 'Maximum', min: 0, step: 1 }"
+        @update:model-value="patch({ choiceMax: $event == null || !Number.isFinite($event) ? null : Math.max(0, Math.floor($event)) })"
+      />
+    </div>
+
     <MiraiCmsTextareaField
       v-if="has(5) && field.type === 'textarea'"
       :model-value="options.defaultValue"
@@ -307,6 +497,148 @@ function setWidth(raw: number | null) {
         @update="patchMarked('helper', $event)"
       />
     </OptionAccordion>
+
+    <MiraiCmsTrueFalseField
+      v-if="has(55)"
+      :model-value="options.showSearch"
+      :field-key="`${field.id}-show-search`"
+      :field="{ type: 'true_false', label: 'Show Search Input' }"
+      @update:model-value="patch({ showSearch: $event === true })"
+    />
+    <MiraiCmsTextField
+      v-if="has(56) && options.showSearch"
+      :model-value="options.searchPlaceholder"
+      :field-key="`${field.id}-search-placeholder`"
+      :field="{ type: 'text', label: 'Search Placeholder', maxLength: 200 }"
+      @update:model-value="patch({ searchPlaceholder: String($event ?? '') })"
+    />
+    <MiraiCmsTrueFalseField
+      v-if="has(57)"
+      :model-value="options.searchClearable"
+      :field-key="`${field.id}-search-clear`"
+      :field="{ type: 'true_false', label: 'Search Clearable', instructions: 'By disabling this option, the field search clearable will be hidden.' }"
+      @update:model-value="patch({ searchClearable: $event === true })"
+    />
+    <MiraiCmsTrueFalseField
+      v-if="has(58)"
+      :model-value="options.selectedClearable"
+      :field-key="`${field.id}-selected-clear`"
+      :field="{ type: 'true_false', label: 'Selected Option Clearable', instructions: 'By disabling this option, the field selected option clearable will be hidden.' }"
+      @update:model-value="patch({ selectedClearable: $event === true })"
+    />
+
+    <MiraiCmsNumberField
+      v-if="has(47)"
+      :model-value="options.itemSize"
+      :field-key="`${field.id}-item-size`"
+      :field="{ type: 'number', label: 'Item Size', min: 1, step: 1 }"
+      @update:model-value="patch({ itemSize: $event == null || !Number.isFinite($event) ? 200 : Math.max(1, Math.floor($event)) })"
+    />
+
+    <div
+      v-if="has(48)"
+      class="miraicms-text-settings__group"
+    >
+      <span class="miraicms-text-settings__heading">Check Position</span>
+      <div class="miraicms-text-settings__positions">
+        <MiraiCmsUiButton
+          v-for="position in checkPositions"
+          :key="position.id"
+          tag="button"
+          :variant="options.checkPosition === position.id ? ['icon'] : ['icon', 'secondary']"
+          :active="options.checkPosition === position.id"
+          :aria-label="position.id"
+          :title="position.id"
+          @click="patch({ checkPosition: position.id })"
+        >
+          <span v-html="position.svg" />
+        </MiraiCmsUiButton>
+      </div>
+    </div>
+
+    <MiraiCmsTrueFalseField
+      v-if="has(49)"
+      :model-value="options.hideImageLabel"
+      :field-key="`${field.id}-hide-label`"
+      :field="{ type: 'true_false', label: 'Hide Image Label' }"
+      @update:model-value="patch({ hideImageLabel: $event === true })"
+    />
+
+    <MiraiCmsNumberField
+      v-if="has(51)"
+      :model-value="options.optionsColumn"
+      :field-key="`${field.id}-columns`"
+      :field="{ type: 'number', label: 'Options Column', min: 1, step: 1 }"
+      @update:model-value="patch({ optionsColumn: $event == null || !Number.isFinite($event) ? 1 : Math.max(1, Math.floor($event)) })"
+    />
+
+    <div
+      v-if="has(52)"
+      class="miraicms-text-settings__group"
+    >
+      <span class="miraicms-text-settings__heading">Minimum</span>
+      <MiraiCmsNumberField
+        :model-value="options.choiceMinimum.value"
+        :field-key="`${field.id}-bound-min`"
+        :field="{ type: 'number', label: 'Minimum', min: 0, step: 1 }"
+        @update:model-value="patch({ choiceMinimum: { ...options.choiceMinimum, value: $event == null || !Number.isFinite($event) ? null : Math.max(0, Math.floor($event)) } })"
+      />
+      <template v-if="(options.choiceMinimum.value ?? 0) > 0">
+        <MiraiCmsTrueFalseField
+          :model-value="options.choiceMinimum.showError"
+          :field-key="`${field.id}-bound-min-show`"
+          :field="{ type: 'true_false', label: 'Show Error Message' }"
+          @update:model-value="patch({ choiceMinimum: { ...options.choiceMinimum, showError: $event === true } })"
+        />
+        <MiraiCmsTrueFalseField
+          v-if="options.choiceMinimum.showError"
+          :model-value="options.choiceMinimum.customError"
+          :field-key="`${field.id}-bound-min-custom`"
+          :field="{ type: 'true_false', label: 'Custom Error Message' }"
+          @update:model-value="patch({ choiceMinimum: { ...options.choiceMinimum, customError: $event === true } })"
+        />
+        <DecoratedText
+          v-if="options.choiceMinimum.showError && options.choiceMinimum.customError"
+          :field-key="`${field.id}-bound-min-text`"
+          :model="{ enabled: true, text: options.choiceMinimum.errorText, prefix: options.choiceMinimum.errorPrefix, suffix: options.choiceMinimum.errorSuffix }"
+          @update="patch({ choiceMinimum: { ...options.choiceMinimum, errorText: $event.text, errorPrefix: $event.prefix, errorSuffix: $event.suffix } })"
+        />
+      </template>
+    </div>
+
+    <div
+      v-if="has(53)"
+      class="miraicms-text-settings__group"
+    >
+      <span class="miraicms-text-settings__heading">Maximum</span>
+      <MiraiCmsNumberField
+        :model-value="options.choiceMaximum.value"
+        :field-key="`${field.id}-bound-max`"
+        :field="{ type: 'number', label: 'Maximum', min: 0, step: 1 }"
+        @update:model-value="patch({ choiceMaximum: { ...options.choiceMaximum, value: $event == null || !Number.isFinite($event) ? null : Math.max(0, Math.floor($event)) } })"
+      />
+      <template v-if="(options.choiceMaximum.value ?? 0) > 0">
+        <MiraiCmsTrueFalseField
+          :model-value="options.choiceMaximum.showError"
+          :field-key="`${field.id}-bound-max-show`"
+          :field="{ type: 'true_false', label: 'Show Error Message' }"
+          @update:model-value="patch({ choiceMaximum: { ...options.choiceMaximum, showError: $event === true } })"
+        />
+        <MiraiCmsTrueFalseField
+          v-if="options.choiceMaximum.showError"
+          :model-value="options.choiceMaximum.customError"
+          :field-key="`${field.id}-bound-max-custom`"
+          :field="{ type: 'true_false', label: 'Custom Error Message' }"
+          @update:model-value="patch({ choiceMaximum: { ...options.choiceMaximum, customError: $event === true } })"
+        />
+        <DecoratedText
+          v-if="options.choiceMaximum.showError && options.choiceMaximum.customError"
+          :field-key="`${field.id}-bound-max-text`"
+          :model="{ enabled: true, text: options.choiceMaximum.errorText, prefix: options.choiceMaximum.errorPrefix, suffix: options.choiceMaximum.errorSuffix }"
+          @update="patch({ choiceMaximum: { ...options.choiceMaximum, errorText: $event.text, errorPrefix: $event.prefix, errorSuffix: $event.suffix } })"
+        />
+      </template>
+    </div>
 
     <MiraiCmsTextField
       v-if="has(38)"
@@ -890,6 +1222,12 @@ function setWidth(raw: number | null) {
 
   &__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  &__positions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: math-rem(6);
   }
 
   &__native-field {

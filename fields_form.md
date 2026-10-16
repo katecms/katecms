@@ -135,6 +135,9 @@
 - text "Label"
 - text "Value"
 - checkbox "Check"
+- button "Add Option" - добавляет сразу под этой опцией
+- button "Clone Option" - клонирует эту опцию
+- button "Delete Option" - удаляет эту опцию
 28) select "Rating Position"
 - Left
 - Center
@@ -189,3 +192,101 @@
     (Date - type="date", Time - type="time", Date-Time - type="datetime-local", Week - type="week", Month - type="month")
 - "Minimum"
 - "Maximum"
+44) "Options" репитер, так же нужен handle:
+- "Image" - ImageField с "iconMode: true"
+- text "Label"
+- text "Value"
+- checkbox "Check"
+- checkbox "Required"
+- checkbox "Disabled"
+- button "Add Option" - добавляет сразу под этой опцией
+- button "Clone Option" - клонирует эту опцию
+- button "Delete Option" - удаляет эту опцию
+45) checkbox "Allow Multiple"
+46) number "Minimum" и number "Maximum" - если включена "Allow Multiple" (45)
+47) number "Item Size" - default: 200
+48) Check Position:
+- button top-left (<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4h16v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm10 6h-4m0 0v4m0-4l4 4"></path></svg>)
+- button top-right (<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4h16v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm10 10v-4m0 0h-4m4 0l-4 4"></path></svg>)
+- button center (<svg width="30" height="30" viewBox="0 0 30 30"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.4,4.16H23.6a2.43,2.43,0,0,1,2.45,2.41V23.43a2.43,2.43,0,0,1-2.45,2.41H6.4A2.43,2.43,0,0,1,4,23.43V6.57A2.43,2.43,0,0,1,6.4,4.16Z"></path><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x1="15" y1="10.18" x2="15" y2="19.82"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x1="10.09" y1="15" x2="19.91" y2="15"></line></svg>)
+- button bottom-left (<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4h16v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm6 6v4m0 0h4m-4 0l4-4"></path></svg>)
+- button bottom-right (<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4h16v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm6 10h4m0 0v-4m0 4l-4-4"></path></svg>)
+49) checkbox "Hide Image Label"
+50) "Options" репитер, так же нужен handle:
+- text "Label"
+- text "Value"
+- checkbox "Check"
+- button "Add Option" - добавляет сразу под этой опцией
+- button "Clone Option" - клонирует эту опцию
+- button "Delete Option" - удаляет эту опцию
+51) number "Options Column"
+52) Minimum:
+- number
+поля если number > 0:
+- checkbox "Show Error Message"
+- checkbox "Custom Error Message"
+- текстовое поле default: Select at least ${minimum} option(s) (только если выбрано "Custom Error Message") + Prefix Icon и Suffix Icon
+53) Maximum:
+- number
+поля если number > 0:
+- checkbox "Show Error Message"
+- checkbox "Custom Error Message"
+- текстовое поле default: Please, select no more than ${field.maximum} option(s) (только если выбрано "Custom Error Message") + Prefix Icon и Suffix Icon
+54) checkbox "Allow Multiple Select"
+- number "Minimum Option"
+  если "Minimum Option" > 0:
+- checkbox "Show Error Message"
+- checkbox "Custom Error Message"
+- текстовое поле default: Select at least ${minimum} option(s) (только если выбрано "Custom Error Message")
+- number "Maximum Option"
+  если "Maximum Option" > 0:
+- checkbox "Show Error Message"
+- checkbox "Custom Error Message"
+- текстовое поле default: Select at least ${maximum} option(s) (только если выбрано "Custom Error Message")
+55) checkbox "Show Search Input"
+56) text "Search Placeholder" - если активно "Show Search Input"
+57) checkbox "Search Clearable" (Info: By disabling this option, the field search clearable will be hidden)
+58) checkbox "Selected Option Clearable" (Info: By disabling this option, the field selected option clearable will be hidden)
+59) checkbox "Show Selected Option Image" (Info: By disabling this option, the field show selected option image will be hidden)
+60) number "Options List Height": default: 400
+61) checkbox "Option Icon/Image" (Info: By disabling this option, the field option icon will be hidden)
+62) "Title" - чекбокс в аккордеоне (слева от стрелки), если выбрать, открывается аккордеон (который стает активный и его можно закрыть/открыть) и там есть:
+- textarea "Text"
+- select "HTML Tag":
+-- h1: H1
+-- h2: H2
+-- h3: H3
+-- h4: H4
+-- h5: H5
+-- h6: H6
+-- div: Div
+-- span: Span
+-- p: p
+- Prefix Icon и Suffix Icon
+63) "Subtitle" - чекбокс в аккордеоне (слева от стрелки), если выбрать, открывается аккордеон (который стает активный и его можно закрыть/открыть) и там есть:
+- textarea "Text"
+- select "HTML Tag":
+  -- h1: H1
+  -- h2: H2
+  -- h3: H3
+  -- h4: H4
+  -- h5: H5
+  -- h6: H6
+  -- div: Div
+  -- span: Span
+  -- p: p
+- Prefix Icon и Suffix Icon
+64) "Logo/Icon" - ImageField с "iconMode: true"
+65) "Label Alignment":
+- Left (<svg width="17" height="17" viewBox="0 0 30 30"><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="2" y1="6.81" x2="21.1" y2="6.81"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="2" y1="15" x2="28" y2="15"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="2" y1="23.19" x2="21.1" y2="23.19"></line></svg>)
+- Center (<svg width="17" height="17" viewBox="0 0 30 30"><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="5.45" y1="6.81" x2="24.55" y2="6.81"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="2" y1="15" x2="28" y2="15"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="5.45" y1="23.19" x2="24.55" y2="23.19"></line></svg>)
+- Right (<svg width="17" height="17" viewBox="0 0 30 30"><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="8.9" y1="6.81" x2="28" y2="6.81"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="2" y1="15" x2="28" y2="15"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke-miterlimit="10" x1="8.9" y1="23.19" x2="28" y2="23.19"></line></svg>)
+66) "Layout Direction":
+    (Одна иконка с трансформацией (<svg width="17" height="17" viewBox="0 0 24 24" style="transform: rotate(0deg);"><path fill="currentColor" d="M5 21q-.425 0-.713-.288Q4 20.425 4 20t.287-.712Q4.575 19 5 19h14q.425 0 .712.288q.288.287.288.712t-.288.712Q19.425 21 19 21Zm7-4.425q-.2 0-.375-.063q-.175-.062-.325-.212l-3.625-3.625Q7.4 12.4 7.4 12t.3-.7q.275-.275.7-.275q.425 0 .7.275l1.9 1.9V4q0-.425.288-.713Q11.575 3 12 3t.713.287Q13 3.575 13 4v9.2l1.925-1.925Q15.2 11 15.6 11t.7.3q.275.275.275.7q0 .425-.275.7l-3.6 3.6q-.15.15-.325.212q-.175.063-.375.063Z"></path></svg>))
+- Vertical
+- Vertical Reverse
+- Horizontal
+- Horizontal Reverse
+67) "Image" - ImageField
+68) number "Width" and number "Height"
+69) textarea "Image Alt Text"

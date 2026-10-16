@@ -56,6 +56,39 @@ export type ButtonKind = 'submit' | 'button' | 'reset'
 export type FileKind = '' | 'image' | 'audio' | 'video' | 'document' | 'zip' | 'presentation' | 'spreadsheet' | 'database'
 export type TemporalType = 'date' | 'time' | 'datetime' | 'week' | 'month'
 
+export type CheckPosition = 'top-left' | 'top-right' | 'center' | 'bottom-left' | 'bottom-right'
+
+export interface FormChoiceOption {
+  id: string
+  image: FormIcon | null
+  label: string
+  value: string
+  checked: boolean
+  required: boolean
+  disabled: boolean
+}
+
+export interface FormChoiceGroup {
+  id: string
+  label: string
+  options: FormChoiceOption[]
+}
+
+export interface FormSelectMultiple {
+  enabled: boolean
+  minimum: FormFileLimit
+  maximum: FormFileLimit
+}
+
+export interface FormBoundError {
+  value: number | null
+  showError: boolean
+  customError: boolean
+  errorText: string
+  errorPrefix: FormIcon | null
+  errorSuffix: FormIcon | null
+}
+
 export interface FormRatingOption {
   id: string
   icon: FormIcon | null
@@ -145,6 +178,23 @@ export interface FormTextOptions {
   fileExistMessage: string
   rangeMin: string
   rangeMax: string
+  choiceOptions: FormChoiceOption[]
+  allowMultiple: boolean
+  choiceMin: number | null
+  choiceMax: number | null
+  itemSize: number | null
+  checkPosition: CheckPosition
+  hideImageLabel: boolean
+  optionsColumn: number | null
+  choiceMinimum: FormBoundError
+  choiceMaximum: FormBoundError
+  optionIcon: boolean
+  choiceGroups: FormChoiceGroup[]
+  selectMultiple: FormSelectMultiple
+  showSearch: boolean
+  searchPlaceholder: string
+  searchClearable: boolean
+  selectedClearable: boolean
 }
 
 export interface PatternPreset {
@@ -328,6 +378,27 @@ export function defaultTextOptions(label = ''): FormTextOptions {
     fileExistMessage: 'A file already exists',
     rangeMin: '',
     rangeMax: '',
+    choiceOptions: [],
+    allowMultiple: false,
+    choiceMin: null,
+    choiceMax: null,
+    itemSize: 200,
+    checkPosition: 'top-left',
+    hideImageLabel: false,
+    optionsColumn: 1,
+    choiceMinimum: defaultBoundError('Select at least ${minimum} option(s)'),
+    choiceMaximum: defaultBoundError('Please, select no more than ${field.maximum} option(s)'),
+    optionIcon: false,
+    choiceGroups: [],
+    selectMultiple: {
+      enabled: false,
+      minimum: { value: null, showError: true, customError: false, errorText: 'Select at least ${minimum} option(s)' },
+      maximum: { value: null, showError: true, customError: false, errorText: 'Select at least ${maximum} option(s)' },
+    },
+    showSearch: false,
+    searchPlaceholder: '',
+    searchClearable: false,
+    selectedClearable: false,
   }
 }
 
@@ -356,7 +427,30 @@ function emptyFileLimit(): FormFileLimit {
   return { value: null, showError: true, customError: false, errorText: '' }
 }
 
-const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month'])
+function defaultBoundError(errorText: string): FormBoundError {
+  return {
+    value: null,
+    showError: true,
+    customError: false,
+    errorText,
+    errorPrefix: null,
+    errorSuffix: null,
+  }
+}
+
+export function defaultChoiceOptions(): FormChoiceOption[] {
+  return [1, 2].map(index => ({
+    id: `opt_${index}`,
+    image: null,
+    label: `Option ${index}`,
+    value: `option_${index}`,
+    checked: false,
+    required: false,
+    disabled: false,
+  }))
+}
+
+const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'image_select', 'select', 'radio', 'checkbox'])
 
 const FIELD_OPTIONS: Record<string, number[]> = {
   text: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
@@ -375,6 +469,10 @@ const FIELD_OPTIONS: Record<string, number[]> = {
   datetime: [1, 2, 3, 5, 6, 7, 43, 14, 15, 16, 17, 18],
   week: [1, 2, 3, 5, 6, 7, 43, 14, 15, 16, 17, 18],
   month: [1, 2, 3, 5, 6, 7, 43, 14, 15, 16, 17, 18],
+  image_select: [1, 2, 3, 44, 45, 46, 7, 47, 48, 49, 15, 17, 18],
+  select: [1, 2, 3, 4, 61, 44, 54, 7, 55, 56, 57, 58, 14, 15, 17, 18],
+  radio: [1, 2, 3, 44, 7, 51, 15, 17, 18],
+  checkbox: [1, 2, 3, 44, 7, 51, 52, 53, 15, 17, 18],
 }
 
 export const FILE_TYPE_ACCEPT: Record<Exclude<FileKind, ''>, { label: string, accept: string }> = {
@@ -409,6 +507,22 @@ export function temporalInputType(type: string): string {
     return type
   }
   return 'text'
+}
+
+export function checkPositionStyle(position: CheckPosition): Record<string, string> {
+  if (position === 'top-right') {
+    return { position: 'absolute', top: '4px', right: '4px' }
+  }
+  if (position === 'bottom-left') {
+    return { position: 'absolute', bottom: '4px', left: '4px' }
+  }
+  if (position === 'bottom-right') {
+    return { position: 'absolute', bottom: '4px', right: '4px' }
+  }
+  if (position === 'center') {
+    return { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+  }
+  return { position: 'absolute', top: '4px', left: '4px' }
 }
 
 export function isRichFieldType(type: string): boolean {
@@ -520,7 +634,7 @@ function normalizeMarked(raw: unknown, fallbackText = ''): FormMarkedText {
   }
 }
 
-export function normalizeTextOptions(raw: unknown, fallback: { label?: string, placeholder?: string, help?: string, required?: boolean, value?: string, min?: string, max?: string, buttonLabel?: string } = {}): FormTextOptions {
+export function normalizeTextOptions(raw: unknown, fallback: { label?: string, placeholder?: string, help?: string, required?: boolean, value?: string, min?: string, max?: string, buttonLabel?: string, options?: { label: string, value: string }[] } = {}): FormTextOptions {
   if (!isRecord(raw)) {
     const options = defaultTextOptions(fallback.label || '')
     options.placeholder = clip(fallback.placeholder, 200)
@@ -531,6 +645,9 @@ export function normalizeTextOptions(raw: unknown, fallback: { label?: string, p
     }
     if (fallback.help) {
       options.helper = { enabled: true, text: clip(fallback.help, 400), prefix: null, suffix: null }
+    }
+    if (fallback.options?.length) {
+      options.choiceOptions = normalizeChoiceOptions(fallback.options, undefined)
     }
     return options
   }
@@ -599,6 +716,23 @@ export function normalizeTextOptions(raw: unknown, fallback: { label?: string, p
     fileExistMessage: clip(source.fileExistMessage, 200) || 'A file already exists',
     rangeMin: source.rangeMin == null ? clip(fallback.min, 40) : clip(source.rangeMin, 40),
     rangeMax: source.rangeMax == null ? clip(fallback.max, 40) : clip(source.rangeMax, 40),
+    choiceOptions: normalizeChoiceOptions(source.choiceOptions, fallback.options),
+    allowMultiple: source.allowMultiple === true,
+    choiceMin: optionalCount(source.choiceMin),
+    choiceMax: optionalCount(source.choiceMax),
+    itemSize: optionalCount(source.itemSize) ?? 200,
+    checkPosition: isCheckPosition(source.checkPosition) ? source.checkPosition : 'top-left',
+    hideImageLabel: source.hideImageLabel === true,
+    optionsColumn: optionalCount(source.optionsColumn) ?? 1,
+    choiceMinimum: normalizeBoundError(source.choiceMinimum, 'Select at least ${minimum} option(s)'),
+    choiceMaximum: normalizeBoundError(source.choiceMaximum, 'Please, select no more than ${field.maximum} option(s)'),
+    optionIcon: source.optionIcon === true,
+    choiceGroups: normalizeChoiceGroups(source.choiceGroups),
+    selectMultiple: normalizeSelectMultiple(source.selectMultiple),
+    showSearch: source.showSearch === true,
+    searchPlaceholder: clip(source.searchPlaceholder, 200),
+    searchClearable: source.searchClearable === true,
+    selectedClearable: source.selectedClearable === true,
   }
 }
 
@@ -624,6 +758,104 @@ function normalizeInvalid(raw: unknown): FormInvalidError {
     errorPrefix: normalizeIcon(source.errorPrefix),
     errorSuffix: normalizeIcon(source.errorSuffix),
   }
+}
+
+const CHECK_POSITIONS = new Set<CheckPosition>(['top-left', 'top-right', 'center', 'bottom-left', 'bottom-right'])
+
+function isCheckPosition(value: unknown): value is CheckPosition {
+  return typeof value === 'string' && CHECK_POSITIONS.has(value as CheckPosition)
+}
+
+function normalizeBoundError(raw: unknown, errorText: string): FormBoundError {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    value: optionalCount(source.value),
+    showError: source.showError !== false,
+    customError: source.customError === true,
+    errorText: clip(source.errorText, 400) || errorText,
+    errorPrefix: normalizeIcon(source.errorPrefix),
+    errorSuffix: normalizeIcon(source.errorSuffix),
+  }
+}
+
+function normalizeChoiceOptions(raw: unknown, fallback: { label: string, value: string }[] | undefined): FormChoiceOption[] {
+  const source = Array.isArray(raw) && raw.length ? raw : fallback
+  if (!source?.length) {
+    return []
+  }
+  const options: FormChoiceOption[] = []
+  for (const item of source.slice(0, 100)) {
+    if (!isRecord(item) && !('label' in (item as object))) {
+      continue
+    }
+    const record = item as Record<string, unknown>
+    const label = clip(record.label, 200)
+    const value = clip(record.value, 80) || label
+    if (!label && !value) {
+      continue
+    }
+    options.push({
+      id: clip(record.id, 80) || `opt_${crypto.randomUUID()}`,
+      image: normalizeIcon(record.image),
+      label: label || value,
+      value: value || label,
+      checked: record.checked === true,
+      required: record.required === true,
+      disabled: record.disabled === true,
+    })
+  }
+  return options
+}
+
+function normalizeChoiceGroups(raw: unknown): FormChoiceGroup[] {
+  if (!Array.isArray(raw)) {
+    return []
+  }
+  const groups: FormChoiceGroup[] = []
+  for (const item of raw.slice(0, 50)) {
+    if (!isRecord(item)) {
+      continue
+    }
+    groups.push({
+      id: clip(item.id, 80) || `grp_${crypto.randomUUID()}`,
+      label: clip(item.label, 200) || 'Group',
+      options: normalizeChoiceOptions(item.options, undefined),
+    })
+  }
+  return groups
+}
+
+function normalizeSelectMultiple(raw: unknown): FormSelectMultiple {
+  const source = isRecord(raw) ? raw : {}
+  const minimum = isRecord(source.minimum) ? source.minimum : {}
+  const maximum = isRecord(source.maximum) ? source.maximum : {}
+  return {
+    enabled: source.enabled === true,
+    minimum: {
+      value: optionalCount(minimum.value),
+      showError: minimum.showError !== false,
+      customError: minimum.customError === true,
+      errorText: clip(minimum.errorText, 400) || 'Select at least ${minimum} option(s)',
+    },
+    maximum: {
+      value: optionalCount(maximum.value),
+      showError: maximum.showError !== false,
+      customError: maximum.customError === true,
+      errorText: clip(maximum.errorText, 400) || 'Select at least ${maximum} option(s)',
+    },
+  }
+}
+
+export function flatChoiceOptions(options: FormChoiceOption[], groups: FormChoiceGroup[]): FormChoiceOption[] {
+  return [...options, ...groups.flatMap(group => group.options)]
+}
+
+export function choiceMatches(option: { label: string, value: string }, query: string): boolean {
+  const text = query.trim().toLowerCase()
+  if (!text) {
+    return true
+  }
+  return option.label.toLowerCase().includes(text) || option.value.toLowerCase().includes(text)
 }
 
 function normalizeFileLimit(raw: unknown): FormFileLimit {

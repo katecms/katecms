@@ -34,15 +34,31 @@ function patchAt(index: number, partial: Partial<FormRatingOption>) {
   }))
 }
 
-function add() {
+function addAt(index: number) {
   const n = props.model.length + 1
-  emit('update', [...props.model, {
+  const next = [...props.model]
+  next.splice(index + 1, 0, {
     id: `rt_${crypto.randomUUID()}`,
     icon: null,
     label: String(n),
     value: String(n),
     checked: false,
-  }])
+  })
+  emit('update', next)
+}
+
+function cloneAt(index: number) {
+  const source = props.model[index]
+  if (!source) {
+    return
+  }
+  const next = [...props.model]
+  next.splice(index + 1, 0, {
+    ...source,
+    id: `rt_${crypto.randomUUID()}`,
+    checked: false,
+  })
+  emit('update', next)
 }
 
 function remove(index: number) {
@@ -234,14 +250,29 @@ onBeforeUnmount(resetDrag)
           :field="{ type: 'true_false', label: 'Check' }"
           @update:model-value="patchAt(index, { checked: $event === true })"
         />
-        <MiraiCmsUiButton
-          tag="button"
-          :variant="['red', 'small']"
-          aria-label="Remove option"
-          @click="remove(index)"
-        >
-          Remove
-        </MiraiCmsUiButton>
+        <div class="miraicms-rating-options__actions">
+          <MiraiCmsUiButton
+            tag="button"
+            variant="secondary"
+            @click="addAt(index)"
+          >
+            Add Option
+          </MiraiCmsUiButton>
+          <MiraiCmsUiButton
+            tag="button"
+            variant="secondary"
+            @click="cloneAt(index)"
+          >
+            Clone Option
+          </MiraiCmsUiButton>
+          <MiraiCmsUiButton
+            tag="button"
+            :variant="['red', 'small']"
+            @click="remove(index)"
+          >
+            Delete Option
+          </MiraiCmsUiButton>
+        </div>
       </div>
     </template>
     <div
@@ -250,11 +281,12 @@ onBeforeUnmount(resetDrag)
       :style="placeholderStyle"
     />
     <MiraiCmsUiButton
+      v-if="!model.length"
       tag="button"
       variant="secondary"
-      @click="add"
+      @click="addAt(-1)"
     >
-      Add option
+      Add Option
     </MiraiCmsUiButton>
   </div>
 </template>
@@ -302,6 +334,13 @@ onBeforeUnmount(resetDrag)
     border: 1px dashed $color-border;
     border-radius: $border-radius;
     background: $color-bg;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: math-rem(6);
+    grid-column: 1 / -1;
   }
 }
 </style>

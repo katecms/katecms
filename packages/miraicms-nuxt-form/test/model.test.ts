@@ -256,3 +256,33 @@ test('file upload keeps a 20 MB size floor and date range rejects late values', 
   const date = submissionErrors(content, { when: '2024-05-01' }, {}, 1024)
   assert.equal(date.when, 'Enter a value in the allowed range.')
 })
+
+test('choice fields keep their options and enforce a checkbox minimum', () => {
+  const content = normalizeFormContent({
+    fields: [
+      { id: 'c', type: 'checkbox', key: 'topics', options: [{ label: 'A', value: 'a' }, { label: 'B', value: 'b' }], text: { choiceMinimum: { value: 2, showError: true, customError: false } } },
+      { id: 'i', type: 'image_select', key: 'pics', text: { allowMultiple: true, choiceMin: 2 } },
+    ],
+  })
+  assert.equal(content.fields[0]?.text?.choiceOptions.length, 2)
+  assert.equal(content.fields[0]?.options[1]?.value, 'b')
+  const few = submissionErrors(content, { topics: ['a'], pics: ['x'] }, {}, 1024)
+  assert.match(few.topics || '', /at least 2/)
+  assert.equal(few.pics, 'Choose a valid option.')
+  const grouped = normalizeFormContent({
+    fields: [{
+      id: 's',
+      type: 'select',
+      key: 'city',
+      text: {
+        selectMultiple: { enabled: true, minimum: { value: 2, showError: true, customError: true, errorText: 'Select at least ${minimum} option(s)' } },
+        choiceGroups: [{ id: 'g', label: 'Europe', options: [{ label: 'Paris', value: 'paris' }] }],
+      },
+    }],
+  })
+  const select = grouped.fields[0]
+  assert.equal(select?.text?.choiceGroups[0]?.label, 'Europe')
+  assert.equal(select?.options.some(option => option.value === 'paris'), true)
+  const short = submissionErrors(grouped, { city: ['paris'] }, {}, 1024)
+  assert.equal(short.city, 'Select at least 2 option(s)')
+})

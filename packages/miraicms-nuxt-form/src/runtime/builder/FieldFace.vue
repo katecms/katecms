@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import type { SelectChoice, SelectModelValue } from '@miraicms/core'
 import type { FormField } from '../form/model'
-import { applyInputMask, defaultTextOptions, fileAccept, iconUrl, isRichFieldType, isTemporalType, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, temporalInputType } from '../form/text-options'
+import { applyInputMask, checkPositionStyle, defaultTextOptions, fileAccept, iconUrl, isRichFieldType, isTemporalType, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, temporalInputType } from '../form/text-options'
 
 const props = withDefaults(defineProps<{
   field?: FormField
@@ -41,8 +42,41 @@ watch(() => options.value.defaultValue, (value) => {
   }
 })
 
+const selectModel = ref<SelectModelValue>('')
 const listId = computed(() => `mirai-suggest-${props.field?.id || 'field'}`)
 const controlId = computed(() => `mirai-${props.field?.id || 'field'}`)
+const selectChoices = computed((): SelectChoice[] => {
+  const leaf = (item: { value: string, label: string, image: { url: string } | null, disabled: boolean, checked: boolean }): SelectChoice => ({
+    val: item.value,
+    lbl: item.label,
+    img: options.value.optionIcon ? iconUrl(item.image) || undefined : undefined,
+    disabled: item.disabled,
+    check: item.checked,
+  })
+  return [
+    ...options.value.choiceOptions.map(leaf),
+    ...options.value.choiceGroups.map(group => ({
+      type: 'group' as const,
+      title: group.label,
+      childs: group.options.map(leaf),
+    })),
+  ]
+})
+
+function syncSelectModel() {
+  const checked = [
+    ...options.value.choiceOptions,
+    ...options.value.choiceGroups.flatMap(group => group.options),
+  ].filter(item => item.checked).map(item => item.value)
+  selectModel.value = options.value.selectMultiple.enabled ? checked : (checked[0] ?? '')
+}
+
+watch(() => [
+  props.field?.id,
+  options.value.selectMultiple.enabled,
+  options.value.choiceOptions.map(item => `${item.value}:${item.checked}`).join('|'),
+  options.value.choiceGroups.map(group => group.options.map(item => `${item.value}:${item.checked}`).join('|')).join(';'),
+], syncSelectModel, { immediate: true })
 const showError = computed(() => props.invalid && options.value.required.showError && !!props.error)
 
 function controlType() {
@@ -220,6 +254,74 @@ function onInput(event: Event) {
           alt=""
         >
       </button>
+      <MiraiCmsUiSelect
+        v-else-if="field.type === 'select'"
+        :id="controlId"
+        v-model="selectModel"
+        :name="preview ? undefined : field.key"
+        :choices="selectChoices"
+        :placeholder="options.placeholder"
+        :multiple="options.selectMultiple.enabled"
+        :required="options.required.enabled"
+        :disabled="disabled || options.disabled || options.readOnly"
+        :min="options.selectMultiple.enabled ? (options.selectMultiple.minimum.value ?? 0) : 0"
+        :max="options.selectMultiple.enabled ? (options.selectMultiple.maximum.value ?? undefined) : undefined"
+        :search="options.showSearch"
+        :search-clearable="options.searchClearable"
+        :search-placeholder="options.searchPlaceholder"
+        :selected-opt-clearable="options.selectedClearable"
+        :selected-opt-image="options.optionIcon"
+        :option-icon="options.optionIcon"
+        :aria-label="options.label.text || field.label"
+      />
+      <div
+        v-else-if="field.type === 'radio' || field.type === 'checkbox'"
+        class="miraicms-field-face__choices"
+        :style="{ display: 'grid', gridTemplateColumns: `repeat(${options.optionsColumn || 1}, minmax(0, 1fr))`, gap: '8px' }"
+      >
+        <label
+          v-for="option in options.choiceOptions"
+          :key="option.id"
+        >
+          <input
+            :type="field.type"
+            :name="preview ? undefined : field.key"
+            :value="option.value"
+            :checked="option.checked"
+            :disabled="option.disabled || disabled || options.disabled"
+            :required="field.type === 'checkbox' ? option.required : options.required.enabled"
+          >
+          <span>{{ option.label }}</span>
+        </label>
+      </div>
+      <div
+        v-else-if="field.type === 'image_select'"
+        class="miraicms-field-face__images"
+        :style="{ display: 'flex', flexWrap: 'wrap', gap: '8px' }"
+      >
+        <label
+          v-for="option in options.choiceOptions"
+          :key="option.id"
+          :style="{ position: 'relative', width: `${options.itemSize || 200}px` }"
+        >
+          <input
+            :type="options.allowMultiple ? 'checkbox' : 'radio'"
+            :name="preview ? undefined : field.key"
+            :value="option.value"
+            :checked="option.checked"
+            :disabled="option.disabled || disabled || options.disabled"
+            :required="option.required"
+            :style="checkPositionStyle(options.checkPosition)"
+          >
+          <img
+            v-if="iconUrl(option.image)"
+            :src="iconUrl(option.image)"
+            alt=""
+            :style="{ display: 'block', width: '100%' }"
+          >
+          <span v-if="!options.hideImageLabel">{{ option.label }}</span>
+        </label>
+      </div>
       <input
         v-else-if="field.type === 'file'"
         :id="controlId"
@@ -465,10 +567,6 @@ function onInput(event: Event) {
   gap: math-rem(6);
   min-width: 0;
   width: 100%;
-
-  &.is-preview {
-    pointer-events: none;
-  }
 
   &.is-hidden {
     opacity: 0.45;

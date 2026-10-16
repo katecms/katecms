@@ -1,5 +1,5 @@
 import type { FormTextOptions } from './text-options.ts'
-import { customErrorText, defaultTextOptions, fileAccept, invalidErrorText, isRichFieldType, isTemporalType, normalizeTextOptions, passwordRuleStates, textConstraintError } from './text-options.ts'
+import { customErrorText, defaultChoiceOptions, defaultTextOptions, fileAccept, flatChoiceOptions, invalidErrorText, isRichFieldType, isTemporalType, normalizeTextOptions, passwordRuleStates, textConstraintError } from './text-options.ts'
 
 export const GRID_COLUMNS = 60
 export const ROW_HEIGHT = 72
@@ -45,6 +45,7 @@ export const FIELD_TYPES = [
   'color',
   'rating',
   'select',
+  'image_select',
   'radio',
   'checkbox',
   'date',
@@ -71,8 +72,9 @@ export const FIELD_LABELS: Record<FieldType, string> = {
   color: 'Color Picker',
   rating: 'Rating',
   select: 'Select',
-  radio: 'Radio',
-  checkbox: 'Checkbox',
+  image_select: 'Image Select',
+  radio: 'Radio Button',
+  checkbox: 'Check Box',
   date: 'Date',
   time: 'Time',
   datetime: 'Date-Time',
@@ -180,7 +182,7 @@ export interface MailSettings {
   passwordSet: boolean
 }
 
-const CHOICE_TYPES = new Set<FieldType>(['select', 'radio', 'checkbox'])
+const CHOICE_TYPES = new Set<FieldType>(['select', 'radio', 'checkbox', 'image_select'])
 const KEY_PATTERN = /^[\p{L}_][\p{L}\p{N}_-]{0,63}$/u
 const SLUG_PATTERN = /^[\p{L}\p{N}]+(?:[-_][\p{L}\p{N}]+)*$/u
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
@@ -760,6 +762,9 @@ function textOptionsFor(type: FieldType, existing: FormField[]) {
   if (type === 'url') {
     text.autocomplete = 'url'
   }
+  if (type === 'select' || type === 'radio' || type === 'checkbox' || type === 'image_select') {
+    text.choiceOptions = defaultChoiceOptions()
+  }
   return text
 }
 
@@ -773,7 +778,7 @@ function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string
     ? raw.id.trim().slice(0, 80)
     : `f_${crypto.randomUUID()}`
   const key = uniqueNormalizedKey(raw.key, type, existing)
-  const options = CHOICE_TYPES.has(type) ? normalizeOptions(raw.options) : []
+  const legacyOptions = CHOICE_TYPES.has(type) ? normalizeOptions(raw.options) : []
   const text = isRichFieldType(type)
     ? normalizeTextOptions(raw.text, {
         label: clip(raw.label, 200) || FIELD_LABELS[type],
@@ -784,8 +789,13 @@ function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string
         min: clip(raw.min, 40),
         max: clip(raw.max, 40),
         buttonLabel: clip(raw.buttonLabel, 400),
+        options: legacyOptions,
       })
     : undefined
+  const listed = text ? flatChoiceOptions(text.choiceOptions, text.choiceGroups) : []
+  const options = listed.length
+    ? listed.map(item => ({ label: item.label, value: item.value }))
+    : legacyOptions
   return {
     id,
     type,
@@ -861,16 +871,8 @@ function fieldError(field: FormField, raw: unknown, file: UploadedFile | Uploade
   if (field.type === 'file') {
     return fileFieldError(field, file, maxFileBytes)
   }
-  if (field.type === 'checkbox') {
-    const selected = allowedChoices(field, asList(raw))
-    const submitted = asList(raw)
-    if (submitted.length !== selected.length) {
-      return 'Choose a valid option.'
-    }
-    if (field.required && selected.length === 0) {
-      return 'This field is required.'
-    }
-    return null
+  if (field.type === 'checkbox' || field.type === 'image_select' || field.type === 'select' || field.type === 'radio') {
+    return choiceFieldError(field, raw)
   }
   const value = cleanText(typeof raw === 'string' ? raw : raw == null ? '' : String(raw)).trim()
   if (!value) {
@@ -941,6 +943,82 @@ function fieldError(field: FormField, raw: unknown, file: UploadedFile | Uploade
   return null
 }
 
+function choiceFieldError(field: FormField, raw: unknown): string | null {
+  const listed = field.text ? flatChoiceOptions(field.text.choiceOptions, field.text.choiceGroups) : []
+  const options = listed.length
+    ? listed
+    : field.options.map(item => ({
+        id: item.value,
+        image: null,
+        label: item.label,
+        value: item.value,
+        checked: false,
+        required: false,
+        disabled: false,
+      }))
+  const allowed = new Set(options.filter(item => !item.disabled).map(item => item.value))
+  const submitted = asList(raw)
+  if (submitted.some(value => !allowed.has(value))) {
+    return 'Choose a valid option.'
+  }
+  const multiple = field.type === 'checkbox'
+    || (field.type === 'image_select' && field.text?.allowMultiple)
+    || (field.type === 'select' && field.text?.selectMultiple.enabled)
+  if (!multiple && submitted.length > 1) {
+    return 'Choose a valid option.'
+  }
+  for (const option of options) {
+    if (option.required && !submitted.includes(option.value)) {
+      return customErrorText(field.text) || 'This field is required.'
+    }
+  }
+  if ((field.required || field.text?.required.enabled) && submitted.length === 0) {
+    return customErrorText(field.text) || 'This field is required.'
+  }
+  if (field.type === 'select' && field.text?.selectMultiple.enabled) {
+    const minimum = field.text.selectMultiple.minimum
+    const maximum = field.text.selectMultiple.maximum
+    if (minimum.value != null && minimum.value > 0 && submitted.length < minimum.value) {
+      return selectLimitMessage(minimum, '${minimum}', minimum.value, 'Select at least ${minimum} option(s)')
+    }
+    if (maximum.value != null && maximum.value > 0 && submitted.length > maximum.value) {
+      return selectLimitMessage(maximum, '${maximum}', maximum.value, 'Select at least ${maximum} option(s)')
+    }
+  }
+  if (field.type === 'image_select' && field.text?.allowMultiple) {
+    const min = field.text.choiceMin
+    const max = field.text.choiceMax
+    if (min != null && submitted.length < min) {
+      return `Select at least ${min} option(s).`
+    }
+    if (max != null && submitted.length > max) {
+      return `Select at most ${max} option(s).`
+    }
+  }
+  if (field.type === 'checkbox' && field.text) {
+    const minimum = field.text.choiceMinimum
+    const maximum = field.text.choiceMaximum
+    if (minimum.value != null && minimum.value > 0 && submitted.length < minimum.value) {
+      return boundMessage(minimum, minimum.value, 'minimum')
+    }
+    if (maximum.value != null && maximum.value > 0 && submitted.length > maximum.value) {
+      return boundMessage(maximum, maximum.value, 'maximum')
+    }
+  }
+  return null
+}
+
+function boundMessage(limit: { showError: boolean, customError: boolean, errorText: string }, count: number, key: 'minimum' | 'maximum'): string {
+  if (limit.showError && limit.customError && limit.errorText.trim()) {
+    return limit.errorText
+      .replaceAll('${minimum}', String(count))
+      .replaceAll('${field.maximum}', String(count))
+  }
+  return key === 'minimum'
+    ? `Select at least ${count} option(s).`
+    : `Please, select no more than ${count} option(s).`
+}
+
 function allowedChoices(field: FormField, values: string[]): string[] {
   const allowed = new Set(field.options.map(option => option.value))
   return values.filter(value => allowed.has(value))
@@ -997,6 +1075,11 @@ function fileFieldError(field: FormField, file: UploadedFile | UploadedFile[] | 
     return uploadSizeMessage(options, limitMb)
   }
   return null
+}
+
+function selectLimitMessage(limit: { showError: boolean, customError: boolean, errorText: string }, token: string, count: number, fallback: string): string {
+  const template = limit.showError && limit.customError && limit.errorText.trim() ? limit.errorText : fallback
+  return template.replaceAll(token, String(count))
 }
 
 function limitMessage(limit: { showError: boolean, customError: boolean, errorText: string }, fallback: string): string {

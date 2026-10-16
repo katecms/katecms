@@ -111,8 +111,9 @@ const baseLabel = computed(() => {
 })
 
 const palette = [
-  { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month'] as FieldType[] },
-  { title: 'Fields', types: FIELD_TYPES.filter(type => !['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month'].includes(type)) },
+  { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month'] as FieldType[] },
+  { title: 'Option/Choice Fields', types: ['image_select', 'select', 'rating', 'radio', 'checkbox'] as FieldType[] },
+  { title: 'Fields', types: FIELD_TYPES.filter(type => !['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'image_select', 'select', 'radio', 'checkbox'].includes(type)) },
 ]
 
 function hasBreakpointIcon(name: string) {
@@ -432,6 +433,9 @@ function onItemPointerDown(event: PointerEvent, item: LayoutItem) {
   selectedId.value = item.fieldId
   stepSettingsOpen.value = false
   focusBoard()
+  if (event.target instanceof Element && event.target.closest('input, textarea, select, button, a, label, .miraicms-select')) {
+    return
+  }
   const point = cellFromEvent(event)
   const el = event.currentTarget
   if (el instanceof HTMLElement) {

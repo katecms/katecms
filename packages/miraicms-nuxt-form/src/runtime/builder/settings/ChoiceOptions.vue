@@ -14,6 +14,7 @@ const props = withDefaults(defineProps<{
   singleCheck?: boolean
   embedded?: boolean
   showAddGroup?: boolean
+  count?: number
 }>(), {
   showImage: false,
   showRequired: false,
@@ -217,9 +218,8 @@ onBeforeUnmount(resetDrag)
         variant="secondary"
         @click="open = true"
       >
-        Edit Options
+        Edit Options ({{ count ?? model.length }})
       </MiraiCmsUiButton>
-      <span class="miraicms-choice-options__count">{{ model.length }}</span>
     </template>
     <component
       :is="embedded ? 'div' : OptionPopup"
@@ -230,130 +230,158 @@ onBeforeUnmount(resetDrag)
         v-for="(item, index) in model"
         :key="item.id"
       >
+        <div
+          v-if="isDragging && dropIndex === index"
+          class="miraicms-choice-options__placeholder"
+          :style="placeholderStyle"
+        />
+
+        <div
+          :ref="(el) => setRowRef(el as Element | null, index)"
+          class="miraicms-choice-options__row"
+          :class="{ 'is-floating': isDragging && draggingIndex === index }"
+          :style="rowStyle(index)"
+        >
+          <button
+            type="button"
+            class="miraicms-choice-options__handle"
+            aria-label="Move option"
+            @mousedown="onHandleDown(index, $event)"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <g
+                fill="currentColor"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle
+                  cx="8"
+                  cy="4"
+                  r="1"
+                />
+                <circle
+                  cx="16"
+                  cy="4"
+                  r="1"
+                />
+                <circle
+                  cx="8"
+                  cy="12"
+                  r="1"
+                />
+                <circle
+                  cx="16"
+                  cy="12"
+                  r="1"
+                />
+                <circle
+                  cx="8"
+                  cy="20"
+                  r="1"
+                />
+                <circle
+                  cx="16"
+                  cy="20"
+                  r="1"
+                />
+              </g>
+            </svg>
+          </button>
+          <MiraiCmsImageField
+            v-if="showImage"
+            :model-value="item.image"
+            :field-key="`${fieldKey}-image-${item.id}`"
+            :field="{ type: 'image', label: 'Image', iconMode: true, returnFormat: 'array' }"
+            @update:model-value="setImage(index, $event)"
+          />
+          <MiraiCmsTextField
+            :model-value="item.label"
+            :field-key="`${fieldKey}-label-${item.id}`"
+            :field="{ type: 'text', label: 'Label' }"
+            @update:model-value="patchAt(index, { label: String($event ?? '') })"
+          />
+          <MiraiCmsTextField
+            :model-value="item.value"
+            :field-key="`${fieldKey}-value-${item.id}`"
+            :field="{ type: 'text', label: 'Value' }"
+            @update:model-value="patchAt(index, { value: String($event ?? '') })"
+          />
+          <MiraiCmsTrueFalseField
+            :model-value="item.checked"
+            :field-key="`${fieldKey}-check-${item.id}`"
+            :field="{ type: 'true_false', label: 'Check' }"
+            @update:model-value="patchAt(index, { checked: $event === true })"
+          />
+          <MiraiCmsTrueFalseField
+            v-if="showRequired"
+            :model-value="item.required"
+            :field-key="`${fieldKey}-required-${item.id}`"
+            :field="{ type: 'true_false', label: 'Required' }"
+            @update:model-value="patchAt(index, { required: $event === true })"
+          />
+          <MiraiCmsTrueFalseField
+            v-if="showDisabled"
+            :model-value="item.disabled"
+            :field-key="`${fieldKey}-disabled-${item.id}`"
+            :field="{ type: 'true_false', label: 'Disabled' }"
+            @update:model-value="patchAt(index, { disabled: $event === true })"
+          />
+          <div class="miraicms-choice-options__actions">
+            <MiraiCmsUiButton
+              tag="button"
+              variant="secondary"
+              @click="addAt(index)"
+            >
+              Add Option
+            </MiraiCmsUiButton>
+            <MiraiCmsUiButton
+              tag="button"
+              variant="secondary"
+              @click="cloneAt(index)"
+            >
+              Clone Option
+            </MiraiCmsUiButton>
+            <MiraiCmsUiButton
+              tag="button"
+              :variant="['red', 'small']"
+              @click="remove(index)"
+            >
+              Delete Option
+            </MiraiCmsUiButton>
+          </div>
+        </div>
+      </template>
       <div
-        v-if="isDragging && dropIndex === index"
+        v-if="isDragging && dropIndex === model.length"
         class="miraicms-choice-options__placeholder"
         :style="placeholderStyle"
       />
+      <slot name="extra" />
       <div
-        :ref="(el) => setRowRef(el as Element | null, index)"
-        class="miraicms-choice-options__row"
-        :class="{ 'is-floating': isDragging && draggingIndex === index }"
-        :style="rowStyle(index)"
+        v-if="!embedded"
+        class="miraicms-choice-options__footer"
       >
-        <button
-          type="button"
-          class="miraicms-choice-options__handle"
-          aria-label="Move option"
-          @mousedown="onHandleDown(index, $event)"
+        <MiraiCmsUiButton
+          tag="button"
+          variant="secondary"
+          @click="addAt(model.length - 1)"
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <g
-              fill="currentColor"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="8" cy="4" r="1" /><circle cx="16" cy="4" r="1" />
-              <circle cx="8" cy="12" r="1" /><circle cx="16" cy="12" r="1" />
-              <circle cx="8" cy="20" r="1" /><circle cx="16" cy="20" r="1" />
-            </g>
-          </svg>
-        </button>
-        <MiraiCmsImageField
-          v-if="showImage"
-          :model-value="item.image"
-          :field-key="`${fieldKey}-image-${item.id}`"
-          :field="{ type: 'image', label: 'Image', iconMode: true, returnFormat: 'array' }"
-          @update:model-value="setImage(index, $event)"
-        />
-        <MiraiCmsTextField
-          :model-value="item.label"
-          :field-key="`${fieldKey}-label-${item.id}`"
-          :field="{ type: 'text', label: 'Label' }"
-          @update:model-value="patchAt(index, { label: String($event ?? '') })"
-        />
-        <MiraiCmsTextField
-          :model-value="item.value"
-          :field-key="`${fieldKey}-value-${item.id}`"
-          :field="{ type: 'text', label: 'Value' }"
-          @update:model-value="patchAt(index, { value: String($event ?? '') })"
-        />
-        <MiraiCmsTrueFalseField
-          :model-value="item.checked"
-          :field-key="`${fieldKey}-check-${item.id}`"
-          :field="{ type: 'true_false', label: 'Check' }"
-          @update:model-value="patchAt(index, { checked: $event === true })"
-        />
-        <MiraiCmsTrueFalseField
-          v-if="showRequired"
-          :model-value="item.required"
-          :field-key="`${fieldKey}-required-${item.id}`"
-          :field="{ type: 'true_false', label: 'Required' }"
-          @update:model-value="patchAt(index, { required: $event === true })"
-        />
-        <MiraiCmsTrueFalseField
-          v-if="showDisabled"
-          :model-value="item.disabled"
-          :field-key="`${fieldKey}-disabled-${item.id}`"
-          :field="{ type: 'true_false', label: 'Disabled' }"
-          @update:model-value="patchAt(index, { disabled: $event === true })"
-        />
-        <div class="miraicms-choice-options__actions">
-          <MiraiCmsUiButton
-            tag="button"
-            variant="secondary"
-            @click="addAt(index)"
-          >
-            Add Option
-          </MiraiCmsUiButton>
-          <MiraiCmsUiButton
-            tag="button"
-            variant="secondary"
-            @click="cloneAt(index)"
-          >
-            Clone Option
-          </MiraiCmsUiButton>
-          <MiraiCmsUiButton
-            tag="button"
-            :variant="['red', 'small']"
-            @click="remove(index)"
-          >
-            Delete Option
-          </MiraiCmsUiButton>
-        </div>
+          Add Option
+        </MiraiCmsUiButton>
+        <MiraiCmsUiButton
+          v-if="showAddGroup"
+          tag="button"
+          variant="secondary"
+          @click="emit('addGroup')"
+        >
+          Add Group
+        </MiraiCmsUiButton>
       </div>
-    </template>
-    <div
-      v-if="isDragging && dropIndex === model.length"
-      class="miraicms-choice-options__placeholder"
-      :style="placeholderStyle"
-    />
-    <slot name="extra" />
-    <div
-      v-if="!embedded"
-      class="miraicms-choice-options__footer"
-    >
-      <MiraiCmsUiButton
-        tag="button"
-        variant="secondary"
-        @click="addAt(model.length - 1)"
-      >
-        Add Option
-      </MiraiCmsUiButton>
-      <MiraiCmsUiButton
-        v-if="showAddGroup"
-        tag="button"
-        variant="secondary"
-        @click="emit('addGroup')"
-      >
-        Add Group
-      </MiraiCmsUiButton>
-    </div>
     </component>
   </div>
 </template>
@@ -365,6 +393,12 @@ onBeforeUnmount(resetDrag)
   display: flex;
   flex-direction: column;
   gap: math-rem(8);
+
+  &__inline {
+    display: flex;
+    flex-direction: column;
+    gap: math-rem(8);
+  }
 
   &__row {
     display: flex;
@@ -414,11 +448,6 @@ onBeforeUnmount(resetDrag)
     gap: math-rem(6);
     flex: 0 0 auto;
     min-width: 0;
-  }
-
-  &__count {
-    color: $color-muted;
-    font-size: math-rem(12);
   }
 
   &__footer {

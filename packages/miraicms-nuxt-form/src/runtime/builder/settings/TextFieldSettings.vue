@@ -491,6 +491,7 @@ function removeGroup(index: number) {
         :show-disabled="has(44)"
         :single-check="field.type === 'radio' || (field.type === 'select' && !options.selectMultiple.enabled) || (field.type === 'image_select' && !options.allowMultiple)"
         :show-add-group="field.type === 'select'"
+        :count="flatChoiceOptions(options.choiceOptions, options.choiceGroups).length"
         @update="patch({ choiceOptions: $event })"
         @add-group="addGroup"
       >
@@ -509,6 +510,13 @@ function removeGroup(index: number) {
               :field="{ type: 'text', label: 'Group', maxLength: 200 }"
               @update:model-value="patchGroup(index, { label: String($event ?? '') })"
             />
+            <MiraiCmsUiButton
+              tag="button"
+              :variant="['red', 'small']"
+              @click="removeGroup(index)"
+            >
+              Delete Group
+            </MiraiCmsUiButton>
             <ChoiceOptions
               :field-key="`${field.id}-group-options-${group.id}`"
               :model="group.options"
@@ -519,13 +527,6 @@ function removeGroup(index: number) {
               embedded
               @update="patchGroup(index, { options: $event })"
             />
-            <MiraiCmsUiButton
-              tag="button"
-              :variant="['red', 'small']"
-              @click="removeGroup(index)"
-            >
-              Delete Group
-            </MiraiCmsUiButton>
           </div>
         </template>
       </ChoiceOptions>

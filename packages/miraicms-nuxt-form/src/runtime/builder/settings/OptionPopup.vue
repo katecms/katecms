@@ -70,7 +70,7 @@ onBeforeUnmount(() => {
 .miraicms-option-popup {
   display: flex;
   flex-direction: column;
-  width: min(math-rem(1100), 100%);
+  width: min(math-rem(1300), 100%);
   max-height: min(math-rem(720), 100%);
   background: $color-surface;
   border-radius: $border-radius;
@@ -104,6 +104,9 @@ onBeforeUnmount(() => {
   &__body {
     overflow: auto;
     padding: math-rem(16);
+    display: flex;
+    flex-direction: column;
+    gap: math-rem(8);
   }
 }
 </style>

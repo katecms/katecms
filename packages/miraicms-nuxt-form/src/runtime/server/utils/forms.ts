@@ -195,16 +195,23 @@ export async function submitForm(event: H3Event, slug: string): Promise<{ ok: tr
         continue
       }
       if (field.type === 'file') {
-        const file = files[field.key]
-        if (!file?.data || file.size < 1) {
-          continue
+        const uploaded = files[field.key]
+        const list = Array.isArray(uploaded) ? uploaded : uploaded ? [uploaded] : []
+        const stored = []
+        for (const item of list) {
+          if (!item.data || item.size < 1) {
+            continue
+          }
+          const key = await saveFormFile(form.id, submissionId, item.name, item.data)
+          storedKeys.push(key)
+          stored.push({ name: item.name, size: item.size, type: item.type, key })
         }
-        const key = await saveFormFile(form.id, submissionId, file.name, file.data)
-        storedKeys.push(key)
-        values.push({
-          key: field.key,
-          value: JSON.stringify({ name: file.name, size: file.size, type: file.type, key }),
-        })
+        if (stored.length) {
+          values.push({
+            key: field.key,
+            value: JSON.stringify(stored.length === 1 ? stored[0] : stored),
+          })
+        }
         continue
       }
       values.push({ key: field.key, value: textStoredValue(field, input[field.key]) })
@@ -266,26 +273,29 @@ async function uniqueSlug(base: string): Promise<string> {
 
 async function readSubmission(event: H3Event, content: FormContent): Promise<{
   input: Record<string, unknown>
-  files: Record<string, (UploadedFile & { data: Buffer }) | null>
+  files: Record<string, (UploadedFile & { data: Buffer }) | (UploadedFile & { data: Buffer })[] | null>
 }> {
   const input: Record<string, unknown> = {}
-  const files: Record<string, (UploadedFile & { data: Buffer }) | null> = {}
+  const files: Record<string, (UploadedFile & { data: Buffer }) | (UploadedFile & { data: Buffer })[] | null> = {}
   const type = event.node.req.headers['content-type'] || ''
   if (type.includes('multipart/form-data')) {
     const parts = await readMultipartFormData(event) || []
     const lists = new Map<string, string[]>()
+    const uploads = new Map<string, (UploadedFile & { data: Buffer })[]>()
     for (const part of parts) {
       if (!part.name) {
         continue
       }
       if (part.filename) {
         const data = Buffer.from(part.data)
-        files[part.name] = {
+        const list = uploads.get(part.name) ?? []
+        list.push({
           name: part.filename,
           type: part.type || 'application/octet-stream',
           size: data.length,
           data,
-        }
+        })
+        uploads.set(part.name, list)
         continue
       }
       const value = Buffer.from(part.data).toString('utf8')
@@ -297,7 +307,11 @@ async function readSubmission(event: H3Event, content: FormContent): Promise<{
       if (field.type === 'checkbox') {
         input[field.key] = lists.get(field.key) ?? []
       }
-      else if (field.type !== 'file') {
+      else if (field.type === 'file') {
+        const list = uploads.get(field.key) ?? []
+        files[field.key] = field.text?.fileMultiple.enabled ? list : (list[0] ?? null)
+      }
+      else {
         input[field.key] = lists.get(field.key)?.[0] ?? ''
       }
     }

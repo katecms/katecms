@@ -239,3 +239,20 @@ test('cloneField keeps a gap in front of the source empty', () => {
   assert.equal(copyItem?.y, 1)
   assert.equal(copyItem?.x, 30)
 })
+
+test('file upload keeps a 20 MB size floor and date range rejects late values', () => {
+  const content = normalizeFormContent({
+    fields: [
+      { id: 'file', type: 'file', key: 'upload', text: { maxUpload: { enabled: true, size: 2 } } },
+      { id: 'when', type: 'date', key: 'when', text: { rangeMax: '2020-01-01', required: { enabled: true } } },
+    ],
+  })
+  const file = content.fields.find(field => field.type === 'file')
+  assert.equal(file?.label, 'File Upload')
+  assert.equal(file?.text?.uploadButtonText, 'Attach File')
+  assert.equal(file?.text?.maxUpload.size, 20)
+  const tooBig = submissionErrors(content, {}, { upload: { name: 'a.pdf', type: 'application/pdf', size: 21 * 1024 * 1024 } }, 50 * 1024 * 1024)
+  assert.match(tooBig.upload || '', /20/)
+  const date = submissionErrors(content, { when: '2024-05-01' }, {}, 1024)
+  assert.equal(date.when, 'Enter a value in the allowed range.')
+})

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { FormField } from '../form/model'
-import { applyInputMask, defaultTextOptions, iconUrl, isRichFieldType, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON } from '../form/text-options'
+import { applyInputMask, defaultTextOptions, fileAccept, iconUrl, isRichFieldType, isTemporalType, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, temporalInputType } from '../form/text-options'
 
 const props = withDefaults(defineProps<{
   field?: FormField
@@ -220,6 +220,30 @@ function onInput(event: Event) {
           alt=""
         >
       </button>
+      <input
+        v-else-if="field.type === 'file'"
+        :id="controlId"
+        class="miraicms-field-face__input"
+        type="file"
+        :name="preview ? undefined : field.key"
+        :accept="fileAccept(options.fileType) || undefined"
+        :multiple="options.fileMultiple.enabled || undefined"
+        :required="options.required.enabled"
+        :disabled="disabled || options.disabled"
+      >
+      <input
+        v-else-if="isTemporalType(field.type)"
+        :id="controlId"
+        v-model="draft"
+        class="miraicms-field-face__input"
+        :type="temporalInputType(field.type)"
+        :name="preview ? undefined : field.key"
+        :required="options.required.enabled"
+        :readonly="preview || options.readOnly"
+        :disabled="disabled || options.disabled"
+        :min="options.rangeMin || undefined"
+        :max="options.rangeMax || undefined"
+      >
       <textarea
         v-else-if="field.type === 'textarea'"
         :id="controlId"
@@ -271,7 +295,16 @@ function onInput(event: Event) {
         {{ revealed ? 'Hide' : 'Show' }}
       </button>
       <img
-        v-if="iconUrl(options.suffix)"
+        v-if="iconUrl(options.suffix) && field.type !== 'file'"
+        class="miraicms-field-face__icon"
+        :src="iconUrl(options.suffix)"
+        alt=""
+      >
+      <span v-if="field.type === 'file'">{{ options.uploadButtonText }}</span>
+      <span v-if="field.type === 'file'">{{ options.fileSelectStatus }}</span>
+      <span v-if="field.type === 'file' && options.showMaximumSize">{{ options.showMaximumSize }}</span>
+      <img
+        v-if="field.type === 'file' && iconUrl(options.suffix)"
         class="miraicms-field-face__icon"
         :src="iconUrl(options.suffix)"
         alt=""

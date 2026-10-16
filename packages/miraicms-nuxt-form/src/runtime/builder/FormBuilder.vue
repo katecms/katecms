@@ -111,8 +111,8 @@ const baseLabel = computed(() => {
 })
 
 const palette = [
-  { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button'] as FieldType[] },
-  { title: 'Fields', types: FIELD_TYPES.filter(type => !['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button'].includes(type)) },
+  { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month'] as FieldType[] },
+  { title: 'Fields', types: FIELD_TYPES.filter(type => !['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month'].includes(type)) },
 ]
 
 function hasBreakpointIcon(name: string) {

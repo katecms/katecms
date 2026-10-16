@@ -2,10 +2,10 @@
 Опции поля (данные опции (возможно частично), в дальнейшем будут использоваться и для других полей):
 1) "Label" - чекбокс в аккордеоне (слева от стрелки), если выбрать, открывается аккордеон (который стает активный и его можно закрыть/открыть) и там есть текстовое поле (textarea) + Prefix Icon и Suffix Icon
 2) "Required" - чекбокс в аккордеоне (слева от стрелки), если выбрать, открывается аккордеон (который стает активный и его можно закрыть/открыть) и там есть:
-- чекбокс "Show Error Message"
-- чекбокс "Custom Error Message"
+- checkbox "Show Error Message"
+- checkbox "Custom Error Message"
 - текстовое поле (только если выбрано "Custom Error Message") + Prefix Icon и Suffix Icon
-- чекбокс "Show Asterisk Symbol"
+- checkbox "Show Asterisk Symbol"
 - Asterisk Position (если выбрано "Show Asterisk Symbol") - left, before, after, right
 3) "Subtitle" - чекбокс в аккордеоне (слева от стрелки), если выбрать, открывается аккордеон (который стает активный и его можно закрыть/открыть) и там есть текстовое поле (textarea) + Prefix Icon и Suffix Icon
 4) текстовое поле "Placeholder"
@@ -92,12 +92,12 @@
   -- Word Limit: `^(?:\b\w+\b[\s\r\n]*){1,30}$`
   -- Only Gmail: `^[a-z0-9](\.?[a-z0-9]){0,}@(gmail)\.com$`
 - текстовое поле "Flags"
-14) чекбокс "Read-only"
-15) чекбокс "Hidden"
+14) checkbox "Read-only"
+15) checkbox "Hidden"
 16) Size & Position:
 - number "X" - расположение по оси x
 - number "W" - ширина
-17) чекбокс "Disabled"
+17) checkbox "Disabled"
 18) текстовое поле "Name Attribute" (Name is the unique identifier for the field. It is used to reference the field in the form submission data.)
 19) "Enable confirm email field" - чекбокс в аккордеоне (слева от стрелки), если выбрать, открывается аккордеон (который стает активный и его можно закрыть/открыть):
 - "Label" - чекбокс в аккордеоне (слева от стрелки), если выбрать, открывается аккордеон (который стает активный и его можно закрыть/открыть) и там есть текстовое поле + Prefix Icon и Suffix Icon
@@ -110,7 +110,7 @@
 21) "Value Range (Min/Max)":
 - number "Minimum"
 - number "Maximum"
-22) чекбокс "Include show/hide password icon" (Info: This allows to show the password icon. You can toggle this option to show or hide the password icon.)
+22) checkbox "Include show/hide password icon" (Info: This allows to show the password icon. You can toggle this option to show or hide the password icon.)
 23) "Enable confirm password field" - чекбокс в аккордеоне (слева от стрелки), если выбрать, открывается аккордеон (который стает активный и его можно закрыть/открыть):
 - "Label" - чекбокс в аккордеоне (слева от стрелки), если выбрать, открывается аккордеон (который стает активный и его можно закрыть/открыть) и там есть текстовое поле + Prefix Icon и Suffix Icon
 - текстовое поле "Placeholder"
@@ -121,11 +121,11 @@
 24) аккордеон "Validations"
 находится под "Helper Text"
 конструкции по типу ${isNumberExistIcn}, можно заменить на другие, которые посчитаешь нужными, эти конструкции будут выводить символы <span style="color: red;">✖</span> или <span style="color: green;">✔</span>
-- чекбокс At least one digit (0-9) - value: (?=.*[0-9]) вставляет в "Helper Text": <span style="margin-right:20px;">${isNumberExistIcn} One number</span>
-- чекбокс At least one lowercase character (a-z) - value: (?=.*[a-z]) вставляет в "Helper Text": <span style="margin-right:20px;">${isLowercaseExistIcn} One lowercase character</span>
-- чекбокс At least one uppercase character (A-Z) - value: (?=.*[A-Z]) вставляет в "Helper Text": <span style="margin-right:20px;">${isUppercaseExistIcn} One uppercase character</span>
-- чекбокс At least one special character (~!@#$%^&*(){}[]<>+-_=/\|;:,.) - value: (?=.*[~!@#$%^&*(){}[$_bf_$]<>+$_bf_$-_=$_bf_$$_bf_$/|;:,.]) (что означает $_bf_$ не знаю!) вставляет в "Helper Text": <span style="margin-right:20px;">${isSpecialExistIcn} One special character</span>
-- чекбокс "Limit Password Length": вставляет в "Helper Text": <span style="margin-right:20px;">${isLimitValidIcn} 8 to 32 characters</span>
+- checkbox At least one digit (0-9) - value: (?=.*[0-9]) вставляет в "Helper Text": <span style="margin-right:20px;">${isNumberExistIcn} One number</span>
+- checkbox At least one lowercase character (a-z) - value: (?=.*[a-z]) вставляет в "Helper Text": <span style="margin-right:20px;">${isLowercaseExistIcn} One lowercase character</span>
+- checkbox At least one uppercase character (A-Z) - value: (?=.*[A-Z]) вставляет в "Helper Text": <span style="margin-right:20px;">${isUppercaseExistIcn} One uppercase character</span>
+- checkbox At least one special character (~!@#$%^&*(){}[]<>+-_=/\|;:,.) - value: (?=.*[~!@#$%^&*(){}[$_bf_$]<>+$_bf_$-_=$_bf_$$_bf_$/|;:,.]) (что означает $_bf_$ не знаю!) вставляет в "Helper Text": <span style="margin-right:20px;">${isSpecialExistIcn} One special character</span>
+- checkbox "Limit Password Length": вставляет в "Helper Text": <span style="margin-right:20px;">${isLimitValidIcn} 8 to 32 characters</span>
 -- number "Min"
 -- number "Max"
 25) number "Step"
@@ -154,3 +154,38 @@
 - Left
 - Center
 - Right
+35) "Allow Multiple" - чекбокс в аккордеоне (слева от стрелки), если выбрать, открывается аккордеон (который стает активный и его можно закрыть/открыть) и там есть:
+- number "Minimum File", для этого поля:
+- checkbox "Show Error Message"
+- checkbox "Custom Error Message"
+- текстовое поле (только если выбрано "Custom Error Message")
+- number "Maximum File", для этого поля:
+- checkbox "Show Error Message"
+- checkbox "Custom Error Message"
+- текстовое поле (только если выбрано "Custom Error Message")
+36) select "Allowed File Type":
+- Images (value: .xbm,.tif,.pjp,.pjpeg,.svgz,.jpg,.jpeg,.ico,.tiff,.gif,.svg,.bmp,.png,.jfif,.webp,.tif)
+- Audios (value: .opus,.flac,.webm,.weba,.wav,.ogg,.m4a,.mp3,.oga,.mid,.amr,.aiff,.wma,.au,.acc,.wpl)
+- Videos (value: .ogm,.wmv,.mpg,.webm,.ogv,.mov,.asx,.mpeg,.mp4,.m4v,.avi,.3g2,.3gp,.flv,.mkv,.swf)
+- Documents (value: .doc,.docx,.odt,.pdf,.rtf,.tex,.txt,.wks,.wps,.wpd)
+- Zip (value: .7z,.arj,.deb,.pkg,.rar,.rpm,.gz,.z,.zip)
+- Presentation (value: .key,.odp,.pps,.ppt,.pptx)
+- Spreadsheet (value: .ods,.xlr,.xls,.xlsx)
+- Databases (value: .csv,.dat,.db,.dbf,.log,.mdb,.sav,.sql,.tar,.sql,.sqlite,.xml)
+37) text "Upload Button Text:" - default: Attach File
+38) text "File Select Status" - default: No File Selected (Info: By enabling this feature, you will see file select status)
+39) text "Show Maximum Size" - placeholder: "Write a Max Size Label Ex:(Max 2MB)" (Info: By disabling this option, the field show maximum size will be hidden)
+40) "Allow Maximum Upload Size" - чекбокс в аккордеоне (слева от стрелки), если выбрать, открывается аккордеон (который стает активный и его можно закрыть/открыть) и там есть:
+- number - default: 2MB
+- checkbox "Total Maximum Size" - default: false
+- checkbox "Show Error Message"
+- checkbox "Custom Error Message"
+- текстовое поле (только если выбрано "Custom Error Message") - default: Maximum file size exceeded. (Max: ${maximum_size}MB)
+41) Show File List:
+- checkbox "Show File Preview"
+- checkbox "Show File Size"
+42) text "File Exist Message" - default: A file already exists
+43) "Value Range (Min/Max)":
+    (Date - type="date", Time - type="time", Date-Time - type="datetime-local", Week - type="week", Month - type="month")
+- "Minimum"
+- "Maximum"

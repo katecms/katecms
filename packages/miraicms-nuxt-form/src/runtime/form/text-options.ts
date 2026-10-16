@@ -53,6 +53,8 @@ export interface FormConfirmField {
 export type RatingPosition = 'left' | 'center' | 'right'
 export type ButtonAlign = 'left' | 'center' | 'right'
 export type ButtonKind = 'submit' | 'button' | 'reset'
+export type FileKind = '' | 'image' | 'audio' | 'video' | 'document' | 'zip' | 'presentation' | 'spreadsheet' | 'database'
+export type TemporalType = 'date' | 'time' | 'datetime' | 'week' | 'month'
 
 export interface FormRatingOption {
   id: string
@@ -70,6 +72,28 @@ export interface FormPasswordRules {
   limitLength: boolean
   min: number | null
   max: number | null
+}
+
+export interface FormFileLimit {
+  value: number | null
+  showError: boolean
+  customError: boolean
+  errorText: string
+}
+
+export interface FormFileMultiple {
+  enabled: boolean
+  minimum: FormFileLimit
+  maximum: FormFileLimit
+}
+
+export interface FormMaxUpload {
+  enabled: boolean
+  size: number | null
+  total: boolean
+  showError: boolean
+  customError: boolean
+  errorText: string
 }
 
 export interface FormTextOptions {
@@ -110,6 +134,17 @@ export interface FormTextOptions {
   buttonType: ButtonKind
   fullWidth: boolean
   buttonAlign: ButtonAlign
+  fileMultiple: FormFileMultiple
+  fileType: FileKind
+  uploadButtonText: string
+  fileSelectStatus: string
+  showMaximumSize: string
+  maxUpload: FormMaxUpload
+  showFilePreview: boolean
+  showFileSize: boolean
+  fileExistMessage: string
+  rangeMin: string
+  rangeMax: string
 }
 
 export interface PatternPreset {
@@ -271,6 +306,28 @@ export function defaultTextOptions(label = ''): FormTextOptions {
     buttonType: 'submit',
     fullWidth: false,
     buttonAlign: 'left',
+    fileMultiple: {
+      enabled: false,
+      minimum: emptyFileLimit(),
+      maximum: emptyFileLimit(),
+    },
+    fileType: '',
+    uploadButtonText: 'Attach File',
+    fileSelectStatus: 'No File Selected',
+    showMaximumSize: '',
+    maxUpload: {
+      enabled: false,
+      size: 20,
+      total: false,
+      showError: true,
+      customError: false,
+      errorText: 'Maximum file size exceeded. (Max: ${maximum_size}MB)',
+    },
+    showFilePreview: false,
+    showFileSize: false,
+    fileExistMessage: 'A file already exists',
+    rangeMin: '',
+    rangeMax: '',
   }
 }
 
@@ -295,7 +352,11 @@ function defaultInvalidError(): FormInvalidError {
   }
 }
 
-const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button'])
+function emptyFileLimit(): FormFileLimit {
+  return { value: null, showError: true, customError: false, errorText: '' }
+}
+
+const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month'])
 
 const FIELD_OPTIONS: Record<string, number[]> = {
   text: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
@@ -308,6 +369,46 @@ const FIELD_OPTIONS: Record<string, number[]> = {
   color: [1, 2, 3, 5, 6, 7, 14, 15, 16, 17, 18],
   rating: [1, 2, 3, 26, 27, 28, 29, 30, 7, 15, 17, 18],
   button: [31, 32, 33, 34, 7, 15, 17, 18],
+  file: [1, 2, 3, 35, 36, 37, 6, 7, 38, 39, 40, 41, 42, 15, 17, 18],
+  date: [1, 2, 3, 5, 6, 7, 43, 14, 15, 16, 17, 18],
+  time: [1, 2, 3, 5, 6, 7, 43, 14, 15, 16, 17, 18],
+  datetime: [1, 2, 3, 5, 6, 7, 43, 14, 15, 16, 17, 18],
+  week: [1, 2, 3, 5, 6, 7, 43, 14, 15, 16, 17, 18],
+  month: [1, 2, 3, 5, 6, 7, 43, 14, 15, 16, 17, 18],
+}
+
+export const FILE_TYPE_ACCEPT: Record<Exclude<FileKind, ''>, { label: string, accept: string }> = {
+  image: { label: 'Images', accept: '.xbm,.tif,.pjp,.pjpeg,.svgz,.jpg,.jpeg,.ico,.tiff,.gif,.svg,.bmp,.png,.jfif,.webp' },
+  audio: { label: 'Audios', accept: '.opus,.flac,.webm,.weba,.wav,.ogg,.m4a,.mp3,.oga,.mid,.amr,.aiff,.wma,.au,.acc,.wpl' },
+  video: { label: 'Videos', accept: '.ogm,.wmv,.mpg,.webm,.ogv,.mov,.asx,.mpeg,.mp4,.m4v,.avi,.3g2,.3gp,.flv,.mkv,.swf' },
+  document: { label: 'Documents', accept: '.doc,.docx,.odt,.pdf,.rtf,.tex,.txt,.wks,.wps,.wpd' },
+  zip: { label: 'Zip', accept: '.7z,.arj,.deb,.pkg,.rar,.rpm,.gz,.z,.zip' },
+  presentation: { label: 'Presentation', accept: '.key,.odp,.pps,.ppt,.pptx' },
+  spreadsheet: { label: 'Spreadsheet', accept: '.ods,.xlr,.xls,.xlsx' },
+  database: { label: 'Databases', accept: '.csv,.dat,.db,.dbf,.log,.mdb,.sav,.sql,.tar,.sqlite,.xml' },
+}
+
+const FILE_KINDS = new Set<FileKind>(['', 'image', 'audio', 'video', 'document', 'zip', 'presentation', 'spreadsheet', 'database'])
+
+export function fileAccept(kind: string): string {
+  if (!kind || kind === '' || !FILE_KINDS.has(kind as FileKind) || kind === '') {
+    return ''
+  }
+  return FILE_TYPE_ACCEPT[kind as Exclude<FileKind, ''>].accept
+}
+
+export function isTemporalType(type: string): type is TemporalType {
+  return type === 'date' || type === 'time' || type === 'datetime' || type === 'week' || type === 'month'
+}
+
+export function temporalInputType(type: string): string {
+  if (type === 'datetime') {
+    return 'datetime-local'
+  }
+  if (isTemporalType(type)) {
+    return type
+  }
+  return 'text'
 }
 
 export function isRichFieldType(type: string): boolean {
@@ -487,6 +588,17 @@ export function normalizeTextOptions(raw: unknown, fallback: { label?: string, p
     buttonType: source.buttonType === 'button' || source.buttonType === 'reset' ? source.buttonType : 'submit',
     fullWidth: source.fullWidth === true,
     buttonAlign: source.buttonAlign === 'center' || source.buttonAlign === 'right' ? source.buttonAlign : 'left',
+    fileMultiple: normalizeFileMultiple(source.fileMultiple),
+    fileType: typeof source.fileType === 'string' && FILE_KINDS.has(source.fileType as FileKind) ? source.fileType as FileKind : '',
+    uploadButtonText: clip(source.uploadButtonText, 80) || 'Attach File',
+    fileSelectStatus: clip(source.fileSelectStatus, 120) || 'No File Selected',
+    showMaximumSize: clip(source.showMaximumSize, 120),
+    maxUpload: normalizeMaxUpload(source.maxUpload),
+    showFilePreview: source.showFilePreview === true,
+    showFileSize: source.showFileSize === true,
+    fileExistMessage: clip(source.fileExistMessage, 200) || 'A file already exists',
+    rangeMin: source.rangeMin == null ? clip(fallback.min, 40) : clip(source.rangeMin, 40),
+    rangeMax: source.rangeMax == null ? clip(fallback.max, 40) : clip(source.rangeMax, 40),
   }
 }
 
@@ -511,6 +623,38 @@ function normalizeInvalid(raw: unknown): FormInvalidError {
     errorText: clip(source.errorText, 400),
     errorPrefix: normalizeIcon(source.errorPrefix),
     errorSuffix: normalizeIcon(source.errorSuffix),
+  }
+}
+
+function normalizeFileLimit(raw: unknown): FormFileLimit {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    value: optionalCount(source.value),
+    showError: source.showError !== false,
+    customError: source.customError === true,
+    errorText: clip(source.errorText, 400),
+  }
+}
+
+function normalizeFileMultiple(raw: unknown): FormFileMultiple {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    enabled: source.enabled === true,
+    minimum: normalizeFileLimit(source.minimum),
+    maximum: normalizeFileLimit(source.maximum),
+  }
+}
+
+function normalizeMaxUpload(raw: unknown): FormMaxUpload {
+  const source = isRecord(raw) ? raw : {}
+  const size = optionalNumber(source.size)
+  return {
+    enabled: source.enabled === true,
+    size: size == null ? 20 : Math.max(20, size),
+    total: source.total === true,
+    showError: source.showError !== false,
+    customError: source.customError === true,
+    errorText: clip(source.errorText, 400) || 'Maximum file size exceeded. (Max: ${maximum_size}MB)',
   }
 }
 

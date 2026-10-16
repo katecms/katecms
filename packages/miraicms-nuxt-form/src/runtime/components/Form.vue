@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { $fetch } from '#imports'
 import type { FormField, LayoutItem, PublicForm, UploadedFile } from '../form/model'
 import { baseBreakpoint, formBreakpoints, submissionErrors } from '../form/model'
-import { applyInputMask, defaultTextOptions, iconUrl, isRichFieldType, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON } from '../form/text-options'
+import { applyInputMask, defaultTextOptions, fileAccept, iconUrl, isRichFieldType, isTemporalType, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, temporalInputType } from '../form/text-options'
 import { clientFormBreakpoints } from '../form/runtime-config'
 import { stepIconSvg } from '../form/icons'
 
@@ -24,6 +24,7 @@ const state = ref<'loading' | 'missing' | 'idle' | 'submitting' | 'success' | 'i
 const fieldErrors = ref<Record<string, string>>({})
 const alertMessage = ref('')
 const drafts = ref<Record<string, string>>({})
+const chosenFiles = ref<Record<string, { name: string, size: number, url: string }[]>>({})
 const revealed = ref<Record<string, boolean>>({})
 const hoverRating = ref<Record<string, string>>({})
 
@@ -113,10 +114,12 @@ async function onSubmit(event: Event) {
       input[field.key] = data.getAll(field.key).map(value => String(value))
     }
     else if (field.type === 'file') {
-      const file = data.get(field.key)
-      files[field.key] = file instanceof File && file.size > 0
-        ? { name: file.name, type: file.type, size: file.size }
-        : null
+      const selected = data.getAll(field.key).filter((value): value is File => value instanceof File && value.size > 0)
+      files[field.key] = selected.length > 1
+        ? selected.map(item => ({ name: item.name, type: item.type, size: item.size }))
+        : selected[0]
+          ? { name: selected[0].name, type: selected[0].type, size: selected[0].size }
+          : null
     }
     else if (field.type !== 'html' && field.type !== 'button') {
       input[field.key] = String(data.get(field.key) ?? '')
@@ -210,6 +213,9 @@ function liveInputType(field: FormField, revealed: boolean) {
   if (field.type === 'email' || field.type === 'number' || field.type === 'url' || field.type === 'color' || field.type === 'range') {
     return field.type
   }
+  if (isTemporalType(field.type)) {
+    return temporalInputType(field.type)
+  }
   return 'text'
 }
 
@@ -247,6 +253,35 @@ function onDraft(field: FormField, event: Event) {
   if (el.value !== next) {
     el.value = next
   }
+}
+
+function onChosenFiles(field: FormField, event: Event) {
+  const el = event.target
+  if (!(el instanceof HTMLInputElement)) {
+    return
+  }
+  const previous = chosenFiles.value[field.id] ?? []
+  for (const item of previous) {
+    if (item.url) {
+      URL.revokeObjectURL(item.url)
+    }
+  }
+  const next = [...(el.files ?? [])].map(file => ({
+    name: file.name,
+    size: file.size,
+    url: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
+  }))
+  chosenFiles.value = { ...chosenFiles.value, [field.id]: next }
+}
+
+function formatBytes(size: number): string {
+  if (size < 1024) {
+    return `${size} B`
+  }
+  if (size < 1024 * 1024) {
+    return `${Math.round(size / 1024)} KB`
+  }
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`
 }
 </script>
 
@@ -452,6 +487,32 @@ function onDraft(field: FormField, event: Event) {
                     alt=""
                   >
                 </button>
+                <input
+                  v-else-if="cell.field.type === 'file'"
+                  :id="controlId(cell.field)"
+                  class="mirai-form__control"
+                  type="file"
+                  :name="cell.field.key"
+                  :accept="fileAccept(textOptions(cell.field).fileType) || undefined"
+                  :multiple="textOptions(cell.field).fileMultiple.enabled || undefined"
+                  :required="textOptions(cell.field).required.enabled"
+                  :disabled="locked || textOptions(cell.field).disabled"
+                  @change="onChosenFiles(cell.field, $event)"
+                >
+                <input
+                  v-else-if="isTemporalType(cell.field.type)"
+                  :id="controlId(cell.field)"
+                  class="mirai-form__control"
+                  :type="temporalInputType(cell.field.type)"
+                  :name="cell.field.key"
+                  :value="drafts[cell.field.id]"
+                  :required="textOptions(cell.field).required.enabled"
+                  :readonly="textOptions(cell.field).readOnly"
+                  :disabled="locked || textOptions(cell.field).disabled"
+                  :min="textOptions(cell.field).rangeMin || undefined"
+                  :max="textOptions(cell.field).rangeMax || undefined"
+                  @input="onDraft(cell.field, $event)"
+                >
                 <textarea
                   v-else-if="cell.field.type === 'textarea'"
                   :id="controlId(cell.field)"
@@ -501,6 +562,22 @@ function onDraft(field: FormField, event: Event) {
                 >
                   {{ revealed[cell.field.id] ? 'Hide' : 'Show' }}
                 </button>
+                <span v-if="cell.field.type === 'file'">{{ textOptions(cell.field).uploadButtonText }}</span>
+                <span v-if="cell.field.type === 'file' && !(chosenFiles[cell.field.id]?.length)">{{ textOptions(cell.field).fileSelectStatus }}</span>
+                <span v-if="cell.field.type === 'file' && (chosenFiles[cell.field.id]?.length || 0) > 1 && !textOptions(cell.field).fileMultiple.enabled">{{ textOptions(cell.field).fileExistMessage }}</span>
+                <span v-if="cell.field.type === 'file' && textOptions(cell.field).showMaximumSize">{{ textOptions(cell.field).showMaximumSize }}</span>
+                <span
+                  v-for="item in cell.field.type === 'file' ? (chosenFiles[cell.field.id] || []) : []"
+                  :key="`${cell.field.id}-${item.name}`"
+                >
+                  <img
+                    v-if="textOptions(cell.field).showFilePreview && item.url"
+                    :src="item.url"
+                    alt=""
+                  >
+                  <span>{{ item.name }}</span>
+                  <span v-if="textOptions(cell.field).showFileSize">{{ formatBytes(item.size) }}</span>
+                </span>
                 <img
                   v-if="iconUrl(textOptions(cell.field).suffix)"
                   class="mirai-form__icon"

@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import type { FormField, LayoutItem } from '../../form/model'
 import { GRID_COLUMNS } from '../../form/model'
 import type { FormMarkedText, FormTextOptions } from '../../form/text-options'
-import { AUTOCOMPLETE_CHOICES, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultTextOptions, fieldHasOption, normalizeIcon } from '../../form/text-options'
+import { AUTOCOMPLETE_CHOICES, FILE_TYPE_ACCEPT, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultTextOptions, fieldHasOption, fileAccept, isTemporalType, normalizeIcon, temporalInputType } from '../../form/text-options'
 import DecoratedText from './DecoratedText.vue'
 import OptionAccordion from './OptionAccordion.vue'
 import SuggestionRepeater from './SuggestionRepeater.vue'
@@ -30,6 +30,7 @@ const patternPreset = computed(() => {
 })
 
 function commit(text: FormTextOptions) {
+  const temporal = isTemporalType(props.field.type)
   emit('update', {
     ...props.field,
     text,
@@ -38,10 +39,11 @@ function commit(text: FormTextOptions) {
     required: text.required.enabled,
     help: text.helper.enabled ? text.helper.text : '',
     value: text.defaultValue,
-    min: props.field.type === 'number' || props.field.type === 'range' ? (text.valueMin == null ? '' : String(text.valueMin)) : props.field.min,
-    max: props.field.type === 'number' || props.field.type === 'range' ? (text.valueMax == null ? '' : String(text.valueMax)) : props.field.max,
+    min: temporal ? text.rangeMin : props.field.type === 'number' || props.field.type === 'range' ? (text.valueMin == null ? '' : String(text.valueMin)) : props.field.min,
+    max: temporal ? text.rangeMax : props.field.type === 'number' || props.field.type === 'range' ? (text.valueMax == null ? '' : String(text.valueMax)) : props.field.max,
     step: text.step == null ? '' : String(text.step),
     buttonLabel: props.field.type === 'button' ? text.buttonText.text : props.field.buttonLabel,
+    accept: props.field.type === 'file' ? (fileAccept(text.fileType) || props.field.accept) : props.field.accept,
   })
 }
 
@@ -156,6 +158,87 @@ function setWidth(raw: number | null) {
       />
     </OptionAccordion>
 
+    <OptionAccordion
+      v-if="has(35)"
+      title="Allow Multiple"
+      :enabled="options.fileMultiple.enabled"
+      @update:enabled="patch({ fileMultiple: { ...options.fileMultiple, enabled: $event } })"
+    >
+      <MiraiCmsNumberField
+        :model-value="options.fileMultiple.minimum.value"
+        :field-key="`${field.id}-file-min`"
+        :field="{ type: 'number', label: 'Minimum File', min: 0, step: 1 }"
+        @update:model-value="patch({ fileMultiple: { ...options.fileMultiple, minimum: { ...options.fileMultiple.minimum, value: $event == null || !Number.isFinite($event) ? null : Math.max(0, Math.floor($event)) } } })"
+      />
+      <MiraiCmsTrueFalseField
+        :model-value="options.fileMultiple.minimum.showError"
+        :field-key="`${field.id}-file-min-show`"
+        :field="{ type: 'true_false', label: 'Show Error Message' }"
+        @update:model-value="patch({ fileMultiple: { ...options.fileMultiple, minimum: { ...options.fileMultiple.minimum, showError: $event === true } } })"
+      />
+      <MiraiCmsTrueFalseField
+        v-if="options.fileMultiple.minimum.showError"
+        :model-value="options.fileMultiple.minimum.customError"
+        :field-key="`${field.id}-file-min-custom`"
+        :field="{ type: 'true_false', label: 'Custom Error Message' }"
+        @update:model-value="patch({ fileMultiple: { ...options.fileMultiple, minimum: { ...options.fileMultiple.minimum, customError: $event === true } } })"
+      />
+      <MiraiCmsTextField
+        v-if="options.fileMultiple.minimum.showError && options.fileMultiple.minimum.customError"
+        :model-value="options.fileMultiple.minimum.errorText"
+        :field-key="`${field.id}-file-min-text`"
+        :field="{ type: 'text', label: 'Error message', maxLength: 400 }"
+        @update:model-value="patch({ fileMultiple: { ...options.fileMultiple, minimum: { ...options.fileMultiple.minimum, errorText: String($event ?? '') } } })"
+      />
+      <MiraiCmsNumberField
+        :model-value="options.fileMultiple.maximum.value"
+        :field-key="`${field.id}-file-max`"
+        :field="{ type: 'number', label: 'Maximum File', min: 0, step: 1 }"
+        @update:model-value="patch({ fileMultiple: { ...options.fileMultiple, maximum: { ...options.fileMultiple.maximum, value: $event == null || !Number.isFinite($event) ? null : Math.max(0, Math.floor($event)) } } })"
+      />
+      <MiraiCmsTrueFalseField
+        :model-value="options.fileMultiple.maximum.showError"
+        :field-key="`${field.id}-file-max-show`"
+        :field="{ type: 'true_false', label: 'Show Error Message' }"
+        @update:model-value="patch({ fileMultiple: { ...options.fileMultiple, maximum: { ...options.fileMultiple.maximum, showError: $event === true } } })"
+      />
+      <MiraiCmsTrueFalseField
+        v-if="options.fileMultiple.maximum.showError"
+        :model-value="options.fileMultiple.maximum.customError"
+        :field-key="`${field.id}-file-max-custom`"
+        :field="{ type: 'true_false', label: 'Custom Error Message' }"
+        @update:model-value="patch({ fileMultiple: { ...options.fileMultiple, maximum: { ...options.fileMultiple.maximum, customError: $event === true } } })"
+      />
+      <MiraiCmsTextField
+        v-if="options.fileMultiple.maximum.showError && options.fileMultiple.maximum.customError"
+        :model-value="options.fileMultiple.maximum.errorText"
+        :field-key="`${field.id}-file-max-text`"
+        :field="{ type: 'text', label: 'Error message', maxLength: 400 }"
+        @update:model-value="patch({ fileMultiple: { ...options.fileMultiple, maximum: { ...options.fileMultiple.maximum, errorText: String($event ?? '') } } })"
+      />
+    </OptionAccordion>
+
+    <MiraiCmsSelectField
+      v-if="has(36)"
+      :model-value="options.fileType"
+      :field-key="`${field.id}-file-type`"
+      :field="{
+        type: 'select',
+        label: 'Allowed File Type',
+        returnFormat: 'value',
+        choices: Object.entries(FILE_TYPE_ACCEPT).map(([val, item]) => ({ val, lbl: item.label })),
+      }"
+      @update:model-value="patch({ fileType: typeof $event === 'string' ? $event as FormTextOptions['fileType'] : '' })"
+    />
+
+    <MiraiCmsTextField
+      v-if="has(37)"
+      :model-value="options.uploadButtonText"
+      :field-key="`${field.id}-upload-text`"
+      :field="{ type: 'text', label: 'Upload Button Text', maxLength: 80 }"
+      @update:model-value="patch({ uploadButtonText: String($event ?? '') })"
+    />
+
     <MiraiCmsTextField
       v-if="has(4)"
       :model-value="options.placeholder"
@@ -172,12 +255,24 @@ function setWidth(raw: number | null) {
       @update:model-value="patch({ defaultValue: String($event ?? '') })"
     />
     <MiraiCmsTextField
-      v-if="has(5) && field.type !== 'textarea'"
+      v-if="has(5) && field.type !== 'textarea' && !isTemporalType(field.type)"
       :model-value="options.defaultValue"
       :field-key="`${field.id}-default`"
       :field="{ type: 'text', label: 'Default value', maxLength: 20000 }"
       @update:model-value="patch({ defaultValue: String($event ?? '') })"
     />
+    <div
+      v-if="has(5) && isTemporalType(field.type)"
+      class="miraicms-text-settings__group"
+    >
+      <span class="miraicms-text-settings__heading">Default value</span>
+      <input
+        class="miraicms-text-settings__native"
+        :type="temporalInputType(field.type)"
+        :value="options.defaultValue"
+        @input="patch({ defaultValue: ($event.target as HTMLInputElement).value })"
+      >
+    </div>
 
     <div
       v-if="has(6)"
@@ -212,6 +307,116 @@ function setWidth(raw: number | null) {
         @update="patchMarked('helper', $event)"
       />
     </OptionAccordion>
+
+    <MiraiCmsTextField
+      v-if="has(38)"
+      :model-value="options.fileSelectStatus"
+      :field-key="`${field.id}-file-status`"
+      :field="{ type: 'text', label: 'File Select Status', instructions: 'By enabling this feature, you will see file select status.', maxLength: 120 }"
+      @update:model-value="patch({ fileSelectStatus: String($event ?? '') })"
+    />
+
+    <MiraiCmsTextField
+      v-if="has(39)"
+      :model-value="options.showMaximumSize"
+      :field-key="`${field.id}-file-size-label`"
+      :field="{ type: 'text', label: 'Show Maximum Size', placeholder: 'Write a Max Size Label Ex:(Max 2MB)', instructions: 'By disabling this option, the field show maximum size will be hidden.', maxLength: 120 }"
+      @update:model-value="patch({ showMaximumSize: String($event ?? '') })"
+    />
+
+    <OptionAccordion
+      v-if="has(40)"
+      title="Allow Maximum Upload Size"
+      :enabled="options.maxUpload.enabled"
+      @update:enabled="patch({ maxUpload: { ...options.maxUpload, enabled: $event } })"
+    >
+      <MiraiCmsNumberField
+        :model-value="options.maxUpload.size"
+        :field-key="`${field.id}-upload-size`"
+        :field="{ type: 'number', label: 'Size (MB)', min: 20, step: 1 }"
+        @update:model-value="patch({ maxUpload: { ...options.maxUpload, size: $event == null || !Number.isFinite($event) ? null : Math.max(20, $event) } })"
+      />
+      <MiraiCmsTrueFalseField
+        :model-value="options.maxUpload.total"
+        :field-key="`${field.id}-upload-total`"
+        :field="{ type: 'true_false', label: 'Total Maximum Size' }"
+        @update:model-value="patch({ maxUpload: { ...options.maxUpload, total: $event === true } })"
+      />
+      <MiraiCmsTrueFalseField
+        :model-value="options.maxUpload.showError"
+        :field-key="`${field.id}-upload-show`"
+        :field="{ type: 'true_false', label: 'Show Error Message' }"
+        @update:model-value="patch({ maxUpload: { ...options.maxUpload, showError: $event === true } })"
+      />
+      <MiraiCmsTrueFalseField
+        v-if="options.maxUpload.showError"
+        :model-value="options.maxUpload.customError"
+        :field-key="`${field.id}-upload-custom`"
+        :field="{ type: 'true_false', label: 'Custom Error Message' }"
+        @update:model-value="patch({ maxUpload: { ...options.maxUpload, customError: $event === true } })"
+      />
+      <MiraiCmsTextField
+        v-if="options.maxUpload.showError && options.maxUpload.customError"
+        :model-value="options.maxUpload.errorText"
+        :field-key="`${field.id}-upload-error`"
+        :field="{ type: 'text', label: 'Error message', maxLength: 400 }"
+        @update:model-value="patch({ maxUpload: { ...options.maxUpload, errorText: String($event ?? '') } })"
+      />
+    </OptionAccordion>
+
+    <div
+      v-if="has(41)"
+      class="miraicms-text-settings__group"
+    >
+      <span class="miraicms-text-settings__heading">Show File List</span>
+      <MiraiCmsTrueFalseField
+        :model-value="options.showFilePreview"
+        :field-key="`${field.id}-file-preview`"
+        :field="{ type: 'true_false', label: 'Show File Preview' }"
+        @update:model-value="patch({ showFilePreview: $event === true })"
+      />
+      <MiraiCmsTrueFalseField
+        :model-value="options.showFileSize"
+        :field-key="`${field.id}-file-show-size`"
+        :field="{ type: 'true_false', label: 'Show File Size' }"
+        @update:model-value="patch({ showFileSize: $event === true })"
+      />
+    </div>
+
+    <MiraiCmsTextField
+      v-if="has(42)"
+      :model-value="options.fileExistMessage"
+      :field-key="`${field.id}-file-exists`"
+      :field="{ type: 'text', label: 'File Exist Message', maxLength: 200 }"
+      @update:model-value="patch({ fileExistMessage: String($event ?? '') })"
+    />
+
+    <div
+      v-if="has(43)"
+      class="miraicms-text-settings__group"
+    >
+      <span class="miraicms-text-settings__heading">Value Range (Min/Max)</span>
+      <div class="miraicms-text-settings__grid">
+        <div class="miraicms-text-settings__native-field">
+          <span>Minimum</span>
+          <input
+            class="miraicms-text-settings__native"
+            :type="temporalInputType(field.type)"
+            :value="options.rangeMin"
+            @input="patch({ rangeMin: ($event.target as HTMLInputElement).value })"
+          >
+        </div>
+        <div class="miraicms-text-settings__native-field">
+          <span>Maximum</span>
+          <input
+            class="miraicms-text-settings__native"
+            :type="temporalInputType(field.type)"
+            :value="options.rangeMax"
+            @input="patch({ rangeMax: ($event.target as HTMLInputElement).value })"
+          >
+        </div>
+      </div>
+    </div>
 
     <OptionAccordion
       v-if="has(24)"
@@ -685,6 +890,24 @@ function setWidth(raw: number | null) {
 
   &__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  &__native-field {
+    display: flex;
+    flex-direction: column;
+    gap: math-rem(4);
+    font-size: math-rem(13);
+  }
+
+  &__native {
+    width: 100%;
+    min-height: math-rem(36);
+    padding: math-rem(6) math-rem(8);
+    border: 1px solid $color-border;
+    border-radius: $border-radius;
+    background: $color-surface;
+    color: $color-ink;
+    font: inherit;
   }
 
   &__icon-row {

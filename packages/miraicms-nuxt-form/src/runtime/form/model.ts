@@ -1,5 +1,5 @@
 import type { FormTextOptions } from './text-options.ts'
-import { customErrorText, defaultTextOptions, invalidErrorText, isRichFieldType, normalizeTextOptions, passwordRuleStates, textConstraintError } from './text-options.ts'
+import { customErrorText, defaultTextOptions, fileAccept, invalidErrorText, isRichFieldType, isTemporalType, normalizeTextOptions, passwordRuleStates, textConstraintError } from './text-options.ts'
 
 export const GRID_COLUMNS = 60
 export const ROW_HEIGHT = 72
@@ -48,6 +48,10 @@ export const FIELD_TYPES = [
   'radio',
   'checkbox',
   'date',
+  'time',
+  'datetime',
+  'week',
+  'month',
   'file',
   'hidden',
   'html',
@@ -70,7 +74,11 @@ export const FIELD_LABELS: Record<FieldType, string> = {
   radio: 'Radio',
   checkbox: 'Checkbox',
   date: 'Date',
-  file: 'File',
+  time: 'Time',
+  datetime: 'Date-Time',
+  week: 'Week',
+  month: 'Month',
+  file: 'File Upload',
   hidden: 'Hidden',
   html: 'HTML',
   button: 'Button',
@@ -591,7 +599,7 @@ export interface UploadedFile {
 export function submissionErrors(
   content: FormContent,
   input: Record<string, unknown>,
-  files: Record<string, UploadedFile | null>,
+  files: Record<string, UploadedFile | UploadedFile[] | null>,
   maxFileBytes: number,
 ): Record<string, string> {
   const errors: Record<string, string> = {}
@@ -791,10 +799,10 @@ function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string
     html: type === 'html' ? sanitizeHtml(clip(raw.html, 50000)) : '',
     value: type === 'hidden' ? clip(raw.value, 2000) : (text?.defaultValue || ''),
     buttonLabel: type === 'button' ? (text?.buttonText.text || clip(raw.buttonLabel, 400) || 'Submit') : '',
-    accept: type === 'file' ? clip(raw.accept, 200) : '',
+    accept: type === 'file' ? (fileAccept(text?.fileType || '') || clip(raw.accept, 400)) : '',
     rows: type === 'textarea' ? clampInt(Number(raw.rows) || 4, 2, 20) : 4,
-    min: text?.valueMin != null ? String(text.valueMin) : (type === 'number' ? clip(raw.min, 40) : ''),
-    max: text?.valueMax != null ? String(text.valueMax) : (type === 'number' ? clip(raw.max, 40) : ''),
+    min: isTemporalType(type) ? (text?.rangeMin || '') : text?.valueMin != null ? String(text.valueMin) : (type === 'number' ? clip(raw.min, 40) : ''),
+    max: isTemporalType(type) ? (text?.rangeMax || '') : text?.valueMax != null ? String(text.valueMax) : (type === 'number' ? clip(raw.max, 40) : ''),
     step: text?.step != null && (type === 'range' || type === 'number') ? String(text.step) : '',
     text,
   }
@@ -846,18 +854,12 @@ function uniqueKey(type: FieldType, existing: FormField[]): string {
   return `${base}_${n}`
 }
 
-function fieldError(field: FormField, raw: unknown, file: UploadedFile | null, maxFileBytes: number): string | null {
+function fieldError(field: FormField, raw: unknown, file: UploadedFile | UploadedFile[] | null, maxFileBytes: number): string | null {
   if (field.type === 'html' || field.type === 'button' || field.type === 'hidden') {
     return null
   }
   if (field.type === 'file') {
-    if (!file || file.size < 1) {
-      return field.required ? 'Choose a file.' : null
-    }
-    if (file.size > maxFileBytes) {
-      return 'File is too large.'
-    }
-    return null
+    return fileFieldError(field, file, maxFileBytes)
   }
   if (field.type === 'checkbox') {
     const selected = allowedChoices(field, asList(raw))
@@ -892,8 +894,15 @@ function fieldError(field: FormField, raw: unknown, file: UploadedFile | null, m
   if (field.type === 'phone' && !PHONE_PATTERN.test(value)) {
     return 'Enter a valid phone number.'
   }
-  if (field.type === 'date' && !isValidDate(value)) {
-    return 'Enter a valid date.'
+  if (isTemporalType(field.type) && !isTemporalValue(field.type, value)) {
+    return 'Enter a valid value.'
+  }
+  if (isTemporalType(field.type)) {
+    const min = field.text?.rangeMin || field.min
+    const max = field.text?.rangeMax || field.max
+    if ((min && value < min) || (max && value > max)) {
+      return 'Enter a value in the allowed range.'
+    }
   }
   if (field.type === 'number' || field.type === 'range') {
     const numeric = Number(value)
@@ -945,6 +954,91 @@ function asList(value: unknown): string[] {
     return [value.trim()]
   }
   return []
+}
+
+function fileList(file: UploadedFile | UploadedFile[] | null): UploadedFile[] {
+  if (!file) {
+    return []
+  }
+  const list = Array.isArray(file) ? file : [file]
+  return list.filter(item => item && item.size > 0)
+}
+
+function fileFieldError(field: FormField, file: UploadedFile | UploadedFile[] | null, maxFileBytes: number): string | null {
+  const list = fileList(file)
+  const options = field.text
+  const required = options ? options.required.enabled : field.required
+  if (!list.length) {
+    return required ? (customErrorText(options) || 'Choose a file.') : null
+  }
+  if (options?.fileMultiple.enabled) {
+    const minimum = options.fileMultiple.minimum
+    const maximum = options.fileMultiple.maximum
+    if (minimum.value != null && list.length < minimum.value) {
+      return limitMessage(minimum, `Select at least ${minimum.value} files.`)
+    }
+    if (maximum.value != null && list.length > maximum.value) {
+      return limitMessage(maximum, `Select at most ${maximum.value} files.`)
+    }
+  }
+  else if (list.length > 1) {
+    return options?.fileExistMessage || 'A file already exists'
+  }
+  const accept = fileAccept(options?.fileType || '') || field.accept
+  if (accept && list.some(item => !extensionAllowed(item.name, accept))) {
+    return 'This file type is not allowed.'
+  }
+  const limitMb = options?.maxUpload.enabled ? options.maxUpload.size : null
+  const limitBytes = limitMb != null && Number.isFinite(limitMb) ? limitMb * 1024 * 1024 : null
+  const total = list.reduce((sum, item) => sum + item.size, 0)
+  const overField = limitBytes != null && (options?.maxUpload.total ? total > limitBytes : list.some(item => item.size > limitBytes))
+  const overServer = list.some(item => item.size > maxFileBytes)
+  if (overField || overServer) {
+    return uploadSizeMessage(options, limitMb)
+  }
+  return null
+}
+
+function limitMessage(limit: { showError: boolean, customError: boolean, errorText: string }, fallback: string): string {
+  if (limit.showError && limit.customError && limit.errorText.trim()) {
+    return limit.errorText.trim()
+  }
+  return fallback
+}
+
+function uploadSizeMessage(options: FormField['text'], sizeMb: number | null): string {
+  const size = sizeMb == null ? '' : String(sizeMb)
+  const fallback = size ? `Maximum file size exceeded. (Max: ${size}MB)` : 'File is too large.'
+  if (options?.maxUpload.showError && options.maxUpload.customError && options.maxUpload.errorText.trim()) {
+    return options.maxUpload.errorText.replaceAll('${maximum_size}', size)
+  }
+  return fallback
+}
+
+function extensionAllowed(name: string, accept: string): boolean {
+  const ext = name.includes('.') ? `.${name.split('.').pop()!.toLowerCase()}` : ''
+  const allowed = accept.split(',').map(item => item.trim().toLowerCase()).filter(Boolean)
+  return !!ext && allowed.includes(ext)
+}
+
+function isTemporalValue(type: string, value: string): boolean {
+  if (type === 'date') {
+    return isValidDate(value)
+  }
+  if (type === 'time') {
+    return /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(value)
+  }
+  if (type === 'datetime') {
+    const [date, time] = value.split('T')
+    return !!date && !!time && isValidDate(date) && /^([01]\d|2[0-3]):[0-5]\d/.test(time)
+  }
+  if (type === 'week') {
+    return /^\d{4}-W(0[1-9]|[1-4]\d|5[0-3])$/.test(value)
+  }
+  if (type === 'month') {
+    return /^\d{4}-(0[1-9]|1[0-2])$/.test(value)
+  }
+  return true
 }
 
 function isValidDate(value: string): boolean {

@@ -13,8 +13,9 @@ export interface MediaConfig {
    */
   allowedMimeTypes?: string[]
   /**
-   * Maximum decoded pixel count (width × height) sharp will accept.
-   * Defaults to 50_000_000 (~7071×7071).
+   * Pixel budget (width × height) for generated variants.
+   * Larger sources are scaled down to fit. Defaults to 50_000_000 (~7071×7071).
+   * Headers above sharp's ceiling (16383×16383) are rejected before decode.
    */
   maxInputPixels?: number
   /**

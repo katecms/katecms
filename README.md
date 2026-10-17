@@ -141,7 +141,7 @@ database: {
 |---|---|---|
 | `maxFileSize` | `10` | Лимит в МБ |
 | `allowedMimeTypes` | jpeg, png, webp, gif, svg+xml, pdf, mp4 | Пустой массив запрещает всё. Omit — дефолтный список |
-| `maxInputPixels` | `50_000_000` | Потолок `width × height` для sharp |
+| `maxInputPixels` | `50_000_000` | Бюджет пикселей для вариантов. Более крупный исходник уменьшается |
 | `avif` | `false` | `true` или `{ quality: 1..100 }` (иначе 80) |
 | `webp` | `false` | То же |
 | `imageSizes` | `[]` | Пресеты. Имя `full` зарезервировано и игнорируется |

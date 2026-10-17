@@ -4,7 +4,7 @@ import { RESERVED_SIZE_NAME } from '../config'
 import type { ResolvedImageSize, ResolvedMediaConfig } from '../config'
 import type { MediaStorage } from './storage'
 import type { StoredMediaVariant } from './types'
-import { variantFilename } from './filename'
+import { readImageSize, variantFilename } from './filename'
 
 /** Reserved `MediaVariant.size` label for the full-resolution extra-format copy. */
 export const FULL_SIZE = RESERVED_SIZE_NAME
@@ -58,13 +58,81 @@ interface RenderResult {
   height: number
 }
 
+/** Sharp's own `limitInputPixels` default: 16383×16383. Larger headers are refused before decode. */
+const SHARP_MAX_INPUT_PIXELS = 16_383 * 16_383
+
+interface PixelSource {
+  data: Buffer
+  /** Set when `data` is raw pixels already scaled to the budget. */
+  raw?: { width: number, height: number, channels: number }
+}
+
+function fitWithinPixelLimit(
+  width: number,
+  height: number,
+  maxPixels: number,
+): { width: number, height: number } {
+  const scale = Math.sqrt(maxPixels / (width * height))
+  let nextWidth = Math.max(1, Math.floor(width * scale))
+  let nextHeight = Math.max(1, Math.floor(height * scale))
+  while (nextWidth * nextHeight > maxPixels && (nextWidth > 1 || nextHeight > 1)) {
+    if (nextWidth >= nextHeight && nextWidth > 1) {
+      nextWidth -= 1
+    }
+    else {
+      nextHeight -= 1
+    }
+  }
+  return { width: nextWidth, height: nextHeight }
+}
+
+/**
+ * Keep variant generation inside `maxInputPixels`. Sources under the budget
+ * are returned unchanged. Larger sources are decoded once and scaled down.
+ * A header above sharp's ceiling is rejected before any bitmap is allocated.
+ */
+async function sourceWithinPixelLimit(data: Buffer, maxInputPixels: number): Promise<PixelSource> {
+  const dims = readImageSize(data)
+  if (!dims || dims.width <= 0 || dims.height <= 0) {
+    return { data }
+  }
+  const pixels = dims.width * dims.height
+  if (!Number.isFinite(pixels) || pixels <= maxInputPixels) {
+    return { data }
+  }
+  if (pixels > SHARP_MAX_INPUT_PIXELS) {
+    throw new Error(
+      `Image is ${dims.width}×${dims.height} px, above the ${SHARP_MAX_INPUT_PIXELS} pixel safety limit.`,
+    )
+  }
+  const fitted = fitWithinPixelLimit(dims.width, dims.height, maxInputPixels)
+  const { data: raw, info } = await sharp(data, {
+    failOn: 'none',
+    limitInputPixels: pixels,
+  })
+    .resize({
+      width: fitted.width,
+      height: fitted.height,
+      fit: 'inside',
+      withoutEnlargement: true,
+    })
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+  return {
+    data: raw,
+    raw: { width: info.width, height: info.height, channels: info.channels },
+  }
+}
+
 async function render(
-  input: Buffer,
+  source: PixelSource,
   size: ResolvedImageSize | null,
   job: FormatJob,
   maxInputPixels: number,
 ): Promise<RenderResult> {
-  let pipeline = sharp(input, { failOn: 'none', limitInputPixels: maxInputPixels })
+  let pipeline = source.raw
+    ? sharp(source.data, { raw: source.raw, failOn: 'none', limitInputPixels: false })
+    : sharp(source.data, { failOn: 'none', limitInputPixels: maxInputPixels })
 
   if (size) {
     pipeline = pipeline.resize({
@@ -129,8 +197,9 @@ export async function generateVariants(options: GenerateVariantsOptions): Promis
   const written: string[] = []
 
   try {
+    const source = await sourceWithinPixelLimit(data, config.maxInputPixels)
     for (const { size, job } of tasks) {
-      const out = await render(data, size, job, config.maxInputPixels)
+      const out = await render(source, size, job, config.maxInputPixels)
       const variantKey = variantFilename(key, out.width, out.height, job.ext, size === null)
 
       if (variantKey === key) {

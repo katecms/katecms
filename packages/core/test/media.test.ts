@@ -161,6 +161,46 @@ describe('generateVariants', () => {
     expect(variants.find(variant => variant.size === 'full')?.format).toBe('webp')
     expect(storage.files.has('hero.png')).toBe(false)
   })
+
+  it('scales a source above maxInputPixels and rejects a pixel bomb', async () => {
+    const png = await sharp({
+      create: { width: 64, height: 64, channels: 3, background: { r: 20, g: 40, b: 60 } },
+    }).png().toBuffer()
+
+    const { media } = resolveMediaConfig({
+      webp: true,
+      maxInputPixels: 1000,
+    })
+    const storage = memoryStorage()
+    const variants = await generateVariants({
+      storage,
+      key: 'wide.png',
+      mimeType: 'image/png',
+      data: png,
+      config: media,
+    })
+
+    const full = variants.find(variant => variant.size === 'full')
+    expect(full).toBeTruthy()
+    expect((full?.width ?? 0) * (full?.height ?? 0)).toBeLessThanOrEqual(1000)
+    expect(full?.width).toBeLessThan(64)
+
+    const bomb = Buffer.alloc(24)
+    bomb[0] = 0x89
+    bomb[1] = 0x50
+    bomb[2] = 0x4E
+    bomb[3] = 0x47
+    bomb.writeUInt32BE(20_000, 16)
+    bomb.writeUInt32BE(20_000, 20)
+    await expect(generateVariants({
+      storage,
+      key: 'bomb.png',
+      mimeType: 'image/png',
+      data: bomb,
+      config: media,
+    })).rejects.toThrow(/safety limit/)
+    expect(storage.files.has('bomb.webp')).toBe(false)
+  })
 })
 
 describe('toMediaItem', () => {

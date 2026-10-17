@@ -4,7 +4,7 @@ import { defaults } from './defaults'
 /** Default encoder quality used when a format is enabled with `true`. */
 export const DEFAULT_IMAGE_QUALITY = 80
 
-/** Default sharp decoded-pixel ceiling (~7071×7071). */
+/** Default pixel budget for variant generation (~7071×7071). Larger sources are scaled down to fit. */
 export const DEFAULT_MAX_INPUT_PIXELS = 50_000_000
 
 /**

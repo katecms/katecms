@@ -1,4 +1,4 @@
-import type { Condition, ConditionalLogic, Operator } from '../config'
+import type { Condition, ConditionalLogic, Operator } from '../config/types/conditional-logic'
 
 export type { Condition, ConditionalLogic, Operator }
 

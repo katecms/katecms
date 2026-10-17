@@ -1,4 +1,4 @@
-import type { RelationEntryValue, RelationTermValue } from '../config'
+import type { RelationEntryValue, RelationTermValue } from '../config/types/fields'
 
 const ENTRY_STATUSES = new Set<RelationEntryValue['status']>(['published', 'draft', 'trash'])
 

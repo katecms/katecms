@@ -1,7 +1,7 @@
 import sharp from 'sharp'
 import type { Buffer } from 'node:buffer'
-import { RESERVED_SIZE_NAME } from '../config'
-import type { ResolvedImageSize, ResolvedMediaConfig } from '../config'
+import { RESERVED_SIZE_NAME } from '../config/resolve-media'
+import type { ResolvedImageSize, ResolvedMediaConfig } from '../config/types/media'
 import type { MediaStorage } from './storage'
 import type { StoredMediaVariant } from './types'
 import { readImageSize, variantFilename } from './filename'
@@ -61,10 +61,20 @@ interface RenderResult {
 /** Sharp's own `limitInputPixels` default: 16383×16383. Larger headers are refused before decode. */
 const SHARP_MAX_INPUT_PIXELS = 16_383 * 16_383
 
+/** Bands sharp accepts on a raw input (`Channels`). */
+type RawChannels = 1 | 2 | 3 | 4
+
+function rawChannels(channels: number): RawChannels {
+  if (channels === 1 || channels === 2 || channels === 3 || channels === 4) {
+    return channels
+  }
+  throw new Error(`Raw pixel data has ${channels} channels; sharp accepts 1–4.`)
+}
+
 interface PixelSource {
   data: Buffer
   /** Set when `data` is raw pixels already scaled to the budget. */
-  raw?: { width: number, height: number, channels: number }
+  raw?: { width: number, height: number, channels: RawChannels }
 }
 
 function fitWithinPixelLimit(
@@ -120,7 +130,7 @@ async function sourceWithinPixelLimit(data: Buffer, maxInputPixels: number): Pro
     .toBuffer({ resolveWithObject: true })
   return {
     data: raw,
-    raw: { width: info.width, height: info.height, channels: info.channels },
+    raw: { width: info.width, height: info.height, channels: rawChannels(info.channels) },
   }
 }
 

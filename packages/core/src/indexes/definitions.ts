@@ -1,4 +1,5 @@
-import type { Collections, Field, Fields } from '../config'
+import type { Collections } from '../config/types/collection'
+import type { Field, Fields } from '../config/types/fields'
 import type {
   ActualFieldIndex,
   DesiredFieldIndex,

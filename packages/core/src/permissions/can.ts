@@ -1,4 +1,4 @@
-import type { ResolvedRole, ResourceRights, RoleAction, ScopedRights } from '../config'
+import type { ResolvedRole, ResourceRights, RoleAction, ScopedRights } from '../config/types/roles'
 
 /** Resources that rights can be granted on. */
 export type Resource = 'collections' | 'dictionaries' | 'media' | 'users' | 'options'

@@ -1,5 +1,5 @@
 import type { ColumnType, Generated } from 'kysely'
-import type { MediaVariantsStatus } from '../../media'
+import type { MediaVariantsStatus } from '../../media/types'
 
 export type { MediaVariantsStatus }
 

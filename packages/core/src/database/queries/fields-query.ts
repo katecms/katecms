@@ -1,6 +1,6 @@
 import type { Kysely, RawBuilder, SelectQueryBuilder, SqlBool } from 'kysely'
 import { sql } from 'kysely'
-import type { Database } from '../client'
+import type { Database } from '../client/schema'
 
 export type FieldsQueryRelation = 'AND' | 'OR'
 

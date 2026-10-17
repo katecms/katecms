@@ -1,5 +1,5 @@
 import type { Kysely, Selectable } from 'kysely'
-import type { Database, OptionsTable } from '../client'
+import type { Database, OptionsTable } from '../client/schema'
 
 export type Option = Selectable<OptionsTable>
 

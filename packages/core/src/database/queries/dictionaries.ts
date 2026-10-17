@@ -1,5 +1,5 @@
 import type { Insertable, Kysely, Selectable, Updateable } from 'kysely'
-import type { Database, DictionariesTable } from '../client'
+import type { Database, DictionariesTable } from '../client/schema'
 
 export type Dictionary = Selectable<DictionariesTable>
 export type NewDictionary = Insertable<DictionariesTable>

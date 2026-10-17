@@ -1,5 +1,5 @@
 import type { Insertable, Kysely, Selectable } from 'kysely'
-import type { CollectionRevisionsTable, Database } from '../client'
+import type { CollectionRevisionsTable, Database } from '../client/schema'
 import { applyListPaging } from './paging'
 import type { ListPaging } from './paging'
 

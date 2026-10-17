@@ -1,8 +1,8 @@
 import type { Insertable, Kysely, Selectable, Updateable } from 'kysely'
 import { sql } from 'kysely'
-import { OWNER_ROLE } from '../../config'
+import { OWNER_ROLE } from '../../config/resolve-roles'
 import type { SafeUser } from '../../auth/types'
-import type { Database, UsersTable } from '../client'
+import type { Database, UsersTable } from '../client/schema'
 import { applyListPaging } from './paging'
 import type { ListPaging } from './paging'
 

@@ -10,4 +10,6 @@ alwaysApply: false
 
 `src/index.ts` is the Node entry. `src/browser.ts` is the client subset. An export used by admin Vue must be added to `browser.ts` and must not pull Node-only modules.
 
+Import a type from the file that defines it (`media/types`, `config/types/*`, `database/client/schema`). Do not import it from `media/index.ts`, `config/index.ts`, `database/index.ts`, or `database/client/index.ts`: those barrels load sharp, every resolver, or `pg`.
+
 Keep the SQLite and Postgres schemas in step. Cover behavior in `packages/core/test`.

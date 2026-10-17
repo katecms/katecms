@@ -1,4 +1,4 @@
-import type { Field, Fields } from '../config'
+import type { Field, Fields } from '../config/types/fields'
 import { isMediaItem } from '../media/types'
 import { isColorArrayValue, isLinkValue } from './values'
 import { isOsmMarker } from './osm'

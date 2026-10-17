@@ -1,4 +1,4 @@
-import type { OsmAddress, OsmMarker } from '../config'
+import type { OsmAddress, OsmMarker } from '../config/types/fields'
 
 export const OSM_ADDRESS_KEYS = [
   'house_number',

@@ -7,7 +7,7 @@ import type {
   SelectChoiceGroup,
   SelectChoiceItem,
   SelectChoiceValue,
-} from '../config'
+} from '../config/types/fields'
 
 export interface ChoiceLabelLookup {
   labelOf: (raw: string) => string

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { FormField, LayoutItem } from '../../form/model'
 import { GRID_COLUMNS } from '../../form/model'
-import { AUTOCOMPLETE_CHOICES, FILE_TYPE_ACCEPT, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultChoiceOptions, defaultTextOptions, fieldHasOption, fileAccept, headingTag, isTemporalType, listedChoiceOptions, normalizeIcon, resolveChoiceEntries, temporalInputType } from '../../form/text-options'
+import { AUTOCOMPLETE_CHOICES, FILE_TYPE_ACCEPT, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultTextOptions, fieldHasOption, fileAccept, headingTag, isTemporalType, listedChoiceOptions, normalizeIcon, resolveChoiceEntries, temporalInputType } from '../../form/text-options'
 import type { CheckPosition, FormChoiceGroup, FormChoiceOption, FormMarkedText, FormTextOptions, HeadingTag, LayoutAlign, LayoutDirection } from '../../form/text-options'
 import ChoiceOptions from './ChoiceOptions.vue'
 import DecoratedText from './DecoratedText.vue'
@@ -161,8 +161,19 @@ function writeEntries(entries: ReturnType<typeof resolveChoiceEntries>) {
   patch({ choiceEntries: entries })
 }
 
+function nextOptionNumber() {
+  const listed = listedChoiceOptions(options.value)
+  let max = 0
+  for (const option of listed) {
+    const label = /^Option (\d+)$/.exec(option.label)
+    const value = /^option_(\d+)$/.exec(option.value)
+    max = Math.max(max, label ? Number(label[1]) : 0, value ? Number(value[1]) : 0)
+  }
+  return Math.max(max, listed.length) + 1
+}
+
 function nextChoiceOption(): FormChoiceOption {
-  const n = listedChoiceOptions(options.value).length + 1
+  const n = nextOptionNumber()
   return {
     id: `opt_${crypto.randomUUID()}`,
     image: null,
@@ -189,7 +200,7 @@ function addGroup() {
     group: {
       id: `grp_${crypto.randomUUID()}`,
       label: `Group ${n}`,
-      options: defaultChoiceOptions().slice(0, 1),
+      options: [nextChoiceOption()],
     },
   }])
 }
@@ -214,127 +225,413 @@ function removeGroup(index: number) {
   writeEntries(resolveChoiceEntries(options.value).filter((_, entryIndex) => entryIndex !== index))
 }
 
-const runRefs = ref<Array<HTMLElement | null>>([])
-const isGroupDragging = ref(false)
-const groupDragIndex = ref<number | null>(null)
-const groupDropIndex = ref(0)
-const groupDragOffset = ref({ x: 0, y: 0 })
-const groupDragSize = ref({ width: 0, height: 0 })
-const groupDragPosition = ref({ left: 0, top: 0 })
+type DropMark
+  = | { kind: 'none' }
+    | { kind: 'before-row', listKey: string, index: number, groupId: string }
+    | { kind: 'group-end', groupId: string }
+    | { kind: 'before-group', groupId: string }
+    | { kind: 'loose-end' }
 
-const groupPlaceholderStyle = computed(() => ({
-  width: `${groupDragSize.value.width}px`,
-  height: `${groupDragSize.value.height}px`,
-}))
-
-function setRunRef(el: Element | null, index: number) {
-  runRefs.value[index] = el instanceof HTMLElement ? el : null
+type ActiveDrag = {
+  kind: 'option' | 'group'
+  groupId: string
+  listKey: string
+  entryStart: number
+  index: number
+  originX: number
+  originY: number
+  moved: boolean
+  offset: { x: number, y: number }
+  size: { width: number, height: number }
+  position: { left: number, top: number }
+  mark: DropMark
 }
 
-function groupBlockStyle(index: number): CSSProperties | undefined {
-  if (!isGroupDragging.value || groupDragIndex.value !== index) {
-    return undefined
+const activeDrag = ref<ActiveDrag | null>(null)
+
+const dragFloatStyle = computed<CSSProperties | null>(() => {
+  const drag = activeDrag.value
+  if (!drag) {
+    return null
   }
   return {
     position: 'fixed',
-    left: `${groupDragPosition.value.left}px`,
-    top: `${groupDragPosition.value.top}px`,
-    width: `${groupDragSize.value.width}px`,
-    height: `${groupDragSize.value.height}px`,
+    left: `${drag.position.left}px`,
+    top: `${drag.position.top}px`,
+    width: `${drag.size.width}px`,
+    height: `${drag.size.height}px`,
     zIndex: 1100,
   }
+})
+
+const dragPlaceholderStyle = computed(() => {
+  const drag = activeDrag.value
+  if (!drag) {
+    return null
+  }
+  return {
+    width: `${drag.size.width}px`,
+    height: `${drag.size.height}px`,
+  }
+})
+
+function choiceRows() {
+  return [...document.querySelectorAll<HTMLElement>('[data-choice-row]')]
 }
 
-function moveGroup(fromRun: number, insertAt: number) {
-  if (insertAt === fromRun || insertAt === fromRun + 1) {
-    return
+function floatIndex(listKey: string) {
+  const drag = activeDrag.value
+  if (!drag?.moved || drag.kind !== 'option' || drag.listKey !== listKey) {
+    return null
   }
-  const runs = [...choiceRuns.value]
-  const [moved] = runs.splice(fromRun, 1)
-  if (!moved || moved.kind !== 'group') {
-    return
-  }
-  runs.splice(fromRun < insertAt ? insertAt - 1 : insertAt, 0, moved)
-  writeEntries(runs.flatMap(run => run.kind === 'group'
-    ? [{ type: 'group' as const, group: run.group }]
-    : run.options.map(option => ({ type: 'option' as const, option }))))
+  return drag.index
 }
 
-function updateGroupDropIndex(clientY: number) {
-  const from = groupDragIndex.value
-  if (from === null) {
-    return
+function placeholderIndex(listKey: string) {
+  const drag = activeDrag.value
+  const mark = drag?.mark
+  if (!drag?.moved || !mark) {
+    return null
   }
-  let insertAt = choiceRuns.value.length
-  for (let index = 0; index < choiceRuns.value.length; index += 1) {
-    if (index === from) {
-      continue
+  if (mark.kind === 'before-row' && mark.listKey === listKey) {
+    return mark.index
+  }
+  if (mark.kind === 'group-end' && listKey === `group:${mark.groupId}`) {
+    return choiceRows().filter(el => el.dataset.listKey === listKey).length
+  }
+  return null
+}
+
+function optionMark(clientY: number, listKey: string, index: number): DropMark {
+  const rows = choiceRows()
+    .filter(el => !(el.dataset.listKey === listKey && Number(el.dataset.optionIndex) === index))
+    .map(el => ({ el, rect: el.getBoundingClientRect() }))
+    .sort((a, b) => a.rect.top - b.rect.top)
+  for (const row of rows) {
+    if (clientY < row.rect.top + row.rect.height / 2) {
+      return {
+        kind: 'before-row',
+        listKey: row.el.dataset.listKey || '',
+        index: Number(row.el.dataset.optionIndex),
+        groupId: row.el.dataset.groupId || '',
+      }
     }
-    const el = runRefs.value[index]
-    if (!el) {
+  }
+  for (const group of document.querySelectorAll<HTMLElement>('[data-choice-group]')) {
+    const rect = group.getBoundingClientRect()
+    if (clientY >= rect.top && clientY <= rect.bottom) {
+      return { kind: 'group-end', groupId: group.dataset.choiceGroup || '' }
+    }
+  }
+  return { kind: 'loose-end' }
+}
+
+function groupMark(clientY: number, skipGroupId: string): DropMark {
+  const points: { top: number, mid: number, mark: DropMark }[] = []
+  for (const el of choiceRows()) {
+    if (el.dataset.groupId) {
       continue
     }
     const rect = el.getBoundingClientRect()
-    if (clientY < rect.top + rect.height / 2) {
-      insertAt = index
-      break
-    }
-    insertAt = index + 1
+    points.push({
+      top: rect.top,
+      mid: rect.top + rect.height / 2,
+      mark: {
+        kind: 'before-row',
+        listKey: el.dataset.listKey || '',
+        index: Number(el.dataset.optionIndex),
+        groupId: '',
+      },
+    })
   }
-  groupDropIndex.value = insertAt
+  for (const el of document.querySelectorAll<HTMLElement>('[data-choice-group]')) {
+    if (el.dataset.choiceGroup === skipGroupId) {
+      continue
+    }
+    const rect = el.getBoundingClientRect()
+    points.push({
+      top: rect.top,
+      mid: rect.top + rect.height / 2,
+      mark: { kind: 'before-group', groupId: el.dataset.choiceGroup || '' },
+    })
+  }
+  points.sort((a, b) => a.top - b.top)
+  for (const point of points) {
+    if (clientY < point.mid) {
+      return point.mark
+    }
+  }
+  return { kind: 'loose-end' }
 }
 
-function onGroupDragMove(event: MouseEvent) {
-  if (!isGroupDragging.value) {
+function cloneChoiceEntries() {
+  return resolveChoiceEntries(options.value).map(entry => entry.type === 'option'
+    ? { type: 'option' as const, option: { ...entry.option } }
+    : { type: 'group' as const, group: { ...entry.group, options: entry.group.options.map(option => ({ ...option })) } })
+}
+
+function looseEntryIndex(listKey: string, index: number) {
+  const run = choiceRuns.value.find(item => item.kind === 'options' && `loose:${item.key}` === listKey)
+  if (!run || run.kind !== 'options') {
+    return null
+  }
+  return run.start + index
+}
+
+function commitOptionDrop(drag: ActiveDrag, mark: DropMark) {
+  if (mark.kind === 'none') {
     return
   }
-  groupDragPosition.value = {
-    left: event.clientX - groupDragOffset.value.x,
-    top: event.clientY - groupDragOffset.value.y,
+  const entries = cloneChoiceEntries()
+  let destGroupId = ''
+  let destEntry: number | null = null
+  let destOptionIndex = 0
+  if (mark.kind === 'group-end') {
+    destGroupId = mark.groupId
+    destOptionIndex = Number.POSITIVE_INFINITY
   }
-  updateGroupDropIndex(event.clientY)
+  else if (mark.kind === 'before-row' && mark.groupId) {
+    destGroupId = mark.groupId
+    destOptionIndex = mark.index
+  }
+  else if (mark.kind === 'before-row') {
+    destEntry = looseEntryIndex(mark.listKey, mark.index)
+  }
+  else if (mark.kind === 'before-group') {
+    destEntry = entries.findIndex(entry => entry.type === 'group' && entry.group.id === mark.groupId)
+  }
+  else {
+    destEntry = entries.length
+  }
+  let moved: FormChoiceOption | undefined
+  if (drag.groupId) {
+    const entry = entries.find(item => item.type === 'group' && item.group.id === drag.groupId)
+    if (!entry || entry.type !== 'group') {
+      return
+    }
+    moved = entry.group.options[drag.index]
+    entry.group.options = entry.group.options.filter((_, index) => index !== drag.index)
+  }
+  else {
+    const at = drag.entryStart + drag.index
+    const entry = entries[at]
+    if (!entry || entry.type !== 'option') {
+      return
+    }
+    moved = entry.option
+    entries.splice(at, 1)
+  }
+  if (!moved) {
+    return
+  }
+  if (!drag.groupId && destEntry != null && drag.entryStart + drag.index < destEntry) {
+    destEntry -= 1
+  }
+  if (drag.groupId && drag.groupId !== destGroupId) {
+    const emptyAt = entries.findIndex(entry => entry.type === 'group' && entry.group.id === drag.groupId && entry.group.options.length === 0)
+    if (emptyAt >= 0) {
+      entries.splice(emptyAt, 1)
+      if (destEntry != null && emptyAt < destEntry) {
+        destEntry -= 1
+      }
+    }
+  }
+  if (destGroupId) {
+    const entry = entries.find(item => item.type === 'group' && item.group.id === destGroupId)
+    if (!entry || entry.type !== 'group') {
+      entries.push({ type: 'option', option: moved })
+    }
+    else if (!Number.isFinite(destOptionIndex)) {
+      entry.group.options.push(moved)
+    }
+    else {
+      let at = destOptionIndex
+      if (drag.groupId === destGroupId && drag.index < destOptionIndex) {
+        at -= 1
+      }
+      entry.group.options.splice(Math.max(0, at), 0, moved)
+    }
+  }
+  else {
+    entries.splice(destEntry == null || destEntry < 0 ? entries.length : destEntry, 0, { type: 'option', option: moved })
+  }
+  writeEntries(entries)
 }
 
-function resetGroupDrag() {
-  isGroupDragging.value = false
-  groupDragIndex.value = null
-  groupDropIndex.value = 0
-  groupDragSize.value = { width: 0, height: 0 }
+function commitGroupDrop(groupId: string, mark: DropMark) {
+  if (mark.kind === 'none') {
+    return
+  }
+  const entries = cloneChoiceEntries()
+  const from = entries.findIndex(entry => entry.type === 'group' && entry.group.id === groupId)
+  if (from < 0) {
+    return
+  }
+  const [moved] = entries.splice(from, 1)
+  if (!moved) {
+    return
+  }
+  let at = entries.length
+  if (mark.kind === 'before-group') {
+    at = entries.findIndex(entry => entry.type === 'group' && entry.group.id === mark.groupId)
+  }
+  else if (mark.kind === 'before-row') {
+    const entryIndex = looseEntryIndex(mark.listKey, mark.index)
+    at = entryIndex == null ? entries.length : entryIndex > from ? entryIndex - 1 : entryIndex
+  }
+  entries.splice(at < 0 ? entries.length : at, 0, moved)
+  writeEntries(entries)
+}
+
+function onChoiceDragMove(event: MouseEvent) {
+  const drag = activeDrag.value
+  if (!drag) {
+    return
+  }
+  const dx = event.clientX - drag.originX
+  const dy = event.clientY - drag.originY
+  if (!drag.moved && dx * dx + dy * dy < 16) {
+    return
+  }
+  drag.moved = true
+  drag.position = {
+    left: event.clientX - drag.offset.x,
+    top: event.clientY - drag.offset.y,
+  }
+  drag.mark = drag.kind === 'group'
+    ? groupMark(event.clientY, drag.groupId)
+    : optionMark(event.clientY, drag.listKey, drag.index)
+}
+
+function resetChoiceDrag() {
+  activeDrag.value = null
   document.body.style.userSelect = ''
-  document.removeEventListener('mousemove', onGroupDragMove)
-  document.removeEventListener('mouseup', onGroupDragEnd)
+  document.removeEventListener('mousemove', onChoiceDragMove)
+  document.removeEventListener('mouseup', onChoiceDragEnd)
 }
 
-function onGroupDragEnd() {
-  if (isGroupDragging.value && groupDragIndex.value !== null) {
-    moveGroup(groupDragIndex.value, groupDropIndex.value)
+function onChoiceDragEnd() {
+  const drag = activeDrag.value
+  if (drag?.moved && drag.kind === 'option') {
+    commitOptionDrop(drag, drag.mark)
   }
-  resetGroupDrag()
+  else if (drag?.moved && drag.kind === 'group') {
+    commitGroupDrop(drag.groupId, drag.mark)
+  }
+  resetChoiceDrag()
 }
 
-function onGroupHandleDown(index: number, event: MouseEvent) {
+function beginDrag(partial: Omit<ActiveDrag, 'position' | 'mark' | 'moved'>, rect: DOMRect) {
+  activeDrag.value = {
+    ...partial,
+    moved: false,
+    position: { left: rect.left, top: rect.top },
+    mark: { kind: 'none' },
+  }
+  document.body.style.userSelect = 'none'
+  document.addEventListener('mousemove', onChoiceDragMove)
+  document.addEventListener('mouseup', onChoiceDragEnd)
+}
+
+function onOptionDragStart(listKey: string, groupId: string, entryStart: number, index: number, event: MouseEvent) {
+  const source = event.currentTarget instanceof HTMLElement
+    ? event.currentTarget
+    : event.target instanceof HTMLElement ? event.target : null
+  const row = source?.closest<HTMLElement>('[data-choice-row]') ?? null
+  if (!row) {
+    return
+  }
+  const rect = row.getBoundingClientRect()
+  beginDrag({
+    kind: 'option',
+    groupId,
+    listKey,
+    entryStart,
+    index,
+    originX: event.clientX,
+    originY: event.clientY,
+    offset: { x: event.clientX - rect.left, y: event.clientY - rect.top },
+    size: { width: rect.width, height: rect.height },
+  }, rect)
+}
+
+function onGroupHandleDown(groupId: string, event: MouseEvent) {
   if (event.button !== 0) {
     return
   }
   event.preventDefault()
   event.stopPropagation()
-  const block = runRefs.value[index]
+  const source = event.currentTarget instanceof HTMLElement
+    ? event.currentTarget
+    : event.target instanceof HTMLElement ? event.target : null
+  const block = source?.closest<HTMLElement>('[data-choice-group]') ?? null
   if (!block) {
     return
   }
   const rect = block.getBoundingClientRect()
-  groupDragIndex.value = index
-  groupDropIndex.value = index
-  groupDragOffset.value = { x: event.clientX - rect.left, y: event.clientY - rect.top }
-  groupDragSize.value = { width: rect.width, height: rect.height }
-  groupDragPosition.value = { left: rect.left, top: rect.top }
-  isGroupDragging.value = true
-  document.body.style.userSelect = 'none'
-  document.addEventListener('mousemove', onGroupDragMove)
-  document.addEventListener('mouseup', onGroupDragEnd)
+  beginDrag({
+    kind: 'group',
+    groupId,
+    listKey: '',
+    entryStart: 0,
+    index: 0,
+    originX: event.clientX,
+    originY: event.clientY,
+    offset: { x: event.clientX - rect.left, y: event.clientY - rect.top },
+    size: { width: rect.width, height: rect.height },
+  }, rect)
 }
 
-onBeforeUnmount(resetGroupDrag)
+function groupIsFloating(groupId: string) {
+  const drag = activeDrag.value
+  return !!drag?.moved && drag.kind === 'group' && drag.groupId === groupId
+}
+
+function insertLoose(start: number, index: number) {
+  const entries = cloneChoiceEntries()
+  entries.splice(start + index + 1, 0, { type: 'option', option: nextChoiceOption() })
+  writeEntries(entries)
+}
+
+function insertInGroup(entryIndex: number, index: number) {
+  const entries = cloneChoiceEntries()
+  const entry = entries[entryIndex]
+  if (!entry || entry.type !== 'group') {
+    return
+  }
+  const nextOptions = [...entry.group.options]
+  nextOptions.splice(index + 1, 0, nextChoiceOption())
+  entries[entryIndex] = { type: 'group', group: { ...entry.group, options: nextOptions } }
+  writeEntries(entries)
+}
+
+function repairOptionIds() {
+  if (props.field.type !== 'select') {
+    return
+  }
+  const seen = new Set<string>()
+  let changed = false
+  const fix = (option: FormChoiceOption) => {
+    if (option.id && !seen.has(option.id)) {
+      seen.add(option.id)
+      return option
+    }
+    changed = true
+    const id = `opt_${crypto.randomUUID()}`
+    seen.add(id)
+    return { ...option, id }
+  }
+  const next = resolveChoiceEntries(options.value).map(entry => entry.type === 'option'
+    ? { type: 'option' as const, option: fix(entry.option) }
+    : { type: 'group' as const, group: { ...entry.group, options: entry.group.options.map(fix) } })
+  if (changed) {
+    writeEntries(next)
+  }
+}
+
+watch(() => props.field.id, repairOptionIds, { immediate: true })
+
+onBeforeUnmount(resetChoiceDrag)
 </script>
 
 <template>
@@ -696,19 +993,18 @@ onBeforeUnmount(resetGroupDrag)
           #extra
         >
           <template
-            v-for="(run, runIndex) in choiceRuns"
+            v-for="run in choiceRuns"
             :key="run.key"
           >
             <div
-              v-if="isGroupDragging && groupDropIndex === runIndex"
+              v-if="run.kind === 'group' && activeDrag?.kind === 'group' && activeDrag.mark.kind === 'before-group' && activeDrag.mark.groupId === run.group.id"
               class="miraicms-text-settings__group-placeholder"
-              :style="groupPlaceholderStyle"
+              :style="dragPlaceholderStyle"
             />
             <div
-              :ref="(el) => setRunRef(el as Element | null, runIndex)"
               class="miraicms-text-settings__choice-block"
-              :class="{ 'is-floating': isGroupDragging && groupDragIndex === runIndex }"
-              :style="groupBlockStyle(runIndex)"
+              :class="{ 'is-floating': run.kind === 'group' && groupIsFloating(run.group.id) }"
+              :style="run.kind === 'group' && groupIsFloating(run.group.id) ? dragFloatStyle ?? undefined : undefined"
             >
               <ChoiceOptions
                 v-if="run.kind === 'options'"
@@ -718,19 +1014,28 @@ onBeforeUnmount(resetGroupDrag)
                 :show-required="true"
                 :show-disabled="true"
                 :single-check="!options.selectMultiple.enabled"
+                external-drag
+                :list-key="`loose:${run.key}`"
+                :floating-index="floatIndex(`loose:${run.key}`)"
+                :placeholder-index="placeholderIndex(`loose:${run.key}`)"
+                :float-style="dragFloatStyle"
+                :external-placeholder-style="dragPlaceholderStyle"
                 embedded
                 @update="setOptionRun(run.start, run.count, $event)"
+                @insert="insertLoose(run.start, $event)"
+                @drag-start="(index, event) => onOptionDragStart(`loose:${run.key}`, '', run.start, index, event)"
               />
               <div
                 v-else
                 class="miraicms-text-settings__group miraicms-text-settings__group--popup"
+                :data-choice-group="run.group.id"
               >
                 <div class="miraicms-text-settings__group-header">
                   <button
                     type="button"
                     class="miraicms-text-settings__group-handle"
                     aria-label="Move group"
-                    @mousedown="onGroupHandleDown(runIndex, $event)"
+                    @mousedown="onGroupHandleDown(run.group.id, $event)"
                   >
                     <svg
                       width="14"
@@ -832,23 +1137,32 @@ onBeforeUnmount(resetGroupDrag)
                     </svg>
                   </MiraiCmsUiButton>
                 </div>
-                <ChoiceOptions
-                  :field-key="`${field.id}-group-options-${run.group.id}`"
-                  :model="run.group.options"
-                  :show-image="options.optionIcon"
-                  :show-required="true"
-                  :show-disabled="true"
-                  :single-check="!options.selectMultiple.enabled"
-                  embedded
-                  @update="setGroup(run.index, { ...run.group, options: $event })"
-                />
+              <ChoiceOptions
+                :field-key="`${field.id}-group-options-${run.group.id}`"
+                :model="run.group.options"
+                :show-image="options.optionIcon"
+                :show-required="true"
+                :show-disabled="true"
+                :single-check="!options.selectMultiple.enabled"
+                external-drag
+                :list-key="`group:${run.group.id}`"
+                :group-id="run.group.id"
+                :floating-index="floatIndex(`group:${run.group.id}`)"
+                :placeholder-index="placeholderIndex(`group:${run.group.id}`)"
+                :float-style="dragFloatStyle"
+                :external-placeholder-style="dragPlaceholderStyle"
+                embedded
+                @update="setGroup(run.index, { ...run.group, options: $event })"
+                @insert="insertInGroup(run.index, $event)"
+                @drag-start="(index, event) => onOptionDragStart(`group:${run.group.id}`, run.group.id, run.index, index, event)"
+              />
               </div>
             </div>
           </template>
           <div
-            v-if="isGroupDragging && groupDropIndex === choiceRuns.length"
+            v-if="activeDrag?.mark.kind === 'loose-end'"
             class="miraicms-text-settings__group-placeholder"
-            :style="groupPlaceholderStyle"
+            :style="dragPlaceholderStyle ?? undefined"
           />
         </template>
       </ChoiceOptions>

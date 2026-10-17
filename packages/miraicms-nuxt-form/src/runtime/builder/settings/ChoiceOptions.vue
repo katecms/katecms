@@ -15,6 +15,14 @@ const props = withDefaults(defineProps<{
   embedded?: boolean
   showAddGroup?: boolean
   count?: number
+  /** Parent handles the drag so an option can move into or out of a group. */
+  externalDrag?: boolean
+  listKey?: string
+  groupId?: string
+  floatingIndex?: number | null
+  placeholderIndex?: number | null
+  floatStyle?: CSSProperties | null
+  externalPlaceholderStyle?: CSSProperties | null
 }>(), {
   showImage: false,
   showRequired: false,
@@ -22,12 +30,21 @@ const props = withDefaults(defineProps<{
   singleCheck: false,
   embedded: false,
   showAddGroup: false,
+  externalDrag: false,
+  listKey: '',
+  groupId: '',
+  floatingIndex: null,
+  placeholderIndex: null,
+  floatStyle: null,
+  externalPlaceholderStyle: null,
 })
 
 const emit = defineEmits<{
   update: [value: FormChoiceOption[]]
   addGroup: []
   addOption: []
+  dragStart: [index: number, event: MouseEvent]
+  insert: [index: number]
 }>()
 
 const open = ref(false)
@@ -74,6 +91,10 @@ function addFromFooter() {
 }
 
 function addAt(index: number) {
+  if (props.externalDrag) {
+    emit('insert', index)
+    return
+  }
   const n = props.model.length + 1
   const next = [...props.model]
   next.splice(index + 1, 0, blank(`Option ${n}`, `option_${n}`))
@@ -106,12 +127,34 @@ function iconValue(value: unknown): FormIcon | null {
   return normalizeIcon(value)
 }
 
-const placeholderStyle = computed(() => ({
-  width: `${dragSize.value.width}px`,
-  height: `${dragSize.value.height}px`,
-}))
+const placeholderStyle = computed(() => {
+  if (props.externalDrag) {
+    return props.externalPlaceholderStyle ?? undefined
+  }
+  return {
+    width: `${dragSize.value.width}px`,
+    height: `${dragSize.value.height}px`,
+  }
+})
+
+function showsPlaceholder(index: number) {
+  if (props.externalDrag) {
+    return props.placeholderIndex === index
+  }
+  return isDragging.value && dropIndex.value === index
+}
+
+function rowIsFloating(index: number) {
+  if (props.externalDrag) {
+    return props.floatingIndex === index
+  }
+  return isDragging.value && draggingIndex.value === index
+}
 
 function rowStyle(index: number): CSSProperties | undefined {
+  if (props.externalDrag) {
+    return rowIsFloating(index) ? props.floatStyle ?? undefined : undefined
+  }
   if (!isDragging.value || draggingIndex.value !== index) {
     return undefined
   }
@@ -121,7 +164,7 @@ function rowStyle(index: number): CSSProperties | undefined {
     top: `${dragPosition.value.top}px`,
     width: `${dragSize.value.width}px`,
     height: `${dragSize.value.height}px`,
-    zIndex: 1000,
+    zIndex: 1100,
   }
 }
 
@@ -196,6 +239,10 @@ function onHandleDown(index: number, event: MouseEvent) {
   }
   event.preventDefault()
   event.stopPropagation()
+  if (props.externalDrag) {
+    emit('dragStart', index, event)
+    return
+  }
   const handle = event.currentTarget
   if (!(handle instanceof HTMLElement)) {
     return
@@ -240,7 +287,7 @@ onBeforeUnmount(resetDrag)
         :key="item.id"
       >
         <div
-          v-if="isDragging && dropIndex === index"
+          v-if="showsPlaceholder(index)"
           class="miraicms-choice-options__placeholder"
           :style="placeholderStyle"
         />
@@ -248,8 +295,13 @@ onBeforeUnmount(resetDrag)
         <div
           :ref="(el) => setRowRef(el as Element | null, index)"
           class="miraicms-choice-options__row"
-          :class="{ 'is-floating': isDragging && draggingIndex === index }"
+          :class="{ 'is-floating': rowIsFloating(index) }"
           :style="rowStyle(index)"
+          data-choice-row
+          :data-list-key="listKey"
+          :data-option-id="item.id"
+          :data-option-index="index"
+          :data-group-id="groupId"
         >
           <button
             type="button"
@@ -452,7 +504,7 @@ onBeforeUnmount(resetDrag)
         </div>
       </template>
       <div
-        v-if="isDragging && dropIndex === model.length"
+        v-if="showsPlaceholder(model.length)"
         class="miraicms-choice-options__placeholder"
         :style="placeholderStyle"
       />

@@ -1005,8 +1005,7 @@ onBeforeUnmount(resetChoiceDrag)
               :style="dragPlaceholderStyle"
             />
             <div
-              :class="`${rootClass}__choice-block`"
-              :class="{ 'is-floating': run.kind === 'group' && groupIsFloating(run.group.id) }"
+              :class="[`${rootClass}__choice-block`, { 'is-floating': run.kind === 'group' && groupIsFloating(run.group.id) }]"
               :style="run.kind === 'group' && groupIsFloating(run.group.id) ? dragFloatStyle ?? undefined : undefined"
             >
               <ChoiceOptions

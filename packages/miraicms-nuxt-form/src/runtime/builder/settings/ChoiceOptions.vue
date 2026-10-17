@@ -297,8 +297,7 @@ onBeforeUnmount(resetDrag)
 
         <div
           :ref="(el) => setRowRef(el as Element | null, index)"
-          :class="`${rootClass}__row`"
-          :class="{ 'is-floating': rowIsFloating(index) }"
+          :class="[`${rootClass}__row`, { 'is-floating': rowIsFloating(index) }]"
           :style="rowStyle(index)"
           data-choice-row
           :data-list-key="listKey"

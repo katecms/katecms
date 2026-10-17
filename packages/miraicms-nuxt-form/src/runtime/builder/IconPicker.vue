@@ -27,8 +27,7 @@ function choose(id: string) {
 
 <template>
   <div
-    :class="rootClass"
-    :class="{ 'is-compact': compact }"
+    :class="[rootClass, { 'is-compact': compact }]"
   >
     <span
       v-if="!compact"
@@ -57,8 +56,7 @@ function choose(id: string) {
     >
       <button
         type="button"
-        :class="`${rootClass}__choice`"
-        :class="{ 'is-active': !modelValue }"
+        :class="[`${rootClass}__choice`, { 'is-active': !modelValue }]"
         aria-label="No icon"
         @click="choose('')"
       >
@@ -68,8 +66,7 @@ function choose(id: string) {
         v-for="icon in STEP_ICONS"
         :key="icon.id"
         type="button"
-        :class="`${rootClass}__choice`"
-        :class="{ 'is-active': icon.id === props.modelValue }"
+        :class="[`${rootClass}__choice`, { 'is-active': icon.id === props.modelValue }]"
         :aria-label="icon.label"
         @click="choose(icon.id)"
       >

@@ -176,8 +176,7 @@ onBeforeUnmount(resetDrag)
       />
       <div
         :ref="(el) => setRowRef(el as Element | null, index)"
-        :class="`${rootClass}__row`"
-        :class="{ 'is-floating': isDragging && draggingIndex === index }"
+        :class="[`${rootClass}__row`, { 'is-floating': isDragging && draggingIndex === index }]"
         :style="rowStyle(index)"
       >
       <button

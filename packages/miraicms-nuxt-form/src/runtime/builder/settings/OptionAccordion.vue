@@ -39,8 +39,7 @@ function toggle() {
 
 <template>
   <div
-    :class="rootClass"
-    :class="{ 'is-on': plain || enabled, 'is-open': (plain || enabled) && open }"
+    :class="[rootClass, { 'is-on': plain || enabled, 'is-open': (plain || enabled) && open }]"
   >
     <div :class="`${rootClass}__bar`">
       <input

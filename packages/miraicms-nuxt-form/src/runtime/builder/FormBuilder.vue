@@ -29,7 +29,6 @@ import StepSettings from './StepSettings.vue'
 
 const rootClass = 'miraicms-form-builder'
 
-
 defineModel<string>('name', { required: true })
 const status = defineModel<FormStatus>('status', { required: true })
 const content = defineModel<FormContent>('content', { required: true })
@@ -811,8 +810,10 @@ onBeforeUnmount(() => {
         <div :class="`${rootClass}__tabs`">
           <button
             type="button"
-            :class="`${rootClass}__tab`"
-            :class="{ 'is-active': sidebarTab === 'fields' }"
+            :class="[
+              `${rootClass}__tab`,
+              { 'is-active': sidebarTab === 'fields' },
+            ]"
             aria-label="Add Fields"
             title="Add Fields"
             @click="sidebarTab = 'fields'"
@@ -858,8 +859,10 @@ onBeforeUnmount(() => {
           </button>
           <button
             type="button"
-            :class="`${rootClass}__tab`"
-            :class="{ 'is-active': sidebarTab === 'options' }"
+            :class="[
+              `${rootClass}__tab`,
+              { 'is-active': sidebarTab === 'options' },
+            ]"
             aria-label="Field Options"
             title="Field Options"
             @click="sidebarTab = 'options'"
@@ -1094,11 +1097,10 @@ onBeforeUnmount(() => {
             />
             <div
               :ref="(el) => setStepRef(el as Element | null, index)"
-              :class="`${rootClass}__step`"
-              :class="{
+              :class="[`${rootClass}__step`, {
                 'is-active': step.id === currentStepId,
                 'is-floating': isDraggingStep && draggingStepIndex === index,
-              }"
+              }]"
               :style="stepDragStyle(index)"
             >
               <span
@@ -1165,8 +1167,7 @@ onBeforeUnmount(() => {
               </button>
               <button
                 type="button"
-                :class="`${rootClass}__step-menu`"
-                :class="{ 'is-open': openStepMenu === step.id }"
+                :class="[`${rootClass}__step-menu`, { 'is-open': openStepMenu === step.id }]"
                 aria-label="Step options"
                 aria-haspopup="menu"
                 :aria-expanded="openStepMenu === step.id"
@@ -1291,8 +1292,7 @@ onBeforeUnmount(() => {
           <button
             v-if="content.steps.length > 1"
             type="button"
-            :class="`${rootClass}__step-icon`"
-            :class="{ 'is-active': stepSettingsOpen }"
+            :class="[`${rootClass}__step-icon`, { 'is-active': stepSettingsOpen }]"
             aria-label="Step settings"
             @click="stepSettingsOpen = !stepSettingsOpen"
           >
@@ -1336,14 +1336,13 @@ onBeforeUnmount(() => {
               <div
                 v-for="item in layout"
                 :key="item.fieldId"
-                :class="`${rootClass}__item`"
-                :class="{
+                :class="[`${rootClass}__item`, {
                   'is-selected': item.fieldId === selectedId,
                   'is-dragging': drag?.fieldId === item.fieldId && drag?.mode !== 'move',
                   'is-floating': drag?.fieldId === item.fieldId && drag?.mode === 'move',
                   'is-hidden': fieldById(item.fieldId)?.text?.hidden,
                   'is-menu-open': openFieldMenu === item.fieldId,
-                }"
+                }]"
                 :style="itemVisualStyle(item)"
                 @pointerdown="onItemPointerDown($event, item)"
               >
@@ -1454,8 +1453,7 @@ onBeforeUnmount(() => {
                     </button>
                     <div
                       v-if="openFieldMenu === item.fieldId"
-                      :class="`${rootClass}__item-menu`"
-                      :class="{ 'is-left': fieldMenuSide === 'left' }"
+                      :class="[`${rootClass}__item-menu`, { 'is-left': fieldMenuSide === 'left' }]"
                     >
                       <button
                         type="button"
@@ -1561,8 +1559,7 @@ onBeforeUnmount(() => {
                           <span>Move to</span>
                         </button>
                         <div
-                          :class="`${rootClass}__move-steps`"
-                          :class="{ 'is-open': openMoveMenu === item.fieldId }"
+                          :class="[`${rootClass}__move-steps`, { 'is-open': openMoveMenu === item.fieldId }]"
                           :style="openMoveMenu === item.fieldId ? moveMenuStyle : undefined"
                           @mouseenter="keepMoveMenu"
                         >
@@ -1653,24 +1650,21 @@ onBeforeUnmount(() => {
       <div :class="`${rootClass}__settings-nav`">
         <button
           type="button"
-          :class="`${rootClass}__settings-item`"
-          :class="{ 'is-active': settingsSection === 'form' }"
+          :class="[`${rootClass}__settings-item`, { 'is-active': settingsSection === 'form' }]"
           @click="settingsSection = 'form'"
         >
           Form Settings
         </button>
         <button
           type="button"
-          :class="`${rootClass}__settings-item`"
-          :class="{ 'is-active': settingsSection === 'email' }"
+          :class="[`${rootClass}__settings-item`, { 'is-active': settingsSection === 'email' }]"
           @click="settingsSection = 'email'"
         >
           Email Notification
         </button>
         <button
           type="button"
-          :class="`${rootClass}__settings-item`"
-          :class="{ 'is-active': settingsSection === 'confirmations' }"
+          :class="[`${rootClass}__settings-item`, { 'is-active': settingsSection === 'confirmations' }]"
           @click="settingsSection = 'confirmations'"
         >
           Confirmations

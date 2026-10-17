@@ -45,12 +45,12 @@ function asStored(value: unknown): number | null {
 }
 
 const selected = computed<SelectModelValue>({
-  get() {
+  get(): SelectModelValue {
     if (props.field?.multiple) {
       const items = Array.isArray(model.value) ? model.value : []
       return items
         .map(asStored)
-        .filter((value): value is string | number => value != null)
+        .filter((value): value is number => value != null)
     }
     return asStored(model.value) ?? ''
   },

@@ -307,7 +307,6 @@ interface FormField extends BaseField {
   type: 'form'
   multiple?: boolean
   allowNull?: boolean
-  returnFormat?: 'id' | 'slug'
 }
 
 interface PageLinkField extends BaseField {

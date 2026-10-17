@@ -3,11 +3,11 @@ import { computed } from 'vue'
 import { useRoute } from '#imports'
 
 const route = useRoute()
-const slug = computed(() => String(route.params.slug ?? ''))
+const id = computed(() => Number(route.params.slug))
 </script>
 
 <template>
   <main>
-    <MiraiCmsForm :form="slug" />
+    <MiraiCmsForm :form="id" />
   </main>
 </template>

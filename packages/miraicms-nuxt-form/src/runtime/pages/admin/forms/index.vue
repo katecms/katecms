@@ -141,7 +141,7 @@ onMounted(load)
         role="row"
       >
         <span role="columnheader">Name</span>
-        <span role="columnheader">Slug</span>
+        <span role="columnheader">ID Form</span>
         <span role="columnheader">Status</span>
         <span role="columnheader">Updated</span>
         <span role="columnheader">Actions</span>
@@ -153,7 +153,7 @@ onMounted(load)
         role="row"
       >
         <span role="cell">{{ form.name }}</span>
-        <span role="cell"><span>{{ form.slug }}</span></span>
+        <span role="cell">{{ form.id }}</span>
         <span role="cell">{{ form.status === 'published' ? 'Published' : 'Draft' }}</span>
         <span role="cell">{{ formatDate(form.updatedAt) }}</span>
         <span

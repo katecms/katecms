@@ -2,8 +2,11 @@ import { createError, defineEventHandler, getRouterParam } from 'h3'
 import { readPublicForm } from '../../utils/forms'
 
 export default defineEventHandler(async (event) => {
-  const slug = getRouterParam(event, 'slug') || ''
-  const form = await readPublicForm(slug)
+  const raw = getRouterParam(event, 'slug') || ''
+  if (!/^[1-9]\d*$/.test(raw)) {
+    throw createError({ statusCode: 404, statusMessage: 'Form not found.' })
+  }
+  const form = await readPublicForm(Number(raw))
   if (!form) {
     throw createError({ statusCode: 404, statusMessage: 'Form not found.' })
   }

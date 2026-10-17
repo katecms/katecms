@@ -7,7 +7,6 @@ type FormFieldConfig = Extract<Field, { type: 'form' }>
 interface FormChoice {
   id: number
   name: string
-  slug: string
 }
 
 const props = withDefaults(defineProps<{
@@ -25,12 +24,6 @@ const forms = ref<FormChoice[]>([])
 const loading = ref(false)
 const loadError = ref<string | null>(null)
 
-const returnFormat = computed(() => props.field?.returnFormat === 'slug' ? 'slug' : 'id')
-
-function storedValue(form: FormChoice): number | string {
-  return returnFormat.value === 'slug' ? form.slug : form.id
-}
-
 function emptyValue(): unknown {
   if (props.field?.multiple) {
     return []
@@ -39,16 +32,13 @@ function emptyValue(): unknown {
 }
 
 const selectChoices = computed<SelectChoice[]>(() => forms.value.map(form => ({
-  val: storedValue(form),
-  lbl: form.name || form.slug,
+  val: form.id,
+  lbl: form.name,
 })))
 
-function asStored(value: unknown): string | number | null {
+function asStored(value: unknown): number | null {
   if (value == null || value === '') {
     return null
-  }
-  if (returnFormat.value === 'slug') {
-    return String(value)
   }
   const id = Number(value)
   return Number.isFinite(id) ? id : null
@@ -68,15 +58,15 @@ const selected = computed<SelectModelValue>({
     if (props.field?.multiple) {
       const items = Array.isArray(raw) ? raw : []
       model.value = items
-        .map(item => returnFormat.value === 'slug' ? String(item) : Number(item))
-        .filter(item => returnFormat.value === 'slug' ? item !== '' : Number.isFinite(item))
+        .map(item => Number(item))
+        .filter(item => Number.isFinite(item))
       return
     }
     if (raw === '' || raw == null) {
       model.value = emptyValue()
       return
     }
-    model.value = returnFormat.value === 'slug' ? String(raw) : Number(raw)
+    model.value = Number(raw)
   },
 })
 
@@ -108,7 +98,7 @@ async function loadForms() {
   try {
     const res = await $fetch<FormChoice[]>('/api/_miraicms/forms')
     forms.value = Array.isArray(res)
-      ? res.filter(form => Number.isFinite(form.id) && typeof form.slug === 'string')
+      ? res.filter(form => Number.isFinite(form.id) && typeof form.name === 'string')
       : []
   }
   catch {

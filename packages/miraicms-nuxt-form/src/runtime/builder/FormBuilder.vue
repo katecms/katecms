@@ -13,6 +13,7 @@ import {
   baseBreakpoint,
   cloneStep,
   copyDesktopLayout,
+  syncFieldOrderLayouts,
   deleteStep,
   cloneField,
   moveFieldToStep,
@@ -24,8 +25,7 @@ import {
 import { clientFormBreakpoints } from '../form/runtime-config'
 import StepSettings from './StepSettings.vue'
 
-const name = defineModel<string>('name', { required: true })
-const slug = defineModel<string>('slug', { required: true })
+defineModel<string>('name', { required: true })
 const status = defineModel<FormStatus>('status', { required: true })
 const content = defineModel<FormContent>('content', { required: true })
 
@@ -379,6 +379,40 @@ function otherSteps(fieldId: string) {
 function matchDesktop() {
   content.value = copyDesktopLayout(content.value, breakpoint.value)
 }
+
+function layoutOrderKey(source: FormContent, name: Breakpoint): string {
+  const items = source.layouts[name] ?? []
+  return [...items]
+    .sort((a, b) => a.y - b.y || a.x - b.x || a.fieldId.localeCompare(b.fieldId))
+    .map(item => item.fieldId)
+    .join(',')
+}
+
+function setSyncFieldOrder(enabled: boolean) {
+  const next = { ...content.value, syncFieldOrder: enabled }
+  content.value = enabled ? syncFieldOrderLayouts(next, breakpoint.value) : next
+}
+
+watch(
+  () => content.value.syncFieldOrder ? `${breakpoint.value}:${layoutOrderKey(content.value, breakpoint.value)}` : '',
+  (key) => {
+    if (!key || !content.value.syncFieldOrder) {
+      return
+    }
+    const next = syncFieldOrderLayouts(content.value, breakpoint.value)
+    const unchanged = formBreakpointList.every((item) => {
+      const before = content.value.layouts[item.name] ?? []
+      const after = next.layouts[item.name] ?? []
+      return before.length === after.length && after.every((entry, index) => {
+        const current = before[index]
+        return current?.fieldId === entry.fieldId && current.x === entry.x && current.y === entry.y && current.w === entry.w && current.h === entry.h
+      })
+    })
+    if (!unchanged) {
+      content.value = next
+    }
+  },
+)
 
 function itemStyle(item: LayoutItem): CSSProperties {
   return {
@@ -969,6 +1003,17 @@ onBeforeUnmount(() => {
           >
             Match {{ baseLabel.toLowerCase() }}
           </MiraiCmsUiButton>
+          <MiraiCmsTrueFalseField
+            class="miraicms-form-builder__sync"
+            field-key="sync-field-order"
+            :model-value="content.syncFieldOrder === true"
+            :field="{
+              type: 'true_false',
+              message: 'Sync Field Order Across Breakpoints',
+              //instructions: 'When enabled, all layouts will automatically sync with and follow the active breakpoint’s field order.',
+            }"
+            @update:model-value="setSyncFieldOrder($event === true)"
+          />
           <span class="miraicms-form-builder__hint">60 columns. Drag to move, drag the edge to resize. Arrows nudge, Shift changes width.</span>
         </div>
         <div class="miraicms-form-builder__steps">
@@ -1699,6 +1744,16 @@ $root: '.miraicms-form-builder';
     display: flex;
     flex-wrap: wrap;
     gap: math-rem(6);
+  }
+
+  &__sync {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 100%;
+
+    :deep(.miraicms-true-false-field) {
+      flex-direction: row-reverse;
+    }
   }
 
   :deep(.miraicms-form-builder__breakpoint-btn.miraicms-btn:not(.miraicms-btn--small) svg) {

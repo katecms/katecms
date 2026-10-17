@@ -9,6 +9,7 @@ import {
   addStep,
   reorderSteps,
   copyDesktopLayout,
+  syncFieldOrderLayouts,
   createEmptyContent,
   normalizeFormContent,
   overlaps,
@@ -93,6 +94,21 @@ test('normalize repairs missing layout cells and strips scripts', () => {
   assert.equal(content.fields[0]?.html.includes('onclick'), false)
   assert.equal(content.layouts.tablet[0]?.fieldId, 'keep')
   assert.equal(content.layouts.tablet[0]?.w, 60)
+})
+
+test('sync field order keeps each breakpoint width and follows the source order', () => {
+  let content = createEmptyContent()
+  content = addField(content, 'text')
+  content = addField(content, 'email')
+  const textId = content.fields[1]!.id
+  const emailId = content.fields[2]!.id
+  content = setLayoutItem(content, 'desktop', { fieldId: emailId, x: 0, y: 0, w: 30 })
+  content = setLayoutItem(content, 'desktop', { fieldId: textId, x: 30, y: 0, w: 30 })
+  content = syncFieldOrderLayouts(content, 'desktop')
+  const phone = [...content.layouts.phone].sort((a, b) => a.y - b.y || a.x - b.x)
+  const ordered = phone.filter(item => item.fieldId === emailId || item.fieldId === textId)
+  assert.deepEqual(ordered.map(item => item.fieldId), [emailId, textId])
+  assert.equal(ordered.every(item => item.w === 60), true)
 })
 
 test('tablet layout can be copied from desktop', () => {

@@ -50,7 +50,6 @@ async function save() {
       method: 'PUT',
       body: {
         name: current.name,
-        slug: current.slug,
         status: current.status,
         content: current.content,
       },
@@ -77,7 +76,7 @@ watch(id, (formId) => {
     <MiraiCmsAdminHeader
       :title="form?.name || 'Form'"
       :back-to="paths.list"
-      :meta="form ? form.slug : ''"
+      :meta="form ? `ID Form ${form.id}` : ''"
     >
       <MiraiCmsUiButton
         tag="button"
@@ -110,13 +109,20 @@ watch(id, (formId) => {
     >
       Loading…
     </div>
-    <FormBuilder
-      v-else-if="form"
-      v-model:name="form.name"
-      v-model:slug="form.slug"
-      v-model:status="form.status"
-      v-model:content="form.content"
-    />
+    <template v-else-if="form">
+      <div class="miraicms-form-editor__name">
+        <MiraiCmsTextField
+          v-model="form.name"
+          field-key="form-name"
+          :field="{ type: 'text', label: 'Form name', maxLength: 160 }"
+        />
+      </div>
+      <FormBuilder
+        v-model:name="form.name"
+        v-model:status="form.status"
+        v-model:content="form.content"
+      />
+    </template>
   </div>
 </template>
 
@@ -134,6 +140,11 @@ watch(id, (formId) => {
   &__hint {
     margin: math-rem(12) 0 0;
     color: $color-muted;
+  }
+
+  &__name {
+    max-width: math-rem(360);
+    margin-bottom: math-rem(8);
   }
 
   :deep(.miraicms-notice) {

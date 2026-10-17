@@ -14,8 +14,17 @@ import { stepIconSvg } from '../form/icons'
  * Columns and rows are 0-based. data-state is loading, missing, idle, submitting, success, invalid, or error.
  */
 const props = defineProps<{
-  form: string
+  /** Published form id. */
+  form: number
 }>()
+
+function formId(): number | null {
+  const id = Number(props.form)
+  if (!Number.isInteger(id) || id < 1) {
+    return null
+  }
+  return id
+}
 
 clientFormBreakpoints()
 
@@ -81,12 +90,13 @@ async function load() {
   fieldErrors.value = {}
   alertMessage.value = ''
   definition.value = null
-  if (!props.form) {
+  const id = formId()
+  if (id == null) {
     state.value = 'missing'
     return
   }
   try {
-    definition.value = await $fetch<PublicForm>(`/api/_miraicms/forms/view/${encodeURIComponent(props.form)}`)
+    definition.value = await $fetch<PublicForm>(`/api/_miraicms/forms/view/${id}`)
     const next: Record<string, string> = {}
     for (const field of definition.value.content.fields) {
       if (isRichFieldType(field.type)) {
@@ -138,7 +148,12 @@ async function onSubmit(event: Event) {
   }
   state.value = 'submitting'
   try {
-    await $fetch(`/api/_miraicms/forms/submit/${encodeURIComponent(props.form)}`, {
+    const id = formId()
+    if (id == null) {
+      state.value = 'missing'
+      return
+    }
+    await $fetch(`/api/_miraicms/forms/submit/${id}`, {
       method: 'POST',
       body: data,
     })

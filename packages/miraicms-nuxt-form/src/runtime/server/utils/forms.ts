@@ -12,7 +12,6 @@ import type {
 } from '../../form/model'
 import {
   createEmptyContent,
-  isSlug,
   normalizeFormContent,
   parseContent,
   slugify,
@@ -70,8 +69,8 @@ export async function readForm(id: number): Promise<FormRecord | null> {
   return row ? rowToRecord(row) : null
 }
 
-export async function readPublicForm(key: string): Promise<PublicForm | null> {
-  const record = await readFormByKey(key)
+export async function readPublicForm(id: number): Promise<PublicForm | null> {
+  const record = await readForm(id)
   if (!record || record.status !== 'published') {
     return null
   }
@@ -115,16 +114,6 @@ export async function updateForm(id: number, body: unknown): Promise<FormRecord>
   if (!name) {
     throw createError({ statusCode: 400, statusMessage: 'Enter a form name.' })
   }
-  const slug = typeof input.slug === 'string' ? input.slug.trim() : current.slug
-  if (!isSlug(slug)) {
-    throw createError({ statusCode: 400, statusMessage: 'Use a slug made of letters, numbers, and hyphens.' })
-  }
-  const taken = await sql<{ id: number }>`
-    SELECT id FROM miraicms_forms WHERE slug = ${slug} AND id <> ${id}
-  `.execute(getFormDb())
-  if (taken.rows.length) {
-    throw createError({ statusCode: 400, statusMessage: 'That slug is already in use.' })
-  }
   const status: FormStatus = input.status === 'published' || input.status === 'draft'
     ? input.status
     : current.status
@@ -136,7 +125,6 @@ export async function updateForm(id: number, body: unknown): Promise<FormRecord>
   await sql`
     UPDATE miraicms_forms
     SET name = ${name},
-        slug = ${slug},
         status = ${status},
         content = ${content},
         updated_at = ${nowIso()}
@@ -164,8 +152,8 @@ export async function deleteForm(id: number): Promise<void> {
   await deleteFormUploads(id)
 }
 
-export async function submitForm(event: H3Event, slug: string): Promise<{ ok: true, id: number }> {
-  const form = await readFormByKey(slug)
+export async function submitForm(event: H3Event, id: number): Promise<{ ok: true, id: number }> {
+  const form = await readForm(id)
   if (!form || form.status !== 'published') {
     throw createError({ statusCode: 404, statusMessage: 'Form not found.' })
   }
@@ -230,31 +218,6 @@ export async function submitForm(event: H3Event, slug: string): Promise<{ ok: tr
     throw error
   }
   return { ok: true, id: submissionId }
-}
-
-async function readFormByKey(key: string): Promise<FormRecord | null> {
-  const bySlug = await readFormBySlug(key)
-  if (bySlug) {
-    return bySlug
-  }
-  if (!/^[1-9]\d*$/.test(key)) {
-    return null
-  }
-  const id = Number(key)
-  if (!Number.isSafeInteger(id)) {
-    return null
-  }
-  return readForm(id)
-}
-
-async function readFormBySlug(slug: string): Promise<FormRecord | null> {
-  const result = await sql<FormRow>`
-    SELECT id, name, slug, status, content, created_at, updated_at
-    FROM miraicms_forms
-    WHERE slug = ${slug}
-  `.execute(getFormDb())
-  const row = result.rows[0]
-  return row ? rowToRecord(row) : null
 }
 
 async function uniqueSlug(base: string): Promise<string> {

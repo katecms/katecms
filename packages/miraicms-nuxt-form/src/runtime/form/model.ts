@@ -151,6 +151,8 @@ export interface FormContent {
   stepHeader: FormStepHeader
   fields: FormField[]
   layouts: Record<Breakpoint, LayoutItem[]>
+  /** When set, every breakpoint layout follows the active breakpoint’s field order. */
+  syncFieldOrder?: boolean
 }
 
 export type FormStatus = 'draft' | 'published'
@@ -530,6 +532,60 @@ export function setLayoutItem(content: FormContent, breakpoint: Breakpoint, item
   }
 }
 
+function readingOrder(items: LayoutItem[]): LayoutItem[] {
+  return [...items].sort((a, b) => a.y - b.y || a.x - b.x || a.fieldId.localeCompare(b.fieldId))
+}
+
+/** Keeps each item’s width and spacer height, and places them in `order`. */
+function flowInOrder(items: LayoutItem[], order: string[]): LayoutItem[] {
+  const byId = new Map(items.map(item => [item.fieldId, item]))
+  const ordered = order.map(id => byId.get(id)).filter((item): item is LayoutItem => !!item)
+  for (const item of items) {
+    if (!order.includes(item.fieldId)) {
+      ordered.push(item)
+    }
+  }
+  const placed: LayoutItem[] = []
+  let x = 0
+  let y = 0
+  for (const item of ordered) {
+    const w = clampInt(item.w, 1, GRID_COLUMNS)
+    if (x > 0 && x + w > GRID_COLUMNS) {
+      y += 1
+      x = 0
+    }
+    const next: LayoutItem = { ...item, x, y, w }
+    placed.push(next)
+    x += w
+    if (x >= GRID_COLUMNS) {
+      y += 1
+      x = 0
+    }
+  }
+  return placed
+}
+
+/** Copies the source breakpoint’s field order onto every other layout. */
+export function syncFieldOrderLayouts(content: FormContent, source: Breakpoint): FormContent {
+  const sourceItems = content.layouts[source] ?? []
+  const layouts = { ...content.layouts }
+  for (const name of formBreakpoints()) {
+    if (name === source) {
+      continue
+    }
+    const target = content.layouts[name] ?? []
+    const next: LayoutItem[] = []
+    for (const step of content.steps) {
+      const stepFields = new Set(content.fields.filter(field => field.stepId === step.id).map(field => field.id))
+      const sourceStep = readingOrder(sourceItems.filter(item => stepFields.has(item.fieldId)))
+      const targetStep = target.filter(item => stepFields.has(item.fieldId))
+      next.push(...flowInOrder(targetStep, sourceStep.map(item => item.fieldId)))
+    }
+    layouts[name] = next
+  }
+  return { ...content, layouts }
+}
+
 export function copyDesktopLayout(content: FormContent, breakpoint: Breakpoint): FormContent {
   const source = baseBreakpoint()
   if (breakpoint === source) {
@@ -591,7 +647,13 @@ export function normalizeFormContent(input: unknown): FormContent {
     }
     layouts[breakpoint] = next
   }
-  return { steps, stepHeader: normalizeStepHeader(source.stepHeader), fields, layouts }
+  return {
+    syncFieldOrder: source.syncFieldOrder === true,
+    steps,
+    stepHeader: normalizeStepHeader(source.stepHeader),
+    fields,
+    layouts,
+  }
 }
 
 export function parseContent(value: unknown): FormContent {

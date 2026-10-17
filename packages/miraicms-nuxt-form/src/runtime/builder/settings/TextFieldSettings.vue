@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import type { CSSProperties } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import type { FormField, LayoutItem } from '../../form/model'
 import { GRID_COLUMNS } from '../../form/model'
 import { AUTOCOMPLETE_CHOICES, FILE_TYPE_ACCEPT, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultChoiceOptions, defaultTextOptions, fieldHasOption, fileAccept, headingTag, isTemporalType, listedChoiceOptions, normalizeIcon, resolveChoiceEntries, temporalInputType } from '../../form/text-options'
@@ -212,6 +213,128 @@ function setGroup(index: number, group: FormChoiceGroup) {
 function removeGroup(index: number) {
   writeEntries(resolveChoiceEntries(options.value).filter((_, entryIndex) => entryIndex !== index))
 }
+
+const runRefs = ref<Array<HTMLElement | null>>([])
+const isGroupDragging = ref(false)
+const groupDragIndex = ref<number | null>(null)
+const groupDropIndex = ref(0)
+const groupDragOffset = ref({ x: 0, y: 0 })
+const groupDragSize = ref({ width: 0, height: 0 })
+const groupDragPosition = ref({ left: 0, top: 0 })
+
+const groupPlaceholderStyle = computed(() => ({
+  width: `${groupDragSize.value.width}px`,
+  height: `${groupDragSize.value.height}px`,
+}))
+
+function setRunRef(el: Element | null, index: number) {
+  runRefs.value[index] = el instanceof HTMLElement ? el : null
+}
+
+function groupBlockStyle(index: number): CSSProperties | undefined {
+  if (!isGroupDragging.value || groupDragIndex.value !== index) {
+    return undefined
+  }
+  return {
+    position: 'fixed',
+    left: `${groupDragPosition.value.left}px`,
+    top: `${groupDragPosition.value.top}px`,
+    width: `${groupDragSize.value.width}px`,
+    height: `${groupDragSize.value.height}px`,
+    zIndex: 1100,
+  }
+}
+
+function moveGroup(fromRun: number, insertAt: number) {
+  if (insertAt === fromRun || insertAt === fromRun + 1) {
+    return
+  }
+  const runs = [...choiceRuns.value]
+  const [moved] = runs.splice(fromRun, 1)
+  if (!moved || moved.kind !== 'group') {
+    return
+  }
+  runs.splice(fromRun < insertAt ? insertAt - 1 : insertAt, 0, moved)
+  writeEntries(runs.flatMap(run => run.kind === 'group'
+    ? [{ type: 'group' as const, group: run.group }]
+    : run.options.map(option => ({ type: 'option' as const, option }))))
+}
+
+function updateGroupDropIndex(clientY: number) {
+  const from = groupDragIndex.value
+  if (from === null) {
+    return
+  }
+  let insertAt = choiceRuns.value.length
+  for (let index = 0; index < choiceRuns.value.length; index += 1) {
+    if (index === from) {
+      continue
+    }
+    const el = runRefs.value[index]
+    if (!el) {
+      continue
+    }
+    const rect = el.getBoundingClientRect()
+    if (clientY < rect.top + rect.height / 2) {
+      insertAt = index
+      break
+    }
+    insertAt = index + 1
+  }
+  groupDropIndex.value = insertAt
+}
+
+function onGroupDragMove(event: MouseEvent) {
+  if (!isGroupDragging.value) {
+    return
+  }
+  groupDragPosition.value = {
+    left: event.clientX - groupDragOffset.value.x,
+    top: event.clientY - groupDragOffset.value.y,
+  }
+  updateGroupDropIndex(event.clientY)
+}
+
+function resetGroupDrag() {
+  isGroupDragging.value = false
+  groupDragIndex.value = null
+  groupDropIndex.value = 0
+  groupDragSize.value = { width: 0, height: 0 }
+  document.body.style.userSelect = ''
+  document.removeEventListener('mousemove', onGroupDragMove)
+  document.removeEventListener('mouseup', onGroupDragEnd)
+}
+
+function onGroupDragEnd() {
+  if (isGroupDragging.value && groupDragIndex.value !== null) {
+    moveGroup(groupDragIndex.value, groupDropIndex.value)
+  }
+  resetGroupDrag()
+}
+
+function onGroupHandleDown(index: number, event: MouseEvent) {
+  if (event.button !== 0) {
+    return
+  }
+  event.preventDefault()
+  event.stopPropagation()
+  const block = runRefs.value[index]
+  if (!block) {
+    return
+  }
+  const rect = block.getBoundingClientRect()
+  groupDragIndex.value = index
+  groupDropIndex.value = index
+  groupDragOffset.value = { x: event.clientX - rect.left, y: event.clientY - rect.top }
+  groupDragSize.value = { width: rect.width, height: rect.height }
+  groupDragPosition.value = { left: rect.left, top: rect.top }
+  isGroupDragging.value = true
+  document.body.style.userSelect = 'none'
+  document.addEventListener('mousemove', onGroupDragMove)
+  document.addEventListener('mouseup', onGroupDragEnd)
+}
+
+onBeforeUnmount(resetGroupDrag)
 </script>
 
 <template>
@@ -573,95 +696,160 @@ function removeGroup(index: number) {
           #extra
         >
           <template
-            v-for="run in choiceRuns"
+            v-for="(run, runIndex) in choiceRuns"
             :key="run.key"
           >
-            <ChoiceOptions
-              v-if="run.kind === 'options'"
-              :field-key="`${field.id}-choices-${run.key}`"
-              :model="run.options"
-              :show-image="options.optionIcon"
-              :show-required="true"
-              :show-disabled="true"
-              :single-check="!options.selectMultiple.enabled"
-              embedded
-              @update="setOptionRun(run.start, run.count, $event)"
+            <div
+              v-if="isGroupDragging && groupDropIndex === runIndex"
+              class="miraicms-text-settings__group-placeholder"
+              :style="groupPlaceholderStyle"
             />
             <div
-              v-else
-              class="miraicms-text-settings__group miraicms-text-settings__group--popup"
+              :ref="(el) => setRunRef(el as Element | null, runIndex)"
+              class="miraicms-text-settings__choice-block"
+              :class="{ 'is-floating': isGroupDragging && groupDragIndex === runIndex }"
+              :style="groupBlockStyle(runIndex)"
             >
-              <div class="miraicms-text-settings__group-header">
-                <MiraiCmsTextField
-                  :model-value="run.group.label"
-                  :field-key="`${field.id}-group-${run.group.id}`"
-                  :field="{ type: 'text', label: 'Group', maxLength: 200 }"
-                  @update:model-value="setGroup(run.index, { ...run.group, label: String($event ?? '') })"
-                />
-                <MiraiCmsUiButton
-                  tag="button"
-                  :variant="['red', 'icon']"
-                  aria-label="Remove Group"
-                  title="Remove Group"
-                  @click="removeGroup(run.index)"
-                >
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 18 18"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M3 5.25H15"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke="currentColor"
-                    />
-                    <path
-                      d="M7.5 8.25V12.75"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke="currentColor"
-                    />
-                    <path
-                      d="M10.5 8.25V12.75"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke="currentColor"
-                    />
-                    <path
-                      d="M3.75 5.25L4.5 14.25C4.5 14.6478 4.65804 15.0294 4.93934 15.3107C5.22064 15.592 5.60218 15.75 6 15.75H12C12.3978 15.75 12.7794 15.592 13.0607 15.3107C13.342 15.0294 13.5 14.6478 13.5 14.25L14.25 5.25"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke="currentColor"
-                    />
-                    <path
-                      d="M6.75 5.25V3C6.75 2.80109 6.82902 2.61032 6.96967 2.46967C7.11032 2.32902 7.30109 2.25 7.5 2.25H10.5C10.6989 2.25 10.8897 2.32902 11.0303 2.46967C11.171 2.61032 11.25 2.80109 11.25 3V5.25"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke="currentColor"
-                    />
-                  </svg>
-                </MiraiCmsUiButton>
-              </div>
               <ChoiceOptions
-                :field-key="`${field.id}-group-options-${run.group.id}`"
-                :model="run.group.options"
+                v-if="run.kind === 'options'"
+                :field-key="`${field.id}-choices-${run.key}`"
+                :model="run.options"
                 :show-image="options.optionIcon"
                 :show-required="true"
                 :show-disabled="true"
                 :single-check="!options.selectMultiple.enabled"
                 embedded
-                @update="setGroup(run.index, { ...run.group, options: $event })"
+                @update="setOptionRun(run.start, run.count, $event)"
               />
+              <div
+                v-else
+                class="miraicms-text-settings__group miraicms-text-settings__group--popup"
+              >
+                <div class="miraicms-text-settings__group-header">
+                  <button
+                    type="button"
+                    class="miraicms-text-settings__group-handle"
+                    aria-label="Move group"
+                    @mousedown="onGroupHandleDown(runIndex, $event)"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <g
+                        fill="currentColor"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <circle
+                          cx="8"
+                          cy="4"
+                          r="1"
+                        /><circle
+                          cx="16"
+                          cy="4"
+                          r="1"
+                        />
+                        <circle
+                          cx="8"
+                          cy="12"
+                          r="1"
+                        /><circle
+                          cx="16"
+                          cy="12"
+                          r="1"
+                        />
+                        <circle
+                          cx="8"
+                          cy="20"
+                          r="1"
+                        /><circle
+                          cx="16"
+                          cy="20"
+                          r="1"
+                        />
+                      </g>
+                    </svg>
+                  </button>
+
+                  <MiraiCmsTextField
+                    :model-value="run.group.label"
+                    :field-key="`${field.id}-group-${run.group.id}`"
+                    :field="{ type: 'text', label: 'Group', maxLength: 200 }"
+                    @update:model-value="setGroup(run.index, { ...run.group, label: String($event ?? '') })"
+                  />
+                  <MiraiCmsUiButton
+                    tag="button"
+                    :variant="['red', 'icon']"
+                    aria-label="Remove Group"
+                    title="Remove Group"
+                    @click="removeGroup(run.index)"
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 18 18"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M3 5.25H15"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke="currentColor"
+                      />
+                      <path
+                        d="M7.5 8.25V12.75"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke="currentColor"
+                      />
+                      <path
+                        d="M10.5 8.25V12.75"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke="currentColor"
+                      />
+                      <path
+                        d="M3.75 5.25L4.5 14.25C4.5 14.6478 4.65804 15.0294 4.93934 15.3107C5.22064 15.592 5.60218 15.75 6 15.75H12C12.3978 15.75 12.7794 15.592 13.0607 15.3107C13.342 15.0294 13.5 14.6478 13.5 14.25L14.25 5.25"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke="currentColor"
+                      />
+                      <path
+                        d="M6.75 5.25V3C6.75 2.80109 6.82902 2.61032 6.96967 2.46967C7.11032 2.32902 7.30109 2.25 7.5 2.25H10.5C10.6989 2.25 10.8897 2.32902 11.0303 2.46967C11.171 2.61032 11.25 2.80109 11.25 3V5.25"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke="currentColor"
+                      />
+                    </svg>
+                  </MiraiCmsUiButton>
+                </div>
+                <ChoiceOptions
+                  :field-key="`${field.id}-group-options-${run.group.id}`"
+                  :model="run.group.options"
+                  :show-image="options.optionIcon"
+                  :show-required="true"
+                  :show-disabled="true"
+                  :single-check="!options.selectMultiple.enabled"
+                  embedded
+                  @update="setGroup(run.index, { ...run.group, options: $event })"
+                />
+              </div>
             </div>
           </template>
+          <div
+            v-if="isGroupDragging && groupDropIndex === choiceRuns.length"
+            class="miraicms-text-settings__group-placeholder"
+            :style="groupPlaceholderStyle"
+          />
         </template>
       </ChoiceOptions>
     </div>
@@ -1560,6 +1748,41 @@ function removeGroup(index: number) {
         flex-grow: 1;
         max-width: 100%;
       }
+    }
+
+    &-handle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+      flex: 0 0 auto;
+      width: math-rem(24);
+      height: math-rem(38);
+      padding: 0;
+      border: 1px solid $color-border;
+      border-radius: $border-radius-inter;
+      background: $color-bg;
+      color: $color-muted;
+      cursor: grab;
+
+      svg {
+        width: math-rem(16);
+        height: auto;
+      }
+    }
+
+    &-placeholder {
+      box-sizing: border-box;
+      border: 1px dashed $color-border;
+      border-radius: $border-radius;
+      background: $color-bg;
+    }
+  }
+
+  &__choice-block {
+    &.is-floating {
+      z-index: 1100;
+      box-shadow: $shadow-md;
     }
   }
 

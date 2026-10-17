@@ -1,0 +1,41 @@
+---
+description: BEM class variables and nested SCSS in CMS Vue components
+globs: packages/miraicms-nuxt/**/*.vue,packages/miraicms-nuxt/**/*.scss,packages/miraicms-nuxt-form/**/*.vue,packages/miraicms-nuxt-form/**/*.scss,packages/miraicms-nuxt-seo/**/*.vue,packages/miraicms-nuxt-seo/**/*.scss
+alwaysApply: false
+---
+
+# Component styles
+
+One root class per component. Store it in script and reuse it in the template and SCSS. Do not repeat the class string in the template.
+
+```ts
+const rootClass = 'miraicms-admin-header'
+```
+
+```vue
+<div :class="rootClass">
+  <div :class="`${rootClass}__main`">
+```
+
+Elements are `` `${rootClass}__name` ``. Modifiers are `` `${rootClass}--name` ``. Combine several on one node: `:class="[rootClass, `${rootClass}--open`]"`.
+
+Scoped SCSS uses the same name. Nest elements, modifiers, and states inside `#{$root}` (`&__main`, `&--open`, `&:hover`). Do not write flat selectors for the same component.
+
+```scss
+@use "../../assets/styles" as *;
+
+$root: '.miraicms-admin-header';
+
+#{$root} {
+  display: flex;
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+  }
+}
+```
+
+In the form and SEO packages, import tokens with `@use "miraicms-nuxt/styles" as *;`. Use `$color-*`, `$shadow-*`, and `math-rem()` from that import.
+
+`@include miraicms-wrapper` wraps rules in `body#miraicms-body` so host CSS does not override the shell. Use it for admin pages and shell chrome: pages, menu, header, user menu, entry forms, notices. Put `#{$root}` inside the mixin. Leave fields, parts, and controls (buttons, selects) unwrapped. Follow the nearest component of the same kind.

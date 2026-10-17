@@ -6,8 +6,7 @@ alwaysApply: false
 
 # Admin shell
 
-- Root class is a `miraicms-*` string. Children use that prefix.
-- Scoped SCSS sits inside `@include miraicms-wrapper`. Tokens (`$color-*`, `$shadow-*`, `$sidebar-w`) and `math-rem()` come from `assets/styles` in this package, and from `@use "miraicms-nuxt/styles"` in the form and SEO addons.
+- Class names and nested SCSS follow the component styles rule. Tokens (`$color-*`, `$shadow-*`, `$sidebar-w`) and `math-rem()` come from `assets/styles` in this package, and from `@use "miraicms-nuxt/styles"` in the form and SEO addons.
 - Admin SFCs live in `runtime/internal/**`. `addAdminComponents` registers them with the `MiraiCms` prefix. Do not add them to the host `components` config.
 - Field `type` maps to `internal/fields/{Pascal}Field.vue` through `resolveField()` (`image_select` to `ImageSelectField.vue`). Add the widget there and the config type in `@miraicms/core`.
 - Host-facing form widgets live in `miraicms-nuxt-form/src/runtime/components` (`addComponentsDir`).

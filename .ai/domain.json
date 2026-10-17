@@ -83,6 +83,10 @@
         {
           "id": "nuxt/server",
           "p": "packages/miraicms-nuxt/src/runtime/server/kit.ts"
+        },
+        {
+          "id": "nuxt/styles",
+          "p": "packages/miraicms-nuxt/src/runtime/assets/styles/_index.scss"
         }
       ],
       "deps": [
@@ -839,6 +843,7 @@
       "requirePermission",
       "requireUser"
     ],
+    "nuxt/styles": [],
     "nuxt-form": [],
     "nuxt-seo": []
   },

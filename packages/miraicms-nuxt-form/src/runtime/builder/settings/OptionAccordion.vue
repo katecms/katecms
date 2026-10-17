@@ -17,7 +17,7 @@ watch(() => props.enabled, (value) => {
   if (props.plain) {
     return
   }
-  open.value = !!value
+  open.value = value
 })
 
 function onCheck(event: Event) {
@@ -69,7 +69,7 @@ function toggle() {
 </template>
 
 <style scoped lang="scss">
-@use "../../assets/styles" as *;
+@use "miraicms-nuxt/styles" as *;
 
 .miraicms-option-accordion {
   border: 1px solid $color-border;

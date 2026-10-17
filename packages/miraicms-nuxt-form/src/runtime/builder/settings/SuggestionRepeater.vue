@@ -238,7 +238,7 @@ onBeforeUnmount(resetDrag)
 </template>
 
 <style scoped lang="scss">
-@use "../../assets/styles" as *;
+@use "miraicms-nuxt/styles" as *;
 
 .miraicms-suggestion-list {
   display: flex;

@@ -181,7 +181,7 @@ onMounted(load)
 </template>
 
 <style scoped lang="scss">
-@use "../../../assets/styles" as *;
+@use "miraicms-nuxt/styles" as *;
 
 .miraicms-form-list {
   display: flex;

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { SelectChoice, SelectModelValue } from '@miraicms/core'
+import type { SelectChoice, SelectChoiceItem, SelectModelValue } from '@miraicms/core'
 import type { FormField } from '../form/model'
 import { applyInputMask, checkPositionStyle, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, listedChoiceOptions, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, resolveChoiceEntries, temporalInputType } from '../form/text-options'
 
@@ -21,6 +21,7 @@ const props = withDefaults(defineProps<{
 const options = computed(() => props.field?.text ?? defaultTextOptions(props.field?.label || ''))
 const rich = computed(() => isRichFieldType(props.field?.type || ''))
 const hoverRating = ref('')
+const revealed = ref(false)
 const ratingMessage = computed(() => {
   if (options.value.ratingHoverMessage && hoverRating.value) {
     return hoverRating.value
@@ -35,6 +36,7 @@ const draft = ref(props.field?.value || '')
 
 watch(() => props.field?.id, () => {
   draft.value = props.field?.value || options.value.defaultValue || ''
+  revealed.value = false
 }, { immediate: true })
 
 watch(() => options.value.defaultValue, (value) => {
@@ -47,7 +49,7 @@ const selectModel = ref<SelectModelValue>('')
 const listId = computed(() => `mirai-suggest-${props.field?.id || 'field'}`)
 const controlId = computed(() => `mirai-${props.field?.id || 'field'}`)
 const selectChoices = computed((): SelectChoice[] => {
-  const leaf = (item: { value: string, label: string, image: { url: string } | null, disabled: boolean, checked: boolean }): SelectChoice => ({
+  const leaf = (item: { value: string, label: string, image: { url: string } | null, disabled: boolean, checked: boolean }): SelectChoiceItem => ({
     val: item.value,
     lbl: item.label,
     img: options.value.optionIcon ? iconUrl(item.image) || undefined : undefined,
@@ -625,7 +627,7 @@ function onInput(event: Event) {
 </template>
 
 <style scoped lang="scss">
-@use "../assets/styles" as *;
+@use "miraicms-nuxt/styles" as *;
 
 .miraicms-field-face {
   display: flex;

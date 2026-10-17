@@ -86,7 +86,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped lang="scss">
-@use "../../assets/styles" as *;
+@use "miraicms-nuxt/styles" as *;
 
 .miraicms-option-popup {
   display: flex;

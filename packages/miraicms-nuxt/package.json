@@ -11,7 +11,8 @@
       "import": "./dist/module.mjs"
     },
     "./extensions": "./src/runtime/composables/useMiraiCmsExtensions.ts",
-    "./server": "./src/runtime/server/kit.ts"
+    "./server": "./src/runtime/server/kit.ts",
+    "./styles": "./dist/runtime/assets/styles/_index.scss"
   },
   "main": "./dist/module.mjs",
   "typesVersions": {

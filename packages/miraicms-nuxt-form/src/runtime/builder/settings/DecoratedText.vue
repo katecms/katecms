@@ -66,7 +66,7 @@ function iconValue(value: unknown): FormIcon | null {
 </template>
 
 <style scoped lang="scss">
-@use "../../assets/styles" as *;
+@use "miraicms-nuxt/styles" as *;
 
 .miraicms-decorated-text {
   display: flex;

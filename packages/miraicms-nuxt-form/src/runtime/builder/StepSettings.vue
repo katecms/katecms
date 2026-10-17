@@ -135,7 +135,7 @@ function toggle(stepId: string) {
 </template>
 
 <style scoped lang="scss">
-@use "../assets/styles" as *;
+@use "miraicms-nuxt/styles" as *;
 
 .miraicms-form-step-settings {
   display: flex;

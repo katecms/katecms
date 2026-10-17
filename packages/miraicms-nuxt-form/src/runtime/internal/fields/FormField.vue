@@ -146,7 +146,7 @@ onMounted(async () => {
 </template>
 
 <style scoped lang="scss">
-@use "../../assets/styles" as *;
+@use "miraicms-nuxt/styles" as *;
 
 $root: '.miraicms-form-field';
 

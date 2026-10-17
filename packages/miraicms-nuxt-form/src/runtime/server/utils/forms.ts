@@ -13,6 +13,7 @@ import type {
 import {
   createEmptyContent,
   normalizeFormContent,
+  notificationFieldErrors,
   parseContent,
   emptySubmissionError,
   storesValue,
@@ -115,7 +116,11 @@ export async function updateForm(id: number, body: unknown): Promise<FormRecord>
     ? input.status
     : current.status
   applyServerFormBreakpoints()
-  const content = JSON.stringify(normalizeFormContent(input.content ?? current.content))
+  const normalized = normalizeFormContent(input.content ?? current.content)
+  if (Object.keys(notificationFieldErrors(normalized.notification)).length) {
+    throw createError({ statusCode: 400, statusMessage: 'Enter a valid email address.' })
+  }
+  const content = JSON.stringify(normalized)
   if (content.length > 1_000_000) {
     throw createError({ statusCode: 400, statusMessage: 'This form is too large to save.' })
   }

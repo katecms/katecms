@@ -806,6 +806,40 @@ function defaultConfirmation(): FormConfirmation {
   }
 }
 
+const NOTIFICATION_MAIL_FIELDS = ['to', 'fromMail', 'cc', 'bcc', 'replyTo'] as const
+const NOTIFICATION_LIST_FIELDS = new Set<string>(['to', 'cc', 'bcc'])
+
+/** Field-key errors for notification addresses. Empty values are allowed. */
+export function notificationFieldErrors(notification: FormNotification | undefined): Record<string, string> {
+  const errors: Record<string, string> = {}
+  if (!notification) {
+    return errors
+  }
+  for (const key of NOTIFICATION_MAIL_FIELDS) {
+    const message = notificationMailError(notification[key], NOTIFICATION_LIST_FIELDS.has(key))
+    if (message) {
+      errors[`notify-${key}`] = message
+    }
+  }
+  return errors
+}
+
+function notificationMailError(value: string, multiple: boolean): string | null {
+  const text = value.trim()
+  if (!text) {
+    return null
+  }
+  const parts = multiple
+    ? text.split(',').map(item => item.trim()).filter(Boolean)
+    : [text]
+  if (!parts.length || parts.some(part => !EMAIL_PATTERN.test(part))) {
+    return multiple
+      ? 'Enter valid email addresses, separated by commas.'
+      : 'Enter a valid email address.'
+  }
+  return null
+}
+
 function normalizeNotification(raw: unknown): FormNotification {
   const source = isRecord(raw) ? raw : {}
   return {

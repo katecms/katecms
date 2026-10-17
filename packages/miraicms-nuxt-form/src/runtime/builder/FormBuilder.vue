@@ -14,6 +14,7 @@ import {
   cloneStep,
   copyDesktopLayout,
   syncFieldOrderLayouts,
+  notificationFieldErrors,
   deleteStep,
   cloneField,
   moveFieldToStep,
@@ -23,11 +24,18 @@ import {
   setLayoutItem,
 } from '../form/model'
 import { clientFormBreakpoints } from '../form/runtime-config'
+import { provideMiraiCmsFieldErrors } from 'miraicms-nuxt/extensions'
 import StepSettings from './StepSettings.vue'
 
 defineModel<string>('name', { required: true })
 const status = defineModel<FormStatus>('status', { required: true })
 const content = defineModel<FormContent>('content', { required: true })
+
+const notificationErrors = ref<Record<string, string>>({})
+watch(() => content.value.notification, (notification) => {
+  notificationErrors.value = notificationFieldErrors(notification)
+}, { immediate: true })
+provideMiraiCmsFieldErrors(notificationErrors)
 
 const rootRef = ref<HTMLElement | null>(null)
 const gridRef = ref<HTMLElement | null>(null)
@@ -1702,14 +1710,25 @@ onBeforeUnmount(() => {
           v-else-if="settingsSection === 'email'"
           class="miraicms-form-builder__form"
         >
-          <MiraiCmsTextField
+          <template
             v-for="field in emailFields"
             :key="field.key"
-            :field-key="`notify-${field.key}`"
-            :model-value="content.notification?.[field.key] ?? ''"
-            :field="{ type: 'text', label: field.label, maxLength: field.maxLength }"
-            @update:model-value="setNotification(field.key, String($event ?? ''))"
-          />
+          >
+            <MiraiCmsEmailField
+              v-if="field.key !== 'fromName'"
+              :field-key="`notify-${field.key}`"
+              :model-value="content.notification?.[field.key] ?? ''"
+              :field="{ type: 'email', label: field.label }"
+              @update:model-value="setNotification(field.key, String($event ?? ''))"
+            />
+            <MiraiCmsTextField
+              v-else
+              :field-key="`notify-${field.key}`"
+              :model-value="content.notification?.[field.key] ?? ''"
+              :field="{ type: 'text', label: field.label, maxLength: field.maxLength }"
+              @update:model-value="setNotification(field.key, String($event ?? ''))"
+            />
+          </template>
         </div>
         <div
           v-else

@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { $fetch, useHead, useRoute } from '#imports'
 import FormBuilder from '../../../builder/FormBuilder.vue'
-import type { FormRecord } from '../../../form/model'
+import { notificationFieldErrors, type FormRecord } from '../../../form/model'
 import { useFormPaths } from '../../../form/paths'
 
 const route = useRoute()
@@ -14,6 +14,14 @@ const error = ref('')
 const saved = ref(false)
 
 const id = computed(() => Number(route.params.id))
+const mailInvalid = computed(() => Object.keys(notificationFieldErrors(form.value?.content.notification)).length > 0)
+const mailNoticeHidden = ref(false)
+
+watch(mailInvalid, (invalid, wasInvalid) => {
+  if (!invalid || !wasInvalid) {
+    mailNoticeHidden.value = false
+  }
+})
 useHead({ title: computed(() => form.value?.name || 'Form') })
 
 function errMessage(err: unknown, fallback: string): string {
@@ -40,6 +48,11 @@ async function load(formId: number) {
 async function save() {
   const current = form.value
   if (!current || saving.value) {
+    return
+  }
+  const mailErrors = notificationFieldErrors(current.content.notification)
+  if (Object.keys(mailErrors).length) {
+    error.value = 'Enter a valid email address in Email Notification.'
     return
   }
   saving.value = true
@@ -81,7 +94,7 @@ watch(id, (formId) => {
       <MiraiCmsUiButton
         tag="button"
         aria-label="Save"
-        :disabled="saving || loading || !form"
+        :disabled="saving || loading || !form || mailInvalid"
         @click="save"
       >
         {{ saving ? 'Saving…' : 'Save' }}
@@ -89,7 +102,14 @@ watch(id, (formId) => {
     </MiraiCmsAdminHeader>
 
     <MiraiCmsUiNotice
-      v-if="error"
+      v-if="mailInvalid && !mailNoticeHidden"
+      placement="static"
+      variant="danger"
+      message="Enter a valid email address in Email Notification."
+      @close="mailNoticeHidden = true"
+    />
+    <MiraiCmsUiNotice
+      v-else-if="error"
       placement="static"
       variant="danger"
       :message="error"

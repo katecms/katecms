@@ -12,6 +12,7 @@ import {
   syncFieldOrderLayouts,
   emptySubmissionError,
   confirmationTarget,
+  notificationFieldErrors,
   createEmptyContent,
   normalizeFormContent,
   overlaps,
@@ -121,6 +122,25 @@ test('notification and confirmation settings are stored and scripts are removed'
   assert.equal(confirmationTarget('/thanks'), '/thanks')
   assert.equal(confirmationTarget('https://example.com/done'), 'https://example.com/done')
   assert.equal(confirmationTarget('//evil.example'), '')
+})
+
+test('notification mail fields reject plain text and allow address lists', () => {
+  const content = normalizeFormContent({
+    notification: {
+      to: 'a@b.co, hello',
+      fromMail: 'not-an-email',
+      fromName: 'Desk',
+      cc: 'c@d.co, e@f.co',
+      replyTo: 'reply@b.co',
+    },
+  })
+  const errors = notificationFieldErrors(content.notification)
+  assert.equal(errors['notify-to'], 'Enter valid email addresses, separated by commas.')
+  assert.equal(errors['notify-fromMail'], 'Enter a valid email address.')
+  assert.equal(errors['notify-cc'], undefined)
+  assert.equal(errors['notify-replyTo'], undefined)
+  assert.equal(errors['notify-fromName'], undefined)
+  assert.equal(Object.keys(notificationFieldErrors(normalizeFormContent({}).notification)).length, 0)
 })
 
 test('empty form submission uses the saved message and ignores hidden values', () => {

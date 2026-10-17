@@ -827,6 +827,7 @@
       "MIRAICMS_COLLECTION_HOOK",
       "MiraiCmsMenuExtra",
       "MiraiCmsPublicPage",
+      "provideMiraiCmsFieldErrors",
       "registerMiraiCmsField",
       "useMiraiCmsEntrySidebar",
       "useMiraiCmsMenuItems",

@@ -568,6 +568,7 @@
 {"n":"normalizePublicPath","k":"fn","p":"packages/core/src/rewrite.ts"}
 {"n":"normalizeRedirectPath","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/server/utils/redirects.ts"}
 {"n":"normalizeTextOptions","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
+{"n":"notificationFieldErrors","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"NumberField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/NumberField.vue"}
 {"n":"OEMBED_PROVIDERS","k":"const","p":"packages/core/src/oembed.ts"}
 {"n":"OembedField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/OembedField.vue"}

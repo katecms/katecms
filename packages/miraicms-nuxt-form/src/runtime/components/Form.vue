@@ -54,7 +54,7 @@ const cells = computed(() => {
       for (const name of names) {
         const item = findLayout(content.layouts[name], field.id)
         if (!item) {
-        return null
+          return null
         }
         layouts[name] = item
       }
@@ -156,15 +156,9 @@ function onFieldFocusOut(field: FormField, event: FocusEvent) {
   }
   const { input, files } = readFormPayload(form, current.content.fields)
   const message = fieldSubmissionError(field, input, files[field.key] ?? null, current.maxFileBytes)
-  const next = { ...fieldErrors.value }
-  if (message) {
-    next[field.key] = message
-  }
-  else {
-    delete next[field.key]
-  }
-  fieldErrors.value = next
-  if (Object.keys(next).length) {
+  const next = Object.fromEntries(Object.entries(fieldErrors.value).filter(([key]) => key !== field.key))
+  fieldErrors.value = message ? { ...next, [field.key]: message } : next
+  if (Object.keys(fieldErrors.value).length) {
     state.value = 'invalid'
   }
   else if (state.value === 'invalid') {
@@ -203,7 +197,7 @@ async function onSubmit(event: Event) {
     }
     await $fetch(`/api/_miraicms/forms/submit/${id}`, {
       method: 'POST',
-      body: data,
+      body: new FormData(form),
     })
     state.value = 'success'
     const target = confirmationTarget(current.content.confirmation?.redirectPage || '')
@@ -388,6 +382,8 @@ function formatBytes(size: number): string {
 </script>
 
 <template>
+  <pre>{{ definition }}</pre>
+
   <form
     class="mirai-form"
     :data-form="form"
@@ -414,8 +410,8 @@ function formatBytes(size: number): string {
         :key="group.step.id"
         class="mirai-form__step"
         :data-step="group.number"
-    >
-      <div
+      >
+        <div
           v-if="definition.content.stepHeader.show"
           class="mirai-form__step-header"
         >
@@ -460,16 +456,16 @@ function formatBytes(size: number): string {
         <div class="mirai-form__grid">
           <div
             v-for="cell in group.cells"
-        :key="cell.field.id"
-        class="mirai-form__cell"
-        :data-field="cell.field.key"
-        :data-type="cell.field.type"
+            :key="cell.field.id"
+            class="mirai-form__cell"
+            :data-field="cell.field.key"
+            :data-type="cell.field.type"
             :data-step="stepNumber(cell.field.stepId)"
-        :data-required="cell.field.required ? 'true' : undefined"
-        :data-invalid="fieldErrors[cell.field.key] ? 'true' : undefined"
+            :data-required="cell.field.required ? 'true' : undefined"
+            :data-invalid="fieldErrors[cell.field.key] ? 'true' : undefined"
             v-bind="layoutAttrs(cell.layouts)"
-            @focusout="onFieldFocusOut(cell.field, $event)"
             :hidden="richField(cell.field) && textOptions(cell.field).hidden ? true : undefined"
+            @focusout="onFieldFocusOut(cell.field, $event)"
           >
             <template v-if="richField(cell.field)">
               <div
@@ -990,148 +986,148 @@ function formatBytes(size: number): string {
             </template>
 
             <template v-else-if="isText(cell.field)">
-          <label
-            class="mirai-form__label"
-            :for="controlId(cell.field)"
-          >
-            {{ cell.field.label }}
-            <span
-              v-if="cell.field.required"
-              class="mirai-form__required"
-            >*</span>
-          </label>
-          <input
-            :id="controlId(cell.field)"
-            class="mirai-form__control"
-            :type="inputType(cell.field.type)"
-            :name="cell.field.key"
-            :placeholder="cell.field.placeholder || undefined"
-            :required="cell.field.required"
-            :disabled="locked"
-            :min="cell.field.type === 'number' && cell.field.min ? cell.field.min : undefined"
-            :max="cell.field.type === 'number' && cell.field.max ? cell.field.max : undefined"
-            :step="cell.field.type === 'number' && cell.field.step ? cell.field.step : undefined"
-          >
-        </template>
+              <label
+                class="mirai-form__label"
+                :for="controlId(cell.field)"
+              >
+                {{ cell.field.label }}
+                <span
+                  v-if="cell.field.required"
+                  class="mirai-form__required"
+                >*</span>
+              </label>
+              <input
+                :id="controlId(cell.field)"
+                class="mirai-form__control"
+                :type="inputType(cell.field.type)"
+                :name="cell.field.key"
+                :placeholder="cell.field.placeholder || undefined"
+                :required="cell.field.required"
+                :disabled="locked"
+                :min="cell.field.type === 'number' && cell.field.min ? cell.field.min : undefined"
+                :max="cell.field.type === 'number' && cell.field.max ? cell.field.max : undefined"
+                :step="cell.field.type === 'number' && cell.field.step ? cell.field.step : undefined"
+              >
+            </template>
 
-        <template v-else-if="cell.field.type === 'select'">
-          <label
-            class="mirai-form__label"
-            :for="controlId(cell.field)"
-          >
-            {{ cell.field.label }}
-            <span
-              v-if="cell.field.required"
-              class="mirai-form__required"
-            >*</span>
-          </label>
-          <select
-            :id="controlId(cell.field)"
-            class="mirai-form__control"
-            :name="cell.field.key"
-            :required="cell.field.required"
-            :disabled="locked"
-          >
-            <option value="">
-              {{ cell.field.placeholder }}
-            </option>
-            <option
-              v-for="option in cell.field.options"
-              :key="option.value"
-              :value="option.value"
+            <template v-else-if="cell.field.type === 'select'">
+              <label
+                class="mirai-form__label"
+                :for="controlId(cell.field)"
+              >
+                {{ cell.field.label }}
+                <span
+                  v-if="cell.field.required"
+                  class="mirai-form__required"
+                >*</span>
+              </label>
+              <select
+                :id="controlId(cell.field)"
+                class="mirai-form__control"
+                :name="cell.field.key"
+                :required="cell.field.required"
+                :disabled="locked"
+              >
+                <option value="">
+                  {{ cell.field.placeholder }}
+                </option>
+                <option
+                  v-for="option in cell.field.options"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </template>
+
+            <div
+              v-else-if="cell.field.type === 'radio' || cell.field.type === 'checkbox'"
+              class="mirai-form__choices"
+              role="group"
+              :aria-labelledby="controlId(cell.field)"
             >
-              {{ option.label }}
-            </option>
-          </select>
-        </template>
+              <div
+                :id="controlId(cell.field)"
+                class="mirai-form__label"
+              >
+                {{ cell.field.label }}
+                <span
+                  v-if="cell.field.required"
+                  class="mirai-form__required"
+                >*</span>
+              </div>
+              <label
+                v-for="option in cell.field.options"
+                :key="option.value"
+                class="mirai-form__choice"
+              >
+                <input
+                  class="mirai-form__control"
+                  :type="cell.field.type === 'radio' ? 'radio' : 'checkbox'"
+                  :name="cell.field.key"
+                  :value="option.value"
+                  :disabled="locked"
+                >
+                <span class="mirai-form__choice-label">{{ option.label }}</span>
+              </label>
+            </div>
 
-        <div
-          v-else-if="cell.field.type === 'radio' || cell.field.type === 'checkbox'"
-          class="mirai-form__choices"
-          role="group"
-          :aria-labelledby="controlId(cell.field)"
-        >
-          <div
-            :id="controlId(cell.field)"
-            class="mirai-form__label"
-          >
-            {{ cell.field.label }}
-            <span
-              v-if="cell.field.required"
-              class="mirai-form__required"
-            >*</span>
-          </div>
-          <label
-            v-for="option in cell.field.options"
-            :key="option.value"
-            class="mirai-form__choice"
-          >
+            <template v-else-if="cell.field.type === 'file'">
+              <label
+                class="mirai-form__label"
+                :for="controlId(cell.field)"
+              >
+                {{ cell.field.label }}
+                <span
+                  v-if="cell.field.required"
+                  class="mirai-form__required"
+                >*</span>
+              </label>
+              <input
+                :id="controlId(cell.field)"
+                class="mirai-form__control"
+                type="file"
+                :name="cell.field.key"
+                :accept="cell.field.accept || undefined"
+                :required="cell.field.required"
+                :disabled="locked"
+              >
+            </template>
+
             <input
-              class="mirai-form__control"
-              :type="cell.field.type === 'radio' ? 'radio' : 'checkbox'"
+              v-else-if="cell.field.type === 'hidden'"
+              type="hidden"
               :name="cell.field.key"
-              :value="option.value"
+              :value="cell.field.value"
+            >
+
+            <div
+              v-else-if="cell.field.type === 'html'"
+              class="mirai-form__html"
+              v-html="cell.field.html"
+            />
+
+            <button
+              v-else-if="cell.field.type === 'button'"
+              class="mirai-form__button"
+              type="submit"
               :disabled="locked"
             >
-            <span class="mirai-form__choice-label">{{ option.label }}</span>
-          </label>
-        </div>
-
-        <template v-else-if="cell.field.type === 'file'">
-          <label
-            class="mirai-form__label"
-            :for="controlId(cell.field)"
-          >
-            {{ cell.field.label }}
-            <span
-              v-if="cell.field.required"
-              class="mirai-form__required"
-            >*</span>
-          </label>
-          <input
-            :id="controlId(cell.field)"
-            class="mirai-form__control"
-            type="file"
-            :name="cell.field.key"
-            :accept="cell.field.accept || undefined"
-            :required="cell.field.required"
-            :disabled="locked"
-          >
-        </template>
-
-        <input
-          v-else-if="cell.field.type === 'hidden'"
-          type="hidden"
-          :name="cell.field.key"
-          :value="cell.field.value"
-        >
-
-        <div
-          v-else-if="cell.field.type === 'html'"
-          class="mirai-form__html"
-          v-html="cell.field.html"
-        />
-
-        <button
-          v-else-if="cell.field.type === 'button'"
-          class="mirai-form__button"
-          type="submit"
-          :disabled="locked"
-        >
-          {{ cell.field.buttonLabel || 'Submit' }}
-        </button>
+              {{ cell.field.buttonLabel || 'Submit' }}
+            </button>
 
             <div
               v-if="cell.field.help && !richField(cell.field) && cell.field.type !== 'hidden' && cell.field.type !== 'html' && cell.field.type !== 'button'"
-          class="mirai-form__help"
-        >
-          {{ cell.field.help }}
+              class="mirai-form__help"
+            >
+              {{ cell.field.help }}
             </div>
             <div
               v-if="fieldErrors[cell.field.key] && !richField(cell.field)"
-          class="mirai-form__error"
-        >
-          {{ fieldErrors[cell.field.key] }}
+              class="mirai-form__error"
+            >
+              {{ fieldErrors[cell.field.key] }}
             </div>
           </div>
         </div>

@@ -184,7 +184,6 @@ export type FormStatus = 'draft' | 'published'
 export interface FormRecord {
   id: number
   name: string
-  slug: string
   status: FormStatus
   content: FormContent
   createdAt: string
@@ -194,15 +193,14 @@ export interface FormRecord {
 export interface FormListItem {
   id: number
   name: string
-  slug: string
   status: FormStatus
   fieldCount: number
   updatedAt: string
 }
 
 export interface PublicForm {
+  id: number
   name: string
-  slug: string
   maxFileBytes: number
   content: FormContent
 }
@@ -219,17 +217,12 @@ export interface MailSettings {
 
 const CHOICE_TYPES = new Set<FieldType>(['select', 'radio', 'checkbox', 'image_select'])
 const KEY_PATTERN = /^[\p{L}_][\p{L}\p{N}_-]{0,63}$/u
-const SLUG_PATTERN = /^[\p{L}\p{N}]+(?:[-_][\p{L}\p{N}]+)*$/u
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
 const PHONE_PATTERN = /^[0-9+().\-\s]{3,40}$/
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 export function isFieldType(value: unknown): value is FieldType {
   return typeof value === 'string' && (FIELD_TYPES as readonly string[]).includes(value)
-}
-
-export function isSlug(value: string): boolean {
-  return value.length > 0 && value.length <= 80 && SLUG_PATTERN.test(value)
 }
 
 export function slugify(name: string): string {

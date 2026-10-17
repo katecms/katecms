@@ -51,14 +51,14 @@ export default defineNuxtModule({
       handler: resolver.resolve('./runtime/server/api/item/[id].delete'),
     })
     addServerHandler({
-      route: '/api/_miraicms/forms/view/:slug',
+      route: '/api/_miraicms/forms/view/:id',
       method: 'get',
-      handler: resolver.resolve('./runtime/server/api/view/[slug].get'),
+      handler: resolver.resolve('./runtime/server/api/view/[id].get'),
     })
     addServerHandler({
-      route: '/api/_miraicms/forms/submit/:slug',
+      route: '/api/_miraicms/forms/submit/:id',
       method: 'post',
-      handler: resolver.resolve('./runtime/server/api/submit/[slug].post'),
+      handler: resolver.resolve('./runtime/server/api/submit/[id].post'),
     })
     addServerHandler({
       route: '/api/_miraicms/forms/mail',

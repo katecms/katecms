@@ -14,7 +14,6 @@ import {
   createEmptyContent,
   normalizeFormContent,
   parseContent,
-  slugify,
   emptySubmissionError,
   storesValue,
   submissionErrors,
@@ -27,7 +26,6 @@ import { deleteFormUploads, deleteStoredFile, saveFormFile } from './uploads'
 interface FormRow {
   id: number
   name: string
-  slug: string
   status: string
   content: string
   created_at: string | Date
@@ -42,8 +40,8 @@ function readStoredContent(value: unknown) {
 }
 
 export async function listForms(): Promise<FormListItem[]> {
-  const result = await sql<Pick<FormRow, 'id' | 'name' | 'slug' | 'status' | 'content' | 'updated_at'>>`
-    SELECT id, name, slug, status, content, updated_at
+  const result = await sql<Pick<FormRow, 'id' | 'name' | 'status' | 'content' | 'updated_at'>>`
+    SELECT id, name, status, content, updated_at
     FROM miraicms_forms
     ORDER BY updated_at DESC, id DESC
   `.execute(getFormDb())
@@ -52,7 +50,6 @@ export async function listForms(): Promise<FormListItem[]> {
     return {
       id: Number(row.id),
       name: row.name,
-      slug: row.slug,
       status: asStatus(row.status),
       fieldCount: content.fields.length,
       updatedAt: asIso(row.updated_at),
@@ -62,7 +59,7 @@ export async function listForms(): Promise<FormListItem[]> {
 
 export async function readForm(id: number): Promise<FormRecord | null> {
   const result = await sql<FormRow>`
-    SELECT id, name, slug, status, content, created_at, updated_at
+    SELECT id, name, status, content, created_at, updated_at
     FROM miraicms_forms
     WHERE id = ${id}
   `.execute(getFormDb())
@@ -76,8 +73,8 @@ export async function readPublicForm(id: number): Promise<PublicForm | null> {
     return null
   }
   return {
+    id: record.id,
     name: record.name,
-    slug: record.slug,
     maxFileBytes: maxFileBytes(),
     content: record.content,
   }
@@ -88,13 +85,12 @@ export async function createForm(name: string): Promise<FormRecord> {
   if (!cleanName) {
     throw createError({ statusCode: 400, statusMessage: 'Enter a form name.' })
   }
-  const slug = await uniqueSlug(slugify(cleanName))
   applyServerFormBreakpoints()
   const content = JSON.stringify(createEmptyContent())
   const now = nowIso()
   const result = await sql<{ id: number }>`
-    INSERT INTO miraicms_forms (name, slug, status, content, created_at, updated_at)
-    VALUES (${cleanName}, ${slug}, 'draft', ${content}, ${now}, ${now})
+    INSERT INTO miraicms_forms (name, status, content, created_at, updated_at)
+    VALUES (${cleanName}, 'draft', ${content}, ${now}, ${now})
     RETURNING id
   `.execute(getFormDb())
   const id = Number(result.rows[0]?.id)
@@ -229,20 +225,6 @@ export async function submitForm(event: H3Event, id: number): Promise<{ ok: true
   return { ok: true, id: submissionId }
 }
 
-async function uniqueSlug(base: string): Promise<string> {
-  let slug = base || 'form'
-  let n = 2
-  while (true) {
-    const existing = await sql<{ id: number }>`SELECT id FROM miraicms_forms WHERE slug = ${slug}`.execute(getFormDb())
-    if (!existing.rows.length) {
-      return slug
-    }
-    const suffix = `-${n}`
-    slug = `${base.slice(0, 80 - suffix.length)}${suffix}`
-    n++
-  }
-}
-
 async function readSubmission(event: H3Event, content: FormContent): Promise<{
   input: Record<string, unknown>
   files: Record<string, (UploadedFile & { data: Buffer }) | (UploadedFile & { data: Buffer })[] | null>
@@ -304,7 +286,6 @@ function rowToRecord(row: FormRow): FormRecord {
   return {
     id: Number(row.id),
     name: row.name,
-    slug: row.slug,
     status: asStatus(row.status),
     content: readStoredContent(row.content),
     createdAt: asIso(row.created_at),

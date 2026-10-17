@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useRoute } from '#imports'
 
 const route = useRoute()
-const id = computed(() => Number(route.params.slug))
+const id = computed(() => Number(route.params.id))
 </script>
 
 <template>

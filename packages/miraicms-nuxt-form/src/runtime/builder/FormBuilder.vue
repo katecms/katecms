@@ -422,12 +422,6 @@ function setNotification(key: typeof emailFields[number]['key'], value: string) 
   content.value = {
     ...content.value,
     notification: {
-      to: '',
-      fromMail: '',
-      fromName: '',
-      cc: '',
-      bcc: '',
-      replyTo: '',
       ...content.value.notification,
       [key]: value,
     },
@@ -438,8 +432,6 @@ function setSuccessMessage(value: string) {
   content.value = {
     ...content.value,
     confirmation: {
-      successMessage: '',
-      redirectPage: '',
       ...content.value.confirmation,
       successMessage: value,
     },
@@ -450,8 +442,6 @@ function setRedirectPage(value: string) {
   content.value = {
     ...content.value,
     confirmation: {
-      successMessage: '',
-      redirectPage: '',
       ...content.value.confirmation,
       redirectPage: value,
     },
@@ -1749,11 +1739,6 @@ onBeforeUnmount(() => {
           field-key="form-name"
           :field="{ type: 'text', label: 'Name', maxLength: 160 }"
         />
-        <MiraiCmsTextField
-          v-model="slug"
-          field-key="form-slug"
-          :field="{ type: 'text', label: 'Slug', maxLength: 80 }"
-        />
         <MiraiCmsSelectField
           v-model="status"
           field-key="form-status"
@@ -1768,7 +1753,7 @@ onBeforeUnmount(() => {
           }"
         />
         <div class="miraicms-form-builder__usage">
-          Published forms render with <span>&lt;MiraiCmsForm form="{{ slug }}" /&gt;</span>
+          Published forms render with <span>&lt;MiraiCmsForm form="1" /&gt;</span>
         </div>
       </div>
       -->

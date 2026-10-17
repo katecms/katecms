@@ -111,9 +111,9 @@
       "p": "packages/miraicms-nuxt/src/runtime/pages/admin/users/create.vue"
     },
     {
-      "n": "[slug]",
-      "path": "/forms/:slug",
-      "p": "playground-nuxt/pages/forms/[slug].vue"
+      "n": "[id]",
+      "path": "/forms/:id",
+      "p": "playground-nuxt/pages/forms/[id].vue"
     }
   ],
   "api": [
@@ -229,13 +229,13 @@
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/forms/submit/:slug",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/submit/[slug].post.ts"
+      "path": "/api/_miraicms/forms/submit/:id",
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/submit/[id].post.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/forms/view/:slug",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/view/[slug].get.ts"
+      "path": "/api/_miraicms/forms/view/:id",
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/view/[id].get.ts"
     },
     {
       "m": "GET",

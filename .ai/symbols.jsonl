@@ -398,7 +398,6 @@
 {"n":"isRichFieldType","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"isSafeIdentifier","k":"fn","p":"packages/core/src/indexes/definitions.ts"}
 {"n":"isSelectChoiceGroup","k":"fn","p":"packages/core/src/fields/choices.ts"}
-{"n":"isSlug","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"isTemporalType","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"isTerminalStatus","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/server/utils/redirects.ts"}
 {"n":"isTermOrderBy","k":"fn","p":"packages/core/src/database/queries/terms-query.ts"}

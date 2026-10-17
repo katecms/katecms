@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
+const rootClass = 'miraicms-option-accordion'
+
+
 const props = defineProps<{
   title: string
   enabled?: boolean
@@ -36,13 +39,13 @@ function toggle() {
 
 <template>
   <div
-    class="miraicms-option-accordion"
+    :class="rootClass"
     :class="{ 'is-on': plain || enabled, 'is-open': (plain || enabled) && open }"
   >
-    <div class="miraicms-option-accordion__bar">
+    <div :class="`${rootClass}__bar`">
       <input
         v-if="!plain"
-        class="miraicms-option-accordion__check"
+        :class="`${rootClass}__check`"
         type="checkbox"
         :checked="enabled"
         :aria-label="title"
@@ -50,18 +53,18 @@ function toggle() {
       >
       <button
         type="button"
-        class="miraicms-option-accordion__toggle"
+        :class="`${rootClass}__toggle`"
         :disabled="!plain && !enabled"
         :aria-expanded="(plain || enabled) && open"
         @click="toggle"
       >
         <span>{{ title }}</span>
-        <span class="miraicms-option-accordion__chevron" />
+        <span :class="`${rootClass}__chevron`" />
       </button>
     </div>
     <div
       v-if="(plain || enabled) && open"
-      class="miraicms-option-accordion__body"
+      :class="`${rootClass}__body`"
     >
       <slot />
     </div>
@@ -70,8 +73,10 @@ function toggle() {
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-option-accordion';
 
-.miraicms-option-accordion {
+
+#{$root} {
   border: 1px solid $color-border;
   border-radius: $border-radius;
   background: $color-bg;
@@ -129,9 +134,10 @@ function toggle() {
     transform: rotate(45deg);
     transition: transform 0.15s ease;
   }
-
-  &.is-open &__chevron {
-    transform: rotate(-135deg);
+  &.is-open {
+    #{$root}__chevron {
+      transform: rotate(-135deg);
+    }
   }
 
   &__body {

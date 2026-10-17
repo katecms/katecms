@@ -534,6 +534,27 @@ $root: '.miraicms-date-time-control';
     align-items: center;
     justify-content: space-between;
     margin-bottom: 8px;
+
+    &-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid $color-border;
+      border-radius: 5px;
+      background-color: $color-surface;
+      cursor: pointer;
+      padding: 0;
+
+      &:focus {
+        outline: none;
+      }
+
+      svg {
+        display: block;
+        width: 14px;
+        height: 14px;
+        margin: auto;
+      }
+    }
   }
 
   &__selects {
@@ -552,27 +573,6 @@ $root: '.miraicms-date-time-control';
 
     &:focus {
       outline: none;
-    }
-  }
-
-  &__nav-btn {
-    width: 28px;
-    height: 28px;
-    border: 1px solid $color-border;
-    border-radius: 5px;
-    background-color: $color-surface;
-    cursor: pointer;
-    padding: 0;
-
-    &:focus {
-      outline: none;
-    }
-
-    svg {
-      display: block;
-      width: 14px;
-      height: 14px;
-      margin: auto;
     }
   }
 
@@ -633,16 +633,16 @@ $root: '.miraicms-date-time-control';
       padding-top: 0;
       border-top: 0;
     }
-  }
 
-  &__time-label {
-    margin-right: auto;
-    font-size: 13px;
-    color: $color-muted;
-  }
+    &-label {
+      margin-right: auto;
+      font-size: 13px;
+      color: $color-muted;
+    }
 
-  &__time-sep {
-    font-weight: 600;
+    &-sep {
+      font-weight: 600;
+    }
   }
 
   &__footer {

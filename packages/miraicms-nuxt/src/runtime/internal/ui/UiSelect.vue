@@ -1317,11 +1317,13 @@ $root: ".miraicms-select";
     overscroll-behavior: contain;
   }
 
-  &__no-results {
-    text-align: center;
-    padding: math-rem(10) math-rem(8);
-    font-size: math-rem(14);
-    color: $color-muted;
+  &__no {
+    &-results {
+      text-align: center;
+      padding: math-rem(10) math-rem(8);
+      font-size: math-rem(14);
+      color: $color-muted;
+    }
   }
 
   &__optgroup {

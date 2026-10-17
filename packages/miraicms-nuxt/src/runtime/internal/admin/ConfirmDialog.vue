@@ -152,13 +152,13 @@ $root: '.miraicms-confirm-dialog';
     justify-content: space-between;
     gap: math-rem(8);
     margin-top: math-rem(4);
-  }
 
-  &__actions-end {
-    display: flex;
-    flex-wrap: wrap;
-    gap: math-rem(8);
-    margin-left: auto;
+    &-end {
+      display: flex;
+      flex-wrap: wrap;
+      gap: math-rem(8);
+      margin-left: auto;
+    }
   }
 }
 </style>

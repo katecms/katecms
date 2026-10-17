@@ -5,6 +5,9 @@ import type { FormField, LayoutItem } from '../form/model'
 import { FIELD_LABELS, GRID_COLUMNS } from '../form/model'
 import { isRichFieldType } from '../form/text-options'
 
+const rootClass = 'miraicms-form-settings'
+
+
 const props = defineProps<{
   field: FormField
   item: LayoutItem
@@ -71,8 +74,8 @@ function removeOption(index: number) {
 </script>
 
 <template>
-  <div class="miraicms-form-settings">
-    <div class="miraicms-form-settings__type">
+  <div :class="rootClass">
+    <div :class="`${rootClass}__type`">
       {{ FIELD_LABELS[field.type] }}
     </div>
 
@@ -135,7 +138,7 @@ function removeOption(index: number) {
 
       <div
         v-if="field.type === 'number'"
-        class="miraicms-form-settings__row"
+        :class="`${rootClass}__row`"
       >
         <MiraiCmsTextField
           :model-value="field.min"
@@ -191,13 +194,13 @@ function removeOption(index: number) {
 
       <div
         v-if="choice"
-        class="miraicms-form-settings__options"
+        :class="`${rootClass}__options`"
       >
-        <span class="miraicms-form-settings__options-label">Options</span>
+        <span :class="`${rootClass}__options-label`">Options</span>
         <div
           v-for="(option, index) in field.options"
           :key="index"
-          class="miraicms-form-settings__option"
+          :class="`${rootClass}__option`"
         >
           <MiraiCmsTextField
             :model-value="option.label"
@@ -229,7 +232,7 @@ function removeOption(index: number) {
         </MiraiCmsUiButton>
       </div>
 
-      <div class="miraicms-form-settings__row">
+      <div :class="`${rootClass}__row`">
         <MiraiCmsNumberField
           :model-value="item.x + 1"
           :field-key="`${field.id}-column`"
@@ -255,8 +258,10 @@ function removeOption(index: number) {
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-form-settings';
 
-.miraicms-form-settings {
+
+#{$root} {
   display: flex;
   flex-direction: column;
   gap: math-rem(12);
@@ -280,11 +285,11 @@ function removeOption(index: number) {
     display: flex;
     flex-direction: column;
     gap: math-rem(8);
-  }
 
-  &__options-label {
-    font-size: math-rem(13);
-    font-weight: 600;
+    &-label {
+      font-size: math-rem(13);
+      font-weight: 600;
+    }
   }
 
   &__option {

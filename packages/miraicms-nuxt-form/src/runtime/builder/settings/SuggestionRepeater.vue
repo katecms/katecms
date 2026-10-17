@@ -3,6 +3,9 @@ import type { CSSProperties } from 'vue'
 import { computed, onBeforeUnmount, ref } from 'vue'
 import type { FormSuggestion } from '../../form/text-options'
 
+const rootClass = 'miraicms-suggestion-list'
+
+
 const props = defineProps<{
   fieldKey: string
   model: FormSuggestion[]
@@ -132,7 +135,7 @@ function onHandleDown(index: number, event: MouseEvent) {
   if (!(handle instanceof HTMLElement)) {
     return
   }
-  const row = handle.closest<HTMLElement>('.miraicms-suggestion-list__row')
+  const row = handle.closest<HTMLElement>(`.${rootClass}__row`)
   if (!row) {
     return
   }
@@ -161,25 +164,25 @@ onBeforeUnmount(resetDrag)
 </script>
 
 <template>
-  <div class="miraicms-suggestion-list">
+  <div :class="rootClass">
     <template
       v-for="(item, index) in model"
       :key="item.id"
     >
       <div
         v-if="isDragging && dropIndex === index"
-        class="miraicms-suggestion-list__placeholder"
+        :class="`${rootClass}__placeholder`"
         :style="placeholderStyle"
       />
       <div
         :ref="(el) => setRowRef(el as Element | null, index)"
-        class="miraicms-suggestion-list__row"
+        :class="`${rootClass}__row`"
         :class="{ 'is-floating': isDragging && draggingIndex === index }"
         :style="rowStyle(index)"
       >
       <button
         type="button"
-        class="miraicms-suggestion-list__handle"
+        :class="`${rootClass}__handle`"
         aria-label="Move suggestion"
         @mousedown="onHandleDown(index, $event)"
       >
@@ -224,7 +227,7 @@ onBeforeUnmount(resetDrag)
     </template>
     <div
       v-if="isDragging && dropIndex === model.length"
-      class="miraicms-suggestion-list__placeholder"
+      :class="`${rootClass}__placeholder`"
       :style="placeholderStyle"
     />
     <MiraiCmsUiButton
@@ -239,8 +242,10 @@ onBeforeUnmount(resetDrag)
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-suggestion-list';
 
-.miraicms-suggestion-list {
+
+#{$root} {
   display: flex;
   flex-direction: column;
   gap: math-rem(8);

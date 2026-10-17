@@ -741,6 +741,29 @@ $checker: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' v
       position: absolute;
       inset: 0;
     }
+
+    &-btn {
+      position: relative;
+      width: 25px;
+      height: 25px;
+      padding: 0;
+      border: 1px solid $color-border;
+      border-radius: 4px;
+      background: $checker;
+      background-size: 8px;
+      cursor: pointer;
+      overflow: hidden;
+
+      > span {
+        position: absolute;
+        inset: 0;
+      }
+
+      &:focus-visible {
+        outline: 2px solid $color-accent;
+        outline-offset: 1px;
+      }
+    }
   }
 
   &__value {
@@ -853,29 +876,6 @@ $checker: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' v
     flex-wrap: wrap;
     gap: 5px;
     margin-bottom: 10px;
-  }
-
-  &__swatch-btn {
-    position: relative;
-    width: 25px;
-    height: 25px;
-    padding: 0;
-    border: 1px solid $color-border;
-    border-radius: 4px;
-    background: $checker;
-    background-size: 8px;
-    cursor: pointer;
-    overflow: hidden;
-
-    > span {
-      position: absolute;
-      inset: 0;
-    }
-
-    &:focus-visible {
-      outline: 2px solid $color-accent;
-      outline-offset: 1px;
-    }
   }
 
   &__interaction {

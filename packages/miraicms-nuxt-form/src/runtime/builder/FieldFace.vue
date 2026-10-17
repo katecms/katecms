@@ -4,6 +4,8 @@ import type { SelectChoice, SelectChoiceItem, SelectModelValue } from '@miraicms
 import type { FormField } from '../form/model'
 import { applyInputMask, checkPositionStyle, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, listedChoiceOptions, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, resolveChoiceEntries, temporalInputType } from '../form/text-options'
 
+const rootClass = 'miraicms-field-face'
+
 const props = withDefaults(defineProps<{
   field?: FormField
   preview?: boolean
@@ -131,69 +133,70 @@ function onInput(event: Event) {
 <template>
   <div
     v-if="field && rich"
-    class="miraicms-field-face"
-    :class="{
-      'is-preview': preview,
-      'is-hidden': options.hidden && preview,
-      'is-inline': options.confirm.enabled && options.confirm.placement === 'inline',
-    }"
+    :class="[
+      rootClass,
+      {
+        'is-preview': preview,
+        'is-hidden': options.hidden && preview,
+        'is-inline': options.confirm.enabled && options.confirm.placement === 'inline',
+      }]"
     :hidden="options.hidden && !preview ? true : undefined"
     :data-invalid="invalid ? 'true' : undefined"
   >
     <div
       v-if="options.label.enabled"
-      class="miraicms-field-face__label-row"
+      :class="`${rootClass}__label-row`"
     >
       <img
         v-if="iconUrl(options.label.prefix)"
-        class="miraicms-field-face__icon"
+        :class="`${rootClass}__icon`"
         :src="iconUrl(options.label.prefix)"
         alt=""
       >
       <span
         v-if="options.required.enabled && options.required.showAsterisk && options.required.asteriskPosition === 'left'"
-        class="miraicms-field-face__asterisk"
+        :class="`${rootClass}__asterisk`"
       >*</span>
       <label
-        class="miraicms-field-face__label"
+        :class="`${rootClass}__label`"
         :for="controlId"
       >
         <span
           v-if="options.required.enabled && options.required.showAsterisk && options.required.asteriskPosition === 'before'"
-          class="miraicms-field-face__asterisk"
+          :class="`${rootClass}__asterisk`"
         >*</span>
         <span>{{ options.label.text }}</span>
         <span
           v-if="options.required.enabled && options.required.showAsterisk && options.required.asteriskPosition === 'after'"
-          class="miraicms-field-face__asterisk"
+          :class="`${rootClass}__asterisk`"
         >*</span>
       </label>
       <img
         v-if="iconUrl(options.label.suffix)"
-        class="miraicms-field-face__icon"
+        :class="`${rootClass}__icon`"
         :src="iconUrl(options.label.suffix)"
         alt=""
       >
       <span
         v-if="options.required.enabled && options.required.showAsterisk && options.required.asteriskPosition === 'right'"
-        class="miraicms-field-face__asterisk"
+        :class="`${rootClass}__asterisk`"
       >*</span>
     </div>
 
     <div
       v-if="options.subtitle.enabled && options.subtitle.text"
-      class="miraicms-field-face__note"
+      :class="`${rootClass}__note`"
     >
       <img
         v-if="iconUrl(options.subtitle.prefix)"
-        class="miraicms-field-face__icon"
+        :class="`${rootClass}__icon`"
         :src="iconUrl(options.subtitle.prefix)"
         alt=""
       >
       <span>{{ options.subtitle.text }}</span>
       <img
         v-if="iconUrl(options.subtitle.suffix)"
-        class="miraicms-field-face__icon"
+        :class="`${rootClass}__icon`"
         :src="iconUrl(options.subtitle.suffix)"
         alt=""
       >
@@ -209,14 +212,14 @@ function onInput(event: Event) {
       >
         <img
           v-if="iconUrl(options.heading.prefix)"
-          class="miraicms-field-face__icon"
+          :class="`${rootClass}__icon`"
           :src="iconUrl(options.heading.prefix)"
           alt=""
         >
         <span>{{ options.heading.text }}</span>
         <img
           v-if="iconUrl(options.heading.suffix)"
-          class="miraicms-field-face__icon"
+          :class="`${rootClass}__icon`"
           :src="iconUrl(options.heading.suffix)"
           alt=""
         >
@@ -227,14 +230,14 @@ function onInput(event: Event) {
       >
         <img
           v-if="iconUrl(options.subheading.prefix)"
-          class="miraicms-field-face__icon"
+          :class="`${rootClass}__icon`"
           :src="iconUrl(options.subheading.prefix)"
           alt=""
         >
         <span>{{ options.subheading.text }}</span>
         <img
           v-if="iconUrl(options.subheading.suffix)"
-          class="miraicms-field-face__icon"
+          :class="`${rootClass}__icon`"
           :src="iconUrl(options.subheading.suffix)"
           alt=""
         >
@@ -250,7 +253,7 @@ function onInput(event: Event) {
     </template>
     <div
       v-else-if="field.type === 'divider'"
-      class="miraicms-field-face__divider"
+      :class="`${rootClass}__divider`"
     />
     <div
       v-else-if="field.type === 'spacer'"
@@ -262,18 +265,18 @@ function onInput(event: Event) {
     />
     <div
       v-else
-      class="miraicms-field-face__control"
+      :class="`${rootClass}__control`"
       :data-align="field.type === 'button' && !options.fullWidth ? options.buttonAlign : undefined"
     >
       <img
         v-if="iconUrl(options.prefix)"
-        class="miraicms-field-face__icon"
+        :class="`${rootClass}__icon`"
         :src="iconUrl(options.prefix)"
         alt=""
       >
       <div
         v-if="field.type === 'rating'"
-        class="miraicms-field-face__rating"
+        :class="`${rootClass}__rating`"
         :data-position="options.ratingPosition"
         @pointerdown.stop
       >
@@ -281,14 +284,16 @@ function onInput(event: Event) {
           v-for="(option, index) in options.ratingOptions"
           :key="option.id"
           type="button"
-          class="miraicms-field-face__star"
-          :class="{ 'is-on': ratingSelectedIndex(options.ratingOptions, draft) >= index }"
+          :class="[
+            `${rootClass}__star`,
+            { 'is-on': ratingSelectedIndex(options.ratingOptions, draft) >= index },
+          ]"
           @mouseenter="hoverRating = option.label"
           @mouseleave="hoverRating = ''"
           @click="chooseRating(index)"
         >
           <img
-            class="miraicms-field-face__icon"
+            :class="`${rootClass}__icon`"
             :src="ratingIconSrc(option.icon, options.ratingIcon)"
             alt=""
             :style="{ filter: ratingSelectedIndex(options.ratingOptions, draft) >= index ? RATING_FILTER_ON : RATING_FILTER_OFF }"
@@ -303,21 +308,21 @@ function onInput(event: Event) {
       </div>
       <button
         v-else-if="field.type === 'button'"
-        class="miraicms-field-face__button"
+        :class="`${rootClass}__button`"
         :type="preview ? 'button' : options.buttonType"
         :disabled="disabled || options.disabled"
         :style="{ width: options.fullWidth ? '100%' : undefined }"
       >
         <img
           v-if="iconUrl(options.buttonText.prefix)"
-          class="miraicms-field-face__icon"
+          :class="`${rootClass}__icon`"
           :src="iconUrl(options.buttonText.prefix)"
           alt=""
         >
         <span>{{ options.buttonText.text }}</span>
         <img
           v-if="iconUrl(options.buttonText.suffix)"
-          class="miraicms-field-face__icon"
+          :class="`${rootClass}__icon`"
           :src="iconUrl(options.buttonText.suffix)"
           alt=""
         >
@@ -344,7 +349,7 @@ function onInput(event: Event) {
       />
       <div
         v-else-if="field.type === 'radio' || field.type === 'checkbox'"
-        class="miraicms-field-face__choices"
+        :class="`${rootClass}__choices`"
         :style="{ display: 'grid', gridTemplateColumns: `repeat(${options.optionsColumn || 1}, minmax(0, 1fr))`, gap: '8px' }"
       >
         <label
@@ -364,7 +369,7 @@ function onInput(event: Event) {
       </div>
       <div
         v-else-if="field.type === 'image_select'"
-        class="miraicms-field-face__images"
+        :class="`${rootClass}__images`"
         :style="{ display: 'flex', flexWrap: 'wrap', gap: '8px' }"
       >
         <label
@@ -393,7 +398,7 @@ function onInput(event: Event) {
       <input
         v-else-if="field.type === 'file'"
         :id="controlId"
-        class="miraicms-field-face__input"
+        :class="`${rootClass}__input`"
         type="file"
         :name="preview ? undefined : field.key"
         :accept="fileAccept(options.fileType) || undefined"
@@ -405,7 +410,7 @@ function onInput(event: Event) {
         v-else-if="isTemporalType(field.type)"
         :id="controlId"
         v-model="draft"
-        class="miraicms-field-face__input"
+        :class="`${rootClass}__input`"
         :type="temporalInputType(field.type)"
         :name="preview ? undefined : field.key"
         :required="options.required.enabled"
@@ -418,7 +423,7 @@ function onInput(event: Event) {
         v-else-if="field.type === 'textarea'"
         :id="controlId"
         v-model="draft"
-        class="miraicms-field-face__input"
+        :class="`${rootClass}__input`"
         :name="preview ? undefined : field?.key"
         :rows="field?.rows || 4"
         :placeholder="options.placeholder || undefined"
@@ -436,7 +441,7 @@ function onInput(event: Event) {
         v-else
         :id="controlId"
         v-model="draft"
-        class="miraicms-field-face__input"
+        :class="`${rootClass}__input`"
         :type="controlType()"
         :name="preview ? undefined : field?.key"
         :placeholder="options.placeholder || undefined"
@@ -458,7 +463,7 @@ function onInput(event: Event) {
       <button
         v-if="field?.type === 'password' && options.showPassword"
         type="button"
-        class="miraicms-field-face__reveal"
+        :class="`${rootClass}__reveal`"
         :aria-label="revealed ? 'Hide password' : 'Show password'"
         @click="revealed = !revealed"
       >
@@ -466,7 +471,7 @@ function onInput(event: Event) {
       </button>
       <img
         v-if="iconUrl(options.suffix) && field.type !== 'file'"
-        class="miraicms-field-face__icon"
+        :class="`${rootClass}__icon`"
         :src="iconUrl(options.suffix)"
         alt=""
       >
@@ -475,7 +480,7 @@ function onInput(event: Event) {
       <span v-if="field.type === 'file' && options.showMaximumSize">{{ options.showMaximumSize }}</span>
       <img
         v-if="field.type === 'file' && iconUrl(options.suffix)"
-        class="miraicms-field-face__icon"
+        :class="`${rootClass}__icon`"
         :src="iconUrl(options.suffix)"
         alt=""
       >
@@ -494,66 +499,66 @@ function onInput(event: Event) {
 
     <div
       v-if="(options.helper.enabled && options.helper.text) || rules.length"
-      class="miraicms-field-face__note"
+      :class="`${rootClass}__note`"
     >
       <img
         v-if="options.helper.enabled && iconUrl(options.helper.prefix)"
-        class="miraicms-field-face__icon"
+        :class="`${rootClass}__icon`"
         :src="iconUrl(options.helper.prefix)"
         alt=""
       >
       <span v-if="options.helper.enabled && options.helper.text">{{ options.helper.text }}</span>
       <img
         v-if="options.helper.enabled && iconUrl(options.helper.suffix)"
-        class="miraicms-field-face__icon"
+        :class="`${rootClass}__icon`"
         :src="iconUrl(options.helper.suffix)"
         alt=""
       >
       <span
         v-for="(rule, index) in rules"
         :key="index"
-        class="miraicms-field-face__rule"
+        :class="`${rootClass}__rule`"
         :style="{ color: rule.ok ? 'green' : 'red', marginRight: '20px' }"
       >{{ rule.ok ? '✔' : '✖' }} {{ rule.label }}</span>
     </div>
 
     <div
       v-if="showError"
-      class="miraicms-field-face__error"
+      :class="`${rootClass}__error`"
     >
       <img
         v-if="iconUrl(options.required.errorPrefix)"
-        class="miraicms-field-face__icon"
+        :class="`${rootClass}__icon`"
         :src="iconUrl(options.required.errorPrefix)"
         alt=""
       >
       <span>{{ error }}</span>
       <img
         v-if="iconUrl(options.required.errorSuffix)"
-        class="miraicms-field-face__icon"
+        :class="`${rootClass}__icon`"
         :src="iconUrl(options.required.errorSuffix)"
         alt=""
       >
     </div>
     <div
       v-if="options.confirm.enabled"
-      class="miraicms-field-face__confirm"
+      :class="`${rootClass}__confirm`"
     >
       <div
         v-if="options.confirm.label.enabled"
-        class="miraicms-field-face__label"
+        :class="`${rootClass}__label`"
       >
         {{ options.confirm.label.text }}
       </div>
       <input
-        class="miraicms-field-face__input"
+        :class="`${rootClass}__input`"
         :type="field?.type === 'password' && !revealed ? 'password' : field?.type === 'email' ? 'email' : 'text'"
         :placeholder="options.confirm.placeholder || undefined"
         :readonly="preview"
       >
       <div
         v-if="options.confirm.helper.enabled && options.confirm.helper.text"
-        class="miraicms-field-face__note"
+        :class="`${rootClass}__note`"
       >
         {{ options.confirm.helper.text }}
       </div>
@@ -562,23 +567,23 @@ function onInput(event: Event) {
 
   <div
     v-else-if="field"
-    class="miraicms-field-face is-preview"
+    :class="[rootClass, 'is-preview']"
   >
     <div
       v-if="field.type !== 'hidden' && field.type !== 'html' && field.type !== 'button'"
-      class="miraicms-field-face__label"
+      :class="`${rootClass}__label`"
     >
       {{ field.label }}
     </div>
     <select
       v-if="field.type === 'select'"
-      class="miraicms-field-face__input"
+      :class="`${rootClass}__input`"
     >
       <option>{{ field.placeholder || field.label }}</option>
     </select>
     <div
       v-else-if="field.type === 'radio' || field.type === 'checkbox'"
-      class="miraicms-field-face__choices"
+      :class="`${rootClass}__choices`"
     >
       <label
         v-for="option in field.options"
@@ -592,19 +597,19 @@ function onInput(event: Event) {
     </div>
     <input
       v-else-if="field.type === 'file'"
-      class="miraicms-field-face__input"
+      :class="`${rootClass}__input`"
       type="file"
     >
     <input
       v-else-if="field.type === 'email' || field.type === 'phone' || field.type === 'number' || field.type === 'date'"
-      class="miraicms-field-face__input"
+      :class="`${rootClass}__input`"
       :type="field.type === 'phone' ? 'tel' : field.type"
       :placeholder="field.placeholder || undefined"
       :value="field.value"
     >
     <span
       v-else-if="field.type === 'hidden'"
-      class="miraicms-field-face__note"
+      :class="`${rootClass}__note`"
     >Hidden</span>
     <div
       v-else-if="field.type === 'html'"
@@ -613,13 +618,13 @@ function onInput(event: Event) {
     <button
       v-else-if="field.type === 'button'"
       type="button"
-      class="miraicms-field-face__button"
+      :class="`${rootClass}__button`"
     >
       {{ field.buttonLabel || 'Submit' }}
     </button>
     <div
       v-if="field.help && field.type !== 'hidden' && field.type !== 'html' && field.type !== 'button'"
-      class="miraicms-field-face__note"
+      :class="`${rootClass}__note`"
     >
       {{ field.help }}
     </div>
@@ -628,8 +633,9 @@ function onInput(event: Event) {
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-field-face';
 
-.miraicms-field-face {
+#{$root} {
   display: flex;
   flex-direction: column;
   gap: math-rem(6);
@@ -650,38 +656,58 @@ function onInput(event: Event) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     column-gap: math-rem(8);
   }
-
-  &.is-inline > :not(.miraicms-field-face__confirm) {
-    grid-column: 1;
+  &.is-inline {
+    > :not(#{$root}__confirm) {
+      grid-column: 1;
+    }
+  }
+  &.is-inline {
+    > #{$root}__confirm {
+      grid-column: 2;
+      grid-row: 1 / span 8;
+    }
   }
 
-  &.is-inline > .miraicms-field-face__confirm {
-    grid-column: 2;
-    grid-row: 1 / span 8;
+  &__label {
+    &-row {
+      display: flex;
+      align-items: center;
+      gap: math-rem(6);
+      min-width: 0;
+    }
+
+    min-width: 0;
+    font-size: math-rem(13);
+    font-weight: 600;
+  }
+  &__note {
+    display: flex;
+    align-items: center;
+    gap: math-rem(6);
+    min-width: 0;
+
   }
 
-  &__label-row,
-  &__note,
-  &__control,
+  &__control {
+    display: flex;
+    align-items: center;
+    gap: math-rem(6);
+    min-width: 0;
+
+    &[data-align='center'] {
+      justify-content: center;
+    }
+
+    &[data-align='right'] {
+      justify-content: flex-end;
+    }
+  }
   &__error {
     display: flex;
     align-items: center;
     gap: math-rem(6);
     min-width: 0;
-  }
 
-  &__control[data-align='center'] {
-    justify-content: center;
-  }
-
-  &__control[data-align='right'] {
-    justify-content: flex-end;
-  }
-
-  &__label {
-    min-width: 0;
-    font-size: math-rem(13);
-    font-weight: 600;
   }
 
   &__asterisk {

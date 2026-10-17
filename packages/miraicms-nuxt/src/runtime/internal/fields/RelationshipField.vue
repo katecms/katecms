@@ -504,15 +504,15 @@ $root: '.miraicms-relationship-field';
     border-radius: $border-radius-inter;
     background: $color-surface;
     overflow: hidden;
-  }
 
-  &__column-title {
-    padding: math-rem(8) math-rem(10);
-    font-size: math-rem(12);
-    font-weight: 600;
-    color: $color-muted;
-    background: $color-bg;
-    border-bottom: 1px solid $color-border;
+    &-title {
+      padding: math-rem(8) math-rem(10);
+      font-size: math-rem(12);
+      font-weight: 600;
+      color: $color-muted;
+      background: $color-bg;
+      border-bottom: 1px solid $color-border;
+    }
   }
 
   &__list {
@@ -559,6 +559,31 @@ $root: '.miraicms-relationship-field';
         background: transparent;
       }
     }
+
+    &-body {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      gap: 2px;
+    }
+
+    &-title {
+      font-size: math-rem(14);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &-meta {
+      font-size: math-rem(12);
+      color: $color-muted;
+    }
+
+    &-actions {
+      display: flex;
+      flex: 0 0 auto;
+      gap: 2px;
+    }
   }
 
   &__thumb {
@@ -570,35 +595,10 @@ $root: '.miraicms-relationship-field';
     flex: 0 0 auto;
   }
 
-  &__item-body {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    gap: 2px;
-  }
-
-  &__item-title {
-    font-size: math-rem(14);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__item-meta {
-    font-size: math-rem(12);
-    color: $color-muted;
-  }
-
   &__selected {
     display: flex;
     align-items: center;
     gap: math-rem(4);
-  }
-
-  &__item-actions {
-    display: flex;
-    flex: 0 0 auto;
-    gap: 2px;
   }
 }
 </style>

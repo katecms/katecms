@@ -1037,12 +1037,14 @@ $root: '.miraicms-flexible-content-field';
     position: relative;
   }
 
-  &__drop-placeholder {
-    flex-shrink: 0;
-    box-sizing: border-box;
-    border: 1px dashed $color-border;
-    border-radius: $border-radius;
-    background-color: $color-bg;
+  &__drop {
+    &-placeholder {
+      flex-shrink: 0;
+      box-sizing: border-box;
+      border: 1px dashed $color-border;
+      border-radius: $border-radius;
+      background-color: $color-bg;
+    }
   }
 
   &__row {
@@ -1152,10 +1154,12 @@ $root: '.miraicms-flexible-content-field';
     }
   }
 
-  &__sub-field {
-    padding-left: math-rem(8);
-    padding-right: math-rem(8);
-    width: 100%;
+  &__sub {
+    &-field {
+      padding-left: math-rem(8);
+      padding-right: math-rem(8);
+      width: 100%;
+    }
   }
 
   &__toolbar {
@@ -1166,16 +1170,22 @@ $root: '.miraicms-flexible-content-field';
     gap: math-rem(8);
   }
 
-  &__toggle-all-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: math-rem(8);
+  &__toggle {
+    &-all {
+      &-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: math-rem(8);
+      }
+    }
   }
 
-  &__add-wrap {
-    position: relative;
-    align-self: flex-start;
-    margin-left: auto;
+  &__add {
+    &-wrap {
+      position: relative;
+      align-self: flex-start;
+      margin-left: auto;
+    }
   }
 
   &__picker {
@@ -1187,100 +1197,100 @@ $root: '.miraicms-flexible-content-field';
     justify-content: center;
     padding: math-rem(24);
     background: rgba($color-ink, 0.45);
-  }
 
-  &__picker-dialog {
-    display: flex;
-    flex-direction: column;
-    width: min(1200px, calc(100vw - 48px));
-    height: min(820px, calc(100vh - 48px));
-    background: $color-surface;
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    box-shadow: $shadow-md;
-    overflow: hidden;
-  }
-
-  &__picker-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: math-rem(12);
-    padding: math-rem(16) math-rem(20);
-    border-bottom: 1px solid $color-border;
-    background: $color-bg;
-  }
-
-  &__picker-title {
-    margin: 0;
-    font-size: math-rem(16);
-    font-weight: 600;
-    color: $color-ink;
-  }
-
-  &__picker-grid {
-    flex: 1 1 auto;
-    overflow: auto;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: math-rem(16);
-    padding: math-rem(20);
-    align-content: start;
-  }
-
-  &__picker-card {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(10);
-    padding: math-rem(12);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background: $color-surface;
-    text-align: left;
-    cursor: pointer;
-    color: $color-ink;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-
-    &:hover:not(:disabled) {
-      border-color: $color-accent;
-      box-shadow: $shadow-sm;
+    &-dialog {
+      display: flex;
+      flex-direction: column;
+      width: min(1200px, calc(100vw - 48px));
+      height: min(820px, calc(100vh - 48px));
+      background: $color-surface;
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
+      box-shadow: $shadow-md;
+      overflow: hidden;
     }
 
-    &:disabled,
-    &.is-disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    &-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: math-rem(12);
+      padding: math-rem(16) math-rem(20);
+      border-bottom: 1px solid $color-border;
+      background: $color-bg;
     }
-  }
 
-  &__picker-preview,
-  &__picker-preview-empty {
-    display: block;
-    width: 100%;
-    aspect-ratio: 16 / 10;
-    border-radius: $border-radius-inter;
-    overflow: hidden;
-    background: $color-bg;
-    border: 1px solid $color-border;
-  }
-
-  &__picker-preview {
-    img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    &-title {
+      margin: 0;
+      font-size: math-rem(16);
+      font-weight: 600;
+      color: $color-ink;
     }
-  }
 
-  &__picker-label {
-    font-size: math-rem(14);
-    font-weight: 600;
-  }
+    &-grid {
+      flex: 1 1 auto;
+      overflow: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: math-rem(16);
+      padding: math-rem(20);
+      align-content: start;
+    }
 
-  &__picker-meta {
-    font-size: math-rem(12);
-    color: $color-muted;
+    &-card {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(10);
+      padding: math-rem(12);
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
+      background: $color-surface;
+      text-align: left;
+      cursor: pointer;
+      color: $color-ink;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+      &:hover:not(:disabled) {
+        border-color: $color-accent;
+        box-shadow: $shadow-sm;
+      }
+
+      &:disabled,
+      &.is-disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    &-preview {
+      &,
+      &-empty {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        border-radius: $border-radius-inter;
+        overflow: hidden;
+        background: $color-bg;
+        border: 1px solid $color-border;
+      }
+
+      img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    &-label {
+      font-size: math-rem(14);
+      font-weight: 600;
+    }
+
+    &-meta {
+      font-size: math-rem(12);
+      color: $color-muted;
+    }
   }
 }
 </style>

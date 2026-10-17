@@ -6,6 +6,9 @@ import { useAuth } from '../../composables/useAuth'
 import { useAuthCooldown } from '../../composables/useAuthCooldown'
 import { useCmsPaths } from '../../composables/useCmsPaths'
 
+const rootClass = 'miraicms-auth'
+
+
 const { authState } = useAuth()
 const isFirstUser = computed(() => authState.value?.hasUsers === false)
 
@@ -78,17 +81,17 @@ async function submit() {
 </script>
 
 <template>
-  <div class="miraicms-auth">
-    <div class="miraicms-auth__card">
+  <div :class="rootClass">
+    <div :class="`${rootClass}__card`">
       <img
-        class="miraicms-auth__logo"
+        :class="`${rootClass}__logo`"
         src="../../assets/img/miraicms-logo.svg"
         alt="MiraiCMS"
       >
-      <div class="miraicms-auth__title">
+      <div :class="`${rootClass}__title`">
         {{ isFirstUser ? 'Create owner' : 'Register' }}
       </div>
-      <div class="miraicms-auth__subtitle">
+      <div :class="`${rootClass}__subtitle`">
         <template v-if="isFirstUser">
           This is the first account — it will automatically receive the owner role.
         </template>
@@ -98,7 +101,7 @@ async function submit() {
       </div>
 
       <form
-        class="miraicms-auth__form"
+        :class="`${rootClass}__form`"
         @submit.prevent="submit"
       >
         <MiraiCmsFieldWrapper
@@ -129,7 +132,7 @@ async function submit() {
           autocomplete="new-password"
         />
 
-        <div class="miraicms-auth__actions">
+        <div :class="`${rootClass}__actions`">
           <MiraiCmsUiButton
             tag="button"
             type="submit"
@@ -143,14 +146,14 @@ async function submit() {
 
       <div
         v-if="error"
-        class="miraicms-auth__error"
+        :class="`${rootClass}__error`"
       >
         Error: {{ error }}
       </div>
 
       <div
         v-if="!isFirstUser"
-        class="miraicms-auth__footer"
+        :class="`${rootClass}__footer`"
       >
         Already have an account?
         <NuxtLink :to="paths.login">
@@ -170,5 +173,7 @@ async function submit() {
 <style scoped lang="scss">
 @use "../../assets/styles" as *;
 
-@include miraicms-auth;
+$root: '.miraicms-auth';
+
+@include miraicms-auth($root);
 </style>

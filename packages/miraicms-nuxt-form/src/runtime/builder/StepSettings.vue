@@ -4,6 +4,9 @@ import IconPicker from './IconPicker.vue'
 import type { FormContent, FormStep } from '../form/model'
 import { updateStep, updateStepHeader } from '../form/model'
 
+const rootClass = 'miraicms-form-step-settings'
+
+
 const props = defineProps<{
   content: FormContent
 }>()
@@ -28,8 +31,8 @@ function toggle(stepId: string) {
 </script>
 
 <template>
-  <div class="miraicms-form-step-settings">
-    <div class="miraicms-form-step-settings__heading">
+  <div :class="rootClass">
+    <div :class="`${rootClass}__heading`">
       Steps
     </div>
 
@@ -41,7 +44,7 @@ function toggle(stepId: string) {
     />
     <div
       v-if="content.stepHeader.show"
-      class="miraicms-form-step-settings__nested"
+      :class="`${rootClass}__nested`"
     >
       <MiraiCmsTrueFalseField
         :model-value="content.stepHeader.showLabel"
@@ -63,24 +66,24 @@ function toggle(stepId: string) {
       @update:model-value="setHeader({ showIcon: $event === true })"
     />
 
-    <div class="miraicms-form-step-settings__list">
+    <div :class="`${rootClass}__list`">
       <div
         v-for="(step, index) in content.steps"
         :key="step.id"
-        class="miraicms-form-step-settings__item"
+        :class="`${rootClass}__item`"
       >
         <button
           type="button"
-          class="miraicms-form-step-settings__summary"
+          :class="`${rootClass}__summary`"
           :aria-expanded="openId === step.id"
           @click="toggle(step.id)"
         >
           <span>{{ step.label || `Step ${index + 1}` }}</span>
-          <span class="miraicms-form-step-settings__chevron">{{ openId === step.id ? '−' : '+' }}</span>
+          <span :class="`${rootClass}__chevron`">{{ openId === step.id ? '−' : '+' }}</span>
         </button>
         <div
           v-if="openId === step.id"
-          class="miraicms-form-step-settings__panel"
+          :class="`${rootClass}__panel`"
         >
           <IconPicker
             v-if="content.stepHeader.showIcon"
@@ -88,7 +91,7 @@ function toggle(stepId: string) {
             :model-value="step.icon"
             @update:model-value="patchStep(step.id, { icon: $event })"
           />
-          <div class="miraicms-form-step-settings__line">
+          <div :class="`${rootClass}__line`">
             <IconPicker
               compact
               label="Label prefix icon"
@@ -108,7 +111,7 @@ function toggle(stepId: string) {
               @update:model-value="patchStep(step.id, { labelSuffix: $event })"
             />
           </div>
-          <div class="miraicms-form-step-settings__line">
+          <div :class="`${rootClass}__line`">
             <IconPicker
               compact
               label="Subtitle prefix icon"
@@ -136,8 +139,10 @@ function toggle(stepId: string) {
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-form-step-settings';
 
-.miraicms-form-step-settings {
+
+#{$root} {
   display: flex;
   flex-direction: column;
   gap: math-rem(12);

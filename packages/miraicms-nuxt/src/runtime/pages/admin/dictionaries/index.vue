@@ -348,12 +348,12 @@ $root: '.miraicms-dictionary-list';
       height: 100%;
       overflow: auto;
       padding: 0 math-rem(8) math-rem(8) 0;
-    }
 
-    &__create-title {
-      flex-shrink: 0;
-      font-size: math-rem(15);
-      font-weight: 600;
+      &-title {
+        flex-shrink: 0;
+        font-size: math-rem(15);
+        font-weight: 600;
+      }
     }
 
     &__list {
@@ -371,15 +371,17 @@ $root: '.miraicms-dictionary-list';
       padding-bottom: math-rem(8);
     }
 
-    &__table-wrap {
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      overflow-x: auto;
-      overflow-y: hidden;
-      background: $color-surface;
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
+    &__table {
+      &-wrap {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        background: $color-surface;
+        border: 1px solid $color-border;
+        border-radius: $border-radius;
+      }
     }
 
     &__columns {

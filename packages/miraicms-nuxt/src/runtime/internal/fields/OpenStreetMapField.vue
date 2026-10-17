@@ -41,6 +41,7 @@ const props = withDefaults(defineProps<{
 const model = defineModel<OsmMarkerValue>()
 
 const rootClass = 'miraicms-open-street-map-field'
+const markerClass = 'miraicms-osm-marker'
 const mapEl = ref<HTMLElement | null>(null)
 const searchEl = ref<HTMLElement | null>(null)
 const selectedIndex = ref(0)
@@ -222,7 +223,7 @@ function applyMarkerSelection() {
     }
     marker.setZIndexOffset(selected ? 1000 : 0)
     const el = marker.getElement()
-    el?.classList.toggle('miraicms-osm-marker--selected', selected)
+    el?.classList.toggle(`${markerClass}--selected`, selected)
   })
 }
 
@@ -563,12 +564,12 @@ async function initMap() {
   }
 
   const markerHtml = [
-    '<span class="miraicms-osm-marker__pin" aria-hidden="true"></span>',
-    '<span class="miraicms-osm-marker__pulse" aria-hidden="true"></span>',
+    `<span class="${markerClass}__pin" aria-hidden="true"></span>`,
+    `<span class="${markerClass}__pulse" aria-hidden="true"></span>`,
   ].join('')
 
   markerIcon = L.divIcon({
-    className: 'miraicms-osm-marker',
+    className: markerClass,
     html: markerHtml,
     iconSize: [28, 42],
     iconAnchor: [14, 42],
@@ -576,7 +577,7 @@ async function initMap() {
   })
 
   selectedMarkerIcon = L.divIcon({
-    className: 'miraicms-osm-marker miraicms-osm-marker--selected',
+    className: `${markerClass} ${markerClass}--selected`,
     html: markerHtml,
     iconSize: [28, 42],
     iconAnchor: [14, 42],
@@ -788,6 +789,7 @@ onBeforeUnmount(() => {
 @use "../../assets/styles" as *;
 
 $root: '.miraicms-open-street-map-field';
+$marker: '.miraicms-osm-marker';
 
 #{$root} {
   display: flex;
@@ -810,11 +812,11 @@ $root: '.miraicms-open-street-map-field';
     position: relative;
   }
 
-  :deep(.miraicms-osm-marker) {
+  :deep(#{$marker}) {
     background: transparent !important;
     border: 0 !important;
 
-    .miraicms-osm-marker__pin {
+    #{$marker}__pin {
       position: absolute;
       left: 50%;
       bottom: 0;
@@ -828,17 +830,17 @@ $root: '.miraicms-open-street-map-field';
       transform: rotate(-45deg);
     }
 
-    .miraicms-osm-marker__pulse {
+    #{$marker}__pulse {
       display: none;
     }
 
-    &.miraicms-osm-marker--selected {
-      .miraicms-osm-marker__pin {
+    &#{$marker}--selected {
+      #{$marker}__pin {
         background: $color-accent-hover;
         box-shadow: 0 2px 8px rgba(47, 111, 237, 0.45);
       }
 
-      .miraicms-osm-marker__pulse {
+      #{$marker}__pulse {
         display: block;
         position: absolute;
         left: 50%;
@@ -870,22 +872,24 @@ $root: '.miraicms-open-street-map-field';
     gap: math-rem(8);
   }
 
-  &__marker-row {
-    display: flex;
-    align-items: flex-end;
-    gap: math-rem(8);
-    padding: math-rem(8);
-    border: 1px solid $color-border;
-    border-radius: $border-radius-inter;
-    background: $color-surface;
+  &__marker {
+    &-row {
+      display: flex;
+      align-items: flex-end;
+      gap: math-rem(8);
+      padding: math-rem(8);
+      border: 1px solid $color-border;
+      border-radius: $border-radius-inter;
+      background: $color-surface;
 
-    &.is-selected {
-      border-color: $color-accent;
-      background: $color-bg;
-    }
+      &.is-selected {
+        border-color: $color-accent;
+        background: $color-bg;
+      }
 
-    :deep(.miraicms-btn) {
-      flex: 0 0 auto;
+      :deep(.miraicms-btn) {
+        flex: 0 0 auto;
+      }
     }
   }
 
@@ -895,11 +899,11 @@ $root: '.miraicms-open-street-map-field';
     flex-direction: column;
     gap: math-rem(4);
     min-width: 0;
-  }
 
-  &__field-label {
-    font-size: math-rem(12);
-    color: $color-muted;
+    &-label {
+      font-size: math-rem(12);
+      color: $color-muted;
+    }
   }
 
   &__input {

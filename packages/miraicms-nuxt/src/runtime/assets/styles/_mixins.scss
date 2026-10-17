@@ -96,8 +96,8 @@
   }
 }
 
-@mixin miraicms-auth {
-  body#miraicms-body .miraicms-auth {
+@mixin miraicms-auth($root: '.miraicms-auth') {
+  body#miraicms-body #{$root} {
     display: flex;
     align-items: center;
     justify-content: center;

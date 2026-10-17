@@ -822,12 +822,14 @@ $root: '.miraicms-repeater-field';
     position: relative;
   }
 
-  &__drop-placeholder {
-    flex-shrink: 0;
-    box-sizing: border-box;
-    border: 1px dashed $color-border;
-    border-radius: $border-radius;
-    background-color: $color-bg;
+  &__drop {
+    &-placeholder {
+      flex-shrink: 0;
+      box-sizing: border-box;
+      border: 1px dashed $color-border;
+      border-radius: $border-radius;
+      background-color: $color-bg;
+    }
   }
 
   &__row {
@@ -871,6 +873,15 @@ $root: '.miraicms-repeater-field';
           }
         }
       }
+    }
+
+    &-body {
+      display: flex;
+      flex-wrap: wrap;
+      gap: math-rem(16) 0;
+      padding: math-rem(12) math-rem(8);
+      margin-left: math-rem(-8);
+      margin-right: math-rem(-8);
     }
   }
 
@@ -959,21 +970,22 @@ $root: '.miraicms-repeater-field';
         transform: rotate(-180deg);
       }
     }
+
+    &-all {
+      &-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: math-rem(8);
+      }
+    }
   }
 
-  &__row-body {
-    display: flex;
-    flex-wrap: wrap;
-    gap: math-rem(16) 0;
-    padding: math-rem(12) math-rem(8);
-    margin-left: math-rem(-8);
-    margin-right: math-rem(-8);
-  }
-
-  &__sub-field {
-    padding-left: math-rem(8);
-    padding-right: math-rem(8);
-    width: 100%;
+  &__sub {
+    &-field {
+      padding-left: math-rem(8);
+      padding-right: math-rem(8);
+      width: 100%;
+    }
   }
 
   &__toolbar {
@@ -981,12 +993,6 @@ $root: '.miraicms-repeater-field';
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: math-rem(8);
-  }
-
-  &__toggle-all-group {
-    display: flex;
-    flex-wrap: wrap;
     gap: math-rem(8);
   }
 }

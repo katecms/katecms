@@ -160,12 +160,13 @@ $root: '.miraicms-tab-field';
     background-color: $color-bg;
     border-bottom: 1px solid $color-border;
   }
-
-  &--left &__nav {
-    flex-direction: column;
-    width: math-rem(160);
-    border-bottom: 0;
-    border-right: 1px solid $color-border;
+  &--left {
+    #{$root}__nav {
+      flex-direction: column;
+      width: math-rem(160);
+      border-bottom: 0;
+      border-right: 1px solid $color-border;
+    }
   }
 
   &__tab {
@@ -205,22 +206,24 @@ $root: '.miraicms-tab-field';
       outline-offset: -2px;
     }
   }
+  &--left {
+    #{$root}__tab {
+      border-right: 0;
+      border-bottom: 1px solid $color-border;
 
-  &--left &__tab {
-    border-right: 0;
-    border-bottom: 1px solid $color-border;
+      &:last-child {
+        border-bottom: 0;
+      }
 
-    &:last-child {
-      border-bottom: 0;
-    }
-
-    &.is-active {
-      box-shadow: inset 2px 0 0 $color-accent;
+      &.is-active {
+        box-shadow: inset 2px 0 0 $color-accent;
+      }
     }
   }
-
-  &--top &__tab.is-active {
-    box-shadow: inset 0 -2px 0 $color-accent;
+  &--top {
+    #{$root}__tab.is-active {
+      box-shadow: inset 0 -2px 0 $color-accent;
+    }
   }
 
   &__panel {

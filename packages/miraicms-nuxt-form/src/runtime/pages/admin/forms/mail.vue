@@ -4,6 +4,9 @@ import { $fetch, useHead } from '#imports'
 import type { MailSettings } from '../../../form/model'
 import { useFormPaths } from '../../../form/paths'
 
+const rootClass = 'miraicms-form-mail'
+
+
 useHead({ title: 'Form email' })
 
 const paths = useFormPaths()
@@ -114,7 +117,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="miraicms-form-mail">
+  <div :class="rootClass">
     <MiraiCmsAdminHeader
       title="Email"
       :back-to="paths.list"
@@ -154,13 +157,13 @@ onMounted(load)
 
     <div
       v-if="loading"
-      class="miraicms-form-mail__hint"
+      :class="`${rootClass}__hint`"
     >
       Loading…
     </div>
     <div
       v-else
-      class="miraicms-form-mail__grid"
+      :class="`${rootClass}__grid`"
     >
       <MiraiCmsTextField
         v-model="form.host"
@@ -211,7 +214,7 @@ onMounted(load)
         field-key="mail-from-email"
         :field="{ type: 'email', label: 'From address' }"
       />
-      <div class="miraicms-form-mail__test">
+      <div :class="`${rootClass}__test`">
         <MiraiCmsEmailField
           v-model="testTo"
           field-key="mail-test-to"
@@ -233,33 +236,37 @@ onMounted(load)
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-form-mail';
 
-.miraicms-form-mail {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: math-rem(16);
-  min-height: 0;
-  padding: 0 math-rem(8) math-rem(8);
-  overflow: auto;
 
-  &__hint {
-    margin: 0;
-    color: $color-muted;
-  }
-
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(math-rem(240), 1fr));
-    gap: math-rem(14);
-    max-width: math-rem(820);
-  }
-
-  &__test {
+@include miraicms-wrapper {
+  #{$root} {
     display: flex;
+    flex: 1;
     flex-direction: column;
-    justify-content: flex-end;
-    gap: math-rem(8);
+    gap: math-rem(16);
+    min-height: 0;
+    padding: 0 math-rem(8) math-rem(8);
+    overflow: auto;
+
+    &__hint {
+      margin: 0;
+      color: $color-muted;
+    }
+
+    &__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(math-rem(240), 1fr));
+      gap: math-rem(14);
+      max-width: math-rem(820);
+    }
+
+    &__test {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: math-rem(8);
+    }
   }
 }
 </style>

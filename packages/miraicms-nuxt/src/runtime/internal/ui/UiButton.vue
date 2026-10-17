@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, useAttrs, useTemplateRef } from 'vue'
 
+const rootClass = 'miraicms-btn'
+
+
 type ButtonLink = {
   url?: string
   title?: string
@@ -36,10 +39,10 @@ function attrDisabled(value: unknown): boolean {
 const isDisabled = computed(() => attrDisabled(attrs.disabled))
 
 const classBtn = computed(() => [
-  'miraicms-btn',
-  ...variants.value.map(v => `miraicms-btn--${v}`),
-  props.tag === 'a' && isDisabled.value ? 'miraicms-btn--disabled' : '',
-  props.active ? 'miraicms-btn--active' : '',
+  rootClass,
+  ...variants.value.map(v => `${rootClass}--${v}`),
+  props.tag === 'a' && isDisabled.value ? `${rootClass}--disabled` : '',
+  props.active ? `${rootClass}--active` : '',
 ].filter(Boolean))
 
 const linkObj = computed<ButtonLink>(() => {

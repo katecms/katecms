@@ -879,41 +879,43 @@ $root: '.miraicms-wysiwyg-field';
     }
   }
 
-  &__link-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    padding: 8px;
-    background: $color-bg;
-    border-bottom: 1px solid $color-border;
-  }
+  &__link {
+    &-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 8px;
+      background: $color-bg;
+      border-bottom: 1px solid $color-border;
+    }
 
-  &__link-label {
-    font-size: 12px;
-    color: $color-muted;
-  }
+    &-label {
+      font-size: 12px;
+      color: $color-muted;
+    }
 
-  &__link-input {
-    flex: 1;
-    min-width: 180px;
-    height: 30px;
-    padding: 0 8px;
-    border: 1px solid $color-border;
-    border-radius: $border-radius-inter;
-    background: $color-surface;
-    color: $color-ink;
+    &-input {
+      flex: 1;
+      min-width: 180px;
+      height: 30px;
+      padding: 0 8px;
+      border: 1px solid $color-border;
+      border-radius: $border-radius-inter;
+      background: $color-surface;
+      color: $color-ink;
 
-    &:focus {
-      outline: none;
-      border-color: $color-accent;
+      &:focus {
+        outline: none;
+        border-color: $color-accent;
+      }
     }
   }
 
   &__content {
     padding: math-rem(8);
 
-    :deep(.miraicms-wysiwyg-field__editable) {
+    :deep(#{$root}__editable) {
       min-height: 180px;
       outline: none;
       color: $color-ink;

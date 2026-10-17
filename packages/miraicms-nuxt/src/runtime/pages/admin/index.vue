@@ -140,15 +140,15 @@ $root: '.miraicms-dashboard';
       &:hover {
         border-color: $color-accent;
       }
-    }
 
-    &__card-title {
-      font-weight: 600;
-    }
+      &-title {
+        font-weight: 600;
+      }
 
-    &__card-meta {
-      font-size: math-rem(12);
-      color: $color-muted;
+      &-meta {
+        font-size: math-rem(12);
+        color: $color-muted;
+      }
     }
   }
 }

@@ -382,19 +382,32 @@ $root: '.miraicms-media-modal';
     border-radius: $border-radius;
     box-shadow: $shadow-md;
     overflow: hidden;
-  }
 
-  &__dialog-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: math-rem(14) math-rem(16);
-    border-bottom: 1px solid $color-border;
-  }
+    &-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: math-rem(14) math-rem(16);
+      border-bottom: 1px solid $color-border;
+    }
 
-  &__dialog-title {
-    font-weight: 600;
-    color: $color-ink;
+    &-title {
+      font-weight: 600;
+      color: $color-ink;
+    }
+
+    &-body {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    &-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: math-rem(8);
+      padding: math-rem(14) math-rem(16);
+      border-top: 1px solid $color-border;
+    }
   }
 
   &__filters {
@@ -404,77 +417,72 @@ $root: '.miraicms-media-modal';
     border-bottom: 1px solid $color-border;
   }
 
-  &__dialog-body {
-    flex: 1;
-    overflow-y: auto;
-  }
-
   &__grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: math-rem(10);
     padding: math-rem(16);
-  }
 
-  &__grid-item {
-    aspect-ratio: 1 / 1;
-    padding: 0;
-    border: 2px solid transparent;
-    border-radius: $border-radius;
-    overflow: hidden;
-    background-color: $color-bg;
-    cursor: pointer;
+    &-item {
+      aspect-ratio: 1 / 1;
+      padding: 0;
+      border: 2px solid transparent;
+      border-radius: $border-radius;
+      overflow: hidden;
+      background-color: $color-bg;
+      cursor: pointer;
 
-    &.is-selected {
-      border-color: $color-accent;
+      &.is-selected {
+        border-color: $color-accent;
+      }
+
+      &.is-disabled {
+        opacity: .45;
+        cursor: default;
+      }
     }
 
-    &.is-disabled {
-      opacity: .45;
-      cursor: default;
-    }
-  }
-
-  &__grid-image {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  &__grid-file {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: math-rem(8);
-    width: 100%;
-    height: 100%;
-    padding: math-rem(10);
-    text-align: center;
-  }
-
-  &__grid-file-icon {
-    display: block;
-    width: 28px;
-    height: 28px;
-
-    svg {
+    &-image {
       display: block;
       width: 100%;
       height: 100%;
-      fill: $color-muted;
+      object-fit: cover;
     }
-  }
 
-  &__grid-file-name {
-    font-size: math-rem(11);
-    color: $color-ink;
-    word-break: break-all;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    &-file {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: math-rem(8);
+      width: 100%;
+      height: 100%;
+      padding: math-rem(10);
+      text-align: center;
+
+      &-icon {
+      display: block;
+      width: 28px;
+      height: 28px;
+
+      svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        fill: $color-muted;
+      }
+      }
+
+      &-name {
+      font-size: math-rem(11);
+      color: $color-ink;
+      word-break: break-all;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      }
+    }
   }
 
   &__hint {
@@ -507,14 +515,6 @@ $root: '.miraicms-media-modal';
     margin: 0;
     padding: math-rem(12) math-rem(16);
     color: $color-danger;
-  }
-
-  &__dialog-foot {
-    display: flex;
-    justify-content: flex-end;
-    gap: math-rem(8);
-    padding: math-rem(14) math-rem(16);
-    border-top: 1px solid $color-border;
   }
 }
 

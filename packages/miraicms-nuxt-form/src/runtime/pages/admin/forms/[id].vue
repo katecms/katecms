@@ -5,6 +5,9 @@ import FormBuilder from '../../../builder/FormBuilder.vue'
 import { notificationFieldErrors, type FormRecord } from '../../../form/model'
 import { useFormPaths } from '../../../form/paths'
 
+const rootClass = 'miraicms-form-editor'
+
+
 const route = useRoute()
 const paths = useFormPaths()
 const form = ref<FormRecord | null>(null)
@@ -85,7 +88,7 @@ watch(id, (formId) => {
 </script>
 
 <template>
-  <div class="miraicms-form-editor">
+  <div :class="rootClass">
     <MiraiCmsAdminHeader
       :title="form?.name || 'Form'"
       :back-to="paths.list"
@@ -125,12 +128,12 @@ watch(id, (formId) => {
 
     <div
       v-if="loading"
-      class="miraicms-form-editor__hint"
+      :class="`${rootClass}__hint`"
     >
       Loading…
     </div>
     <template v-else-if="form">
-      <div class="miraicms-form-editor__name">
+      <div :class="`${rootClass}__name`">
         <MiraiCmsTextField
           v-model="form.name"
           field-key="form-name"
@@ -148,27 +151,31 @@ watch(id, (formId) => {
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-form-editor';
 
-.miraicms-form-editor {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  min-width: 0;
-  padding: 0 math-rem(8) math-rem(8);
 
-  &__hint {
-    margin: math-rem(12) 0 0;
-    color: $color-muted;
-  }
+@include miraicms-wrapper {
+  #{$root} {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    padding: 0 math-rem(8) math-rem(8);
 
-  &__name {
-    max-width: math-rem(360);
-    margin-bottom: math-rem(8);
-  }
+    &__hint {
+      margin: math-rem(12) 0 0;
+      color: $color-muted;
+    }
 
-  :deep(.miraicms-notice) {
-    margin-bottom: math-rem(8);
+    &__name {
+      max-width: math-rem(360);
+      margin-bottom: math-rem(8);
+    }
+
+    :deep(.miraicms-notice) {
+      margin-bottom: math-rem(8);
+    }
   }
 }
 </style>

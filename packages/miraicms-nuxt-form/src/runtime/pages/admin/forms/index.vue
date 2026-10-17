@@ -4,6 +4,9 @@ import { $fetch, navigateTo, useHead } from '#imports'
 import type { FormListItem } from '../../../form/model'
 import { useFormPaths } from '../../../form/paths'
 
+const rootClass = 'miraicms-form-list'
+
+
 useHead({ title: 'Forms' })
 
 const paths = useFormPaths()
@@ -78,7 +81,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="miraicms-form-list">
+  <div :class="rootClass">
     <MiraiCmsAdminHeader
       title="Forms"
       :count="loading ? undefined : forms.length"
@@ -101,7 +104,7 @@ onMounted(load)
     />
 
     <div
-      class="miraicms-form-list__create"
+      :class="`${rootClass}__create`"
       @keydown.enter.prevent="create"
     >
       <MiraiCmsTextField
@@ -122,22 +125,22 @@ onMounted(load)
 
     <div
       v-if="loading"
-      class="miraicms-form-list__hint"
+      :class="`${rootClass}__hint`"
     >
       Loading…
     </div>
     <div
       v-else-if="!forms.length"
-      class="miraicms-form-list__hint"
+      :class="`${rootClass}__hint`"
     >
       No forms yet.
     </div>
     <div
       v-else
-      class="miraicms-form-list__table"
+      :class="`${rootClass}__table`"
     >
       <div
-        class="miraicms-form-list__row miraicms-form-list__row--head"
+        :class="[`${rootClass}__row`, `${rootClass}__row--head`]"
         role="row"
       >
         <span role="columnheader">Name</span>
@@ -149,7 +152,7 @@ onMounted(load)
       <div
         v-for="form in forms"
         :key="form.id"
-        class="miraicms-form-list__row"
+        :class="`${rootClass}__row`"
         role="row"
       >
         <span role="cell">{{ form.name }}</span>
@@ -157,7 +160,7 @@ onMounted(load)
         <span role="cell">{{ form.status === 'published' ? 'Published' : 'Draft' }}</span>
         <span role="cell">{{ formatDate(form.updatedAt) }}</span>
         <span
-          class="miraicms-form-list__actions"
+          :class="`${rootClass}__actions`"
           role="cell"
         >
           <MiraiCmsUiButton
@@ -182,75 +185,79 @@ onMounted(load)
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-form-list';
 
-.miraicms-form-list {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: math-rem(16);
-  min-height: 0;
-  padding: 0 math-rem(8) math-rem(8);
-  overflow: auto;
 
-  &__hint {
-    margin: 0;
-    color: $color-muted;
-  }
-
-  &__create {
+@include miraicms-wrapper {
+  #{$root} {
     display: flex;
-    flex-wrap: wrap;
-    gap: math-rem(8);
-    align-items: end;
+    flex: 1;
+    flex-direction: column;
+    gap: math-rem(16);
+    min-height: 0;
+    padding: 0 math-rem(8) math-rem(8);
+    overflow: auto;
 
-    :deep(.miraicms-field) {
-      flex: 1 1 math-rem(240);
-      max-width: math-rem(360);
-    }
-  }
-
-  &__table {
-    overflow-x: auto;
-    border: 1px solid $color-border;
-    border-radius: math-rem(8);
-    background: $color-surface;
-  }
-
-  &__row {
-    display: grid;
-    grid-template-columns: minmax(math-rem(160), 1.4fr) minmax(math-rem(140), 1fr) math-rem(120) minmax(math-rem(160), 1fr) math-rem(180);
-    align-items: center;
-    min-width: math-rem(760);
-    border-bottom: 1px solid $color-border;
-
-    &:last-child {
-      border-bottom: 0;
+    &__hint {
+      margin: 0;
+      color: $color-muted;
     }
 
-    > [role='columnheader'],
-    > [role='cell'] {
-      min-width: 0;
-      padding: math-rem(10) math-rem(14);
-      overflow-wrap: anywhere;
-    }
+    &__create {
+      display: flex;
+      flex-wrap: wrap;
+      gap: math-rem(8);
+      align-items: end;
 
-    &--head {
-      background: $color-bg;
-
-      > [role='columnheader'] {
-        font-size: math-rem(12);
-        font-weight: 600;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
-        color: $color-muted;
+      :deep(.miraicms-field) {
+        flex: 1 1 math-rem(240);
+        max-width: math-rem(360);
       }
     }
-  }
 
-  &__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: math-rem(6);
+    &__table {
+      overflow-x: auto;
+      border: 1px solid $color-border;
+      border-radius: math-rem(8);
+      background: $color-surface;
+    }
+
+    &__row {
+      display: grid;
+      grid-template-columns: minmax(math-rem(160), 1.4fr) minmax(math-rem(140), 1fr) math-rem(120) minmax(math-rem(160), 1fr) math-rem(180);
+      align-items: center;
+      min-width: math-rem(760);
+      border-bottom: 1px solid $color-border;
+
+      &:last-child {
+        border-bottom: 0;
+      }
+
+      > [role='columnheader'],
+      > [role='cell'] {
+        min-width: 0;
+        padding: math-rem(10) math-rem(14);
+        overflow-wrap: anywhere;
+      }
+
+      &--head {
+        background: $color-bg;
+
+        > [role='columnheader'] {
+          font-size: math-rem(12);
+          font-weight: 600;
+          letter-spacing: 0.03em;
+          text-transform: uppercase;
+          color: $color-muted;
+        }
+      }
+    }
+
+    &__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: math-rem(6);
+    }
   }
 }
 </style>

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { FormIcon, FormMarkedText } from '../../form/text-options'
 
+const rootClass = 'miraicms-decorated-text'
+
+
 const props = defineProps<{
   fieldKey: string
   model: FormMarkedText
@@ -39,23 +42,23 @@ function iconValue(value: unknown): FormIcon | null {
 </script>
 
 <template>
-  <div class="miraicms-decorated-text">
+  <div :class="rootClass">
     <MiraiCmsTextareaField
       :model-value="model.text"
       :field-key="`${fieldKey}-text`"
       :field="{ type: 'textarea', label: textLabel || 'Text', maxLength: 400, rows: 3 }"
       @update:model-value="patch({ text: String($event ?? '') })"
     />
-    <div class="miraicms-decorated-text__icons">
+    <div :class="`${rootClass}__icons`">
       <MiraiCmsImageField
-        class="miraicms-decorated-text__icon"
+        :class="`${rootClass}__icon`"
         :model-value="model.prefix"
         :field-key="`${fieldKey}-prefix`"
         :field="{ type: 'image', label: 'Prefix Icon', iconMode: true, returnFormat: 'array' }"
         @update:model-value="setIcon('prefix', $event)"
       />
       <MiraiCmsImageField
-        class="miraicms-decorated-text__icon"
+        :class="`${rootClass}__icon`"
         :model-value="model.suffix"
         :field-key="`${fieldKey}-suffix`"
         :field="{ type: 'image', label: 'Suffix Icon', iconMode: true, returnFormat: 'array' }"
@@ -67,8 +70,10 @@ function iconValue(value: unknown): FormIcon | null {
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-decorated-text';
 
-.miraicms-decorated-text {
+
+#{$root} {
   display: flex;
   flex-direction: column;
   gap: math-rem(8);

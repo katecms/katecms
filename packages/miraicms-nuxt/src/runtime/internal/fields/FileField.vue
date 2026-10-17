@@ -436,34 +436,34 @@ $root: '.miraicms-file-field';
     align-items: flex-start;
     gap: math-rem(6);
     padding: math-rem(20);
-  }
 
-  &__file-icon {
-    display: block;
-    width: 30px;
-    height: 30px;
-
-    svg {
+    &-icon {
       display: block;
-      width: 100%;
-      height: 100%;
-      fill: $color-muted;
+      width: 30px;
+      height: 30px;
+
+      svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        fill: $color-muted;
+      }
     }
-  }
 
-  &__file-name {
-    color: $color-accent;
-    text-decoration: none;
-    word-break: break-all;
+    &-name {
+      color: $color-accent;
+      text-decoration: none;
+      word-break: break-all;
 
-    &:hover {
-      text-decoration: underline;
+      &:hover {
+        text-decoration: underline;
+      }
     }
-  }
 
-  &__file-meta {
-    font-size: math-rem(12);
-    color: $color-muted;
+    &-meta {
+      font-size: math-rem(12);
+      color: $color-muted;
+    }
   }
 
   &__actions {

@@ -226,33 +226,33 @@ $root: '.miraicms-user';
       border: 1px solid $color-border;
       border-radius: $border-radius;
       box-shadow: $shadow-md;
-    }
 
-    &__menu-item {
-      display: block;
-      width: 100%;
-      padding: math-rem(8) math-rem(10);
-      border: none;
-      border-radius: $border-radius-inter;
-      background: transparent;
-      color: $color-ink;
-      text-align: left;
-      text-decoration: none;
-      font: inherit;
-      font-size: math-rem(14);
-      cursor: pointer;
+      &-item {
+        display: block;
+        width: 100%;
+        padding: math-rem(8) math-rem(10);
+        border: none;
+        border-radius: $border-radius-inter;
+        background: transparent;
+        color: $color-ink;
+        text-align: left;
+        text-decoration: none;
+        font: inherit;
+        font-size: math-rem(14);
+        cursor: pointer;
 
-      &:hover {
-        background: $color-accent-wash;
-      }
+        &:hover {
+          background: $color-accent-wash;
+        }
 
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
 
-      &--danger {
-        color: $color-danger;
+        &--danger {
+          color: $color-danger;
+        }
       }
     }
   }

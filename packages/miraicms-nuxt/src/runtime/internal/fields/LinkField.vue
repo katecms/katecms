@@ -277,36 +277,36 @@ $root: '.miraicms-link-field';
     border-radius: $border-radius;
     box-shadow: $shadow-md;
     overflow: hidden;
-  }
 
-  &__modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: math-rem(14) math-rem(18);
-    border-bottom: 1px solid $color-border;
-  }
+    &-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: math-rem(14) math-rem(18);
+      border-bottom: 1px solid $color-border;
+    }
 
-  &__modal-title {
-    margin: 0;
-    font-size: math-rem(16);
-    color: $color-ink;
-  }
+    &-title {
+      margin: 0;
+      font-size: math-rem(16);
+      color: $color-ink;
+    }
 
-  &__modal-body {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(12);
-    padding: math-rem(18);
-    overflow-y: auto;
-  }
+    &-body {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(12);
+      padding: math-rem(18);
+      overflow-y: auto;
+    }
 
-  &__modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: math-rem(8);
-    padding: math-rem(14) math-rem(18);
-    border-top: 1px solid $color-border;
+    &-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: math-rem(8);
+      padding: math-rem(14) math-rem(18);
+      border-top: 1px solid $color-border;
+    }
   }
 
   &__chip {
@@ -317,22 +317,22 @@ $root: '.miraicms-link-field';
     border: 1px solid $color-border;
     border-radius: $border-radius;
     background-color: $color-surface;
-  }
 
-  &__chip-text {
-    display: inline-flex;
-    align-items: center;
-    gap: math-rem(8);
-    color: $color-ink;
+    &-text {
+      display: inline-flex;
+      align-items: center;
+      gap: math-rem(8);
+      color: $color-ink;
 
-    a {
-      color: $color-accent;
-      text-decoration: underline;
+      a {
+        color: $color-accent;
+        text-decoration: underline;
+      }
     }
-  }
 
-  &__chip-title {
-    font-weight: 700;
+    &-title {
+      font-weight: 700;
+    }
   }
 }
 </style>

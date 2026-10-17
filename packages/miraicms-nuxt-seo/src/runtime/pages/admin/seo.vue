@@ -500,136 +500,146 @@ onMounted(load)
 
 $root: '.miraicms-seo-settings';
 
-#{$root} {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: math-rem(16);
-  min-height: 0;
-  padding: 0 math-rem(8) math-rem(8);
-  overflow: auto;
-
-  &__hint {
-    margin: 0;
-    color: $color-muted;
-  }
-
-  &__form {
+@include miraicms-wrapper {
+  #{$root} {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: math-rem(16);
-    max-width: math-rem(600);
-  }
+    min-height: 0;
+    padding: 0 math-rem(8) math-rem(8);
+    overflow: auto;
 
-  &__redirects {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(12);
-    margin-top: math-rem(8);
-  }
-
-  &__redirect-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: math-rem(12);
-  }
-
-  &__redirect-title {
-    font-size: math-rem(16);
-    font-weight: 600;
-  }
-
-  &__redirect-form,
-  &__toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: math-rem(12);
-    align-items: flex-end;
-  }
-
-  &__redirect-form {
-    > * {
-      flex: 1 1 math-rem(192);
-      min-width: math-rem(192);
-    }
-  }
-
-  &__redirect-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: math-rem(8);
-    align-items: center;
-  }
-
-  &__toolbar {
-    :deep(.miraicms-input-control),
-    :deep(.miraicms-select) {
-      flex: 1 1 math-rem(224);
-      min-width: math-rem(224);
-      max-width: math-rem(352);
-    }
-  }
-
-  &__table {
-    overflow-x: auto;
-    border: 1px solid $color-border;
-    border-radius: math-rem(8);
-    background: $color-surface;
-  }
-
-  &__columns {
-    display: grid;
-    grid-template-columns: math-rem(48) minmax(math-rem(192), 1.4fr) minmax(math-rem(160), 1fr) minmax(math-rem(160), 1fr) math-rem(148);
-    align-items: center;
-    min-width: math-rem(736);
-    border-bottom: 1px solid $color-border;
-
-    &:last-child {
-      border-bottom: 0;
+    &__hint {
+      margin: 0;
+      color: $color-muted;
     }
 
-    > [role='columnheader'],
-    > [role='cell'] {
-      min-width: 0;
-      padding: math-rem(10) math-rem(14);
-      overflow-wrap: anywhere;
+    &__form {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(16);
+      max-width: math-rem(600);
     }
 
-    &--head {
-      background: $color-bg;
+    &__redirects {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(12);
+      margin-top: math-rem(8);
+    }
 
-      > [role='columnheader'] {
-        font-size: math-rem(12);
+    &__redirect {
+      &-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: math-rem(12);
+      }
+
+      &-title {
+        font-size: math-rem(16);
         font-weight: 600;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
-        color: $color-muted;
+      }
+
+      &-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: math-rem(12);
+        align-items: flex-end;
+
+        > * {
+          flex: 1 1 math-rem(192);
+          min-width: math-rem(192);
+        }
+      }
+
+      &-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: math-rem(8);
+        align-items: center;
+      }
+    }
+    &__toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: math-rem(12);
+      align-items: flex-end;
+
+    }
+
+    &__toolbar {
+      :deep(.miraicms-input-control),
+      :deep(.miraicms-select) {
+        flex: 1 1 math-rem(224);
+        min-width: math-rem(224);
+        max-width: math-rem(352);
       }
     }
 
-    &.is-marked {
-      background: $color-accent-wash;
+    &__table {
+      overflow-x: auto;
+      border: 1px solid $color-border;
+      border-radius: math-rem(8);
+      background: $color-surface;
     }
 
-    :deep(.miraicms-field) {
-      gap: 0;
+    &__columns {
+      display: grid;
+      grid-template-columns: math-rem(48) minmax(math-rem(192), 1.4fr) minmax(math-rem(160), 1fr) minmax(math-rem(160), 1fr) math-rem(148);
+      align-items: center;
+      min-width: math-rem(736);
+      border-bottom: 1px solid $color-border;
+
+      &:last-child {
+        border-bottom: 0;
+      }
+
+      > [role='columnheader'],
+      > [role='cell'] {
+        min-width: 0;
+        padding: math-rem(10) math-rem(14);
+        overflow-wrap: anywhere;
+      }
+
+      &--head {
+        background: $color-bg;
+
+        > [role='columnheader'] {
+          font-size: math-rem(12);
+          font-weight: 600;
+          letter-spacing: 0.03em;
+          text-transform: uppercase;
+          color: $color-muted;
+        }
+      }
+
+      &.is-marked {
+        background: $color-accent-wash;
+      }
+
+      :deep(.miraicms-field) {
+        gap: 0;
+      }
     }
-  }
 
-  &__row-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: math-rem(6);
-  }
+    &__row {
+      &-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: math-rem(6);
+      }
+    }
 
-  &__url {
-    color: $color-accent;
-    text-decoration: underline;
-    overflow-wrap: anywhere;
+    &__url {
+      color: $color-accent;
+      text-decoration: underline;
+      overflow-wrap: anywhere;
 
-    &:hover {
-      color: $color-accent-hover;
+      &:hover {
+        color: $color-accent-hover;
+      }
     }
   }
 }

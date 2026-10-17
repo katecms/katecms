@@ -17,9 +17,9 @@ const rootClass = 'miraicms-admin-header'
   <div :class="`${rootClass}__main`">
 ```
 
-Elements are `` `${rootClass}__name` ``. Modifiers are `` `${rootClass}--name` ``. Combine several on one node: `:class="[rootClass, `${rootClass}--open`]"`.
+Elements are `` `${rootClass}__name` ``. A hyphen continues that element: `__settings-nav` belongs to `__settings`, and `__grid-file-icon` belongs to `__grid` then `__grid-file`. Modifiers use `--` (`__item--active`). Combine several on one node: `:class="[rootClass, `${rootClass}--open`]"`.
 
-Scoped SCSS uses the same name. Nest elements, modifiers, and states inside `#{$root}` (`&__main`, `&--open`, `&:hover`). Do not write flat selectors for the same component.
+Scoped SCSS uses the same name. Nest under `#{$root}`: hyphen parts with `&-`, modifiers with `&--`, states with `&.` and `&:`. Do not leave `__settings-nav` as a sibling of `__settings`.
 
 ```scss
 @use "../../assets/styles" as *;
@@ -32,6 +32,30 @@ $root: '.miraicms-admin-header';
   &__main {
     display: flex;
     flex-direction: column;
+  }
+
+  &__settings {
+    display: grid;
+
+    &-nav {
+      display: flex;
+    }
+
+    &-item {
+      width: 100%;
+
+      &.is-active {
+        color: $color-accent;
+      }
+    }
+  }
+
+  &__grid {
+    &-file {
+      &-icon {
+        display: flex;
+      }
+    }
   }
 }
 ```

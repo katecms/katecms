@@ -11,6 +11,9 @@ import OptionAccordion from './OptionAccordion.vue'
 import SuggestionRepeater from './SuggestionRepeater.vue'
 import RatingOptions from './RatingOptions.vue'
 
+const rootClass = 'miraicms-text-settings'
+
+
 const props = defineProps<{
   field: FormField
   item: LayoutItem
@@ -635,7 +638,7 @@ onBeforeUnmount(resetChoiceDrag)
 </script>
 
 <template>
-  <div class="miraicms-text-settings">
+  <div :class="rootClass">
     <MiraiCmsWysiwygField
       v-if="field.type === 'html'"
       :model-value="field.html"
@@ -662,7 +665,7 @@ onBeforeUnmount(resetChoiceDrag)
         :field="{ type: 'select', label: 'HTML Tag', returnFormat: 'value', choices: headingTagChoices }"
         @update:model-value="patch({ heading: { ...options.heading, tag: headingTag(String($event ?? '')) } })"
       />
-      <div class="miraicms-text-settings__icon-row">
+      <div :class="`${rootClass}__icon-row`">
         <MiraiCmsImageField
           :model-value="options.heading.prefix"
           :field-key="`${field.id}-heading-prefix`"
@@ -696,7 +699,7 @@ onBeforeUnmount(resetChoiceDrag)
         :field="{ type: 'select', label: 'HTML Tag', returnFormat: 'value', choices: headingTagChoices }"
         @update:model-value="patch({ subheading: { ...options.subheading, tag: headingTag(String($event ?? '')) } })"
       />
-      <div class="miraicms-text-settings__icon-row">
+      <div :class="`${rootClass}__icon-row`">
         <MiraiCmsImageField
           :model-value="options.subheading.prefix"
           :field-key="`${field.id}-subheading-prefix`"
@@ -714,10 +717,10 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(65)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Label Alignment</span>
-      <div class="miraicms-text-settings__positions">
+      <span :class="`${rootClass}__heading`">Label Alignment</span>
+      <div :class="`${rootClass}__positions`">
         <MiraiCmsUiButton
           v-for="item in alignChoices"
           :key="item.id"
@@ -734,10 +737,10 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(66)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Layout Direction</span>
-      <div class="miraicms-text-settings__positions">
+      <span :class="`${rootClass}__heading`">Layout Direction</span>
+      <div :class="`${rootClass}__positions`">
         <MiraiCmsUiButton
           v-for="item in directionChoices"
           :key="item.id"
@@ -773,7 +776,7 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(68)"
-      class="miraicms-text-settings__grid"
+      :class="`${rootClass}__grid`"
     >
       <MiraiCmsNumberField
         :model-value="options.imageWidth"
@@ -972,9 +975,9 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(44) || has(50)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Options</span>
+      <span :class="`${rootClass}__heading`">Options</span>
       <ChoiceOptions
         :field-key="`${field.id}-choices`"
         :model="field.type === 'select' ? [] : options.choiceOptions"
@@ -998,11 +1001,11 @@ onBeforeUnmount(resetChoiceDrag)
           >
             <div
               v-if="run.kind === 'group' && activeDrag?.kind === 'group' && activeDrag.mark.kind === 'before-group' && activeDrag.mark.groupId === run.group.id"
-              class="miraicms-text-settings__group-placeholder"
+              :class="`${rootClass}__group-placeholder`"
               :style="dragPlaceholderStyle"
             />
             <div
-              class="miraicms-text-settings__choice-block"
+              :class="`${rootClass}__choice-block`"
               :class="{ 'is-floating': run.kind === 'group' && groupIsFloating(run.group.id) }"
               :style="run.kind === 'group' && groupIsFloating(run.group.id) ? dragFloatStyle ?? undefined : undefined"
             >
@@ -1027,13 +1030,13 @@ onBeforeUnmount(resetChoiceDrag)
               />
               <div
                 v-else
-                class="miraicms-text-settings__group miraicms-text-settings__group--popup"
+                :class="[`${rootClass}__group`, `${rootClass}__group--popup`]"
                 :data-choice-group="run.group.id"
               >
-                <div class="miraicms-text-settings__group-header">
+                <div :class="`${rootClass}__group-header`">
                   <button
                     type="button"
-                    class="miraicms-text-settings__group-handle"
+                    :class="`${rootClass}__group-handle`"
                     aria-label="Move group"
                     @mousedown="onGroupHandleDown(run.group.id, $event)"
                   >
@@ -1161,7 +1164,7 @@ onBeforeUnmount(resetChoiceDrag)
           </template>
           <div
             v-if="activeDrag?.mark.kind === 'loose-end'"
-            class="miraicms-text-settings__group-placeholder"
+            :class="`${rootClass}__group-placeholder`"
             :style="dragPlaceholderStyle ?? undefined"
           />
         </template>
@@ -1170,7 +1173,7 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(54)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
       <MiraiCmsTrueFalseField
         :model-value="options.selectMultiple.enabled"
@@ -1248,7 +1251,7 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(46) && options.allowMultiple"
-      class="miraicms-text-settings__grid"
+      :class="`${rootClass}__grid`"
     >
       <MiraiCmsNumberField
         :model-value="options.choiceMin"
@@ -1280,11 +1283,11 @@ onBeforeUnmount(resetChoiceDrag)
     />
     <div
       v-if="has(5) && isTemporalType(field.type)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Default value</span>
+      <span :class="`${rootClass}__heading`">Default value</span>
       <input
-        class="miraicms-text-settings__native"
+        :class="`${rootClass}__native`"
         :type="temporalInputType(field.type)"
         :value="options.defaultValue"
         @input="patch({ defaultValue: ($event.target as HTMLInputElement).value })"
@@ -1293,10 +1296,10 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(6)"
-      class="miraicms-text-settings__icons"
+      :class="`${rootClass}__icons`"
     >
-      <span class="miraicms-text-settings__heading">Input Icons</span>
-      <div class="miraicms-text-settings__icon-row">
+      <span :class="`${rootClass}__heading`">Input Icons</span>
+      <div :class="`${rootClass}__icon-row`">
         <MiraiCmsImageField
           :model-value="options.prefix"
           :field-key="`${field.id}-input-prefix`"
@@ -1364,10 +1367,10 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(48)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Check Position</span>
-      <div class="miraicms-text-settings__positions">
+      <span :class="`${rootClass}__heading`">Check Position</span>
+      <div :class="`${rootClass}__positions`">
         <MiraiCmsUiButton
           v-for="position in checkPositions"
           :key="position.id"
@@ -1401,9 +1404,9 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(52)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Minimum</span>
+      <span :class="`${rootClass}__heading`">Minimum</span>
       <MiraiCmsNumberField
         :model-value="options.choiceMinimum.value"
         :field-key="`${field.id}-bound-min`"
@@ -1435,9 +1438,9 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(53)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Maximum</span>
+      <span :class="`${rootClass}__heading`">Maximum</span>
       <MiraiCmsNumberField
         :model-value="options.choiceMaximum.value"
         :field-key="`${field.id}-bound-max`"
@@ -1525,9 +1528,9 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(41)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Show File List</span>
+      <span :class="`${rootClass}__heading`">Show File List</span>
       <MiraiCmsTrueFalseField
         :model-value="options.showFilePreview"
         :field-key="`${field.id}-file-preview`"
@@ -1552,23 +1555,23 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(43)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Value Range (Min/Max)</span>
-      <div class="miraicms-text-settings__grid">
-        <div class="miraicms-text-settings__native-field">
+      <span :class="`${rootClass}__heading`">Value Range (Min/Max)</span>
+      <div :class="`${rootClass}__grid`">
+        <div :class="`${rootClass}__native-field`">
           <span>Minimum</span>
           <input
-            class="miraicms-text-settings__native"
+            :class="`${rootClass}__native`"
             :type="temporalInputType(field.type)"
             :value="options.rangeMin"
             @input="patch({ rangeMin: ($event.target as HTMLInputElement).value })"
           >
         </div>
-        <div class="miraicms-text-settings__native-field">
+        <div :class="`${rootClass}__native-field`">
           <span>Maximum</span>
           <input
-            class="miraicms-text-settings__native"
+            :class="`${rootClass}__native`"
             :type="temporalInputType(field.type)"
             :value="options.rangeMax"
             @input="patch({ rangeMax: ($event.target as HTMLInputElement).value })"
@@ -1614,7 +1617,7 @@ onBeforeUnmount(resetChoiceDrag)
       />
       <div
         v-if="options.passwordRules.limitLength"
-        class="miraicms-text-settings__grid"
+        :class="`${rootClass}__grid`"
       >
         <MiraiCmsNumberField
           :model-value="options.passwordRules.min"
@@ -1633,10 +1636,10 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(8)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Min/Max Text Length</span>
-      <div class="miraicms-text-settings__grid">
+      <span :class="`${rootClass}__heading`">Min/Max Text Length</span>
+      <div :class="`${rootClass}__grid`">
         <MiraiCmsNumberField
           :model-value="options.minLength"
           :field-key="`${field.id}-min-length`"
@@ -1666,9 +1669,9 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(9)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Suggestion</span>
+      <span :class="`${rootClass}__heading`">Suggestion</span>
       <SuggestionRepeater
         :field-key="`${field.id}-suggestions`"
         :model="options.suggestions"
@@ -1702,9 +1705,9 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(13)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">RegEx Pattern</span>
+      <span :class="`${rootClass}__heading`">RegEx Pattern</span>
       <MiraiCmsSelectField
         :model-value="patternPreset"
         :field-key="`${field.id}-pattern-preset`"
@@ -1751,10 +1754,10 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(16)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Size & Position</span>
-      <div class="miraicms-text-settings__grid">
+      <span :class="`${rootClass}__heading`">Size & Position</span>
+      <div :class="`${rootClass}__grid`">
         <MiraiCmsNumberField
           :model-value="item.x"
           :field-key="`${field.id}-x`"
@@ -1880,10 +1883,10 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(21)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Value Range (Min/Max)</span>
-      <div class="miraicms-text-settings__grid">
+      <span :class="`${rootClass}__heading`">Value Range (Min/Max)</span>
+      <div :class="`${rootClass}__grid`">
         <MiraiCmsNumberField
           :model-value="options.valueMin"
           :field-key="`${field.id}-value-min`"
@@ -1917,7 +1920,7 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(26)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
       <MiraiCmsImageField
         :model-value="options.ratingIcon"
@@ -1929,9 +1932,9 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(27)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Options</span>
+      <span :class="`${rootClass}__heading`">Options</span>
       <RatingOptions
         :field-key="`${field.id}-rating-options`"
         :model="options.ratingOptions"
@@ -1974,9 +1977,9 @@ onBeforeUnmount(resetChoiceDrag)
 
     <div
       v-if="has(31)"
-      class="miraicms-text-settings__group"
+      :class="`${rootClass}__group`"
     >
-      <span class="miraicms-text-settings__heading">Button Text</span>
+      <span :class="`${rootClass}__heading`">Button Text</span>
       <DecoratedText
         :field-key="`${field.id}-button-text`"
         :model="options.buttonText"
@@ -2031,8 +2034,10 @@ onBeforeUnmount(resetChoiceDrag)
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-text-settings';
 
-.miraicms-text-settings {
+
+#{$root} {
   display: flex;
   flex-direction: column;
   gap: math-rem(12);
@@ -2092,10 +2097,12 @@ onBeforeUnmount(resetChoiceDrag)
     }
   }
 
-  &__choice-block {
-    &.is-floating {
-      z-index: 1100;
-      box-shadow: $shadow-md;
+  &__choice {
+    &-block {
+      &.is-floating {
+        z-index: 1100;
+        box-shadow: $shadow-md;
+      }
     }
   }
 
@@ -2103,11 +2110,24 @@ onBeforeUnmount(resetChoiceDrag)
     font-size: math-rem(13);
     font-weight: 600;
   }
-
-  &__grid,
-  &__icon-row {
+  &__grid {
     display: grid;
     gap: math-rem(8);
+
+  }
+
+  &__icon {
+    &-row {
+      display: grid;
+      gap: math-rem(8);
+
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+
+      :deep(.miraicms-field) {
+        width: 100%;
+        min-width: 0;
+      }
+    }
   }
 
   &__grid {
@@ -2120,14 +2140,14 @@ onBeforeUnmount(resetChoiceDrag)
     gap: math-rem(6);
   }
 
-  &__native-field {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(4);
-    font-size: math-rem(13);
-  }
-
   &__native {
+    &-field {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(4);
+      font-size: math-rem(13);
+    }
+
     width: 100%;
     min-height: math-rem(36);
     padding: math-rem(6) math-rem(8);
@@ -2136,15 +2156,6 @@ onBeforeUnmount(resetChoiceDrag)
     background: $color-surface;
     color: $color-ink;
     font: inherit;
-  }
-
-  &__icon-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-
-    :deep(.miraicms-field) {
-      width: 100%;
-      min-width: 0;
-    }
   }
 }
 </style>

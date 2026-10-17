@@ -180,6 +180,15 @@ $root: '.miraicms-accordion-field';
     &:last-child {
       border-bottom: 0;
     }
+
+    &.is-open #{$root}__header {
+      background-color: $color-surface;
+      box-shadow: inset 3px 0 0 $color-accent;
+    }
+
+    &.is-open #{$root}__chevron {
+      transform: rotate(-135deg);
+    }
   }
 
   &__header {
@@ -213,11 +222,6 @@ $root: '.miraicms-accordion-field';
     }
   }
 
-  &__item.is-open &__header {
-    background-color: $color-surface;
-    box-shadow: inset 3px 0 0 $color-accent;
-  }
-
   &__title {
     min-width: 0;
   }
@@ -230,10 +234,6 @@ $root: '.miraicms-accordion-field';
     border-bottom: 2px solid $color-muted;
     transform: rotate(45deg);
     transition: transform 0.15s ease;
-  }
-
-  &__item.is-open &__chevron {
-    transform: rotate(-135deg);
   }
 
   &__body {

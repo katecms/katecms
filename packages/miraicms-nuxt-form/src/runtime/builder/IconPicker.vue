@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import { STEP_ICONS, stepIconSvg } from '../form/icons'
 
+const rootClass = 'miraicms-form-icon-picker'
+
+
 const props = withDefaults(defineProps<{
   label: string
   modelValue: string
@@ -24,37 +27,37 @@ function choose(id: string) {
 
 <template>
   <div
-    class="miraicms-form-icon-picker"
+    :class="rootClass"
     :class="{ 'is-compact': compact }"
   >
     <span
       v-if="!compact"
-      class="miraicms-form-icon-picker__label"
+      :class="`${rootClass}__label`"
     >{{ label }}</span>
     <button
       type="button"
-      class="miraicms-form-icon-picker__trigger"
+      :class="`${rootClass}__trigger`"
       :aria-label="compact ? label : undefined"
       :aria-expanded="open"
       @click="open = !open"
     >
       <span
         v-if="stepIconSvg(modelValue)"
-        class="miraicms-form-icon-picker__preview"
+        :class="`${rootClass}__preview`"
         v-html="stepIconSvg(modelValue)"
       />
       <span
         v-else
-        class="miraicms-form-icon-picker__empty"
+        :class="`${rootClass}__empty`"
       >{{ compact ? '' : 'None' }}</span>
     </button>
     <div
       v-if="open"
-      class="miraicms-form-icon-picker__grid"
+      :class="`${rootClass}__grid`"
     >
       <button
         type="button"
-        class="miraicms-form-icon-picker__choice"
+        :class="`${rootClass}__choice`"
         :class="{ 'is-active': !modelValue }"
         aria-label="No icon"
         @click="choose('')"
@@ -65,7 +68,7 @@ function choose(id: string) {
         v-for="icon in STEP_ICONS"
         :key="icon.id"
         type="button"
-        class="miraicms-form-icon-picker__choice"
+        :class="`${rootClass}__choice`"
         :class="{ 'is-active': icon.id === props.modelValue }"
         :aria-label="icon.label"
         @click="choose(icon.id)"
@@ -78,8 +81,10 @@ function choose(id: string) {
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-form-icon-picker';
 
-.miraicms-form-icon-picker {
+
+#{$root} {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -135,15 +140,16 @@ function choose(id: string) {
     grid-template-columns: repeat(6, math-rem(32));
     gap: math-rem(4);
   }
-
-  &.is-compact &__grid {
-    position: absolute;
-    z-index: 3;
-    padding: math-rem(6);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background: $color-surface;
-    box-shadow: $shadow-md;
+  &.is-compact {
+    #{$root}__grid {
+      position: absolute;
+      z-index: 3;
+      padding: math-rem(6);
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
+      background: $color-surface;
+      box-shadow: $shadow-md;
+    }
   }
 
   &__choice {

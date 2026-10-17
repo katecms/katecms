@@ -5,6 +5,9 @@ import type { FormChoiceOption, FormIcon } from '../../form/text-options'
 import { normalizeIcon } from '../../form/text-options'
 import OptionPopup from './OptionPopup.vue'
 
+const rootClass = 'miraicms-choice-options'
+
+
 const props = withDefaults(defineProps<{
   fieldKey: string
   model: FormChoiceOption[]
@@ -247,7 +250,7 @@ function onHandleDown(index: number, event: MouseEvent) {
   if (!(handle instanceof HTMLElement)) {
     return
   }
-  const row = handle.closest<HTMLElement>('.miraicms-choice-options__row')
+  const row = handle.closest<HTMLElement>(`.${rootClass}__row`)
   if (!row) {
     return
   }
@@ -267,7 +270,7 @@ onBeforeUnmount(resetDrag)
 </script>
 
 <template>
-  <div class="miraicms-choice-options">
+  <div :class="rootClass">
     <template v-if="!embedded">
       <MiraiCmsUiButton
         tag="button"
@@ -279,7 +282,7 @@ onBeforeUnmount(resetDrag)
     </template>
     <component
       :is="embedded ? 'div' : OptionPopup"
-      v-bind="embedded ? { class: 'miraicms-choice-options__inline' } : { open, title: 'Edit Options' }"
+      v-bind="embedded ? { class: `${rootClass}__inline` } : { open, title: 'Edit Options' }"
       @update:open="open = $event"
     >
       <template
@@ -288,13 +291,13 @@ onBeforeUnmount(resetDrag)
       >
         <div
           v-if="showsPlaceholder(index)"
-          class="miraicms-choice-options__placeholder"
+          :class="`${rootClass}__placeholder`"
           :style="placeholderStyle"
         />
 
         <div
           :ref="(el) => setRowRef(el as Element | null, index)"
-          class="miraicms-choice-options__row"
+          :class="`${rootClass}__row`"
           :class="{ 'is-floating': rowIsFloating(index) }"
           :style="rowStyle(index)"
           data-choice-row
@@ -305,7 +308,7 @@ onBeforeUnmount(resetDrag)
         >
           <button
             type="button"
-            class="miraicms-choice-options__handle"
+            :class="`${rootClass}__handle`"
             aria-label="Move option"
             @mousedown="onHandleDown(index, $event)"
           >
@@ -355,7 +358,7 @@ onBeforeUnmount(resetDrag)
           </button>
           <MiraiCmsImageField
             v-if="showImage"
-            class="miraicms-choice-options__image"
+            :class="`${rootClass}__image`"
             :model-value="item.image"
             :field-key="`${fieldKey}-image-${item.id}`"
             :field="{ type: 'image', label: 'Image', iconMode: true, returnFormat: 'array' }"
@@ -374,7 +377,7 @@ onBeforeUnmount(resetDrag)
             @update:model-value="patchAt(index, { value: String($event ?? '') })"
           />
           <MiraiCmsTrueFalseField
-            class="miraicms-choice-options__checkbox"
+            :class="`${rootClass}__checkbox`"
             :model-value="item.checked"
             :field-key="`${fieldKey}-check-${item.id}`"
             :field="{ type: 'true_false', label: 'Check' }"
@@ -382,7 +385,7 @@ onBeforeUnmount(resetDrag)
           />
           <MiraiCmsTrueFalseField
             v-if="showRequired"
-            class="miraicms-choice-options__checkbox"
+            :class="`${rootClass}__checkbox`"
             :model-value="item.required"
             :field-key="`${fieldKey}-required-${item.id}`"
             :field="{ type: 'true_false', label: 'Required' }"
@@ -390,13 +393,13 @@ onBeforeUnmount(resetDrag)
           />
           <MiraiCmsTrueFalseField
             v-if="showDisabled"
-            class="miraicms-choice-options__checkbox"
+            :class="`${rootClass}__checkbox`"
             :model-value="item.disabled"
             :field-key="`${fieldKey}-disabled-${item.id}`"
             :field="{ type: 'true_false', label: 'Disabled' }"
             @update:model-value="patchAt(index, { disabled: $event === true })"
           />
-          <div class="miraicms-choice-options__actions">
+          <div :class="`${rootClass}__actions`">
             <MiraiCmsUiButton
               tag="button"
               :variant="['secondary', 'small', 'icon']"
@@ -505,13 +508,13 @@ onBeforeUnmount(resetDrag)
       </template>
       <div
         v-if="showsPlaceholder(model.length)"
-        class="miraicms-choice-options__placeholder"
+        :class="`${rootClass}__placeholder`"
         :style="placeholderStyle"
       />
       <slot name="extra" />
       <div
         v-if="!embedded"
-        class="miraicms-choice-options__footer"
+        :class="`${rootClass}__footer`"
       >
         <MiraiCmsUiButton
           tag="button"
@@ -533,8 +536,10 @@ onBeforeUnmount(resetDrag)
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-choice-options';
 
-.miraicms-choice-options {
+
+#{$root} {
   display: flex;
   flex-direction: column;
   gap: math-rem(8);
@@ -559,8 +564,8 @@ onBeforeUnmount(resetDrag)
       flex: 1 0 math-rem(150);
     }
 
-    > .miraicms-choice-options__handle,
-    > .miraicms-choice-options__actions {
+    > #{$root}__handle,
+    > #{$root}__actions {
       flex: 0 0 auto;
       min-width: 0;
     }

@@ -27,6 +27,9 @@ import { clientFormBreakpoints } from '../form/runtime-config'
 import { provideMiraiCmsFieldErrors } from 'miraicms-nuxt/extensions'
 import StepSettings from './StepSettings.vue'
 
+const rootClass = 'miraicms-form-builder'
+
+
 defineModel<string>('name', { required: true })
 const status = defineModel<FormStatus>('status', { required: true })
 const content = defineModel<FormContent>('content', { required: true })
@@ -276,7 +279,7 @@ function onStepHandleMouseDown(index: number, event: MouseEvent) {
   if (!(handle instanceof HTMLElement)) {
     return
   }
-  const stepEl = handle.closest<HTMLElement>('.miraicms-form-builder__step')
+  const stepEl = handle.closest<HTMLElement>(`.${rootClass}__step`)
   if (!stepEl) {
     return
   }
@@ -311,7 +314,7 @@ function onUpdateLayout(item: LayoutItem) {
 }
 
 function menuSide(anchor: HTMLElement, width: number): 'left' | 'right' {
-  const bounds = anchor.closest('.miraicms-form-builder__scroll')?.getBoundingClientRect()
+  const bounds = anchor.closest(`.${rootClass}__scroll`)?.getBoundingClientRect()
   const box = anchor.getBoundingClientRect()
   if (!bounds) {
     return 'right'
@@ -679,7 +682,7 @@ function rowFromPointer(clientY: number, grid: HTMLElement): number {
   const gridTop = grid.getBoundingClientRect().top
   const offsetY = clientY - gridTop
   const bands: { row: number, top: number, bottom: number }[] = []
-  for (const el of grid.querySelectorAll<HTMLElement>(':scope > .miraicms-form-builder__item:not(.is-floating), :scope > .miraicms-form-builder__drop-placeholder')) {
+  for (const el of grid.querySelectorAll<HTMLElement>(`:scope > .${rootClass}__item:not(.is-floating), :scope > .${rootClass}__drop-placeholder`)) {
     const raw = Number.parseInt(el.style.gridRow, 10)
     if (!Number.isFinite(raw)) {
       continue
@@ -755,7 +758,7 @@ function onDocumentMouseDown(event: MouseEvent) {
     openStepMenu.value = ''
     return
   }
-  if (target.closest('.miraicms-form-builder__step-menu, .miraicms-form-builder__step-options, .miraicms-form-builder__item-menu, .miraicms-form-builder__more')) {
+  if (target.closest(`.${rootClass}__step-menu, .${rootClass}__step-options, .${rootClass}__item-menu, .${rootClass}__more`)) {
     return
   }
   openStepMenu.value = ''
@@ -777,11 +780,11 @@ onBeforeUnmount(() => {
 <template>
   <div
     ref="rootRef"
-    class="miraicms-form-builder"
+    :class="rootClass"
     tabindex="0"
     @keydown="onKeydown"
   >
-    <div class="miraicms-form-builder__modes">
+    <div :class="`${rootClass}__modes`">
       <MiraiCmsUiButton
         tag="button"
         :variant="editorMode === 'builder' ? ['small'] : ['secondary', 'small']"
@@ -802,13 +805,13 @@ onBeforeUnmount(() => {
 
     <div
       v-if="editorMode === 'builder'"
-      class="miraicms-form-builder__workspace"
+      :class="`${rootClass}__workspace`"
     >
-      <div class="miraicms-form-builder__sidebar">
-        <div class="miraicms-form-builder__tabs">
+      <div :class="`${rootClass}__sidebar`">
+        <div :class="`${rootClass}__tabs`">
           <button
             type="button"
-            class="miraicms-form-builder__tab"
+            :class="`${rootClass}__tab`"
             :class="{ 'is-active': sidebarTab === 'fields' }"
             aria-label="Add Fields"
             title="Add Fields"
@@ -855,7 +858,7 @@ onBeforeUnmount(() => {
           </button>
           <button
             type="button"
-            class="miraicms-form-builder__tab"
+            :class="`${rootClass}__tab`"
             :class="{ 'is-active': sidebarTab === 'options' }"
             aria-label="Field Options"
             title="Field Options"
@@ -909,14 +912,14 @@ onBeforeUnmount(() => {
         </div>
         <div
           v-if="sidebarTab === 'fields'"
-          class="miraicms-form-builder__panel"
+          :class="`${rootClass}__panel`"
         >
           <div
             v-for="group in palette"
             :key="group.title"
-            class="miraicms-form-builder__group"
+            :class="`${rootClass}__group`"
           >
-            <div class="miraicms-form-builder__heading">
+            <div :class="`${rootClass}__heading`">
               {{ group.title }}
             </div>
             <MiraiCmsUiButton
@@ -924,7 +927,7 @@ onBeforeUnmount(() => {
               :key="type"
               tag="button"
               variant="secondary"
-              class="miraicms-form-builder__add"
+              :class="`${rootClass}__add`"
               @click="add(type)"
             >
               {{ FIELD_LABELS[type] }}
@@ -933,7 +936,7 @@ onBeforeUnmount(() => {
         </div>
         <div
           v-else
-          class="miraicms-form-builder__panel"
+          :class="`${rootClass}__panel`"
         >
           <StepSettings
             v-if="stepSettingsOpen && content.steps.length > 1"
@@ -949,20 +952,20 @@ onBeforeUnmount(() => {
           />
           <div
             v-else
-            class="miraicms-form-builder__empty"
+            :class="`${rootClass}__empty`"
           >
             Select a field
           </div>
         </div>
       </div>
 
-      <div class="miraicms-form-builder__stage">
-        <div class="miraicms-form-builder__toolbar">
-          <div class="miraicms-form-builder__breakpoints">
+      <div :class="`${rootClass}__stage`">
+        <div :class="`${rootClass}__toolbar`">
+          <div :class="`${rootClass}__breakpoints`">
             <MiraiCmsUiButton
               v-for="item in formBreakpointList"
               :key="item.name"
-              :class="['miraicms-form-builder__breakpoint-btn']"
+              :class="[`${rootClass}__breakpoint-btn`]"
               tag="button"
               :variant="hasBreakpointIcon(item.name)
                 ? (breakpoint !== item.name ? ['icon', 'small', 'secondary'] : ['icon', 'small'])
@@ -1067,7 +1070,7 @@ onBeforeUnmount(() => {
             Match {{ baseLabel.toLowerCase() }}
           </MiraiCmsUiButton>
           <MiraiCmsTrueFalseField
-            class="miraicms-form-builder__sync"
+            :class="`${rootClass}__sync`"
             title="When enabled, all layouts will automatically sync with and follow the active breakpoint’s field order."
             field-key="sync-field-order"
             :model-value="content.syncFieldOrder === true"
@@ -1077,21 +1080,21 @@ onBeforeUnmount(() => {
             }"
             @update:model-value="setSyncFieldOrder($event === true)"
           />
-          <span class="miraicms-form-builder__hint">60 columns. Drag to move, drag the edge to resize. Arrows nudge, Shift changes width.</span>
+          <span :class="`${rootClass}__hint`">60 columns. Drag to move, drag the edge to resize. Arrows nudge, Shift changes width.</span>
         </div>
-        <div class="miraicms-form-builder__steps">
+        <div :class="`${rootClass}__steps`">
           <template
             v-for="(step, index) in content.steps"
             :key="step.id"
           >
             <div
               v-if="isDraggingStep && dropStepIndex === index"
-              class="miraicms-form-builder__step-placeholder"
+              :class="`${rootClass}__step-placeholder`"
               :style="stepPlaceholderStyle"
             />
             <div
               :ref="(el) => setStepRef(el as Element | null, index)"
-              class="miraicms-form-builder__step"
+              :class="`${rootClass}__step`"
               :class="{
                 'is-active': step.id === currentStepId,
                 'is-floating': isDraggingStep && draggingStepIndex === index,
@@ -1100,7 +1103,7 @@ onBeforeUnmount(() => {
             >
               <span
                 v-if="content.steps.length > 1"
-                class="miraicms-form-builder__step-handle"
+                :class="`${rootClass}__step-handle`"
                 @mousedown="onStepHandleMouseDown(index, $event)"
               >
                 <svg
@@ -1155,14 +1158,14 @@ onBeforeUnmount(() => {
               </span>
               <button
                 type="button"
-                class="miraicms-form-builder__step-label"
+                :class="`${rootClass}__step-label`"
                 @click="selectStep(step.id)"
               >
                 {{ step.label }}
               </button>
               <button
                 type="button"
-                class="miraicms-form-builder__step-menu"
+                :class="`${rootClass}__step-menu`"
                 :class="{ 'is-open': openStepMenu === step.id }"
                 aria-label="Step options"
                 aria-haspopup="menu"
@@ -1205,7 +1208,7 @@ onBeforeUnmount(() => {
               </button>
               <div
                 v-if="openStepMenu === step.id"
-                class="miraicms-form-builder__step-options"
+                :class="`${rootClass}__step-options`"
                 role="menu"
               >
                 <button
@@ -1263,12 +1266,12 @@ onBeforeUnmount(() => {
           </template>
           <div
             v-if="isDraggingStep && dropStepIndex === content.steps.length"
-            class="miraicms-form-builder__step-placeholder"
+            :class="`${rootClass}__step-placeholder`"
             :style="stepPlaceholderStyle"
           />
           <button
             type="button"
-            class="miraicms-form-builder__step-icon"
+            :class="`${rootClass}__step-icon`"
             aria-label="Add step"
             :disabled="content.steps.length >= 20"
             @click="createStep"
@@ -1288,7 +1291,7 @@ onBeforeUnmount(() => {
           <button
             v-if="content.steps.length > 1"
             type="button"
-            class="miraicms-form-builder__step-icon"
+            :class="`${rootClass}__step-icon`"
             :class="{ 'is-active': stepSettingsOpen }"
             aria-label="Step settings"
             @click="stepSettingsOpen = !stepSettingsOpen"
@@ -1315,25 +1318,25 @@ onBeforeUnmount(() => {
             </svg>
           </button>
         </div>
-        <div class="miraicms-form-builder__scroll">
+        <div :class="`${rootClass}__scroll`">
           <div
-            class="miraicms-form-builder__frame"
+            :class="`${rootClass}__frame`"
             :style="frameStyle"
           >
             <div
               ref="gridRef"
-              class="miraicms-form-builder__grid"
+              :class="`${rootClass}__grid`"
               @pointerdown.self="selectedId = null"
             >
               <div
                 v-if="dropPlaceholderStyle"
-                class="miraicms-form-builder__drop-placeholder"
+                :class="`${rootClass}__drop-placeholder`"
                 :style="dropPlaceholderStyle"
               />
               <div
                 v-for="item in layout"
                 :key="item.fieldId"
-                class="miraicms-form-builder__item"
+                :class="`${rootClass}__item`"
                 :class="{
                   'is-selected': item.fieldId === selectedId,
                   'is-dragging': drag?.fieldId === item.fieldId && drag?.mode !== 'move',
@@ -1351,12 +1354,12 @@ onBeforeUnmount(() => {
                   preview
                 />
                 <div
-                  class="miraicms-form-builder__item-actions"
+                  :class="`${rootClass}__item-actions`"
                   @pointerdown.stop
                 >
                   <button
                     type="button"
-                    class="miraicms-form-builder__item-action"
+                    :class="`${rootClass}__item-action`"
                     aria-label="Clone"
                     title="Clone"
                     @click="onCloneField(item.fieldId)"
@@ -1388,7 +1391,7 @@ onBeforeUnmount(() => {
                   </button>
                   <button
                     type="button"
-                    class="miraicms-form-builder__item-action"
+                    :class="`${rootClass}__item-action`"
                     aria-label="Remove"
                     title="Remove"
                     @click="onRemove(item.fieldId)"
@@ -1414,10 +1417,10 @@ onBeforeUnmount(() => {
                       </g>
                     </svg>
                   </button>
-                  <div class="miraicms-form-builder__more">
+                  <div :class="`${rootClass}__more`">
                     <button
                       type="button"
-                      class="miraicms-form-builder__item-action"
+                      :class="`${rootClass}__item-action`"
                       aria-label="More Options"
                       title="More Options"
                       :aria-expanded="openFieldMenu === item.fieldId"
@@ -1451,7 +1454,7 @@ onBeforeUnmount(() => {
                     </button>
                     <div
                       v-if="openFieldMenu === item.fieldId"
-                      class="miraicms-form-builder__item-menu"
+                      :class="`${rootClass}__item-menu`"
                       :class="{ 'is-left': fieldMenuSide === 'left' }"
                     >
                       <button
@@ -1539,7 +1542,7 @@ onBeforeUnmount(() => {
                       </button>
                       <div
                         v-if="content.steps.length > 1"
-                        class="miraicms-form-builder__move"
+                        :class="`${rootClass}__move`"
                         @mouseenter="showMoveMenu(item.fieldId, $event)"
                         @mouseleave="hideMoveMenu"
                       >
@@ -1558,7 +1561,7 @@ onBeforeUnmount(() => {
                           <span>Move to</span>
                         </button>
                         <div
-                          class="miraicms-form-builder__move-steps"
+                          :class="`${rootClass}__move-steps`"
                           :class="{ 'is-open': openMoveMenu === item.fieldId }"
                           :style="openMoveMenu === item.fieldId ? moveMenuStyle : undefined"
                           @mouseenter="keepMoveMenu"
@@ -1603,7 +1606,7 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
                 <div
-                  class="miraicms-form-builder__resizable-handle miraicms-form-builder__resizable-handle--left"
+                  :class="[`${rootClass}__resizable-handle`, `${rootClass}__resizable-handle--left`]"
                   @pointerdown="onResizePointerDown($event, item, 'left')"
                 >
                   <svg
@@ -1620,7 +1623,7 @@ onBeforeUnmount(() => {
                   </svg>
                 </div>
                 <div
-                  class="miraicms-form-builder__resizable-handle miraicms-form-builder__resizable-handle--right"
+                  :class="[`${rootClass}__resizable-handle`, `${rootClass}__resizable-handle--right`]"
                   @pointerdown="onResizePointerDown($event, item, 'right')"
                 >
                   <svg
@@ -1645,12 +1648,12 @@ onBeforeUnmount(() => {
 
     <div
       v-else
-      class="miraicms-form-builder__settings"
+      :class="`${rootClass}__settings`"
     >
-      <div class="miraicms-form-builder__settings-nav">
+      <div :class="`${rootClass}__settings-nav`">
         <button
           type="button"
-          class="miraicms-form-builder__settings-item"
+          :class="`${rootClass}__settings-item`"
           :class="{ 'is-active': settingsSection === 'form' }"
           @click="settingsSection = 'form'"
         >
@@ -1658,7 +1661,7 @@ onBeforeUnmount(() => {
         </button>
         <button
           type="button"
-          class="miraicms-form-builder__settings-item"
+          :class="`${rootClass}__settings-item`"
           :class="{ 'is-active': settingsSection === 'email' }"
           @click="settingsSection = 'email'"
         >
@@ -1666,17 +1669,17 @@ onBeforeUnmount(() => {
         </button>
         <button
           type="button"
-          class="miraicms-form-builder__settings-item"
+          :class="`${rootClass}__settings-item`"
           :class="{ 'is-active': settingsSection === 'confirmations' }"
           @click="settingsSection = 'confirmations'"
         >
           Confirmations
         </button>
       </div>
-      <div class="miraicms-form-builder__settings-panel">
+      <div :class="`${rootClass}__settings-panel`">
         <div
           v-if="settingsSection === 'form'"
-          class="miraicms-form-builder__form"
+          :class="`${rootClass}__form`"
         >
           <MiraiCmsTrueFalseField
             field-key="validate-on-blur"
@@ -1708,7 +1711,7 @@ onBeforeUnmount(() => {
         </div>
         <div
           v-else-if="settingsSection === 'email'"
-          class="miraicms-form-builder__form"
+          :class="`${rootClass}__form`"
         >
           <template
             v-for="field in emailFields"
@@ -1732,7 +1735,7 @@ onBeforeUnmount(() => {
         </div>
         <div
           v-else
-          class="miraicms-form-builder__form"
+          :class="`${rootClass}__form`"
         >
           <MiraiCmsWysiwygField
             field-key="success-message"
@@ -1749,8 +1752,8 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <!--
-      <div class="miraicms-form-builder__form">
-        <div class="miraicms-form-builder__heading">
+      <div :class="`${rootClass}__form`">
+        <div :class="`${rootClass}__heading`">
           Form
         </div>
         <MiraiCmsTextField
@@ -1771,7 +1774,7 @@ onBeforeUnmount(() => {
             ],
           }"
         />
-        <div class="miraicms-form-builder__usage">
+        <div :class="`${rootClass}__usage`">
           Published forms render with <span>&lt;MiraiCmsForm form="1" /&gt;</span>
         </div>
       </div>
@@ -1865,43 +1868,43 @@ $root: '.miraicms-form-builder';
     flex: 1;
     min-height: 0;
     overflow: hidden;
-  }
 
-  &__settings-nav {
-    display: flex;
-    flex-direction: column;
-    gap: math-rem(4);
-    min-height: 0;
-    overflow: auto;
-    padding: math-rem(8);
-    border-right: 1px solid $color-border;
-    background: $color-surface;
-  }
-
-  &__settings-item {
-    width: 100%;
-    padding: math-rem(8) math-rem(10);
-    border: 0;
-    border-radius: $border-radius;
-    background: transparent;
-    color: $color-ink;
-    font: inherit;
-    font-size: math-rem(13);
-    line-height: 1.4;
-    text-align: left;
-    cursor: pointer;
-
-    &.is-active {
-      background: $color-accent-wash;
-      color: $color-accent;
+    &-nav {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(4);
+      min-height: 0;
+      overflow: auto;
+      padding: math-rem(8);
+      border-right: 1px solid $color-border;
+      background: $color-surface;
     }
-  }
 
-  &__settings-panel {
-    min-width: 0;
-    min-height: 0;
-    overflow: auto;
-    padding: math-rem(16);
+    &-item {
+      width: 100%;
+      padding: math-rem(8) math-rem(10);
+      border: 0;
+      border-radius: $border-radius;
+      background: transparent;
+      color: $color-ink;
+      font: inherit;
+      font-size: math-rem(13);
+      line-height: 1.4;
+      text-align: left;
+      cursor: pointer;
+
+      &.is-active {
+        background: $color-accent-wash;
+        color: $color-accent;
+      }
+    }
+
+    &-panel {
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+      padding: math-rem(16);
+    }
   }
 
   &__heading {
@@ -1955,7 +1958,7 @@ $root: '.miraicms-form-builder';
     }
   }
 
-  :deep(.miraicms-form-builder__breakpoint-btn.miraicms-btn:not(.miraicms-btn--small) svg) {
+  :deep(#{$root}__breakpoint-btn.miraicms-btn:not(.miraicms-btn--small) svg) {
     width: auto;
     height: auto !important;
   }
@@ -1977,111 +1980,27 @@ $root: '.miraicms-form-builder';
     border-bottom: 1px solid $color-border;
   }
 
-  &__step,
-  &__step-icon {
-    display: inline-flex;
-    align-items: center;
-    height: math-rem(32);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background: $color-surface;
-    color: $color-ink;
-    font-size: math-rem(13);
-    cursor: pointer;
-
-    &:hover:not(:disabled) {
-      background: $color-bg;
-    }
-
-    &.is-active {
-      background: $color-accent-wash;
-      border-color: $color-accent;
-      color: $color-accent;
-    }
-
-    &:disabled {
-      color: $color-muted;
-      cursor: not-allowed;
-    }
-  }
-
   &__step {
-    position: relative;
-  }
-
-  &__step-label,
-  &__step-menu {
-    border: 0;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
-  }
-
-  &__step-label {
-    padding: 0 math-rem(38) 0 math-rem(36);
-    line-height: math-rem(30);
-  }
-
-  &__step-menu,
-  &__step-handle {
-    position: absolute;
-  }
-
-  &__step-menu {
-    display: flex;
-    padding: 0;
-    width: 22px;
-    height: 22px;
-    border: 1px solid $color-border;
-    border-radius: $border-radius-inter;
-    transition: border .2s;
-    top: math-rem(4);
-    right: math-rem(8);
-
-    &:hover {
-      border-color: $color-muted;
-    }
-
-    svg {
-      width: 100%;
-      height: auto;
-      transform: rotate(90deg);
-      transition: transform 0.2s;
-    }
-  }
-
-  &__step-options {
-    position: absolute;
-    top: calc(100% + #{math-rem(4)});
-    right: 0;
-    z-index: 5;
-    display: flex;
-    flex-direction: column;
-    min-width: math-rem(168);
-    padding: math-rem(4);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background: $color-surface;
-    box-shadow: $shadow-md;
-
-    button {
-      display: flex;
+    &,
+    &-icon {
+      display: inline-flex;
       align-items: center;
-      gap: math-rem(8);
-      width: 100%;
-      padding: math-rem(6) math-rem(8);
-      border: 0;
-      border-radius: math-rem(4);
-      background: transparent;
+      height: math-rem(32);
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
+      background: $color-surface;
       color: $color-ink;
-      font: inherit;
       font-size: math-rem(13);
-      text-align: left;
       cursor: pointer;
 
       &:hover:not(:disabled) {
         background: $color-bg;
+      }
+
+      &.is-active {
+        background: $color-accent-wash;
+        border-color: $color-accent;
+        color: $color-accent;
       }
 
       &:disabled {
@@ -2089,35 +2008,119 @@ $root: '.miraicms-form-builder';
         cursor: not-allowed;
       }
     }
-  }
 
-  &__step-handle {
-    display: flex;
-    justify-content: center;
-    color: $color-muted;
-    cursor: grab;
-    width: 20px;
-    height: 20px;
-    top: math-rem(5);
-    left: math-rem(8);
-  }
+    position: relative;
 
-  &__step.is-floating {
-    box-shadow: $shadow-md;
-  }
+    &-label,
+    &-menu {
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+    }
 
-  &__step-placeholder {
-    flex-shrink: 0;
-    box-sizing: border-box;
-    border: 1px dashed $color-border;
-    border-radius: $border-radius;
-    background-color: $color-bg;
-  }
+    &-label {
+      padding: 0 math-rem(38) 0 math-rem(36);
+      line-height: math-rem(30);
+    }
 
-  &__step-icon {
-    justify-content: center;
-    width: math-rem(32);
-    padding: 0;
+    &-menu,
+    &-handle {
+      position: absolute;
+    }
+
+    &-menu {
+      display: flex;
+      padding: 0;
+      width: 22px;
+      height: 22px;
+      border: 1px solid $color-border;
+      border-radius: $border-radius-inter;
+      transition: border .2s;
+      top: math-rem(4);
+      right: math-rem(8);
+
+      &:hover {
+        border-color: $color-muted;
+      }
+
+      svg {
+        width: 100%;
+        height: auto;
+        transform: rotate(90deg);
+        transition: transform 0.2s;
+      }
+    }
+
+    &-options {
+      position: absolute;
+      top: calc(100% + #{math-rem(4)});
+      right: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      min-width: math-rem(168);
+      padding: math-rem(4);
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
+      background: $color-surface;
+      box-shadow: $shadow-md;
+
+      button {
+        display: flex;
+        align-items: center;
+        gap: math-rem(8);
+        width: 100%;
+        padding: math-rem(6) math-rem(8);
+        border: 0;
+        border-radius: math-rem(4);
+        background: transparent;
+        color: $color-ink;
+        font: inherit;
+        font-size: math-rem(13);
+        text-align: left;
+        cursor: pointer;
+
+        &:hover:not(:disabled) {
+          background: $color-bg;
+        }
+
+        &:disabled {
+          color: $color-muted;
+          cursor: not-allowed;
+        }
+      }
+    }
+
+    &-handle {
+      display: flex;
+      justify-content: center;
+      color: $color-muted;
+      cursor: grab;
+      width: 20px;
+      height: 20px;
+      top: math-rem(5);
+      left: math-rem(8);
+    }
+
+    &.is-floating {
+      box-shadow: $shadow-md;
+    }
+
+    &-placeholder {
+      flex-shrink: 0;
+      box-sizing: border-box;
+      border: 1px dashed $color-border;
+      border-radius: $border-radius;
+      background-color: $color-bg;
+    }
+
+    &-icon {
+      justify-content: center;
+      width: math-rem(32);
+      padding: 0;
+    }
   }
 
   &__scroll {
@@ -2147,14 +2150,16 @@ $root: '.miraicms-form-builder';
     padding: math-rem(16) math-rem(16);
   }
 
-  &__drop-placeholder {
-    box-sizing: border-box;
-    align-self: start;
-    margin: math-rem(6);
-    border: 1px dashed $color-border;
-    border-radius: $border-radius;
-    background-color: $color-bg;
-    pointer-events: none;
+  &__drop {
+    &-placeholder {
+      box-sizing: border-box;
+      align-self: start;
+      margin: math-rem(6);
+      border: 1px dashed $color-border;
+      border-radius: $border-radius;
+      background-color: $color-bg;
+      pointer-events: none;
+    }
   }
 
   &__item {
@@ -2194,51 +2199,125 @@ $root: '.miraicms-form-builder';
     &.is-hidden {
       opacity: 0.55;
     }
-  }
 
-  &__item-actions {
-    display: none;
-    position: absolute;
-    top: math-rem(-14);
-    right: math-rem(-1);
-    z-index: 99;
-    align-items: center;
-    background-color: $color-accent-wash;
-    border-radius: $border-radius $border-radius 0 $border-radius;
-  }
-
-  &__item:hover > &__item-actions,
-  &__item.is-menu-open > &__item-actions {
-    display: flex;
-  }
-
-  &__item-action {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: math-rem(28);
-    height: math-rem(28);
-    padding: 0 math-rem(6);
-    border: 0;
-    background: transparent;
-    color: $color-ink;
-    cursor: pointer;
-    box-shadow: none;
-    border-radius: 0;
-
-    &:nth-child(1) {
-      border-radius: $border-radius-inter 0 0 $border-radius-inter;
+    &-actions {
+      display: none;
+      position: absolute;
+      top: math-rem(-14);
+      right: math-rem(-1);
+      z-index: 99;
+      align-items: center;
+      background-color: $color-accent-wash;
+      border-radius: $border-radius $border-radius 0 $border-radius;
     }
 
-    svg {
-      display: block;
-      width: math-rem(18);
-      height: auto;
+    &:hover > &-actions,
+    &.is-menu-open > &-actions {
+      display: flex;
     }
 
-    &:hover {
-      background: $color-accent;
-      color: $color-surface;
+    &-action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: math-rem(28);
+      height: math-rem(28);
+      padding: 0 math-rem(6);
+      border: 0;
+      background: transparent;
+      color: $color-ink;
+      cursor: pointer;
+      box-shadow: none;
+      border-radius: 0;
+
+      &:nth-child(1) {
+        border-radius: $border-radius-inter 0 0 $border-radius-inter;
+      }
+
+      svg {
+        display: block;
+        width: math-rem(18);
+        height: auto;
+      }
+
+      &:hover {
+        background: $color-accent;
+        color: $color-surface;
+      }
+    }
+
+    &-menu {
+      position: absolute;
+      z-index: 6;
+      display: flex;
+      flex-direction: column;
+      min-width: math-rem(168);
+      padding: math-rem(4);
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
+      background: $color-surface;
+      box-shadow: $shadow-md;
+
+      button {
+        display: flex;
+        align-items: center;
+        gap: math-rem(8);
+        width: 100%;
+        padding: math-rem(6) math-rem(8);
+        border: 0;
+        border-radius: math-rem(4);
+        background: transparent;
+        color: $color-ink;
+        font: inherit;
+        font-size: math-rem(13);
+        text-align: left;
+        cursor: pointer;
+
+        &:hover {
+          background: $color-bg;
+        }
+      }
+
+      top: 100%;
+      left: 0;
+      margin-top: math-rem(4);
+
+      &.is-left {
+        left: auto;
+        right: 0;
+      }
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: math-rem(-8);
+        right: 0;
+        left: 0;
+        height: math-rem(8);
+      }
+    }
+
+    &.is-menu-open {
+      z-index: 5;
+    }
+
+    &-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: math-rem(13);
+    }
+
+    &-meta {
+      margin-left: auto;
+      color: $color-muted;
+      font-size: math-rem(11);
+    }
+
+    &:hover #{$root}__resizable-handle,
+    &.is-dragging #{$root}__resizable-handle {
+      opacity: 1;
     }
   }
 
@@ -2250,65 +2329,48 @@ $root: '.miraicms-form-builder';
     }
   }
 
-  &__item-menu,
-  &__move-steps {
-    position: absolute;
-    z-index: 6;
-    display: flex;
-    flex-direction: column;
-    min-width: math-rem(168);
-    padding: math-rem(4);
-    border: 1px solid $color-border;
-    border-radius: $border-radius;
-    background: $color-surface;
-    box-shadow: $shadow-md;
-
-    button {
+  &__move {
+    &-steps {
+      position: absolute;
+      z-index: 6;
       display: flex;
-      align-items: center;
-      gap: math-rem(8);
-      width: 100%;
-      padding: math-rem(6) math-rem(8);
-      border: 0;
-      border-radius: math-rem(4);
-      background: transparent;
-      color: $color-ink;
-      font: inherit;
-      font-size: math-rem(13);
-      text-align: left;
-      cursor: pointer;
+      flex-direction: column;
+      min-width: math-rem(168);
+      padding: math-rem(4);
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
+      background: $color-surface;
+      box-shadow: $shadow-md;
 
-      &:hover {
-        background: $color-bg;
+      button {
+        display: flex;
+        align-items: center;
+        gap: math-rem(8);
+        width: 100%;
+        padding: math-rem(6) math-rem(8);
+        border: 0;
+        border-radius: math-rem(4);
+        background: transparent;
+        color: $color-ink;
+        font: inherit;
+        font-size: math-rem(13);
+        text-align: left;
+        cursor: pointer;
+
+        &:hover {
+          background: $color-bg;
+        }
+      }
+
+      display: none;
+      position: fixed;
+      z-index: 30;
+
+      &.is-open {
+        display: flex;
       }
     }
-  }
 
-  &__item.is-menu-open {
-    z-index: 5;
-  }
-
-  &__item-menu {
-    top: 100%;
-    left: 0;
-    margin-top: math-rem(4);
-
-    &.is-left {
-      left: auto;
-      right: 0;
-    }
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: math-rem(-8);
-      right: 0;
-      left: 0;
-      height: math-rem(8);
-    }
-  }
-
-  &__move {
     position: relative;
 
     &::before {
@@ -2325,69 +2387,42 @@ $root: '.miraicms-form-builder';
       left: 100%;
     }
 
-    &:hover > .miraicms-form-builder__move-steps,
-    &:hover > .miraicms-form-builder__move-steps.is-open {
+    &:hover > &-steps,
+    &:hover > &-steps.is-open {
       display: flex;
     }
   }
 
-  &__move-steps {
-    display: none;
-    position: fixed;
-    z-index: 30;
-
-    &.is-open {
+  &__resizable {
+    &-handle {
       display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 2;
+      width: math-rem(12);
+      height: math-rem(30) !important;
+      cursor: ew-resize;
+      opacity: 0;
+      border-radius: math-rem(7);
+      background-color: $color-accent;
+
+      svg {
+        display: block;
+        width: 4px;
+        height: 20px !important;
+      }
+
+      &--left {
+        left: -6px;
+      }
+
+      &--right {
+        right: -6px;
+      }
     }
-  }
-
-  &__item-label {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: math-rem(13);
-  }
-
-  &__item-meta {
-    margin-left: auto;
-    color: $color-muted;
-    font-size: math-rem(11);
-  }
-
-  &__resizable-handle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
-    width: math-rem(12);
-    height: math-rem(30) !important;
-    cursor: ew-resize;
-    opacity: 0;
-    border-radius: math-rem(7);
-    background-color: $color-accent;
-
-    svg {
-      display: block;
-      width: 4px;
-      height: 20px !important;
-    }
-  }
-
-  &__resizable-handle--left {
-    left: -6px;
-  }
-
-  &__resizable-handle--right {
-    right: -6px;
-  }
-
-  &__item:hover .miraicms-form-builder__resizable-handle,
-  &__item.is-dragging .miraicms-form-builder__resizable-handle {
-    opacity: 1;
   }
 
   &__form {

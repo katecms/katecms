@@ -7,6 +7,9 @@ import { applyInputMask, checkPositionStyle, choiceMatches, defaultTextOptions, 
 import { clientFormBreakpoints } from '../form/runtime-config'
 import { stepIconSvg } from '../form/icons'
 
+const rootClass = 'mirai-form'
+
+
 /**
  * Unstyled public form.
  * Each cell carries a 60-column layout. The base breakpoint (`desktop` by default)
@@ -385,7 +388,7 @@ function formatBytes(size: number): string {
   <pre>{{ definition }}</pre>
 
   <form
-    class="mirai-form"
+    :class="rootClass"
     :data-form="form"
     :data-state="state"
     novalidate
@@ -393,14 +396,14 @@ function formatBytes(size: number): string {
   >
     <div
       v-if="alertMessage"
-      class="mirai-form__alert"
+      :class="`${rootClass}__alert`"
       data-alert="error"
     >
       {{ alertMessage }}
     </div>
     <div
       v-if="state === 'success' && successHtml"
-      class="mirai-form__alert"
+      :class="`${rootClass}__alert`"
       data-alert="success"
       v-html="successHtml"
     />
@@ -408,56 +411,56 @@ function formatBytes(size: number): string {
       <div
         v-for="group in stepGroups"
         :key="group.step.id"
-        class="mirai-form__step"
+        :class="`${rootClass}__step`"
         :data-step="group.number"
       >
         <div
           v-if="definition.content.stepHeader.show"
-          class="mirai-form__step-header"
+          :class="`${rootClass}__step-header`"
         >
           <span
             v-if="definition.content.stepHeader.showIcon && stepIconSvg(group.step.icon)"
-            class="mirai-form__step-icon"
+            :class="`${rootClass}__step-icon`"
             v-html="stepIconSvg(group.step.icon)"
           />
           <span
             v-if="definition.content.stepHeader.showLabel"
-            class="mirai-form__step-label"
+            :class="`${rootClass}__step-label`"
           >
             <span
               v-if="stepIconSvg(group.step.labelPrefix)"
-              class="mirai-form__step-affix"
+              :class="`${rootClass}__step-affix`"
               v-html="stepIconSvg(group.step.labelPrefix)"
             />
             <span>{{ group.step.label }}</span>
             <span
               v-if="stepIconSvg(group.step.labelSuffix)"
-              class="mirai-form__step-affix"
+              :class="`${rootClass}__step-affix`"
               v-html="stepIconSvg(group.step.labelSuffix)"
             />
           </span>
           <span
             v-if="definition.content.stepHeader.showSubtitle"
-            class="mirai-form__step-subtitle"
+            :class="`${rootClass}__step-subtitle`"
           >
             <span
               v-if="stepIconSvg(group.step.subtitlePrefix)"
-              class="mirai-form__step-affix"
+              :class="`${rootClass}__step-affix`"
               v-html="stepIconSvg(group.step.subtitlePrefix)"
             />
             <span>{{ group.step.subtitle }}</span>
             <span
               v-if="stepIconSvg(group.step.subtitleSuffix)"
-              class="mirai-form__step-affix"
+              :class="`${rootClass}__step-affix`"
               v-html="stepIconSvg(group.step.subtitleSuffix)"
             />
           </span>
         </div>
-        <div class="mirai-form__grid">
+        <div :class="`${rootClass}__grid`">
           <div
             v-for="cell in group.cells"
             :key="cell.field.id"
-            class="mirai-form__cell"
+            :class="`${rootClass}__cell`"
             :data-field="cell.field.key"
             :data-type="cell.field.type"
             :data-step="stepNumber(cell.field.stepId)"
@@ -527,61 +530,61 @@ function formatBytes(size: number): string {
               />
               <div
                 v-if="!isDisplay(cell.field.type) && textOptions(cell.field).label.enabled"
-                class="mirai-form__label"
+                :class="`${rootClass}__label`"
               >
                 <img
                   v-if="iconUrl(textOptions(cell.field).label.prefix)"
-                  class="mirai-form__icon"
+                  :class="`${rootClass}__icon`"
                   :src="iconUrl(textOptions(cell.field).label.prefix)"
                   alt=""
                 >
                 <span
                   v-if="textOptions(cell.field).required.enabled && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'left'"
-                  class="mirai-form__required"
+                  :class="`${rootClass}__required`"
                 >*</span>
                 <label :for="controlId(cell.field)">
                   <span
                     v-if="textOptions(cell.field).required.enabled && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'before'"
-                    class="mirai-form__required"
+                    :class="`${rootClass}__required`"
                   >*</span>
                   <span>{{ textOptions(cell.field).label.text }}</span>
                   <span
                     v-if="textOptions(cell.field).required.enabled && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'after'"
-                    class="mirai-form__required"
+                    :class="`${rootClass}__required`"
                   >*</span>
                 </label>
                 <img
                   v-if="iconUrl(textOptions(cell.field).label.suffix)"
-                  class="mirai-form__icon"
+                  :class="`${rootClass}__icon`"
                   :src="iconUrl(textOptions(cell.field).label.suffix)"
                   alt=""
                 >
                 <span
                   v-if="textOptions(cell.field).required.enabled && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'right'"
-                  class="mirai-form__required"
+                  :class="`${rootClass}__required`"
                 >*</span>
               </div>
               <div
                 v-if="textOptions(cell.field).subtitle.enabled && textOptions(cell.field).subtitle.text"
-                class="mirai-form__subtitle"
+                :class="`${rootClass}__subtitle`"
               >
                 <img
                   v-if="iconUrl(textOptions(cell.field).subtitle.prefix)"
-                  class="mirai-form__icon"
+                  :class="`${rootClass}__icon`"
                   :src="iconUrl(textOptions(cell.field).subtitle.prefix)"
                   alt=""
                 >
                 <span>{{ textOptions(cell.field).subtitle.text }}</span>
                 <img
                   v-if="iconUrl(textOptions(cell.field).subtitle.suffix)"
-                  class="mirai-form__icon"
+                  :class="`${rootClass}__icon`"
                   :src="iconUrl(textOptions(cell.field).subtitle.suffix)"
                   alt=""
                 >
               </div>
               <span
                 v-if="!isDisplay(cell.field.type)"
-                class="mirai-form__control-row"
+                :class="`${rootClass}__control-row`"
                 :style="cell.field.type === 'button' ? {
                   display: 'flex',
                   width: '100%',
@@ -596,13 +599,13 @@ function formatBytes(size: number): string {
               >
                 <img
                   v-if="iconUrl(textOptions(cell.field).prefix)"
-                  class="mirai-form__icon"
+                  :class="`${rootClass}__icon`"
                   :src="iconUrl(textOptions(cell.field).prefix)"
                   alt=""
                 >
                 <div
                   v-if="cell.field.type === 'rating'"
-                  class="mirai-form__rating"
+                  :class="`${rootClass}__rating`"
                   :data-position="textOptions(cell.field).ratingPosition"
                 >
                   <button
@@ -614,7 +617,7 @@ function formatBytes(size: number): string {
                     @click="chooseRating(cell.field, index)"
                   >
                     <img
-                      class="mirai-form__icon"
+                      :class="`${rootClass}__icon`"
                       :src="ratingIconSrc(option.icon, textOptions(cell.field).ratingIcon)"
                       alt=""
                       :style="{ filter: ratingSelectedIndex(textOptions(cell.field).ratingOptions, drafts[cell.field.id] || '') >= index ? RATING_FILTER_ON : RATING_FILTER_OFF }"
@@ -629,7 +632,7 @@ function formatBytes(size: number): string {
                 </div>
                 <button
                   v-else-if="cell.field.type === 'button'"
-                  class="mirai-form__button"
+                  :class="`${rootClass}__button`"
                   :type="textOptions(cell.field).buttonType"
                   :disabled="locked || textOptions(cell.field).disabled"
                   :data-align="textOptions(cell.field).fullWidth ? undefined : textOptions(cell.field).buttonAlign"
@@ -638,14 +641,14 @@ function formatBytes(size: number): string {
                 >
                   <img
                     v-if="iconUrl(textOptions(cell.field).buttonText.prefix)"
-                    class="mirai-form__icon"
+                    :class="`${rootClass}__icon`"
                     :src="iconUrl(textOptions(cell.field).buttonText.prefix)"
                     alt=""
                   >
                   <span>{{ textOptions(cell.field).buttonText.text }}</span>
                   <img
                     v-if="iconUrl(textOptions(cell.field).buttonText.suffix)"
-                    class="mirai-form__icon"
+                    :class="`${rootClass}__icon`"
                     :src="iconUrl(textOptions(cell.field).buttonText.suffix)"
                     alt=""
                   >
@@ -671,7 +674,7 @@ function formatBytes(size: number): string {
                   <select
                     v-if="!textOptions(cell.field).optionIcon"
                     :id="controlId(cell.field)"
-                    class="mirai-form__control"
+                    :class="`${rootClass}__control`"
                     :name="cell.field.key"
                     :multiple="textOptions(cell.field).selectMultiple.enabled || undefined"
                     :required="textOptions(cell.field).required.enabled"
@@ -813,7 +816,7 @@ function formatBytes(size: number): string {
                 <input
                   v-else-if="cell.field.type === 'file'"
                   :id="controlId(cell.field)"
-                  class="mirai-form__control"
+                  :class="`${rootClass}__control`"
                   type="file"
                   :name="cell.field.key"
                   :accept="fileAccept(textOptions(cell.field).fileType) || undefined"
@@ -825,7 +828,7 @@ function formatBytes(size: number): string {
                 <input
                   v-else-if="isTemporalType(cell.field.type)"
                   :id="controlId(cell.field)"
-                  class="mirai-form__control"
+                  :class="`${rootClass}__control`"
                   :type="temporalInputType(cell.field.type)"
                   :name="cell.field.key"
                   :value="drafts[cell.field.id]"
@@ -839,7 +842,7 @@ function formatBytes(size: number): string {
                 <textarea
                   v-else-if="cell.field.type === 'textarea'"
                   :id="controlId(cell.field)"
-                  class="mirai-form__control"
+                  :class="`${rootClass}__control`"
                   :name="cell.field.key"
                   :rows="cell.field.rows"
                   :value="drafts[cell.field.id]"
@@ -857,7 +860,7 @@ function formatBytes(size: number): string {
                 <input
                   v-else
                   :id="controlId(cell.field)"
-                  class="mirai-form__control"
+                  :class="`${rootClass}__control`"
                   :type="liveInputType(cell.field, revealed[cell.field.id] === true)"
                   :name="cell.field.key"
                   :value="drafts[cell.field.id]"
@@ -903,7 +906,7 @@ function formatBytes(size: number): string {
                 </span>
                 <img
                   v-if="iconUrl(textOptions(cell.field).suffix)"
-                  class="mirai-form__icon"
+                  :class="`${rootClass}__icon`"
                   :src="iconUrl(textOptions(cell.field).suffix)"
                   alt=""
                 >
@@ -921,18 +924,18 @@ function formatBytes(size: number): string {
               </span>
               <div
                 v-if="(textOptions(cell.field).helper.enabled && textOptions(cell.field).helper.text) || passwordRuleStates(textOptions(cell.field), drafts[cell.field.id] || '').length"
-                class="mirai-form__help"
+                :class="`${rootClass}__help`"
               >
                 <img
                   v-if="textOptions(cell.field).helper.enabled && iconUrl(textOptions(cell.field).helper.prefix)"
-                  class="mirai-form__icon"
+                  :class="`${rootClass}__icon`"
                   :src="iconUrl(textOptions(cell.field).helper.prefix)"
                   alt=""
                 >
                 <span v-if="textOptions(cell.field).helper.enabled">{{ textOptions(cell.field).helper.text }}</span>
                 <img
                   v-if="textOptions(cell.field).helper.enabled && iconUrl(textOptions(cell.field).helper.suffix)"
-                  class="mirai-form__icon"
+                  :class="`${rootClass}__icon`"
                   :src="iconUrl(textOptions(cell.field).helper.suffix)"
                   alt=""
                 >
@@ -944,25 +947,25 @@ function formatBytes(size: number): string {
               </div>
               <div
                 v-if="fieldErrors[cell.field.key] && textOptions(cell.field).required.showError"
-                class="mirai-form__error"
+                :class="`${rootClass}__error`"
               >
                 <img
                   v-if="iconUrl(textOptions(cell.field).required.errorPrefix)"
-                  class="mirai-form__icon"
+                  :class="`${rootClass}__icon`"
                   :src="iconUrl(textOptions(cell.field).required.errorPrefix)"
                   alt=""
                 >
                 <span>{{ fieldErrors[cell.field.key] }}</span>
                 <img
                   v-if="iconUrl(textOptions(cell.field).required.errorSuffix)"
-                  class="mirai-form__icon"
+                  :class="`${rootClass}__icon`"
                   :src="iconUrl(textOptions(cell.field).required.errorSuffix)"
                   alt=""
                 >
               </div>
               <span
                 v-if="textOptions(cell.field).confirm.enabled"
-                class="mirai-form__confirm"
+                :class="`${rootClass}__confirm`"
                 :data-placement="textOptions(cell.field).confirm.placement"
               >
                 <label
@@ -973,7 +976,7 @@ function formatBytes(size: number): string {
                 </label>
                 <input
                   :id="`${controlId(cell.field)}-confirm`"
-                  class="mirai-form__control"
+                  :class="`${rootClass}__control`"
                   :type="liveInputType(cell.field, revealed[cell.field.id] === true)"
                   :name="`${cell.field.key}__confirm`"
                   :placeholder="textOptions(cell.field).confirm.placeholder || undefined"
@@ -987,18 +990,18 @@ function formatBytes(size: number): string {
 
             <template v-else-if="isText(cell.field)">
               <label
-                class="mirai-form__label"
+                :class="`${rootClass}__label`"
                 :for="controlId(cell.field)"
               >
                 {{ cell.field.label }}
                 <span
                   v-if="cell.field.required"
-                  class="mirai-form__required"
+                  :class="`${rootClass}__required`"
                 >*</span>
               </label>
               <input
                 :id="controlId(cell.field)"
-                class="mirai-form__control"
+                :class="`${rootClass}__control`"
                 :type="inputType(cell.field.type)"
                 :name="cell.field.key"
                 :placeholder="cell.field.placeholder || undefined"
@@ -1012,18 +1015,18 @@ function formatBytes(size: number): string {
 
             <template v-else-if="cell.field.type === 'select'">
               <label
-                class="mirai-form__label"
+                :class="`${rootClass}__label`"
                 :for="controlId(cell.field)"
               >
                 {{ cell.field.label }}
                 <span
                   v-if="cell.field.required"
-                  class="mirai-form__required"
+                  :class="`${rootClass}__required`"
                 >*</span>
               </label>
               <select
                 :id="controlId(cell.field)"
-                class="mirai-form__control"
+                :class="`${rootClass}__control`"
                 :name="cell.field.key"
                 :required="cell.field.required"
                 :disabled="locked"
@@ -1043,50 +1046,50 @@ function formatBytes(size: number): string {
 
             <div
               v-else-if="cell.field.type === 'radio' || cell.field.type === 'checkbox'"
-              class="mirai-form__choices"
+              :class="`${rootClass}__choices`"
               role="group"
               :aria-labelledby="controlId(cell.field)"
             >
               <div
                 :id="controlId(cell.field)"
-                class="mirai-form__label"
+                :class="`${rootClass}__label`"
               >
                 {{ cell.field.label }}
                 <span
                   v-if="cell.field.required"
-                  class="mirai-form__required"
+                  :class="`${rootClass}__required`"
                 >*</span>
               </div>
               <label
                 v-for="option in cell.field.options"
                 :key="option.value"
-                class="mirai-form__choice"
+                :class="`${rootClass}__choice`"
               >
                 <input
-                  class="mirai-form__control"
+                  :class="`${rootClass}__control`"
                   :type="cell.field.type === 'radio' ? 'radio' : 'checkbox'"
                   :name="cell.field.key"
                   :value="option.value"
                   :disabled="locked"
                 >
-                <span class="mirai-form__choice-label">{{ option.label }}</span>
+                <span :class="`${rootClass}__choice-label`">{{ option.label }}</span>
               </label>
             </div>
 
             <template v-else-if="cell.field.type === 'file'">
               <label
-                class="mirai-form__label"
+                :class="`${rootClass}__label`"
                 :for="controlId(cell.field)"
               >
                 {{ cell.field.label }}
                 <span
                   v-if="cell.field.required"
-                  class="mirai-form__required"
+                  :class="`${rootClass}__required`"
                 >*</span>
               </label>
               <input
                 :id="controlId(cell.field)"
-                class="mirai-form__control"
+                :class="`${rootClass}__control`"
                 type="file"
                 :name="cell.field.key"
                 :accept="cell.field.accept || undefined"
@@ -1104,13 +1107,13 @@ function formatBytes(size: number): string {
 
             <div
               v-else-if="cell.field.type === 'html'"
-              class="mirai-form__html"
+              :class="`${rootClass}__html`"
               v-html="cell.field.html"
             />
 
             <button
               v-else-if="cell.field.type === 'button'"
-              class="mirai-form__button"
+              :class="`${rootClass}__button`"
               type="submit"
               :disabled="locked"
             >
@@ -1119,13 +1122,13 @@ function formatBytes(size: number): string {
 
             <div
               v-if="cell.field.help && !richField(cell.field) && cell.field.type !== 'hidden' && cell.field.type !== 'html' && cell.field.type !== 'button'"
-              class="mirai-form__help"
+              :class="`${rootClass}__help`"
             >
               {{ cell.field.help }}
             </div>
             <div
               v-if="fieldErrors[cell.field.key] && !richField(cell.field)"
-              class="mirai-form__error"
+              :class="`${rootClass}__error`"
             >
               {{ fieldErrors[cell.field.key] }}
             </div>

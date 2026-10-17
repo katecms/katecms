@@ -5,6 +5,9 @@ import { parseAuthError } from '../../utils/auth-error'
 import { useAuthCooldown } from '../../composables/useAuthCooldown'
 import { useCmsPaths } from '../../composables/useCmsPaths'
 
+const rootClass = 'miraicms-auth'
+
+
 useHead({
   bodyAttrs: {
     id: 'miraicms-body',
@@ -71,22 +74,22 @@ async function submit() {
 </script>
 
 <template>
-  <div class="miraicms-auth">
-    <div class="miraicms-auth__card">
+  <div :class="rootClass">
+    <div :class="`${rootClass}__card`">
       <img
-        class="miraicms-auth__logo"
+        :class="`${rootClass}__logo`"
         src="../../assets/img/miraicms-logo.svg"
         alt="MiraiCMS"
       >
-      <div class="miraicms-auth__title">
+      <div :class="`${rootClass}__title`">
         Sign in
       </div>
-      <div class="miraicms-auth__subtitle">
+      <div :class="`${rootClass}__subtitle`">
         Sign in to the CMS admin.
       </div>
 
       <form
-        class="miraicms-auth__form"
+        :class="`${rootClass}__form`"
         @submit.prevent="submit"
       >
         <MiraiCmsFieldWrapper
@@ -109,7 +112,7 @@ async function submit() {
           autocomplete="current-password"
         />
 
-        <div class="miraicms-auth__actions">
+        <div :class="`${rootClass}__actions`">
           <MiraiCmsUiButton
             tag="button"
             type="submit"
@@ -123,14 +126,14 @@ async function submit() {
 
       <div
         v-if="error"
-        class="miraicms-auth__error"
+        :class="`${rootClass}__error`"
       >
         Error: {{ error }}
       </div>
 
       <div
         v-if="registrationOpen"
-        class="miraicms-auth__footer"
+        :class="`${rootClass}__footer`"
       >
         No account?
         <NuxtLink :to="paths.register">
@@ -150,5 +153,7 @@ async function submit() {
 <style scoped lang="scss">
 @use "../../assets/styles" as *;
 
-@include miraicms-auth;
+$root: '.miraicms-auth';
+
+@include miraicms-auth($root);
 </style>

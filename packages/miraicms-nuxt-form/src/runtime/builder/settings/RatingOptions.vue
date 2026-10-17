@@ -5,6 +5,9 @@ import type { FormIcon, FormRatingOption } from '../../form/text-options'
 import { normalizeIcon } from '../../form/text-options'
 import OptionPopup from './OptionPopup.vue'
 
+const rootClass = 'miraicms-rating-options'
+
+
 const props = defineProps<{
   fieldKey: string
   model: FormRatingOption[]
@@ -170,7 +173,7 @@ function onHandleDown(index: number, event: MouseEvent) {
   if (!(handle instanceof HTMLElement)) {
     return
   }
-  const row = handle.closest<HTMLElement>('.miraicms-rating-options__row')
+  const row = handle.closest<HTMLElement>(`.${rootClass}__row`)
   if (!row) {
     return
   }
@@ -190,7 +193,7 @@ onBeforeUnmount(resetDrag)
 </script>
 
 <template>
-  <div class="miraicms-rating-options">
+  <div :class="rootClass">
     <MiraiCmsUiButton
       tag="button"
       variant="secondary"
@@ -198,7 +201,7 @@ onBeforeUnmount(resetDrag)
     >
       Edit Options
     </MiraiCmsUiButton>
-    <span class="miraicms-rating-options__count">{{ model.length }}</span>
+    <span :class="`${rootClass}__count`">{{ model.length }}</span>
     <OptionPopup
       v-model:open="open"
       title="Options"
@@ -209,18 +212,18 @@ onBeforeUnmount(resetDrag)
       >
       <div
         v-if="isDragging && dropIndex === index"
-        class="miraicms-rating-options__placeholder"
+        :class="`${rootClass}__placeholder`"
         :style="placeholderStyle"
       />
       <div
         :ref="(el) => setRowRef(el as Element | null, index)"
-        class="miraicms-rating-options__row"
+        :class="`${rootClass}__row`"
         :class="{ 'is-floating': isDragging && draggingIndex === index }"
         :style="rowStyle(index)"
       >
         <button
           type="button"
-          class="miraicms-rating-options__handle"
+          :class="`${rootClass}__handle`"
           aria-label="Move option"
           @mousedown="onHandleDown(index, $event)"
         >
@@ -265,7 +268,7 @@ onBeforeUnmount(resetDrag)
           :field="{ type: 'true_false', label: 'Check' }"
           @update:model-value="patchAt(index, { checked: $event === true })"
         />
-        <div class="miraicms-rating-options__actions">
+        <div :class="`${rootClass}__actions`">
           <MiraiCmsUiButton
             tag="button"
             variant="secondary"
@@ -292,7 +295,7 @@ onBeforeUnmount(resetDrag)
     </template>
     <div
       v-if="isDragging && dropIndex === model.length"
-      class="miraicms-rating-options__placeholder"
+      :class="`${rootClass}__placeholder`"
       :style="placeholderStyle"
     />
     <MiraiCmsUiButton
@@ -309,8 +312,10 @@ onBeforeUnmount(resetDrag)
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-rating-options';
 
-.miraicms-rating-options {
+
+#{$root} {
   display: flex;
   flex-direction: column;
   gap: math-rem(8);
@@ -331,8 +336,8 @@ onBeforeUnmount(resetDrag)
       min-width: math-rem(140);
     }
 
-    > .miraicms-rating-options__handle,
-    > .miraicms-rating-options__actions {
+    > #{$root}__handle,
+    > #{$root}__actions {
       flex: 0 0 auto;
       min-width: 0;
     }

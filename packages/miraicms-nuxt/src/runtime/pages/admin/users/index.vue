@@ -200,16 +200,18 @@ $root: '.miraicms-users';
     padding: 0 math-rem(8) math-rem(8);
     overflow: hidden;
 
-    &__table-wrap {
-      display: flex;
-      flex: 1;
-      flex-direction: column;
-      min-height: 0;
-      overflow-x: auto;
-      overflow-y: hidden;
-      background: $color-surface;
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
+    &__table {
+      &-wrap {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-height: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        background: $color-surface;
+        border: 1px solid $color-border;
+        border-radius: $border-radius;
+      }
     }
 
     &__columns {
@@ -272,17 +274,19 @@ $root: '.miraicms-users';
         max-width: none;
         object-fit: cover;
       }
+
+      &-initials {
+        font-size: math-rem(11);
+        font-weight: 700;
+        color: $color-accent;
+        line-height: 1;
+      }
     }
 
-    &__avatar-initials {
-      font-size: math-rem(11);
-      font-weight: 700;
-      color: $color-accent;
-      line-height: 1;
-    }
-
-    &__row--banned {
-      opacity: 0.6;
+    &__row {
+      &--banned {
+        opacity: 0.6;
+      }
     }
 
     &__badge {

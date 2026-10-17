@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { onBeforeUnmount, watch } from 'vue'
 
+const rootClass = 'miraicms-option-popup'
+
+
 const open = defineModel<boolean>('open', { default: false })
 
 withDefaults(defineProps<{
@@ -38,16 +41,16 @@ onBeforeUnmount(() => {
   <Teleport to="body">
     <div
       v-if="open"
-      class="miraicms-option-popup__overlay"
+      :class="`${rootClass}__overlay`"
       @click.self="open = false"
     >
       <div
-        class="miraicms-option-popup"
+        :class="rootClass"
         role="dialog"
         aria-modal="true"
       >
-        <div class="miraicms-option-popup__head">
-          <span class="miraicms-option-popup__title">{{ title }}</span>
+        <div :class="`${rootClass}__head`">
+          <span :class="`${rootClass}__title`">{{ title }}</span>
           <MiraiCmsUiButton
             tag="button"
             :variant="['secondary', 'small', 'icon']"
@@ -77,7 +80,7 @@ onBeforeUnmount(() => {
             </svg>
           </MiraiCmsUiButton>
         </div>
-        <div class="miraicms-option-popup__body">
+        <div :class="`${rootClass}__body`">
           <slot />
         </div>
       </div>
@@ -87,8 +90,10 @@ onBeforeUnmount(() => {
 
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
+$root: '.miraicms-option-popup';
 
-.miraicms-option-popup {
+
+#{$root} {
   display: flex;
   flex-direction: column;
   width: min(math-rem(1300), 100%);

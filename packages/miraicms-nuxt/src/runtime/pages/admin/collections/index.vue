@@ -782,13 +782,13 @@ $root: '.miraicms-collection-list';
         background: $color-accent-wash;
         color: $color-accent;
       }
-    }
 
-    &__tab-count {
-      font-size: math-rem(12);
-      font-weight: 600;
-      color: inherit;
-      opacity: 0.75;
+      &-count {
+        font-size: math-rem(12);
+        font-weight: 600;
+        color: inherit;
+        opacity: 0.75;
+      }
     }
 
     &__search {
@@ -812,15 +812,17 @@ $root: '.miraicms-collection-list';
       }
     }
 
-    &__table-wrap {
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      overflow-x: auto;
-      overflow-y: hidden;
-      background: $color-surface;
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
+    &__table {
+      &-wrap {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        background: $color-surface;
+        border: 1px solid $color-border;
+        border-radius: $border-radius;
+      }
     }
 
     &__columns {
@@ -915,15 +917,15 @@ $root: '.miraicms-collection-list';
       flex-direction: column;
       gap: math-rem(2);
       white-space: nowrap;
-    }
 
-    &__date-label {
-      font-size: math-rem(12);
-      color: $color-muted;
-    }
+      &-label {
+        font-size: math-rem(12);
+        color: $color-muted;
+      }
 
-    &__date-value {
-      font-size: math-rem(13);
+      &-value {
+        font-size: math-rem(13);
+      }
     }
 
     &__actions {
@@ -942,11 +944,11 @@ $root: '.miraicms-collection-list';
       align-items: center;
       justify-content: flex-end;
       gap: math-rem(12);
-    }
 
-    &__pager-status {
-      font-size: math-rem(13);
-      color: $color-muted;
+      &-status {
+        font-size: math-rem(13);
+        color: $color-muted;
+      }
     }
   }
 }

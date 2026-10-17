@@ -1248,32 +1248,44 @@ $root: '.miraicms-admin-demo';
       background-color: $color-surface;
       border: 1px solid $color-border;
       border-radius: $border-radius;
-    }
 
-    &__buttons-title,
-    &__notices-title {
-      margin: 0;
-      font-size: math-rem(16);
-      font-weight: 600;
-      color: $color-ink;
-    }
+      &-title {
+        margin: 0;
+        font-size: math-rem(16);
+        font-weight: 600;
+        color: $color-ink;
+      }
 
-    &__buttons-grid {
-      display: grid;
-      grid-template-columns: math-rem(140) auto auto;
-      align-items: center;
-      justify-content: start;
-      column-gap: math-rem(12);
-      row-gap: math-rem(10);
-    }
+      &-grid {
+        display: grid;
+        grid-template-columns: math-rem(140) auto auto;
+        align-items: center;
+        justify-content: start;
+        column-gap: math-rem(12);
+        row-gap: math-rem(10);
+      }
 
-    &__buttons-label,
-    &__notices-label {
-      font-size: math-rem(13);
-      color: $color-muted;
+      &-label {
+        font-size: math-rem(13);
+        color: $color-muted;
+      }
     }
 
     &__notices {
+      &-title {
+        margin: 0;
+        font-size: math-rem(16);
+        font-weight: 600;
+        color: $color-ink;
+      }
+
+      &-label {
+        font-size: math-rem(13);
+        color: $color-muted;
+
+        margin: math-rem(4) 0 0;
+      }
+
       display: flex;
       flex-direction: column;
       gap: math-rem(12);
@@ -1281,16 +1293,12 @@ $root: '.miraicms-admin-demo';
       background-color: $color-surface;
       border: 1px solid $color-border;
       border-radius: $border-radius;
-    }
 
-    &__notices-label {
-      margin: math-rem(4) 0 0;
-    }
-
-    &__notices-stack {
-      display: flex;
-      flex-direction: column;
-      gap: math-rem(8);
+      &-stack {
+        display: flex;
+        flex-direction: column;
+        gap: math-rem(8);
+      }
     }
 
     &__layout {

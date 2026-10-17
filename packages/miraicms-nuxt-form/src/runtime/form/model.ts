@@ -148,6 +148,20 @@ export interface LayoutItem {
 
 export const EMPTY_SUBMIT_MESSAGE = 'Empty form cannot be submitted.'
 
+export interface FormNotification {
+  to: string
+  fromMail: string
+  fromName: string
+  cc: string
+  bcc: string
+  replyTo: string
+}
+
+export interface FormConfirmation {
+  successMessage: string
+  redirectPage: string
+}
+
 export interface FormContent {
   steps: FormStep[]
   stepHeader: FormStepHeader
@@ -161,6 +175,8 @@ export interface FormContent {
   preventEmptySubmit?: boolean
   /** Shown when an empty submission is blocked. */
   emptySubmitMessage?: string
+  notification: FormNotification
+  confirmation: FormConfirmation
 }
 
 export type FormStatus = 'draft' | 'published'
@@ -332,6 +348,8 @@ export function createEmptyContent(): FormContent {
     validateOnBlur: true,
     preventEmptySubmit: true,
     emptySubmitMessage: EMPTY_SUBMIT_MESSAGE,
+    notification: defaultNotification(),
+    confirmation: defaultConfirmation(),
   }, 'button')
 }
 
@@ -663,6 +681,8 @@ export function normalizeFormContent(input: unknown): FormContent {
     validateOnBlur: source.validateOnBlur !== false,
     preventEmptySubmit: source.preventEmptySubmit !== false,
     emptySubmitMessage: clip(source.emptySubmitMessage, 400).trim() || EMPTY_SUBMIT_MESSAGE,
+    notification: normalizeNotification(source.notification),
+    confirmation: normalizeConfirmation(source.confirmation),
     steps,
     stepHeader: normalizeStepHeader(source.stepHeader),
     fields,
@@ -773,6 +793,62 @@ export function textStoredValue(field: FormField, input: unknown): string {
 
 export function storesValue(field: FormField): boolean {
   return field.type !== 'html' && field.type !== 'button' && field.type !== 'title' && field.type !== 'image' && field.type !== 'divider' && field.type !== 'spacer'
+}
+
+function defaultNotification(): FormNotification {
+  return {
+    to: '',
+    fromMail: '',
+    fromName: '',
+    cc: '',
+    bcc: '',
+    replyTo: '',
+  }
+}
+
+function defaultConfirmation(): FormConfirmation {
+  return {
+    successMessage: '',
+    redirectPage: '',
+  }
+}
+
+function normalizeNotification(raw: unknown): FormNotification {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    to: clip(source.to, 500),
+    fromMail: clip(source.fromMail, 200),
+    fromName: clip(source.fromName, 200),
+    cc: clip(source.cc, 500),
+    bcc: clip(source.bcc, 500),
+    replyTo: clip(source.replyTo, 200),
+  }
+}
+
+function normalizeConfirmation(raw: unknown): FormConfirmation {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    successMessage: sanitizeHtml(clip(source.successMessage, 50000)),
+    redirectPage: clip(source.redirectPage, 2000).trim(),
+  }
+}
+
+/** A same-site path or an http(s) URL. Anything else is ignored. */
+export function confirmationTarget(value: string): string {
+  const text = value.trim()
+  if (text.startsWith('/') && !text.startsWith('//') && !text.includes('\\')) {
+    return text
+  }
+  try {
+    const url = new URL(text)
+    if (url.protocol === 'http:' || url.protocol === 'https:') {
+      return url.href
+    }
+  }
+  catch {
+    return ''
+  }
+  return ''
 }
 
 function defaultStepHeader(): FormStepHeader {

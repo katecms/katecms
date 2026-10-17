@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { $fetch } from '#imports'
 import type { FormField, LayoutItem, PublicForm, UploadedFile } from '../form/model'
-import { baseBreakpoint, emptySubmissionError, fieldSubmissionError, formBreakpoints, submissionErrors } from '../form/model'
+import { baseBreakpoint, confirmationTarget, emptySubmissionError, fieldSubmissionError, formBreakpoints, sanitizeHtml, submissionErrors } from '../form/model'
 import { applyInputMask, checkPositionStyle, choiceMatches, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, resolveChoiceEntries, temporalInputType } from '../form/text-options'
 import { clientFormBreakpoints } from '../form/runtime-config'
 import { stepIconSvg } from '../form/icons'
@@ -39,6 +39,7 @@ const revealed = ref<Record<string, boolean>>({})
 const hoverRating = ref<Record<string, string>>({})
 
 const locked = computed(() => state.value === 'submitting' || state.value === 'success')
+const successHtml = computed(() => sanitizeHtml(definition.value?.content.confirmation?.successMessage || ''))
 
 const cells = computed(() => {
   const content = definition.value?.content
@@ -205,6 +206,10 @@ async function onSubmit(event: Event) {
       body: data,
     })
     state.value = 'success'
+    const target = confirmationTarget(current.content.confirmation?.redirectPage || '')
+    if (target) {
+      window.location.assign(target)
+    }
   }
   catch (error) {
     const body = (error as { data?: { message?: string, errors?: Record<string, string>, data?: { message?: string, errors?: Record<string, string> } } }).data
@@ -397,6 +402,12 @@ function formatBytes(size: number): string {
     >
       {{ alertMessage }}
     </div>
+    <div
+      v-if="state === 'success' && successHtml"
+      class="mirai-form__alert"
+      data-alert="success"
+      v-html="successHtml"
+    />
     <template v-if="definition">
       <div
         v-for="group in stepGroups"

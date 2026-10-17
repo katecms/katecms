@@ -43,6 +43,15 @@ const moveMenuStyle = ref<{ top: string, left?: string, right?: string }>({ top:
 let moveMenuTimer: ReturnType<typeof setTimeout> | undefined
 const selectedId = ref<string | null>(null)
 const editorMode = ref<'builder' | 'settings'>('builder')
+const settingsSection = ref<'form' | 'email' | 'confirmations'>('form')
+const emailFields = [
+  { key: 'to', label: 'To', maxLength: 500 },
+  { key: 'fromMail', label: 'From Mail', maxLength: 200 },
+  { key: 'fromName', label: 'From Name', maxLength: 200 },
+  { key: 'cc', label: 'CC', maxLength: 500 },
+  { key: 'bcc', label: 'BCC', maxLength: 500 },
+  { key: 'replyTo', label: 'Reply To', maxLength: 200 },
+] as const
 const sidebarTab = ref<'fields' | 'options'>('fields')
 const drag = ref<DragState | null>(null)
 const dragGhost = ref<DragGhost | null>(null)
@@ -407,6 +416,46 @@ function setPreventEmptySubmit(enabled: boolean) {
 
 function setEmptySubmitMessage(value: string) {
   content.value = { ...content.value, emptySubmitMessage: value }
+}
+
+function setNotification(key: typeof emailFields[number]['key'], value: string) {
+  content.value = {
+    ...content.value,
+    notification: {
+      to: '',
+      fromMail: '',
+      fromName: '',
+      cc: '',
+      bcc: '',
+      replyTo: '',
+      ...content.value.notification,
+      [key]: value,
+    },
+  }
+}
+
+function setSuccessMessage(value: string) {
+  content.value = {
+    ...content.value,
+    confirmation: {
+      successMessage: '',
+      redirectPage: '',
+      ...content.value.confirmation,
+      successMessage: value,
+    },
+  }
+}
+
+function setRedirectPage(value: string) {
+  content.value = {
+    ...content.value,
+    confirmation: {
+      successMessage: '',
+      redirectPage: '',
+      ...content.value.confirmation,
+      redirectPage: value,
+    },
+  }
 }
 
 watch(
@@ -918,8 +967,8 @@ onBeforeUnmount(() => {
               :class="['miraicms-form-builder__breakpoint-btn']"
               tag="button"
               :variant="hasBreakpointIcon(item.name)
-                ? (breakpoint !== item.name ? ['icon', 'secondary'] : ['icon'])
-                : (breakpoint !== item.name ? ['secondary'] : [])"
+                ? (breakpoint !== item.name ? ['icon', 'small', 'secondary'] : ['icon', 'small'])
+                : (breakpoint !== item.name ? ['secondary', 'small'] : [])"
               :active="breakpoint === item.name"
               :aria-label="item.label"
               :title="item.label"
@@ -1014,7 +1063,7 @@ onBeforeUnmount(() => {
           <MiraiCmsUiButton
             v-if="breakpoint !== baseName"
             tag="button"
-            :variant="['secondary']"
+            :variant="['secondary', 'small']"
             @click="matchDesktop"
           >
             Match {{ baseLabel.toLowerCase() }}
@@ -1600,34 +1649,95 @@ onBeforeUnmount(() => {
       v-else
       class="miraicms-form-builder__settings"
     >
-      <div class="miraicms-form-builder__form">
-        <MiraiCmsTrueFalseField
-          field-key="validate-on-blur"
-          :model-value="content.validateOnBlur !== false"
-          :field="{
-            type: 'true_false',
-            label: 'Validate form input on focus lost',
-            instructions: 'This will validate the field when the user leaves the field.',
-          }"
-          @update:model-value="setValidateOnBlur($event === true)"
-        />
-        <MiraiCmsTrueFalseField
-          field-key="prevent-empty-submit"
-          :model-value="content.preventEmptySubmit !== false"
-          :field="{
-            type: 'true_false',
-            label: 'Prevent empty form submission',
-            instructions: 'This will prevent empty form submission.',
-          }"
-          @update:model-value="setPreventEmptySubmit($event === true)"
-        />
-        <MiraiCmsTextField
-          v-if="content.preventEmptySubmit !== false"
-          field-key="empty-submit-message"
-          :model-value="content.emptySubmitMessage || 'Empty form cannot be submitted.'"
-          :field="{ type: 'text', label: 'Error message', maxLength: 400 }"
-          @update:model-value="setEmptySubmitMessage"
-        />
+      <div class="miraicms-form-builder__settings-nav">
+        <button
+          type="button"
+          class="miraicms-form-builder__settings-item"
+          :class="{ 'is-active': settingsSection === 'form' }"
+          @click="settingsSection = 'form'"
+        >
+          Form Settings
+        </button>
+        <button
+          type="button"
+          class="miraicms-form-builder__settings-item"
+          :class="{ 'is-active': settingsSection === 'email' }"
+          @click="settingsSection = 'email'"
+        >
+          Email Notification
+        </button>
+        <button
+          type="button"
+          class="miraicms-form-builder__settings-item"
+          :class="{ 'is-active': settingsSection === 'confirmations' }"
+          @click="settingsSection = 'confirmations'"
+        >
+          Confirmations
+        </button>
+      </div>
+      <div class="miraicms-form-builder__settings-panel">
+        <div
+          v-if="settingsSection === 'form'"
+          class="miraicms-form-builder__form"
+        >
+          <MiraiCmsTrueFalseField
+            field-key="validate-on-blur"
+            :model-value="content.validateOnBlur !== false"
+            :field="{
+              type: 'true_false',
+              label: 'Validate form input on focus lost',
+              instructions: 'This will validate the field when the user leaves the field.',
+            }"
+            @update:model-value="setValidateOnBlur($event === true)"
+          />
+          <MiraiCmsTrueFalseField
+            field-key="prevent-empty-submit"
+            :model-value="content.preventEmptySubmit !== false"
+            :field="{
+              type: 'true_false',
+              label: 'Prevent empty form submission',
+              instructions: 'This will prevent empty form submission.',
+            }"
+            @update:model-value="setPreventEmptySubmit($event === true)"
+          />
+          <MiraiCmsTextField
+            v-if="content.preventEmptySubmit !== false"
+            field-key="empty-submit-message"
+            :model-value="content.emptySubmitMessage || 'Empty form cannot be submitted.'"
+            :field="{ type: 'text', label: 'Error message', maxLength: 400 }"
+            @update:model-value="setEmptySubmitMessage"
+          />
+        </div>
+        <div
+          v-else-if="settingsSection === 'email'"
+          class="miraicms-form-builder__form"
+        >
+          <MiraiCmsTextField
+            v-for="field in emailFields"
+            :key="field.key"
+            :field-key="`notify-${field.key}`"
+            :model-value="content.notification?.[field.key] ?? ''"
+            :field="{ type: 'text', label: field.label, maxLength: field.maxLength }"
+            @update:model-value="setNotification(field.key, String($event ?? ''))"
+          />
+        </div>
+        <div
+          v-else
+          class="miraicms-form-builder__form"
+        >
+          <MiraiCmsWysiwygField
+            field-key="success-message"
+            :model-value="content.confirmation?.successMessage ?? ''"
+            :field="{ type: 'wysiwyg', label: 'Success Message' }"
+            @update:model-value="setSuccessMessage(String($event ?? ''))"
+          />
+          <MiraiCmsTextField
+            field-key="redirect-page"
+            :model-value="content.confirmation?.redirectPage ?? ''"
+            :field="{ type: 'text', label: 'Redirect Page', maxLength: 2000 }"
+            @update:model-value="setRedirectPage"
+          />
+        </div>
       </div>
       <!--
       <div class="miraicms-form-builder__form">
@@ -1746,7 +1856,45 @@ $root: '.miraicms-form-builder';
   }
 
   &__settings {
+    display: grid;
+    grid-template-columns: math-rem(240) minmax(0, 1fr);
     flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  &__settings-nav {
+    display: flex;
+    flex-direction: column;
+    gap: math-rem(4);
+    min-height: 0;
+    overflow: auto;
+    padding: math-rem(8);
+    border-right: 1px solid $color-border;
+    background: $color-surface;
+  }
+
+  &__settings-item {
+    width: 100%;
+    padding: math-rem(8) math-rem(10);
+    border: 0;
+    border-radius: $border-radius;
+    background: transparent;
+    color: $color-ink;
+    font: inherit;
+    font-size: math-rem(13);
+    line-height: 1.4;
+    text-align: left;
+    cursor: pointer;
+
+    &.is-active {
+      background: $color-accent-wash;
+      color: $color-accent;
+    }
+  }
+
+  &__settings-panel {
+    min-width: 0;
     min-height: 0;
     overflow: auto;
     padding: math-rem(16);
@@ -2242,7 +2390,7 @@ $root: '.miraicms-form-builder';
     display: flex;
     flex-direction: column;
     gap: math-rem(12);
-    max-width: math-rem(520);
+    max-width: math-rem(720);
   }
 
   &__usage {

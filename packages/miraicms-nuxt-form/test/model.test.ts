@@ -11,6 +11,7 @@ import {
   copyDesktopLayout,
   syncFieldOrderLayouts,
   emptySubmissionError,
+  confirmationTarget,
   createEmptyContent,
   normalizeFormContent,
   overlaps,
@@ -98,6 +99,28 @@ test('normalize repairs missing layout cells and strips scripts', () => {
   assert.equal(content.validateOnBlur, true)
   assert.equal(content.preventEmptySubmit, true)
   assert.equal(content.emptySubmitMessage, 'Empty form cannot be submitted.')
+  assert.equal(content.notification.to, '')
+  assert.equal(content.confirmation.successMessage, '')
+})
+
+test('notification and confirmation settings are stored and scripts are removed', () => {
+  const content = normalizeFormContent({
+    notification: { to: 'a@b.co', fromName: 'Desk', cc: 'c@b.co' },
+    confirmation: {
+      successMessage: '<p>Thanks</p><script>alert(1)</script>',
+      redirectPage: ' javascript:alert(1)',
+    },
+  })
+  assert.equal(content.notification.to, 'a@b.co')
+  assert.equal(content.notification.fromName, 'Desk')
+  assert.equal(content.notification.cc, 'c@b.co')
+  assert.equal(content.notification.bcc, '')
+  assert.equal(content.confirmation.successMessage.includes('script'), false)
+  assert.equal(content.confirmation.successMessage.includes('Thanks'), true)
+  assert.equal(confirmationTarget(content.confirmation.redirectPage), '')
+  assert.equal(confirmationTarget('/thanks'), '/thanks')
+  assert.equal(confirmationTarget('https://example.com/done'), 'https://example.com/done')
+  assert.equal(confirmationTarget('//evil.example'), '')
 })
 
 test('empty form submission uses the saved message and ignores hidden values', () => {

@@ -124,6 +124,7 @@
 {"n":"Condition","k":"iface","p":"packages/core/src/config/types/conditional-logic.ts"}
 {"n":"ConditionalLogic","k":"type","p":"packages/core/src/config/types/conditional-logic.ts"}
 {"n":"ConditionValue","k":"type","p":"packages/core/src/config/types/conditional-logic.ts"}
+{"n":"confirmationTarget","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"ConfirmDialog","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/admin/ConfirmDialog.vue"}
 {"n":"copyDesktopLayout","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"countCollections","k":"fn","p":"packages/core/src/database/queries/collections.ts"}
@@ -285,6 +286,7 @@
 {"n":"FormChoiceGroup","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormChoiceOption","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormConfig","k":"iface","p":"packages/core/src/config/types/form.ts"}
+{"n":"FormConfirmation","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FormConfirmField","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormContent","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"formDictionarySelection","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/collections.ts"}
@@ -299,6 +301,7 @@
 {"n":"FormListItem","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FormMarkedText","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormMaxUpload","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
+{"n":"FormNotification","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FormPasswordRules","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormRatingOption","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormRecord","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}

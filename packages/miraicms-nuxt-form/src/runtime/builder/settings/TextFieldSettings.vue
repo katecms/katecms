@@ -1137,25 +1137,25 @@ onBeforeUnmount(resetChoiceDrag)
                     </svg>
                   </MiraiCmsUiButton>
                 </div>
-              <ChoiceOptions
-                :field-key="`${field.id}-group-options-${run.group.id}`"
-                :model="run.group.options"
-                :show-image="options.optionIcon"
-                :show-required="true"
-                :show-disabled="true"
-                :single-check="!options.selectMultiple.enabled"
-                external-drag
-                :list-key="`group:${run.group.id}`"
-                :group-id="run.group.id"
-                :floating-index="floatIndex(`group:${run.group.id}`)"
-                :placeholder-index="placeholderIndex(`group:${run.group.id}`)"
-                :float-style="dragFloatStyle"
-                :external-placeholder-style="dragPlaceholderStyle"
-                embedded
-                @update="setGroup(run.index, { ...run.group, options: $event })"
-                @insert="insertInGroup(run.index, $event)"
-                @drag-start="(index, event) => onOptionDragStart(`group:${run.group.id}`, run.group.id, run.index, index, event)"
-              />
+                <ChoiceOptions
+                  :field-key="`${field.id}-group-options-${run.group.id}`"
+                  :model="run.group.options"
+                  :show-image="options.optionIcon"
+                  :show-required="true"
+                  :show-disabled="true"
+                  :single-check="!options.selectMultiple.enabled"
+                  external-drag
+                  :list-key="`group:${run.group.id}`"
+                  :group-id="run.group.id"
+                  :floating-index="floatIndex(`group:${run.group.id}`)"
+                  :placeholder-index="placeholderIndex(`group:${run.group.id}`)"
+                  :float-style="dragFloatStyle"
+                  :external-placeholder-style="dragPlaceholderStyle"
+                  embedded
+                  @update="setGroup(run.index, { ...run.group, options: $event })"
+                  @insert="insertInGroup(run.index, $event)"
+                  @drag-start="(index, event) => onOptionDragStart(`group:${run.group.id}`, run.group.id, run.index, index, event)"
+                />
               </div>
             </div>
           </template>
@@ -2068,10 +2068,9 @@ onBeforeUnmount(resetChoiceDrag)
       display: flex;
       align-items: center;
       justify-content: center;
-      align-self: center;
       flex: 0 0 auto;
       width: math-rem(24);
-      height: math-rem(38);
+      height: math-rem(62);
       padding: 0;
       border: 1px solid $color-border;
       border-radius: $border-radius-inter;

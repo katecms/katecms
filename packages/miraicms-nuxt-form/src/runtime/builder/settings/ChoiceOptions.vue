@@ -274,12 +274,12 @@ onBeforeUnmount(resetDrag)
         variant="secondary"
         @click="open = true"
       >
-        Edit Options ({{ count ?? model.length }})
+        Options ({{ count ?? model.length }})
       </MiraiCmsUiButton>
     </template>
     <component
       :is="embedded ? 'div' : OptionPopup"
-      v-bind="embedded ? { class: 'miraicms-choice-options__inline' } : { open, title: 'Options' }"
+      v-bind="embedded ? { class: 'miraicms-choice-options__inline' } : { open, title: 'Edit Options' }"
       @update:open="open = $event"
     >
       <template
@@ -515,7 +515,6 @@ onBeforeUnmount(resetDrag)
       >
         <MiraiCmsUiButton
           tag="button"
-          variant="secondary"
           @click="addFromFooter"
         >
           Add Option
@@ -523,7 +522,6 @@ onBeforeUnmount(resetDrag)
         <MiraiCmsUiButton
           v-if="showAddGroup"
           tag="button"
-          variant="secondary"
           @click="emit('addGroup')"
         >
           Add Group
@@ -579,7 +577,7 @@ onBeforeUnmount(resetDrag)
     justify-content: center;
     align-self: center;
     width: math-rem(24);
-    height: math-rem(38);
+    height: math-rem(62);
     padding: 0;
     border: 1px solid $color-border;
     border-radius: $border-radius-inter;

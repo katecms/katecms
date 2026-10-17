@@ -207,9 +207,11 @@
 {"n":"DOCUMENT_MIME_TYPES","k":"const","p":"packages/miraicms-nuxt/src/runtime/utils/media-library-query.ts"}
 {"n":"EMAIL_RE","k":"const","p":"packages/core/src/auth/account.ts"}
 {"n":"EmailField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/EmailField.vue"}
+{"n":"EMPTY_SUBMIT_MESSAGE","k":"const","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"emptyDictionarySelection","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/collections.ts"}
 {"n":"emptyMarkedText","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"emptyOsmAddress","k":"fn","p":"packages/core/src/fields/osm.ts"}
+{"n":"emptySubmissionError","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"encodeChoiceValue","k":"fn","p":"packages/core/src/fields/choices.ts"}
 {"n":"encodeRelationEntryValue","k":"fn","p":"packages/core/src/fields/relation.ts"}
 {"n":"encodeRelationTermValue","k":"fn","p":"packages/core/src/fields/relation.ts"}
@@ -248,6 +250,7 @@
 {"n":"FieldsQueryKeyCompare","k":"type","p":"packages/core/src/database/queries/fields-query.ts"}
 {"n":"FieldsQueryRelation","k":"type","p":"packages/core/src/database/queries/fields-query.ts"}
 {"n":"FieldsQueryScalar","k":"type","p":"packages/core/src/database/queries/fields-query.ts"}
+{"n":"fieldSubmissionError","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FieldType","k":"type","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FieldWrapper","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/parts/FieldWrapper.vue"}
 {"n":"FILE_TYPE_ACCEPT","k":"const","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
@@ -278,6 +281,7 @@
 {"n":"FormBoundError","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormBreakpointConfig","k":"iface","p":"packages/core/src/config/types/form.ts"}
 {"n":"formBreakpoints","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FormChoiceEntry","k":"type","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormChoiceGroup","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormChoiceOption","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormConfig","k":"iface","p":"packages/core/src/config/types/form.ts"}
@@ -424,6 +428,7 @@
 {"n":"listDictionaries","k":"fn","p":"packages/core/src/database/queries/dictionaries.ts"}
 {"n":"listDictionariesByCollection","k":"fn","p":"packages/core/src/database/queries/collection-dictionaries.ts"}
 {"n":"listDictionaryParentOptions","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/dictionaries.ts"}
+{"n":"listedChoiceOptions","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"listForms","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/forms.ts"}
 {"n":"listMedia","k":"fn","p":"packages/core/src/database/queries/media.ts"}
 {"n":"listMediaMonths","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/media-list.ts"}
@@ -707,6 +712,7 @@
 {"n":"resolveArchivePath","k":"fn","p":"packages/core/src/rewrite.ts"}
 {"n":"ResolveArchiveResponse","k":"iface","p":"packages/miraicms-nuxt/src/runtime/utils/collections.ts"}
 {"n":"resolveAuthorId","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
+{"n":"resolveChoiceEntries","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"resolveDatabaseConfig","k":"fn","p":"packages/core/src/config/resolve-database.ts"}
 {"n":"ResolveDatabaseResult","k":"iface","p":"packages/core/src/config/resolve-database.ts"}
 {"n":"resolveDatabaseTarget","k":"fn","p":"packages/core/src/database/client/resolve-target.ts"}
@@ -805,6 +811,7 @@
 {"n":"SUBSCRIBER_ROLE","k":"const","p":"packages/core/src/config/resolve-roles.ts"}
 {"n":"syncCollectionFieldIndexes","k":"fn","p":"packages/core/src/indexes/apply.ts"}
 {"n":"SyncCollectionFieldIndexesResult","k":"iface","p":"packages/core/src/indexes/types.ts"}
+{"n":"syncFieldOrderLayouts","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"TabField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/TabField.vue"}
 {"n":"temporalInputType","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"TemporalType","k":"type","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}

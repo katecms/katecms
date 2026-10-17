@@ -15,6 +15,7 @@ import {
   normalizeFormContent,
   parseContent,
   slugify,
+  emptySubmissionError,
   storesValue,
   submissionErrors,
   textStoredValue,
@@ -158,6 +159,14 @@ export async function submitForm(event: H3Event, id: number): Promise<{ ok: true
     throw createError({ statusCode: 404, statusMessage: 'Form not found.' })
   }
   const { input, files } = await readSubmission(event, form.content)
+  const empty = emptySubmissionError(form.content, input, files)
+  if (empty) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Empty form cannot be submitted.',
+      data: { message: empty },
+    })
+  }
   const errors = submissionErrors(form.content, input, files, maxFileBytes())
   if (Object.keys(errors).length) {
     throw createError({

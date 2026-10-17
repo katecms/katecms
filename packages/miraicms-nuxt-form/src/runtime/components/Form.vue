@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { $fetch } from '#imports'
 import type { FormField, LayoutItem, PublicForm, UploadedFile } from '../form/model'
-import { baseBreakpoint, formBreakpoints, submissionErrors } from '../form/model'
+import { baseBreakpoint, emptySubmissionError, fieldSubmissionError, formBreakpoints, submissionErrors } from '../form/model'
 import { applyInputMask, checkPositionStyle, choiceMatches, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, resolveChoiceEntries, temporalInputType } from '../form/text-options'
 import { clientFormBreakpoints } from '../form/runtime-config'
 import { stepIconSvg } from '../form/icons'
@@ -111,16 +111,11 @@ async function load() {
   }
 }
 
-async function onSubmit(event: Event) {
-  const form = event.target
-  const current = definition.value
-  if (!(form instanceof HTMLFormElement) || !current || locked.value) {
-    return
-  }
+function readFormPayload(form: HTMLFormElement, fields: FormField[]) {
   const data = new FormData(form)
   const input: Record<string, unknown> = {}
-  const files: Record<string, UploadedFile | null> = {}
-  for (const field of current.content.fields) {
+  const files: Record<string, UploadedFile | UploadedFile[] | null> = {}
+  for (const field of fields) {
     if (field.type === 'checkbox' || (field.type === 'image_select' && field.text?.allowMultiple) || (field.type === 'select' && field.text?.selectMultiple.enabled)) {
       input[field.key] = data.getAll(field.key).map(value => String(value))
     }
@@ -130,7 +125,7 @@ async function onSubmit(event: Event) {
         ? selected.map(item => ({ name: item.name, type: item.type, size: item.size }))
         : selected[0]
           ? { name: selected[0].name, type: selected[0].type, size: selected[0].size }
-        : null
+          : null
     }
     else if (field.type !== 'html' && field.type !== 'button') {
       input[field.key] = String(data.get(field.key) ?? '')
@@ -138,6 +133,58 @@ async function onSubmit(event: Event) {
         input[`${field.key}__confirm`] = String(data.get(`${field.key}__confirm`) ?? '')
       }
     }
+  }
+  return { input, files }
+}
+
+function onFieldFocusOut(field: FormField, event: FocusEvent) {
+  const current = definition.value
+  if (!current || current.content.validateOnBlur === false || locked.value) {
+    return
+  }
+  const cell = event.currentTarget
+  if (!(cell instanceof HTMLElement)) {
+    return
+  }
+  if (event.relatedTarget instanceof Node && cell.contains(event.relatedTarget)) {
+    return
+  }
+  const form = cell.closest('form')
+  if (!(form instanceof HTMLFormElement)) {
+    return
+  }
+  const { input, files } = readFormPayload(form, current.content.fields)
+  const message = fieldSubmissionError(field, input, files[field.key] ?? null, current.maxFileBytes)
+  const next = { ...fieldErrors.value }
+  if (message) {
+    next[field.key] = message
+  }
+  else {
+    delete next[field.key]
+  }
+  fieldErrors.value = next
+  if (Object.keys(next).length) {
+    state.value = 'invalid'
+  }
+  else if (state.value === 'invalid') {
+    state.value = 'idle'
+    alertMessage.value = ''
+  }
+}
+
+async function onSubmit(event: Event) {
+  const form = event.target
+  const current = definition.value
+  if (!(form instanceof HTMLFormElement) || !current || locked.value) {
+    return
+  }
+  const { input, files } = readFormPayload(form, current.content.fields)
+  const empty = emptySubmissionError(current.content, input, files)
+  if (empty) {
+    fieldErrors.value = {}
+    alertMessage.value = empty
+    state.value = 'invalid'
+    return
   }
   const errors = submissionErrors(current.content, input, files, current.maxFileBytes)
   fieldErrors.value = errors
@@ -160,10 +207,20 @@ async function onSubmit(event: Event) {
     state.value = 'success'
   }
   catch (error) {
-    const body = (error as { data?: { errors?: Record<string, string>, data?: { errors?: Record<string, string> } } }).data
+    const body = (error as { data?: { message?: string, errors?: Record<string, string>, data?: { message?: string, errors?: Record<string, string> } } }).data
     const errors = body?.errors || body?.data?.errors
     if (errors && Object.keys(errors).length) {
       fieldErrors.value = errors
+      state.value = 'invalid'
+      return
+    }
+    const message = typeof body?.message === 'string'
+      ? body.message
+      : typeof body?.data?.message === 'string'
+        ? body.data.message
+        : ''
+    if (message) {
+      alertMessage.value = message
       state.value = 'invalid'
       return
     }
@@ -400,6 +457,7 @@ function formatBytes(size: number): string {
         :data-required="cell.field.required ? 'true' : undefined"
         :data-invalid="fieldErrors[cell.field.key] ? 'true' : undefined"
             v-bind="layoutAttrs(cell.layouts)"
+            @focusout="onFieldFocusOut(cell.field, $event)"
             :hidden="richField(cell.field) && textOptions(cell.field).hidden ? true : undefined"
           >
             <template v-if="richField(cell.field)">

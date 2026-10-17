@@ -10,6 +10,7 @@ import {
   reorderSteps,
   copyDesktopLayout,
   syncFieldOrderLayouts,
+  emptySubmissionError,
   createEmptyContent,
   normalizeFormContent,
   overlaps,
@@ -94,6 +95,26 @@ test('normalize repairs missing layout cells and strips scripts', () => {
   assert.equal(content.fields[0]?.html.includes('onclick'), false)
   assert.equal(content.layouts.tablet[0]?.fieldId, 'keep')
   assert.equal(content.layouts.tablet[0]?.w, 60)
+  assert.equal(content.validateOnBlur, true)
+  assert.equal(content.preventEmptySubmit, true)
+  assert.equal(content.emptySubmitMessage, 'Empty form cannot be submitted.')
+})
+
+test('empty form submission uses the saved message and ignores hidden values', () => {
+  const content = normalizeFormContent({
+    preventEmptySubmit: true,
+    emptySubmitMessage: 'Please fill in the form.',
+    validateOnBlur: false,
+    fields: [
+      { id: 'e', type: 'email', key: 'email', label: 'Email' },
+      { id: 'h', type: 'hidden', key: 'src', label: 'Source', value: 'site' },
+    ],
+  })
+  assert.equal(content.validateOnBlur, false)
+  assert.equal(emptySubmissionError(content, { email: '  ', src: 'site' }, {}), 'Please fill in the form.')
+  assert.equal(emptySubmissionError(content, { email: 'a@b.co' }, {}), null)
+  content.preventEmptySubmit = false
+  assert.equal(emptySubmissionError(content, { email: '' }, {}), null)
 })
 
 test('sync field order keeps each breakpoint width and follows the source order', () => {

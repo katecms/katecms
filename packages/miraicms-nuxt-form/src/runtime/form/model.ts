@@ -146,6 +146,8 @@ export interface LayoutItem {
   h?: number
 }
 
+export const EMPTY_SUBMIT_MESSAGE = 'Empty form cannot be submitted.'
+
 export interface FormContent {
   steps: FormStep[]
   stepHeader: FormStepHeader
@@ -153,6 +155,12 @@ export interface FormContent {
   layouts: Record<Breakpoint, LayoutItem[]>
   /** When set, every breakpoint layout follows the active breakpoint’s field order. */
   syncFieldOrder?: boolean
+  /** Validate a field when the visitor leaves it. Missing means enabled. */
+  validateOnBlur?: boolean
+  /** Block a submission that has no visitor-entered values. Missing means enabled. */
+  preventEmptySubmit?: boolean
+  /** Shown when an empty submission is blocked. */
+  emptySubmitMessage?: string
 }
 
 export type FormStatus = 'draft' | 'published'
@@ -321,6 +329,9 @@ export function createEmptyContent(): FormContent {
     stepHeader: defaultStepHeader(),
     fields: [],
     layouts,
+    validateOnBlur: true,
+    preventEmptySubmit: true,
+    emptySubmitMessage: EMPTY_SUBMIT_MESSAGE,
   }, 'button')
 }
 
@@ -649,6 +660,9 @@ export function normalizeFormContent(input: unknown): FormContent {
   }
   return {
     syncFieldOrder: source.syncFieldOrder === true,
+    validateOnBlur: source.validateOnBlur !== false,
+    preventEmptySubmit: source.preventEmptySubmit !== false,
+    emptySubmitMessage: clip(source.emptySubmitMessage, 400).trim() || EMPTY_SUBMIT_MESSAGE,
     steps,
     stepHeader: normalizeStepHeader(source.stepHeader),
     fields,
@@ -674,6 +688,28 @@ export interface UploadedFile {
   size: number
 }
 
+export function fieldSubmissionError(
+  field: FormField,
+  input: Record<string, unknown>,
+  file: UploadedFile | UploadedFile[] | null,
+  maxFileBytes: number,
+): string | null {
+  const message = fieldError(field, input[field.key], file, maxFileBytes)
+  if (message) {
+    return message
+  }
+  if (field.text?.confirm.enabled) {
+    const rawEntered = input[field.key]
+    const rawConfirm = input[`${field.key}__confirm`]
+    const entered = cleanText(typeof rawEntered === 'string' ? rawEntered : rawEntered == null ? '' : String(rawEntered)).trim()
+    const confirm = cleanText(typeof rawConfirm === 'string' ? rawConfirm : '').trim()
+    if (entered !== confirm) {
+      return 'The values do not match.'
+    }
+  }
+  return null
+}
+
 export function submissionErrors(
   content: FormContent,
   input: Record<string, unknown>,
@@ -682,22 +718,44 @@ export function submissionErrors(
 ): Record<string, string> {
   const errors: Record<string, string> = {}
   for (const field of content.fields) {
-    const message = fieldError(field, input[field.key], files[field.key] ?? null, maxFileBytes)
+    const message = fieldSubmissionError(field, input, files[field.key] ?? null, maxFileBytes)
     if (message) {
       errors[field.key] = message
-      continue
-    }
-    if (field.text?.confirm.enabled) {
-      const rawEntered = input[field.key]
-      const rawConfirm = input[`${field.key}__confirm`]
-      const entered = cleanText(typeof rawEntered === 'string' ? rawEntered : rawEntered == null ? '' : String(rawEntered)).trim()
-      const confirm = cleanText(typeof rawConfirm === 'string' ? rawConfirm : '').trim()
-      if (entered !== confirm) {
-        errors[field.key] = 'The values do not match.'
-      }
     }
   }
   return errors
+}
+
+export function emptySubmissionError(
+  content: FormContent,
+  input: Record<string, unknown>,
+  files: Record<string, UploadedFile | UploadedFile[] | null>,
+): string | null {
+  if (content.preventEmptySubmit === false) {
+    return null
+  }
+  for (const field of content.fields) {
+    if (!storesValue(field) || field.type === 'hidden') {
+      continue
+    }
+    if (fieldHasVisitorValue(field, input[field.key], files[field.key] ?? null)) {
+      return null
+    }
+    if (field.text?.confirm.enabled && cleanText(typeof input[`${field.key}__confirm`] === 'string' ? input[`${field.key}__confirm`] : '').trim()) {
+      return null
+    }
+  }
+  return content.emptySubmitMessage?.trim() || EMPTY_SUBMIT_MESSAGE
+}
+
+function fieldHasVisitorValue(field: FormField, raw: unknown, file: UploadedFile | UploadedFile[] | null): boolean {
+  if (field.type === 'file') {
+    return fileList(file).length > 0
+  }
+  if (field.type === 'checkbox' || (field.type === 'image_select' && field.text?.allowMultiple) || (field.type === 'select' && field.text?.selectMultiple.enabled)) {
+    return asList(raw).length > 0
+  }
+  return cleanText(typeof raw === 'string' ? raw : raw == null ? '' : String(raw)).trim().length > 0
 }
 
 export function textStoredValue(field: FormField, input: unknown): string {

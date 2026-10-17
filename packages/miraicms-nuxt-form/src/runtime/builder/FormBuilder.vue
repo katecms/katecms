@@ -393,6 +393,22 @@ function setSyncFieldOrder(enabled: boolean) {
   content.value = enabled ? syncFieldOrderLayouts(next, breakpoint.value) : next
 }
 
+function setValidateOnBlur(enabled: boolean) {
+  content.value = { ...content.value, validateOnBlur: enabled }
+}
+
+function setPreventEmptySubmit(enabled: boolean) {
+  content.value = {
+    ...content.value,
+    preventEmptySubmit: enabled,
+    emptySubmitMessage: content.value.emptySubmitMessage?.trim() || 'Empty form cannot be submitted.',
+  }
+}
+
+function setEmptySubmitMessage(value: string) {
+  content.value = { ...content.value, emptySubmitMessage: value }
+}
+
 watch(
   () => content.value.syncFieldOrder ? `${breakpoint.value}:${layoutOrderKey(content.value, breakpoint.value)}` : '',
   (key) => {
@@ -1005,12 +1021,12 @@ onBeforeUnmount(() => {
           </MiraiCmsUiButton>
           <MiraiCmsTrueFalseField
             class="miraicms-form-builder__sync"
+            title="When enabled, all layouts will automatically sync with and follow the active breakpoint’s field order."
             field-key="sync-field-order"
             :model-value="content.syncFieldOrder === true"
             :field="{
               type: 'true_false',
               message: 'Sync Field Order Across Breakpoints',
-              //instructions: 'When enabled, all layouts will automatically sync with and follow the active breakpoint’s field order.',
             }"
             @update:model-value="setSyncFieldOrder($event === true)"
           />
@@ -1584,6 +1600,35 @@ onBeforeUnmount(() => {
       v-else
       class="miraicms-form-builder__settings"
     >
+      <div class="miraicms-form-builder__form">
+        <MiraiCmsTrueFalseField
+          field-key="validate-on-blur"
+          :model-value="content.validateOnBlur !== false"
+          :field="{
+            type: 'true_false',
+            label: 'Validate form input on focus lost',
+            instructions: 'This will validate the field when the user leaves the field.',
+          }"
+          @update:model-value="setValidateOnBlur($event === true)"
+        />
+        <MiraiCmsTrueFalseField
+          field-key="prevent-empty-submit"
+          :model-value="content.preventEmptySubmit !== false"
+          :field="{
+            type: 'true_false',
+            label: 'Prevent empty form submission',
+            instructions: 'This will prevent empty form submission.',
+          }"
+          @update:model-value="setPreventEmptySubmit($event === true)"
+        />
+        <MiraiCmsTextField
+          v-if="content.preventEmptySubmit !== false"
+          field-key="empty-submit-message"
+          :model-value="content.emptySubmitMessage || 'Empty form cannot be submitted.'"
+          :field="{ type: 'text', label: 'Error message', maxLength: 400 }"
+          @update:model-value="setEmptySubmitMessage"
+        />
+      </div>
       <!--
       <div class="miraicms-form-builder__form">
         <div class="miraicms-form-builder__heading">
@@ -1703,6 +1748,8 @@ $root: '.miraicms-form-builder';
   &__settings {
     flex: 1;
     min-height: 0;
+    overflow: auto;
+    padding: math-rem(16);
   }
 
   &__heading {
@@ -2195,6 +2242,7 @@ $root: '.miraicms-form-builder';
     display: flex;
     flex-direction: column;
     gap: math-rem(12);
+    max-width: math-rem(520);
   }
 
   &__usage {

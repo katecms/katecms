@@ -50,10 +50,31 @@ onBeforeUnmount(() => {
           <span class="miraicms-option-popup__title">{{ title }}</span>
           <MiraiCmsUiButton
             tag="button"
-            variant="secondary"
+            :variant="['secondary', 'small', 'icon']"
             @click="open = false"
           >
-            Close
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M2.13379 2.07031L13.8671 13.9316"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M13.8671 2.07031L2.13379 13.9316"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
           </MiraiCmsUiButton>
         </div>
         <div class="miraicms-option-popup__body">
@@ -71,7 +92,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   width: min(math-rem(1300), 100%);
-  max-height: min(math-rem(720), 100%);
+  max-height: min(math-rem(900), 100%);
   background: $color-surface;
   border-radius: $border-radius;
   box-shadow: $shadow-md;

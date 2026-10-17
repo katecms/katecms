@@ -19,6 +19,9 @@ export function createFieldDefault(field: Field): unknown {
   if (field.type === 'repeater' || field.type === 'flexible_content' || field.type === 'gallery') {
     return []
   }
+  if (field.type === 'form') {
+    return field.multiple ? [] : field.allowNull ? null : undefined
+  }
   if ('defaultValue' in field) {
     return field.defaultValue
   }
@@ -162,6 +165,9 @@ export function buildFormValues(fields: Fields): Record<string, unknown> {
     }
     else if (field.type === 'open_street_map' && field.multiple) {
       result[key] = []
+    }
+    else if (field.type === 'form') {
+      result[key] = field.multiple ? [] : field.allowNull ? null : undefined
     }
     else {
       result[key] = undefined

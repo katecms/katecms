@@ -42,3 +42,5 @@ export function useMiraiCmsTermPanels() {
 export function useMiraiCmsMenuItems() {
   return useState<MiraiCmsMenuExtra[]>('miraicms:menu-items', () => [])
 }
+
+export { registerMiraiCmsField } from '../utils/helpers'

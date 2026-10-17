@@ -12,6 +12,13 @@ const fieldComponents: Record<string, Component> = Object.fromEntries(
   }),
 )
 
+const extraFieldComponents = new Map<string, Component>()
+
+/** Registers a field widget supplied by an addon. `type` matches the field config `type`. */
+export function registerMiraiCmsField(type: string, component: Component) {
+  extraFieldComponents.set(type, component)
+}
+
 /** Maps field `type` to `TypeField` from the glob of `internal/fields/*.vue`. */
 function toPascalCase(str: string): string {
   return str
@@ -22,5 +29,5 @@ function toPascalCase(str: string): string {
 }
 
 export function resolveField(type: string): Component | undefined {
-  return fieldComponents[`${toPascalCase(type)}Field`]
+  return fieldComponents[`${toPascalCase(type)}Field`] ?? extraFieldComponents.get(type)
 }

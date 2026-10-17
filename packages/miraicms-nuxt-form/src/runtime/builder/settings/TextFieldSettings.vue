@@ -2,8 +2,8 @@
 import { computed } from 'vue'
 import type { FormField, LayoutItem } from '../../form/model'
 import { GRID_COLUMNS } from '../../form/model'
-import { AUTOCOMPLETE_CHOICES, FILE_TYPE_ACCEPT, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultChoiceOptions, defaultTextOptions, fieldHasOption, fileAccept, flatChoiceOptions, headingTag, isTemporalType, normalizeIcon, temporalInputType } from '../../form/text-options'
-import type { CheckPosition, FormMarkedText, FormTextOptions, HeadingTag, LayoutAlign, LayoutDirection } from '../../form/text-options'
+import { AUTOCOMPLETE_CHOICES, FILE_TYPE_ACCEPT, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultChoiceOptions, defaultTextOptions, fieldHasOption, fileAccept, headingTag, isTemporalType, listedChoiceOptions, normalizeIcon, resolveChoiceEntries, temporalInputType } from '../../form/text-options'
+import type { CheckPosition, FormChoiceGroup, FormChoiceOption, FormMarkedText, FormTextOptions, HeadingTag, LayoutAlign, LayoutDirection } from '../../form/text-options'
 import ChoiceOptions from './ChoiceOptions.vue'
 import DecoratedText from './DecoratedText.vue'
 import OptionAccordion from './OptionAccordion.vue'
@@ -78,8 +78,8 @@ function commit(text: FormTextOptions) {
     step: text.step == null ? '' : String(text.step),
     buttonLabel: props.field.type === 'button' ? text.buttonText.text : props.field.buttonLabel,
     accept: props.field.type === 'file' ? (fileAccept(text.fileType) || props.field.accept) : props.field.accept,
-    options: flatChoiceOptions(text.choiceOptions, text.choiceGroups).length
-      ? flatChoiceOptions(text.choiceOptions, text.choiceGroups).map(item => ({ label: item.label, value: item.value }))
+    options: listedChoiceOptions(text).length
+      ? listedChoiceOptions(text).map(item => ({ label: item.label, value: item.value }))
       : props.field.options,
   })
 }
@@ -120,25 +120,97 @@ function setHeight(raw: number | null) {
   emit('layout', { ...props.item, h: raw == null || !Number.isFinite(raw) ? 0 : Math.max(0, Math.floor(raw)) })
 }
 
+const choiceRuns = computed(() => {
+  const entries = resolveChoiceEntries(options.value)
+  const runs: Array<
+    | { kind: 'options', key: string, start: number, count: number, options: FormChoiceOption[] }
+    | { kind: 'group', key: string, index: number, group: FormChoiceGroup }
+  > = []
+  let index = 0
+  while (index < entries.length) {
+    const entry = entries[index]
+    if (!entry || entry.type === 'group') {
+      if (entry?.type === 'group') {
+        runs.push({ kind: 'group', key: entry.group.id, index, group: entry.group })
+      }
+      index += 1
+      continue
+    }
+    const start = index
+    const list: FormChoiceOption[] = []
+    while (index < entries.length && entries[index]?.type === 'option') {
+      const item = entries[index]
+      if (item?.type === 'option') {
+        list.push(item.option)
+      }
+      index += 1
+    }
+    runs.push({
+      kind: 'options',
+      key: list[0]?.id || `options-${start}`,
+      start,
+      count: list.length,
+      options: list,
+    })
+  }
+  return runs
+})
+
+function writeEntries(entries: ReturnType<typeof resolveChoiceEntries>) {
+  patch({ choiceEntries: entries })
+}
+
+function nextChoiceOption(): FormChoiceOption {
+  const n = listedChoiceOptions(options.value).length + 1
+  return {
+    id: `opt_${crypto.randomUUID()}`,
+    image: null,
+    label: `Option ${n}`,
+    value: `option_${n}`,
+    checked: false,
+    required: false,
+    disabled: false,
+  }
+}
+
+function addListedOption() {
+  if (props.field.type !== 'select') {
+    patch({ choiceOptions: [...options.value.choiceOptions, nextChoiceOption()] })
+    return
+  }
+  writeEntries([...resolveChoiceEntries(options.value), { type: 'option', option: nextChoiceOption() }])
+}
+
 function addGroup() {
-  const n = options.value.choiceGroups.length + 1
-  patch({
-    choiceGroups: [...options.value.choiceGroups, {
+  const n = resolveChoiceEntries(options.value).filter(entry => entry.type === 'group').length + 1
+  writeEntries([...resolveChoiceEntries(options.value), {
+    type: 'group',
+    group: {
       id: `grp_${crypto.randomUUID()}`,
       label: `Group ${n}`,
       options: defaultChoiceOptions().slice(0, 1),
-    }],
-  })
+    },
+  }])
 }
 
-function patchGroup(index: number, partial: Partial<FormTextOptions['choiceGroups'][number]>) {
-  patch({
-    choiceGroups: options.value.choiceGroups.map((group, groupIndex) => groupIndex === index ? { ...group, ...partial } : group),
-  })
+function setOptionRun(start: number, count: number, nextOptions: FormChoiceOption[]) {
+  const entries = [...resolveChoiceEntries(options.value)]
+  entries.splice(start, count, ...nextOptions.map(option => ({ type: 'option' as const, option })))
+  writeEntries(entries)
+}
+
+function setGroup(index: number, group: FormChoiceGroup) {
+  const entries = [...resolveChoiceEntries(options.value)]
+  const current = entries[index]
+  if (!current || current.type !== 'group') {
+    return
+  }
+  entries.splice(index, 1, { type: 'group', group })
+  writeEntries(entries)
 }
 
 function removeGroup(index: number) {
-  patch({ choiceGroups: options.value.choiceGroups.filter((_, groupIndex) => groupIndex !== index) })
+  writeEntries(resolveChoiceEntries(options.value).filter((_, entryIndex) => entryIndex !== index))
 }
 </script>
 
@@ -485,49 +557,111 @@ function removeGroup(index: number) {
       <span class="miraicms-text-settings__heading">Options</span>
       <ChoiceOptions
         :field-key="`${field.id}-choices`"
-        :model="options.choiceOptions"
+        :model="field.type === 'select' ? [] : options.choiceOptions"
         :show-image="field.type === 'image_select' || (field.type === 'select' && options.optionIcon)"
         :show-required="field.type === 'image_select' || field.type === 'checkbox' || field.type === 'select'"
         :show-disabled="has(44)"
         :single-check="field.type === 'radio' || (field.type === 'select' && !options.selectMultiple.enabled) || (field.type === 'image_select' && !options.allowMultiple)"
         :show-add-group="field.type === 'select'"
-        :count="flatChoiceOptions(options.choiceOptions, options.choiceGroups).length"
+        :count="listedChoiceOptions(options).length"
         @update="patch({ choiceOptions: $event })"
         @add-group="addGroup"
+        @add-option="addListedOption"
       >
         <template
           v-if="field.type === 'select'"
           #extra
         >
-          <div
-            v-for="(group, index) in options.choiceGroups"
-            :key="group.id"
-            class="miraicms-text-settings__group"
+          <template
+            v-for="run in choiceRuns"
+            :key="run.key"
           >
-            <MiraiCmsTextField
-              :model-value="group.label"
-              :field-key="`${field.id}-group-${group.id}`"
-              :field="{ type: 'text', label: 'Group', maxLength: 200 }"
-              @update:model-value="patchGroup(index, { label: String($event ?? '') })"
-            />
-            <MiraiCmsUiButton
-              tag="button"
-              :variant="['red', 'small']"
-              @click="removeGroup(index)"
-            >
-              Delete Group
-            </MiraiCmsUiButton>
             <ChoiceOptions
-              :field-key="`${field.id}-group-options-${group.id}`"
-              :model="group.options"
+              v-if="run.kind === 'options'"
+              :field-key="`${field.id}-choices-${run.key}`"
+              :model="run.options"
               :show-image="options.optionIcon"
               :show-required="true"
               :show-disabled="true"
               :single-check="!options.selectMultiple.enabled"
               embedded
-              @update="patchGroup(index, { options: $event })"
+              @update="setOptionRun(run.start, run.count, $event)"
             />
-          </div>
+            <div
+              v-else
+              class="miraicms-text-settings__group miraicms-text-settings__group--popup"
+            >
+              <div class="miraicms-text-settings__group-header">
+                <MiraiCmsTextField
+                  :model-value="run.group.label"
+                  :field-key="`${field.id}-group-${run.group.id}`"
+                  :field="{ type: 'text', label: 'Group', maxLength: 200 }"
+                  @update:model-value="setGroup(run.index, { ...run.group, label: String($event ?? '') })"
+                />
+                <MiraiCmsUiButton
+                  tag="button"
+                  :variant="['red', 'icon']"
+                  aria-label="Remove Group"
+                  title="Remove Group"
+                  @click="removeGroup(run.index)"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M3 5.25H15"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke="currentColor"
+                    />
+                    <path
+                      d="M7.5 8.25V12.75"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke="currentColor"
+                    />
+                    <path
+                      d="M10.5 8.25V12.75"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke="currentColor"
+                    />
+                    <path
+                      d="M3.75 5.25L4.5 14.25C4.5 14.6478 4.65804 15.0294 4.93934 15.3107C5.22064 15.592 5.60218 15.75 6 15.75H12C12.3978 15.75 12.7794 15.592 13.0607 15.3107C13.342 15.0294 13.5 14.6478 13.5 14.25L14.25 5.25"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke="currentColor"
+                    />
+                    <path
+                      d="M6.75 5.25V3C6.75 2.80109 6.82902 2.61032 6.96967 2.46967C7.11032 2.32902 7.30109 2.25 7.5 2.25H10.5C10.6989 2.25 10.8897 2.32902 11.0303 2.46967C11.171 2.61032 11.25 2.80109 11.25 3V5.25"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke="currentColor"
+                    />
+                  </svg>
+                </MiraiCmsUiButton>
+              </div>
+              <ChoiceOptions
+                :field-key="`${field.id}-group-options-${run.group.id}`"
+                :model="run.group.options"
+                :show-image="options.optionIcon"
+                :show-required="true"
+                :show-disabled="true"
+                :single-check="!options.selectMultiple.enabled"
+                embedded
+                @update="setGroup(run.index, { ...run.group, options: $event })"
+              />
+            </div>
+          </template>
         </template>
       </ChoiceOptions>
     </div>
@@ -1406,6 +1540,27 @@ function removeGroup(index: number) {
     display: flex;
     flex-direction: column;
     gap: math-rem(8);
+  }
+
+  &__group {
+
+    &--popup {
+      padding: math-rem(12) math-rem(8);
+      background-color: $color-bg;
+      border-radius: $border-radius;
+    }
+
+    &-header {
+      display: flex;
+      gap: math-rem(8);
+      align-items: flex-end;
+
+      :deep(.miraicms-field) {
+        flex-basis: 0;
+        flex-grow: 1;
+        max-width: 100%;
+      }
+    }
   }
 
   &__heading {

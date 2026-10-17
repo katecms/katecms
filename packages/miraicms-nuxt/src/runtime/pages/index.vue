@@ -63,11 +63,6 @@ function toggleSidebar() {
             stroke="currentColor"
             stroke-width="1.6"
           />
-          <path
-            v-if="!sidebarHidden"
-            d="M5.15 6.35h3.2v11.3H5.5a.8.8 0 0 1-.8-.8V7.15a.8.8 0 0 1 .8-.8Z"
-            fill="currentColor"
-          />
         </svg>
       </MiraiCmsUiButton>
       <MiraiCmsAppUser />
@@ -79,7 +74,9 @@ function toggleSidebar() {
       :inert="sidebarHidden || undefined"
       :aria-hidden="sidebarHidden ? 'true' : undefined"
     >
-      <MiraiCmsAppMenu />
+      <div :class="[`${rootClass}-sidebar-wrap`]">
+        <MiraiCmsAppMenu />
+      </div>
     </div>
 
     <div :class="[`${rootClass}-main`]">
@@ -112,7 +109,7 @@ $root: '.miraicms';
     height: 100vh;
 
     @media (prefers-reduced-motion: no-preference) {
-      transition: grid-template-columns .6s ease;
+      transition: grid-template-columns .3s ease;
     }
 
     &.is-sidebar-hidden {
@@ -146,6 +143,11 @@ $root: '.miraicms';
       overflow: hidden;
       border-right: 1px solid $color-border;
       background-color: $color-bg;
+
+      &-wrap {
+        width: $sidebar-w;
+        min-height: 100%;
+      }
     }
 
     &-main {

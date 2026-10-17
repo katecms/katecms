@@ -298,6 +298,18 @@ interface PostObjectField extends BaseField {
   returnFormat?: 'object' | 'id'
 }
 
+/**
+ * Picks a form from the form addon.
+ * The widget is registered by `miraicms-nuxt-form` when that module is installed.
+ * `multiple` stores an array. A single empty value is `null` when `allowNull` is set.
+ */
+interface FormField extends BaseField {
+  type: 'form'
+  multiple?: boolean
+  allowNull?: boolean
+  returnFormat?: 'id' | 'slug'
+}
+
 interface PageLinkField extends BaseField {
   type: 'page_link'
   postType?: string[]
@@ -581,6 +593,7 @@ export type Field
     | TrueFalseField
     | LinkField
     | PostObjectField
+    | FormField
     | PageLinkField
     | RelationshipField
     | DictionaryField

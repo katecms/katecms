@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { $fetch } from '#imports'
 import type { FormField, LayoutItem, PublicForm, UploadedFile } from '../form/model'
 import { baseBreakpoint, formBreakpoints, submissionErrors } from '../form/model'
-import { applyInputMask, checkPositionStyle, choiceMatches, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, temporalInputType } from '../form/text-options'
+import { applyInputMask, checkPositionStyle, choiceMatches, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, resolveChoiceEntries, temporalInputType } from '../form/text-options'
 import { clientFormBreakpoints } from '../form/runtime-config'
 import { stepIconSvg } from '../form/icons'
 
@@ -229,6 +229,10 @@ function liveInputType(field: FormField, revealed: boolean) {
 
 function textOptions(field: FormField) {
   return field.text ?? defaultTextOptions(field.label)
+}
+
+function choiceEntries(field: FormField) {
+  return resolveChoiceEntries(textOptions(field))
 }
 
 function ratingLabel(field: FormField) {
@@ -599,74 +603,78 @@ function formatBytes(size: number): string {
                     >
                       {{ textOptions(cell.field).placeholder }}
                     </option>
-                    <option
-                      v-for="option in textOptions(cell.field).choiceOptions.filter(item => choiceMatches(item, selectQuery[cell.field.id] || ''))"
-                      :key="option.id"
-                      :value="option.value"
-                      :selected="option.checked"
-                      :disabled="option.disabled"
-                    >
-                      {{ option.label }}
-                    </option>
-                    <optgroup
-                      v-for="group in textOptions(cell.field).choiceGroups"
-                      :key="group.id"
-                      :label="group.label"
+                    <template
+                      v-for="entry in choiceEntries(cell.field)"
+                      :key="entry.type === 'group' ? entry.group.id : entry.option.id"
                     >
                       <option
-                        v-for="option in group.options.filter(item => choiceMatches(item, selectQuery[cell.field.id] || ''))"
-                        :key="option.id"
-                        :value="option.value"
-                        :selected="option.checked"
-                        :disabled="option.disabled"
+                        v-if="entry.type === 'option' && choiceMatches(entry.option, selectQuery[cell.field.id] || '')"
+                        :value="entry.option.value"
+                        :selected="entry.option.checked"
+                        :disabled="entry.option.disabled"
                       >
-                        {{ option.label }}
+                        {{ entry.option.label }}
                       </option>
-                    </optgroup>
+                      <optgroup
+                        v-else-if="entry.type === 'group'"
+                        :label="entry.group.label"
+                      >
+                        <option
+                          v-for="option in entry.group.options.filter(item => choiceMatches(item, selectQuery[cell.field.id] || ''))"
+                          :key="option.id"
+                          :value="option.value"
+                          :selected="option.checked"
+                          :disabled="option.disabled"
+                        >
+                          {{ option.label }}
+                        </option>
+                      </optgroup>
+                    </template>
                   </select>
                   <div v-else>
-                    <label
-                      v-for="option in textOptions(cell.field).choiceOptions.filter(item => choiceMatches(item, selectQuery[cell.field.id] || ''))"
-                      :key="option.id"
+                    <template
+                      v-for="entry in choiceEntries(cell.field)"
+                      :key="entry.type === 'group' ? entry.group.id : entry.option.id"
                     >
-                      <input
-                        :type="textOptions(cell.field).selectMultiple.enabled ? 'checkbox' : 'radio'"
-                        :name="cell.field.key"
-                        :value="option.value"
-                        :checked="option.checked"
-                        :disabled="locked || option.disabled || textOptions(cell.field).disabled"
-                      >
-                      <img
-                        v-if="iconUrl(option.image)"
-                        :src="iconUrl(option.image)"
-                        alt=""
-                      >
-                      <span>{{ option.label }}</span>
-                    </label>
-                    <div
-                      v-for="group in textOptions(cell.field).choiceGroups"
-                      :key="group.id"
-                    >
-                      <span>{{ group.label }}</span>
                       <label
-                        v-for="option in group.options.filter(item => choiceMatches(item, selectQuery[cell.field.id] || ''))"
-                        :key="option.id"
+                        v-if="entry.type === 'option' && choiceMatches(entry.option, selectQuery[cell.field.id] || '')"
                       >
                         <input
                           :type="textOptions(cell.field).selectMultiple.enabled ? 'checkbox' : 'radio'"
                           :name="cell.field.key"
-                          :value="option.value"
-                          :checked="option.checked"
-                          :disabled="locked || option.disabled || textOptions(cell.field).disabled"
+                          :value="entry.option.value"
+                          :checked="entry.option.checked"
+                          :disabled="locked || entry.option.disabled || textOptions(cell.field).disabled"
                         >
                         <img
-                          v-if="iconUrl(option.image)"
-                          :src="iconUrl(option.image)"
+                          v-if="iconUrl(entry.option.image)"
+                          :src="iconUrl(entry.option.image)"
                           alt=""
                         >
-                        <span>{{ option.label }}</span>
+                        <span>{{ entry.option.label }}</span>
                       </label>
-                    </div>
+                      <div v-else-if="entry.type === 'group'">
+                        <span>{{ entry.group.label }}</span>
+                        <label
+                          v-for="option in entry.group.options.filter(item => choiceMatches(item, selectQuery[cell.field.id] || ''))"
+                          :key="option.id"
+                        >
+                          <input
+                            :type="textOptions(cell.field).selectMultiple.enabled ? 'checkbox' : 'radio'"
+                            :name="cell.field.key"
+                            :value="option.value"
+                            :checked="option.checked"
+                            :disabled="locked || option.disabled || textOptions(cell.field).disabled"
+                          >
+                          <img
+                            v-if="iconUrl(option.image)"
+                            :src="iconUrl(option.image)"
+                            alt=""
+                          >
+                          <span>{{ option.label }}</span>
+                        </label>
+                      </div>
+                    </template>
                   </div>
                   <button
                     v-if="textOptions(cell.field).selectedClearable"

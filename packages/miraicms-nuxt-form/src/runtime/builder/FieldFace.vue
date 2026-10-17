@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import type { SelectChoice, SelectModelValue } from '@miraicms/core'
 import type { FormField } from '../form/model'
-import { applyInputMask, checkPositionStyle, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, temporalInputType } from '../form/text-options'
+import { applyInputMask, checkPositionStyle, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, listedChoiceOptions, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, resolveChoiceEntries, temporalInputType } from '../form/text-options'
 
 const props = withDefaults(defineProps<{
   field?: FormField
@@ -54,29 +54,32 @@ const selectChoices = computed((): SelectChoice[] => {
     disabled: item.disabled,
     check: item.checked,
   })
-  return [
-    ...options.value.choiceOptions.map(leaf),
-    ...options.value.choiceGroups.map(group => ({
-      type: 'group' as const,
-      title: group.label,
-      childs: group.options.map(leaf),
-    })),
-  ]
+  const choices: SelectChoice[] = []
+  for (const entry of resolveChoiceEntries(options.value)) {
+    if (entry.type === 'option') {
+      choices.push(leaf(entry.option))
+      continue
+    }
+    choices.push({
+      type: 'group',
+      title: entry.group.label,
+      childs: entry.group.options.map(leaf),
+    })
+  }
+  return choices
 })
 
 function syncSelectModel() {
-  const checked = [
-    ...options.value.choiceOptions,
-    ...options.value.choiceGroups.flatMap(group => group.options),
-  ].filter(item => item.checked).map(item => item.value)
+  const checked = listedChoiceOptions(options.value).filter(item => item.checked).map(item => item.value)
   selectModel.value = options.value.selectMultiple.enabled ? checked : (checked[0] ?? '')
 }
 
 watch(() => [
   props.field?.id,
   options.value.selectMultiple.enabled,
-  options.value.choiceOptions.map(item => `${item.value}:${item.checked}`).join('|'),
-  options.value.choiceGroups.map(group => group.options.map(item => `${item.value}:${item.checked}`).join('|')).join(';'),
+  resolveChoiceEntries(options.value).map(entry => entry.type === 'option'
+    ? `o:${entry.option.value}:${entry.option.checked}`
+    : `g:${entry.group.id}:${entry.group.options.map(item => `${item.value}:${item.checked}`).join('|')}`).join(';'),
 ], syncSelectModel, { immediate: true })
 const showError = computed(() => props.invalid && options.value.required.showError && !!props.error)
 

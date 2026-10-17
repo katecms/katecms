@@ -27,6 +27,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   update: [value: FormChoiceOption[]]
   addGroup: []
+  addOption: []
 }>()
 
 const open = ref(false)
@@ -62,6 +63,14 @@ function patchAt(index: number, partial: Partial<FormChoiceOption>) {
     }
     return itemIndex === index ? { ...item, ...partial } : item
   }))
+}
+
+function addFromFooter() {
+  if (props.showAddGroup) {
+    emit('addOption')
+    return
+  }
+  addAt(props.model.length - 1)
 }
 
 function addAt(index: number) {
@@ -294,6 +303,7 @@ onBeforeUnmount(resetDrag)
           </button>
           <MiraiCmsImageField
             v-if="showImage"
+            class="miraicms-choice-options__image"
             :model-value="item.image"
             :field-key="`${fieldKey}-image-${item.id}`"
             :field="{ type: 'image', label: 'Image', iconMode: true, returnFormat: 'array' }"
@@ -312,6 +322,7 @@ onBeforeUnmount(resetDrag)
             @update:model-value="patchAt(index, { value: String($event ?? '') })"
           />
           <MiraiCmsTrueFalseField
+            class="miraicms-choice-options__checkbox"
             :model-value="item.checked"
             :field-key="`${fieldKey}-check-${item.id}`"
             :field="{ type: 'true_false', label: 'Check' }"
@@ -319,6 +330,7 @@ onBeforeUnmount(resetDrag)
           />
           <MiraiCmsTrueFalseField
             v-if="showRequired"
+            class="miraicms-choice-options__checkbox"
             :model-value="item.required"
             :field-key="`${fieldKey}-required-${item.id}`"
             :field="{ type: 'true_false', label: 'Required' }"
@@ -326,6 +338,7 @@ onBeforeUnmount(resetDrag)
           />
           <MiraiCmsTrueFalseField
             v-if="showDisabled"
+            class="miraicms-choice-options__checkbox"
             :model-value="item.disabled"
             :field-key="`${fieldKey}-disabled-${item.id}`"
             :field="{ type: 'true_false', label: 'Disabled' }"
@@ -334,24 +347,106 @@ onBeforeUnmount(resetDrag)
           <div class="miraicms-choice-options__actions">
             <MiraiCmsUiButton
               tag="button"
-              variant="secondary"
+              :variant="['secondary', 'small', 'icon']"
               @click="addAt(index)"
             >
-              Add Option
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M2 8.21875L14.513 8.28663"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke="currentColor"
+                />
+                <path
+                  d="M8.22254 1.99621L8.29042 14.5092"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke="currentColor"
+                />
+              </svg>
             </MiraiCmsUiButton>
             <MiraiCmsUiButton
               tag="button"
-              variant="secondary"
+              :variant="['secondary', 'small', 'icon']"
               @click="cloneAt(index)"
             >
-              Clone Option
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 30 30"
+              ><path
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                d="M13.89,11.7h10a2.2,2.2,0,0,1,2.22,2.2v9.9A2.2,2.2,0,0,1,23.88,26h-10a2.2,2.2,0,0,1-2.22-2.2V13.9A2.2,2.2,0,0,1,13.89,11.7Z"
+              /><path
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                d="M7.23,18.3H6.12A2.2,2.2,0,0,1,3.9,16.1V6.2A2.2,2.2,0,0,1,6.12,4h10a2.2,2.2,0,0,1,2.22,2.2V7.3"
+              /></svg>
             </MiraiCmsUiButton>
             <MiraiCmsUiButton
               tag="button"
-              :variant="['red', 'small']"
+              :variant="['red', 'small', 'icon']"
               @click="remove(index)"
             >
-              Delete Option
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 5.25H15"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke="currentColor"
+                />
+                <path
+                  d="M7.5 8.25V12.75"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke="currentColor"
+                />
+                <path
+                  d="M10.5 8.25V12.75"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke="currentColor"
+                />
+                <path
+                  d="M3.75 5.25L4.5 14.25C4.5 14.6478 4.65804 15.0294 4.93934 15.3107C5.22064 15.592 5.60218 15.75 6 15.75H12C12.3978 15.75 12.7794 15.592 13.0607 15.3107C13.342 15.0294 13.5 14.6478 13.5 14.25L14.25 5.25"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke="currentColor"
+                />
+                <path
+                  d="M6.75 5.25V3C6.75 2.80109 6.82902 2.61032 6.96967 2.46967C7.11032 2.32902 7.30109 2.25 7.5 2.25H10.5C10.6989 2.25 10.8897 2.32902 11.0303 2.46967C11.171 2.61032 11.25 2.80109 11.25 3V5.25"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke="currentColor"
+                />
+              </svg>
             </MiraiCmsUiButton>
           </div>
         </div>
@@ -369,7 +464,7 @@ onBeforeUnmount(resetDrag)
         <MiraiCmsUiButton
           tag="button"
           variant="secondary"
-          @click="addAt(model.length - 1)"
+          @click="addFromFooter"
         >
           Add Option
         </MiraiCmsUiButton>
@@ -403,7 +498,6 @@ onBeforeUnmount(resetDrag)
   &__row {
     display: flex;
     flex-wrap: nowrap;
-    align-items: flex-end;
     gap: math-rem(8);
     min-width: max-content;
     padding: math-rem(8);
@@ -413,7 +507,6 @@ onBeforeUnmount(resetDrag)
 
     :deep(> *) {
       flex: 1 0 math-rem(150);
-      min-width: math-rem(140);
     }
 
     > .miraicms-choice-options__handle,
@@ -432,14 +525,30 @@ onBeforeUnmount(resetDrag)
     display: flex;
     align-items: center;
     justify-content: center;
-    width: math-rem(28);
-    height: math-rem(32);
+    align-self: center;
+    width: math-rem(24);
+    height: math-rem(38);
     padding: 0;
     border: 1px solid $color-border;
-    border-radius: $border-radius;
+    border-radius: $border-radius-inter;
     background: $color-bg;
     color: $color-muted;
     cursor: grab;
+
+    svg {
+      width: math-rem(16);
+      height: auto;
+    }
+  }
+
+  &__image {
+    flex: 0 0 math-rem(140);
+    max-width: math-rem(140);
+  }
+
+  &__checkbox {
+    flex: 0 0 math-rem(70);
+    max-width: math-rem(70);
   }
 
   &__actions {
@@ -448,6 +557,7 @@ onBeforeUnmount(resetDrag)
     gap: math-rem(6);
     flex: 0 0 auto;
     min-width: 0;
+    align-self: center;
   }
 
   &__footer {

@@ -130,6 +130,7 @@ export function isFieldValueEmpty(field: Field, value: unknown): boolean {
       return !isOsmMarker(value)
     case 'user':
     case 'post_object':
+    case 'form':
     case 'page_link':
     case 'relationship':
     case 'dictionary':

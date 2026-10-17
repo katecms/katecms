@@ -85,6 +85,11 @@ export interface FormChoiceGroup {
   options: FormChoiceOption[]
 }
 
+/** One step in a select option list. Options and groups stay in the order they were added. */
+export type FormChoiceEntry =
+  | { type: 'option', option: FormChoiceOption }
+  | { type: 'group', group: FormChoiceGroup }
+
 export interface FormSelectMultiple {
   enabled: boolean
   minimum: FormFileLimit
@@ -201,6 +206,13 @@ export interface FormTextOptions {
   choiceMaximum: FormBoundError
   optionIcon: boolean
   choiceGroups: FormChoiceGroup[]
+  /** Options shown after every group when `choiceEntries` is not set. */
+  choiceAfter: FormChoiceOption[]
+  /**
+   * Ordered select options and groups.
+   * `null` means the list is still `choiceOptions`, then `choiceGroups`, then `choiceAfter`.
+   */
+  choiceEntries: FormChoiceEntry[] | null
   selectMultiple: FormSelectMultiple
   showSearch: boolean
   searchPlaceholder: string
@@ -410,6 +422,8 @@ export function defaultTextOptions(label = ''): FormTextOptions {
     choiceMaximum: defaultBoundError('Please, select no more than ${field.maximum} option(s)'),
     optionIcon: false,
     choiceGroups: [],
+    choiceAfter: [],
+    choiceEntries: null,
     selectMultiple: {
       enabled: false,
       minimum: { value: null, showError: true, customError: false, errorText: 'Select at least ${minimum} option(s)' },
@@ -792,6 +806,8 @@ export function normalizeTextOptions(raw: unknown, fallback: { label?: string, p
     choiceMaximum: normalizeBoundError(source.choiceMaximum, 'Please, select no more than ${field.maximum} option(s)'),
     optionIcon: source.optionIcon === true,
     choiceGroups: normalizeChoiceGroups(source.choiceGroups),
+    choiceAfter: normalizeChoiceOptions(source.choiceAfter, undefined),
+    choiceEntries: normalizeChoiceEntries(source.choiceEntries),
     selectMultiple: normalizeSelectMultiple(source.selectMultiple),
     showSearch: source.showSearch === true,
     searchPlaceholder: clip(source.searchPlaceholder, 200),
@@ -895,6 +911,30 @@ function normalizeChoiceOptions(raw: unknown, fallback: { label: string, value: 
   return options
 }
 
+function normalizeChoiceEntries(raw: unknown): FormChoiceEntry[] | null {
+  if (!Array.isArray(raw)) {
+    return null
+  }
+  const entries: FormChoiceEntry[] = []
+  for (const item of raw.slice(0, 150)) {
+    if (!isRecord(item)) {
+      continue
+    }
+    if (item.type === 'group') {
+      const group = normalizeChoiceGroups([item.group])[0]
+      if (group) {
+        entries.push({ type: 'group', group })
+      }
+      continue
+    }
+    const option = normalizeChoiceOptions([item.option], undefined)[0]
+    if (option) {
+      entries.push({ type: 'option', option })
+    }
+  }
+  return entries
+}
+
 function normalizeChoiceGroups(raw: unknown): FormChoiceGroup[] {
   if (!Array.isArray(raw)) {
     return []
@@ -934,8 +974,24 @@ function normalizeSelectMultiple(raw: unknown): FormSelectMultiple {
   }
 }
 
-export function flatChoiceOptions(options: FormChoiceOption[], groups: FormChoiceGroup[]): FormChoiceOption[] {
-  return [...options, ...groups.flatMap(group => group.options)]
+export function flatChoiceOptions(options: FormChoiceOption[], groups: FormChoiceGroup[], after?: FormChoiceOption[]): FormChoiceOption[] {
+  return [...options, ...groups.flatMap(group => group.options), ...(after ?? [])]
+}
+
+/** Select list in display order. An explicit `choiceEntries` array wins over the older split lists. */
+export function resolveChoiceEntries(text: Pick<FormTextOptions, 'choiceEntries' | 'choiceOptions' | 'choiceGroups' | 'choiceAfter'>): FormChoiceEntry[] {
+  if (Array.isArray(text.choiceEntries)) {
+    return text.choiceEntries
+  }
+  return [
+    ...(text.choiceOptions ?? []).map(option => ({ type: 'option' as const, option })),
+    ...(text.choiceGroups ?? []).map(group => ({ type: 'group' as const, group })),
+    ...(text.choiceAfter ?? []).map(option => ({ type: 'option' as const, option })),
+  ]
+}
+
+export function listedChoiceOptions(text: Pick<FormTextOptions, 'choiceEntries' | 'choiceOptions' | 'choiceGroups' | 'choiceAfter'>): FormChoiceOption[] {
+  return resolveChoiceEntries(text).flatMap(entry => entry.type === 'option' ? [entry.option] : entry.group.options)
 }
 
 export function choiceMatches(option: { label: string, value: string }, query: string): boolean {

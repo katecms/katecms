@@ -1,5 +1,5 @@
 import type { FormTextOptions } from './text-options.ts'
-import { customErrorText, defaultChoiceOptions, defaultTextOptions, fileAccept, flatChoiceOptions, invalidErrorText, isRichFieldType, isTemporalType, normalizeTextOptions, passwordRuleStates, textConstraintError } from './text-options.ts'
+import { customErrorText, defaultChoiceOptions, defaultTextOptions, fileAccept, invalidErrorText, isRichFieldType, isTemporalType, listedChoiceOptions, normalizeTextOptions, passwordRuleStates, textConstraintError } from './text-options.ts'
 
 export const GRID_COLUMNS = 60
 export const ROW_HEIGHT = 72
@@ -779,6 +779,9 @@ function textOptionsFor(type: FieldType, existing: FormField[]) {
   if (type === 'select' || type === 'radio' || type === 'checkbox' || type === 'image_select') {
     text.choiceOptions = defaultChoiceOptions()
   }
+  if (type === 'select') {
+    text.choiceEntries = text.choiceOptions.map(option => ({ type: 'option', option }))
+  }
   if (type === 'title' || type === 'image' || type === 'divider' || type === 'spacer' || type === 'html') {
     text.label.enabled = false
   }
@@ -809,7 +812,7 @@ function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string
         options: legacyOptions,
       })
     : undefined
-  const listed = text ? flatChoiceOptions(text.choiceOptions, text.choiceGroups) : []
+  const listed = text ? listedChoiceOptions(text) : []
   const options = listed.length
     ? listed.map(item => ({ label: item.label, value: item.value }))
     : legacyOptions
@@ -961,7 +964,7 @@ function fieldError(field: FormField, raw: unknown, file: UploadedFile | Uploade
 }
 
 function choiceFieldError(field: FormField, raw: unknown): string | null {
-  const listed = field.text ? flatChoiceOptions(field.text.choiceOptions, field.text.choiceGroups) : []
+  const listed = field.text ? listedChoiceOptions(field.text) : []
   const options = listed.length
     ? listed
     : field.options.map(item => ({

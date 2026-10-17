@@ -735,6 +735,52 @@ const fields: Fields = {
     placeholder: 'Sidebar',
     defaultValue: 'Aside',
   },
+  separator_form: {
+    type: 'separator',
+    label: 'Form',
+    position: 'main',
+    columnWidth: 100,
+  },
+  form_test: {
+    type: 'form',
+    label: 'Form',
+    instructions: 'Single form, stored as an id. Empty value is null.',
+    position: 'main',
+    multiple: false,
+    allowNull: true,
+    returnFormat: 'id',
+    columnWidth: 50,
+  },
+  form_slug_test: {
+    type: 'form',
+    label: 'Form (slug)',
+    instructions: 'Single form, stored as a slug.',
+    position: 'main',
+    multiple: false,
+    allowNull: false,
+    returnFormat: 'slug',
+    columnWidth: 50,
+  },
+  form_multiple_test: {
+    type: 'form',
+    label: 'Forms',
+    instructions: 'Multiple forms, stored as ids. Empty value is an array.',
+    position: 'main',
+    multiple: true,
+    allowNull: true,
+    returnFormat: 'id',
+    columnWidth: 50,
+  },
+  form_multiple_slug_test: {
+    type: 'form',
+    label: 'Forms (slug)',
+    instructions: 'Multiple forms, stored as slugs.',
+    position: 'main',
+    multiple: true,
+    allowNull: false,
+    returnFormat: 'slug',
+    columnWidth: 50,
+  },
 }
 
 const values = reactive<Record<string, unknown>>(buildFormValues(fields))
@@ -1305,6 +1351,7 @@ $root: '.miraicms-admin-demo';
     }
 
     &__values {
+      flex-shrink: 0;
       margin: 0;
       padding: math-rem(12);
       overflow: auto;

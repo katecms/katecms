@@ -66,6 +66,7 @@ export const FIELD_OPERATORS: Record<string, Operator[]> = {
 
   page_link: RELATIONAL,
   post_object: RELATIONAL,
+  form: RELATIONAL,
   relationship: RELATIONAL,
   user: RELATIONAL,
   dictionary: RELATIONAL,

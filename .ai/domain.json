@@ -827,6 +827,7 @@
       "MIRAICMS_COLLECTION_HOOK",
       "MiraiCmsMenuExtra",
       "MiraiCmsPublicPage",
+      "registerMiraiCmsField",
       "useMiraiCmsEntrySidebar",
       "useMiraiCmsMenuItems",
       "useMiraiCmsTermPanels"
@@ -952,6 +953,10 @@
     {
       "type": "flexible_content",
       "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/FlexibleContentField.vue"
+    },
+    {
+      "type": "form",
+      "ui": "packages/miraicms-nuxt-form/src/runtime/internal/fields/FormField.vue"
     },
     {
       "type": "gallery",

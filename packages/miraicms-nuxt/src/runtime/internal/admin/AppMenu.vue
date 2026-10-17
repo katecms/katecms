@@ -205,7 +205,6 @@ $root: '.miraicms-menu';
 
 @include miraicms-wrapper {
   #{$root} {
-    height: 100%;
     display: flex;
     flex-direction: column;
     background: $color-bg;

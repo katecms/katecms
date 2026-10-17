@@ -277,12 +277,29 @@ test('choice fields keep their options and enforce a checkbox minimum', () => {
       text: {
         selectMultiple: { enabled: true, minimum: { value: 2, showError: true, customError: true, errorText: 'Select at least ${minimum} option(s)' } },
         choiceGroups: [{ id: 'g', label: 'Europe', options: [{ label: 'Paris', value: 'paris' }] }],
+        choiceAfter: [{ label: 'Tokyo', value: 'tokyo' }],
       },
     }],
   })
   const select = grouped.fields[0]
   assert.equal(select?.text?.choiceGroups[0]?.label, 'Europe')
-  assert.equal(select?.options.some(option => option.value === 'paris'), true)
+  assert.deepEqual(select?.options.map(option => option.value), ['paris', 'tokyo'])
+  const ordered = normalizeFormContent({
+    fields: [{
+      id: 'ordered',
+      type: 'select',
+      key: 'place',
+      text: {
+        choiceEntries: [
+          { type: 'option', option: { label: 'Before', value: 'before' } },
+          { type: 'group', group: { id: 'eu', label: 'Europe', options: [{ label: 'Paris', value: 'paris' }] } },
+          { type: 'option', option: { label: 'Middle', value: 'middle' } },
+          { type: 'group', group: { id: 'as', label: 'Asia', options: [{ label: 'Tokyo', value: 'tokyo' }] } },
+        ],
+      },
+    }],
+  })
+  assert.deepEqual(ordered.fields[0]?.options.map(option => option.value), ['before', 'paris', 'middle', 'tokyo'])
   const short = submissionErrors(grouped, { city: ['paris'] }, {}, 1024)
   assert.equal(short.city, 'Select at least 2 option(s)')
 })

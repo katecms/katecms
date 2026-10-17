@@ -388,4 +388,18 @@ describe('validateRequiredFields', () => {
       items: [{ name: '' }],
     }).map(issue => issue.key)).toEqual(['items_0_name'])
   })
+
+  it('stores a form id or slug and treats an empty selection as empty', () => {
+    const single: Field = { type: 'form', label: 'Form', allowNull: true, returnFormat: 'id' }
+    const multiple: Field = { type: 'form', label: 'Forms', multiple: true, returnFormat: 'slug' }
+    expect(isFieldValueEmpty(single, null)).toBe(true)
+    expect(isFieldValueEmpty(single, '')).toBe(true)
+    expect(isFieldValueEmpty(single, 3)).toBe(false)
+    expect(isFieldValueEmpty(multiple, [])).toBe(true)
+    expect(isFieldValueEmpty(multiple, ['contact'])).toBe(false)
+    expect(buildFormValues({
+      one: { type: 'form', allowNull: true },
+      many: { type: 'form', multiple: true, returnFormat: 'slug' },
+    })).toEqual({ one: null, many: [] })
+  })
 })

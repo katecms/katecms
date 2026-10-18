@@ -47,7 +47,18 @@ const kindLabels: Record<FormConditionBranch['kind'], string> = {
 }
 
 function fieldLabel(field: FormField | undefined): string {
-  return field?.label || field?.key || 'Field'
+  if (!field) {
+    return 'Field'
+  }
+  const marked = field.text?.label
+  if (marked) {
+    const label = marked.text.trim()
+    if (!marked.enabled || !label) {
+      return field.key || 'Field'
+    }
+    return label
+  }
+  return field.label.trim() || field.key || 'Field'
 }
 
 function fieldById(id: string): FormField | undefined {

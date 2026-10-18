@@ -330,12 +330,13 @@ function onInput(event: Event) {
           :value="draft"
         >
       </div>
-      <button
+      <MiraiCmsUiButton
         v-else-if="field.type === 'button'"
-        :class="`${rootClass}__button`"
+        tag="button"
         :type="preview ? 'button' : options.buttonType"
         :disabled="disabled || options.disabled"
-        :style="{ width: options.fullWidth ? '100%' : undefined }"
+        :variant="options.fullWidth ? ['full'] : undefined"
+        :aria-label="options.buttonText.text || 'Button'"
       >
         <img
           v-if="iconUrl(options.buttonText.prefix)"
@@ -350,7 +351,7 @@ function onInput(event: Event) {
           :src="iconUrl(options.buttonText.suffix)"
           alt=""
         >
-      </button>
+      </MiraiCmsUiButton>
       <MiraiCmsUiSelect
         v-else-if="field.type === 'select'"
         :id="controlId"
@@ -641,13 +642,14 @@ function onInput(event: Event) {
       v-else-if="field.type === 'html'"
       v-html="field.html"
     />
-    <button
+    <MiraiCmsUiButton
       v-else-if="field.type === 'button'"
+      tag="button"
       type="button"
-      :class="`${rootClass}__button`"
+      :aria-label="field.buttonLabel || 'Submit'"
     >
       {{ field.buttonLabel || 'Submit' }}
-    </button>
+    </MiraiCmsUiButton>
     <div
       v-if="field.help && field.type !== 'hidden' && field.type !== 'html' && field.type !== 'button'"
       :class="`${rootClass}__note`"
@@ -822,17 +824,5 @@ $root: '.miraicms-field-face';
     cursor: pointer;
   }
 
-  &__button {
-    display: inline-flex;
-    align-items: center;
-    gap: math-rem(6);
-    align-self: center;
-    padding: math-rem(8) math-rem(14);
-    border: 1px solid $color-accent;
-    border-radius: $border-radius;
-    background: $color-accent;
-    color: $color-surface;
-    font: inherit;
-  }
 }
 </style>

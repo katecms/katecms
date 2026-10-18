@@ -136,6 +136,8 @@ export interface FormField {
   max: string
   step: string
   text?: FormTextOptions
+  /** The button created with the form. It cannot be deleted or cloned. */
+  locked?: boolean
 }
 
 export interface LayoutItem {
@@ -179,12 +181,9 @@ export interface FormContent {
   confirmation: FormConfirmation
 }
 
-export type FormStatus = 'draft' | 'published'
-
 export interface FormRecord {
   id: number
   name: string
-  status: FormStatus
   content: FormContent
   createdAt: string
   updatedAt: string
@@ -193,7 +192,6 @@ export interface FormRecord {
 export interface FormListItem {
   id: number
   name: string
-  status: FormStatus
   fieldCount: number
   updatedAt: string
 }
@@ -296,6 +294,53 @@ export function placeField(layout: LayoutItem[], fieldId: string, width: number)
     }
   }
   return [...layout, { fieldId, x: 0, y: layout.length, w }]
+}
+
+function placeAtEnd(layout: LayoutItem[], fieldId: string, width: number): LayoutItem[] {
+  const w = clampInt(width, 1, GRID_COLUMNS)
+  const last = readingOrder(layout).at(-1)
+  if (!last) {
+    return [{ fieldId, x: 0, y: 0, w }]
+  }
+  const besideX = last.x + last.w
+  if (besideX + w <= GRID_COLUMNS) {
+    const beside = { fieldId, x: besideX, y: last.y, w }
+    if (!layout.some(item => overlaps(beside, item))) {
+      return [...layout, beside]
+    }
+  }
+  return [...layout, { fieldId, x: 0, y: last.y + 1, w }]
+}
+
+/** Puts `fieldId` immediately before `anchor` in reading order. */
+function placeBeforeItem(layout: LayoutItem[], anchor: LayoutItem | undefined, fieldId: string, width: number): LayoutItem[] {
+  const w = clampInt(width, 1, GRID_COLUMNS)
+  if (anchor && layout.length === 1) {
+    return [
+      { fieldId, x: 0, y: anchor.y, w },
+      { ...anchor, y: anchor.y + 1 },
+    ]
+  }
+  if (!anchor) {
+    return placeAtEnd(layout, fieldId, w)
+  }
+  const gapStart = layout
+    .filter(item => item.y === anchor.y && item.x + item.w <= anchor.x)
+    .reduce((end, item) => Math.max(end, item.x + item.w), 0)
+  if (anchor.x - gapStart >= w) {
+    return [...layout, { fieldId, x: anchor.x - w, y: anchor.y, w }]
+  }
+  const shifted = layout.map(item => item.fieldId === anchor.fieldId || item.y > anchor.y
+    ? { ...item, y: item.y + 1 }
+    : item)
+  if (GRID_COLUMNS - gapStart >= w) {
+    return [...shifted, { fieldId, x: gapStart, y: anchor.y, w }]
+  }
+  const moved = shifted.find(item => item.fieldId === anchor.fieldId)
+  const again = shifted.map(item => item.fieldId === anchor.fieldId || (moved && item.y > moved.y)
+    ? { ...item, y: item.y + 1 }
+    : item)
+  return [...again, { fieldId, x: 0, y: moved?.y ?? anchor.y + 1, w }]
 }
 
 function placeAfter(layout: LayoutItem[], source: LayoutItem | undefined, fieldId: string, width: number): LayoutItem[] {
@@ -407,6 +452,10 @@ export function cloneStep(content: FormContent, stepId: string): FormContent {
     copy.id = id
     copy.stepId = nextStep.id
     copy.key = uniqueKey(field.type, existing)
+    copy.locked = undefined
+    if (copy.type === 'button' && copy.text?.buttonType === 'submit' && copy.text) {
+      copy.text = { ...copy.text, buttonType: 'button' }
+    }
     copy.options = field.options.map(option => ({ ...option }))
     existing.push(copy)
     return copy
@@ -431,6 +480,9 @@ export function cloneStep(content: FormContent, stepId: string): FormContent {
 
 export function deleteStep(content: FormContent, stepId: string): FormContent {
   if (content.steps.length < 2 || !content.steps.some(step => step.id === stepId)) {
+    return content
+  }
+  if (content.fields.some(field => field.stepId === stepId && field.locked)) {
     return content
   }
   const removeIds = new Set(content.fields.filter(field => field.stepId === stepId).map(field => field.id))
@@ -467,24 +519,32 @@ export function addField(content: FormContent, type: FieldType, stepId?: string)
     return { ...content, steps }
   }
   const field = createField(type, content.fields, target)
+  const submit = content.fields.find(item => item.stepId === target && isSubmitButton(item))
+  const fields = submit ? insertBefore(content.fields, submit.id, field) : [...content.fields, field]
   const layouts = { ...content.layouts }
   for (const breakpoint of formBreakpoints()) {
     const current = content.layouts[breakpoint] ?? []
     const sameStep = current.filter(item => stepIdOf(content, item.fieldId) === target)
     const otherSteps = current.filter(item => stepIdOf(content, item.fieldId) !== target)
-    layouts[breakpoint] = [...otherSteps, ...placeField(sameStep, field.id, defaultWidth(type, breakpoint))]
+    const anchor = submit ? sameStep.find(item => item.fieldId === submit.id) : undefined
+    const width = field.locked ? GRID_COLUMNS : defaultWidth(type, breakpoint)
+    layouts[breakpoint] = [...otherSteps, ...readingOrder(placeBeforeItem(sameStep, anchor, field.id, width))]
   }
-  return { ...content, steps, fields: [...content.fields, field], layouts }
+  return { ...content, steps, fields, layouts }
 }
 
 export function cloneField(content: FormContent, fieldId: string): FormContent {
   const source = content.fields.find(field => field.id === fieldId)
-  if (!source || content.fields.length >= MAX_FIELDS) {
+  if (!source || source.locked || content.fields.length >= MAX_FIELDS) {
     return content
   }
   const copy = JSON.parse(JSON.stringify(source)) as FormField
   copy.id = `f_${crypto.randomUUID()}`
+  copy.locked = undefined
   copy.key = uniqueKey(source.type, content.fields)
+  if (copy.type === 'button' && copy.text?.buttonType === 'submit' && copy.text) {
+    copy.text = { ...copy.text, buttonType: 'button' }
+  }
   const index = content.fields.findIndex(field => field.id === fieldId)
   const fields = [
     ...content.fields.slice(0, index + 1),
@@ -522,6 +582,9 @@ export function moveFieldToStep(content: FormContent, fieldId: string, stepId: s
 }
 
 export function removeField(content: FormContent, fieldId: string): FormContent {
+  if (content.fields.some(field => field.id === fieldId && field.locked)) {
+    return content
+  }
   return {
     ...content,
     fields: content.fields.filter(field => field.id !== fieldId),
@@ -533,10 +596,25 @@ export function removeField(content: FormContent, fieldId: string): FormContent 
 }
 
 export function replaceField(content: FormContent, field: FormField): FormContent {
+  let next = field
+  if (isSubmitButton(next) && content.fields.some(item => item.id !== next.id && isSubmitButton(item))) {
+    next = {
+      ...next,
+      text: next.text ? { ...next.text, buttonType: 'button' } : next.text,
+    }
+  }
   return {
     ...content,
-    fields: content.fields.map(current => current.id === field.id ? field : current),
+    fields: content.fields.map(current => current.id === next.id ? next : current),
   }
+}
+
+export function hasSubmitButton(content: FormContent): boolean {
+  return content.fields.some(isSubmitButton)
+}
+
+export function isSubmitButton(field: FormField): boolean {
+  return field.type === 'button' && field.text?.buttonType === 'submit'
 }
 
 export function setLayoutItem(content: FormContent, breakpoint: Breakpoint, item: LayoutItem, resolve = true): FormContent {
@@ -640,6 +718,7 @@ export function normalizeFormContent(input: unknown): FormContent {
       fields.push(field)
     }
   }
+  fields.splice(0, fields.length, ...lockInitialSubmit(fields))
   const rawLayouts = isRecord(source.layouts) ? source.layouts : {}
   const layouts = {} as FormContent['layouts']
   for (const breakpoint of formBreakpoints()) {
@@ -943,6 +1022,40 @@ function normalizeSteps(raw: unknown): FormStep[] {
   return steps
 }
 
+function insertBefore(fields: FormField[], beforeId: string, field: FormField): FormField[] {
+  const index = fields.findIndex(item => item.id === beforeId)
+  if (index < 0) {
+    return [...fields, field]
+  }
+  return [...fields.slice(0, index), field, ...fields.slice(index)]
+}
+
+function lockInitialSubmit(fields: FormField[]): FormField[] {
+  let submitSeen = false
+  const next = fields.map((field) => {
+    if (!isSubmitButton(field)) {
+      return field
+    }
+    if (submitSeen) {
+      return {
+        ...field,
+        locked: undefined,
+        text: field.text ? { ...field.text, buttonType: 'button' as const } : field.text,
+      }
+    }
+    submitSeen = true
+    return field
+  })
+  if (next.some(field => field.locked)) {
+    return next
+  }
+  const submit = next.find(isSubmitButton)
+  if (!submit) {
+    return next
+  }
+  return next.map(field => field.id === submit.id ? { ...field, locked: true } : field)
+}
+
 function stepIdOf(content: FormContent, fieldId: string): string {
   return content.fields.find(field => field.id === fieldId)?.stepId || content.steps[0]?.id || ''
 }
@@ -967,6 +1080,7 @@ function createField(type: FieldType, existing: FormField[], stepId: string): Fo
     html: '',
     value: '',
     buttonLabel: type === 'button' && existing.some(field => field.type === 'button') ? 'Button' : type === 'button' ? 'Submit' : '',
+    locked: type === 'button' && !existing.some(field => field.type === 'button') ? true : undefined,
     accept: '',
     rows: 4,
     min: '',
@@ -1058,6 +1172,7 @@ function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string
     max: isTemporalType(type) ? (text?.rangeMax || '') : text?.valueMax != null ? String(text.valueMax) : (type === 'number' ? clip(raw.max, 40) : ''),
     step: text?.step != null && (type === 'range' || type === 'number') ? String(text.step) : '',
     text,
+    locked: raw.locked === true ? true : undefined,
   }
 }
 

@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { $fetch, useHead, useRoute } from '#imports'
 import FormBuilder from '../../../builder/FormBuilder.vue'
-import { notificationFieldErrors, type FormRecord } from '../../../form/model'
+import { hasSubmitButton, notificationFieldErrors, type FormRecord } from '../../../form/model'
 import { useFormPaths } from '../../../form/paths'
 
 const rootClass = 'miraicms-form-editor'
@@ -19,6 +19,7 @@ const saved = ref(false)
 const id = computed(() => Number(route.params.id))
 const mailInvalid = computed(() => Object.keys(notificationFieldErrors(form.value?.content.notification)).length > 0)
 const mailNoticeHidden = ref(false)
+const submitMissing = ref(false)
 
 watch(mailInvalid, (invalid, wasInvalid) => {
   if (!invalid || !wasInvalid) {
@@ -53,6 +54,11 @@ async function save() {
   if (!current || saving.value) {
     return
   }
+  if (!hasSubmitButton(current.content)) {
+    submitMissing.value = true
+    return
+  }
+  submitMissing.value = false
   const mailErrors = notificationFieldErrors(current.content.notification)
   if (Object.keys(mailErrors).length) {
     error.value = 'Enter a valid email address in Email Notification.'
@@ -66,7 +72,6 @@ async function save() {
       method: 'PUT',
       body: {
         name: current.name,
-        status: current.status,
         content: current.content,
       },
     })
@@ -105,6 +110,13 @@ watch(id, (formId) => {
     </MiraiCmsAdminHeader>
 
     <MiraiCmsUiNotice
+      v-if="submitMissing"
+      placement="static"
+      variant="danger"
+      message="Please add a submit button"
+      @close="submitMissing = false"
+    />
+    <MiraiCmsUiNotice
       v-if="mailInvalid && !mailNoticeHidden"
       placement="static"
       variant="danger"
@@ -142,7 +154,6 @@ watch(id, (formId) => {
       </div>
       <FormBuilder
         v-model:name="form.name"
-        v-model:status="form.status"
         v-model:content="form.content"
       />
     </template>

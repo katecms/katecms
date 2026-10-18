@@ -145,7 +145,6 @@ onMounted(load)
       >
         <span role="columnheader">Name</span>
         <span role="columnheader">ID Form</span>
-        <span role="columnheader">Status</span>
         <span role="columnheader">Updated</span>
         <span role="columnheader">Actions</span>
       </div>
@@ -157,7 +156,6 @@ onMounted(load)
       >
         <span role="cell">{{ form.name }}</span>
         <span role="cell">{{ form.id }}</span>
-        <span role="cell">{{ form.status === 'published' ? 'Published' : 'Draft' }}</span>
         <span role="cell">{{ formatDate(form.updatedAt) }}</span>
         <span
           :class="`${rootClass}__actions`"
@@ -224,7 +222,7 @@ $root: '.miraicms-form-list';
 
     &__row {
       display: grid;
-      grid-template-columns: minmax(math-rem(160), 1.4fr) minmax(math-rem(140), 1fr) math-rem(120) minmax(math-rem(160), 1fr) math-rem(180);
+      grid-template-columns: minmax(math-rem(160), 1.4fr) minmax(math-rem(140), 1fr) minmax(math-rem(160), 1fr) math-rem(180);
       align-items: center;
       min-width: math-rem(760);
       border-bottom: 1px solid $color-border;

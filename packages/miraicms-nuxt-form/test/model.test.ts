@@ -14,6 +14,8 @@ import {
   confirmationTarget,
   notificationFieldErrors,
   createEmptyContent,
+  hasSubmitButton,
+  removeField,
   normalizeFormContent,
   overlaps,
   placeField,
@@ -55,19 +57,32 @@ test('clone copies the step fields and delete removes them', () => {
   assert.equal(deleteStep(content, content.steps[0]!.id), content)
 })
 
-test('new fields sit beside each other on the 60-column grid', () => {
+test('new fields sit before the full-width submit button', () => {
   let content = createEmptyContent()
+  const submit = content.fields.find(field => field.type === 'button')!
+  assert.equal(submit.locked, true)
+  assert.equal(submit.text?.buttonType, 'submit')
+  assert.equal(content.layouts.desktop.find(item => item.fieldId === submit.id)?.w, 60)
   content = addField(content, 'text')
   content = addField(content, 'email')
-  const [button, text, email] = content.layouts.desktop
-  assert.equal(button?.w, 15)
-  assert.equal(text?.x, 15)
+  const textId = content.fields.find(field => field.type === 'text')!.id
+  const emailId = content.fields.find(field => field.type === 'email')!.id
+  const text = content.layouts.desktop.find(item => item.fieldId === textId)
+  const email = content.layouts.desktop.find(item => item.fieldId === emailId)
+  const button = content.layouts.desktop.find(item => item.fieldId === submit.id)
+  assert.equal(text?.x, 0)
   assert.equal(text?.y, 0)
   assert.equal(text?.w, 30)
   assert.equal(email?.x, 0)
   assert.equal(email?.y, 1)
-  assert.equal(content.layouts.phone[1]?.w, 60)
-  assert.equal(content.layouts.phone[1]?.y, 1)
+  assert.equal(email?.w, 30)
+  assert.equal(button?.y, 2)
+  assert.equal(button?.w, 60)
+  assert.equal(content.fields.at(-1)?.id, submit.id)
+  assert.equal(content.layouts.phone.find(item => item.fieldId === emailId)?.w, 60)
+  assert.equal(removeField(content, submit.id), content)
+  assert.equal(cloneField(content, submit.id).fields.length, content.fields.length)
+  assert.equal(hasSubmitButton(content), true)
 })
 
 test('overlapping items are pushed off the active field row', () => {
@@ -164,8 +179,8 @@ test('sync field order keeps each breakpoint width and follows the source order'
   let content = createEmptyContent()
   content = addField(content, 'text')
   content = addField(content, 'email')
-  const textId = content.fields[1]!.id
-  const emailId = content.fields[2]!.id
+  const textId = content.fields.find(field => field.type === 'text')!.id
+  const emailId = content.fields.find(field => field.type === 'email')!.id
   content = setLayoutItem(content, 'desktop', { fieldId: emailId, x: 0, y: 0, w: 30 })
   content = setLayoutItem(content, 'desktop', { fieldId: textId, x: 30, y: 0, w: 30 })
   content = syncFieldOrderLayouts(content, 'desktop')
@@ -178,10 +193,12 @@ test('sync field order keeps each breakpoint width and follows the source order'
 test('tablet layout can be copied from desktop', () => {
   let content = createEmptyContent()
   content = addField(content, 'text')
-  content = setLayoutItem(content, 'desktop', { fieldId: content.fields[1]!.id, x: 20, y: 3, w: 10 })
+  const textId = content.fields.find(field => field.type === 'text')!.id
+  content = setLayoutItem(content, 'desktop', { fieldId: textId, x: 20, y: 3, w: 10 })
   content = copyDesktopLayout(content, 'tablet')
-  assert.equal(content.layouts.tablet[1]?.x, 20)
-  assert.equal(content.layouts.tablet[1]?.y, 3)
+  const copied = content.layouts.tablet.find(item => item.fieldId === textId)
+  assert.equal(copied?.x, 20)
+  assert.equal(copied?.y, 3)
 })
 
 test('submission checks required fields, choices, and hidden values', () => {
@@ -269,12 +286,27 @@ test('configured breakpoints replace the default layout keys', () => {
   try {
     const content = createEmptyContent()
     assert.deepEqual(Object.keys(content.layouts).sort(), ['desktop', 'wide'])
-    assert.equal(content.layouts.desktop[0]?.w, 15)
+    assert.equal(content.layouts.desktop[0]?.w, 60)
     assert.equal(content.layouts.wide[0]?.w, 60)
   }
   finally {
     setFormBreakpoints(['phone', 'tablet', 'desktop'])
   }
+})
+
+test('a saved form keeps one locked submit button', () => {
+  const content = normalizeFormContent({
+    fields: [
+      { id: 'a', type: 'button', key: 'button', text: { buttonType: 'submit' } },
+      { id: 'b', type: 'button', key: 'button_2', text: { buttonType: 'submit' } },
+    ],
+  })
+  const buttons = content.fields.filter(field => field.type === 'button')
+  assert.equal(buttons[0]?.locked, true)
+  assert.equal(buttons[0]?.text?.buttonType, 'submit')
+  assert.equal(buttons[1]?.locked, undefined)
+  assert.equal(buttons[1]?.text?.buttonType, 'button')
+  assert.equal(hasSubmitButton({ ...content, fields: buttons.map(field => field.text ? { ...field, text: { ...field.text, buttonType: 'button' as const } } : field) }), false)
 })
 
 test('the first button is submit and later buttons default to button', () => {
@@ -283,8 +315,9 @@ test('the first button is submit and later buttons default to button', () => {
   assert.equal(first?.text?.buttonType, 'submit')
   assert.equal(first?.text?.buttonText.text, 'Submit')
   content = addField(content, 'button')
-  const added = content.fields.filter(field => field.type === 'button').at(-1)
+  const added = content.fields.find(field => field.type === 'button' && !field.locked)
   assert.equal(added?.text?.buttonType, 'button')
+  assert.equal(content.fields.at(-1)?.text?.buttonType, 'submit')
   assert.equal(added?.text?.buttonText.text, 'Button')
 })
 

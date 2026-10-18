@@ -6,12 +6,12 @@ import type {
   FormContent,
   FormListItem,
   FormRecord,
-  FormStatus,
   PublicForm,
   UploadedFile,
 } from '../../form/model'
 import {
   createEmptyContent,
+  hasSubmitButton,
   normalizeFormContent,
   notificationFieldErrors,
   parseContent,
@@ -27,7 +27,6 @@ import { deleteFormUploads, deleteStoredFile, saveFormFile } from './uploads'
 interface FormRow {
   id: number
   name: string
-  status: string
   content: string
   created_at: string | Date
   updated_at: string | Date
@@ -41,8 +40,8 @@ function readStoredContent(value: unknown) {
 }
 
 export async function listForms(): Promise<FormListItem[]> {
-  const result = await sql<Pick<FormRow, 'id' | 'name' | 'status' | 'content' | 'updated_at'>>`
-    SELECT id, name, status, content, updated_at
+  const result = await sql<Pick<FormRow, 'id' | 'name' | 'content' | 'updated_at'>>`
+    SELECT id, name, content, updated_at
     FROM miraicms_forms
     ORDER BY updated_at DESC, id DESC
   `.execute(getFormDb())
@@ -51,7 +50,6 @@ export async function listForms(): Promise<FormListItem[]> {
     return {
       id: Number(row.id),
       name: row.name,
-      status: asStatus(row.status),
       fieldCount: content.fields.length,
       updatedAt: asIso(row.updated_at),
     }
@@ -60,7 +58,7 @@ export async function listForms(): Promise<FormListItem[]> {
 
 export async function readForm(id: number): Promise<FormRecord | null> {
   const result = await sql<FormRow>`
-    SELECT id, name, status, content, created_at, updated_at
+    SELECT id, name, content, created_at, updated_at
     FROM miraicms_forms
     WHERE id = ${id}
   `.execute(getFormDb())
@@ -70,7 +68,7 @@ export async function readForm(id: number): Promise<FormRecord | null> {
 
 export async function readPublicForm(id: number): Promise<PublicForm | null> {
   const record = await readForm(id)
-  if (!record || record.status !== 'published') {
+  if (!record) {
     return null
   }
   return {
@@ -90,8 +88,8 @@ export async function createForm(name: string): Promise<FormRecord> {
   const content = JSON.stringify(createEmptyContent())
   const now = nowIso()
   const result = await sql<{ id: number }>`
-    INSERT INTO miraicms_forms (name, status, content, created_at, updated_at)
-    VALUES (${cleanName}, 'draft', ${content}, ${now}, ${now})
+    INSERT INTO miraicms_forms (name, content, created_at, updated_at)
+    VALUES (${cleanName}, ${content}, ${now}, ${now})
     RETURNING id
   `.execute(getFormDb())
   const id = Number(result.rows[0]?.id)
@@ -112,11 +110,11 @@ export async function updateForm(id: number, body: unknown): Promise<FormRecord>
   if (!name) {
     throw createError({ statusCode: 400, statusMessage: 'Enter a form name.' })
   }
-  const status: FormStatus = input.status === 'published' || input.status === 'draft'
-    ? input.status
-    : current.status
   applyServerFormBreakpoints()
   const normalized = normalizeFormContent(input.content ?? current.content)
+  if (!hasSubmitButton(normalized)) {
+    throw createError({ statusCode: 400, statusMessage: 'Please add a submit button' })
+  }
   if (Object.keys(notificationFieldErrors(normalized.notification)).length) {
     throw createError({ statusCode: 400, statusMessage: 'Enter a valid email address.' })
   }
@@ -127,7 +125,6 @@ export async function updateForm(id: number, body: unknown): Promise<FormRecord>
   await sql`
     UPDATE miraicms_forms
     SET name = ${name},
-        status = ${status},
         content = ${content},
         updated_at = ${nowIso()}
     WHERE id = ${id}
@@ -156,7 +153,7 @@ export async function deleteForm(id: number): Promise<void> {
 
 export async function submitForm(event: H3Event, id: number): Promise<{ ok: true, id: number }> {
   const form = await readForm(id)
-  if (!form || form.status !== 'published') {
+  if (!form) {
     throw createError({ statusCode: 404, statusMessage: 'Form not found.' })
   }
   const { input, files } = await readSubmission(event, form.content)
@@ -291,15 +288,10 @@ function rowToRecord(row: FormRow): FormRecord {
   return {
     id: Number(row.id),
     name: row.name,
-    status: asStatus(row.status),
     content: readStoredContent(row.content),
     createdAt: asIso(row.created_at),
     updatedAt: asIso(row.updated_at),
   }
-}
-
-function asStatus(value: string): FormStatus {
-  return value === 'published' ? 'published' : 'draft'
 }
 
 function asIso(value: string | Date): string {

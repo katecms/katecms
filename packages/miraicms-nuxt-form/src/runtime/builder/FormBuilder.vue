@@ -3,7 +3,7 @@ import type { CSSProperties } from 'vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import FieldFace from './FieldFace.vue'
 import FieldSettings from './FieldSettings.vue'
-import type { Breakpoint, FieldType, FormContent, FormField, FormStatus, LayoutItem } from '../form/model'
+import type { Breakpoint, FieldType, FormContent, FormField, LayoutItem } from '../form/model'
 import {
   FIELD_LABELS,
   GRID_COLUMNS,
@@ -21,6 +21,7 @@ import {
   removeField,
   reorderSteps,
   replaceField,
+  isSubmitButton,
   setLayoutItem,
 } from '../form/model'
 import { clientFormBreakpoints } from '../form/runtime-config'
@@ -30,7 +31,6 @@ import StepSettings from './StepSettings.vue'
 const rootClass = 'miraicms-form-builder'
 
 defineModel<string>('name', { required: true })
-const status = defineModel<FormStatus>('status', { required: true })
 const content = defineModel<FormContent>('content', { required: true })
 
 const notificationErrors = ref<Record<string, string>>({})
@@ -101,7 +101,7 @@ const currentStepId = computed(() => {
 })
 const layout = computed(() => (content.value.layouts[breakpoint.value] ?? []).filter((item) => {
   return content.value.fields.find(field => field.id === item.fieldId)?.stepId === currentStepId.value
-}))
+}).sort((a, b) => a.y - b.y || a.x - b.x || a.fieldId.localeCompare(b.fieldId)))
 watch(selectedId, (id) => {
   if (id) {
     sidebarTab.value = 'options'
@@ -116,6 +116,13 @@ watch(stepSettingsOpen, (open) => {
 
 const selected = computed(() => content.value.fields.find(field => field.id === selectedId.value) ?? null)
 const selectedItem = computed(() => layout.value.find(item => item.fieldId === selectedId.value) ?? null)
+const submitTaken = computed(() => {
+  const current = selected.value
+  if (!current) {
+    return false
+  }
+  return content.value.fields.some(field => field.id !== current.id && isSubmitButton(field))
+})
 const frameStyle = computed(() => {
   const current = formBreakpointList.find(item => item.name === breakpoint.value)
   if (current?.maxWidth) {
@@ -139,10 +146,19 @@ function hasBreakpointIcon(name: string) {
 }
 
 function add(type: FieldType) {
+  const before = new Set(content.value.fields.map(field => field.id))
   const next = addField(content.value, type, currentStepId.value)
   content.value = next
-  selectedId.value = next.fields.at(-1)?.id ?? null
+  const created = next.fields.find(field => !before.has(field.id))
+  selectedId.value = created?.id ?? null
+  if (created) {
+    activeStepId.value = created.stepId
+  }
   stepSettingsOpen.value = false
+}
+
+function fieldLocked(fieldId: string) {
+  return content.value.fields.some(field => field.id === fieldId && field.locked)
 }
 
 function selectStep(stepId: string) {
@@ -950,6 +966,7 @@ onBeforeUnmount(() => {
             v-else-if="selected && selectedItem"
             :field="selected"
             :item="selectedItem"
+            :submit-taken="submitTaken"
             @update="onUpdateField"
             @layout="onUpdateLayout"
           />
@@ -1357,6 +1374,7 @@ onBeforeUnmount(() => {
                   @pointerdown.stop
                 >
                   <button
+                    v-if="!fieldLocked(item.fieldId)"
                     type="button"
                     :class="`${rootClass}__item-action`"
                     aria-label="Clone"
@@ -1389,6 +1407,7 @@ onBeforeUnmount(() => {
                     </svg>
                   </button>
                   <button
+                    v-if="!fieldLocked(item.fieldId)"
                     type="button"
                     :class="`${rootClass}__item-action`"
                     aria-label="Remove"
@@ -1509,6 +1528,7 @@ onBeforeUnmount(() => {
                         <span>Deselect</span>
                       </button>
                       <button
+                        v-if="!fieldLocked(item.fieldId)"
                         type="button"
                         @click="onCloneField(item.fieldId)"
                       >
@@ -1574,6 +1594,7 @@ onBeforeUnmount(() => {
                         </div>
                       </div>
                       <button
+                        v-if="!fieldLocked(item.fieldId)"
                         type="button"
                         @click="onRemove(item.fieldId)"
                       >
@@ -1755,21 +1776,8 @@ onBeforeUnmount(() => {
           field-key="form-name"
           :field="{ type: 'text', label: 'Name', maxLength: 160 }"
         />
-        <MiraiCmsSelectField
-          v-model="status"
-          field-key="form-status"
-          :field="{
-            type: 'select',
-            label: 'Status',
-            returnFormat: 'value',
-            choices: [
-              { val: 'draft', lbl: 'Draft' },
-              { val: 'published', lbl: 'Published' },
-            ],
-          }"
-        />
         <div :class="`${rootClass}__usage`">
-          Published forms render with <span>&lt;MiraiCmsForm form="1" /&gt;</span>
+          Forms render with <span>&lt;MiraiCmsForm form="1" /&gt;</span>
         </div>
       </div>
       -->
@@ -1848,6 +1856,27 @@ $root: '.miraicms-form-builder';
     min-height: 0;
     overflow: auto;
     padding: math-rem(8);
+
+    #{$root} {
+      &__group {
+        &:not(:last-child) {
+          margin-bottom: math-rem(16);
+        }
+      }
+    }
+  }
+
+  &__group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: math-rem(8);
+
+    #{$root} {
+      &__heading {
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+    }
   }
 
   &__empty {
@@ -1911,8 +1940,8 @@ $root: '.miraicms-form-builder';
   }
 
   &__add {
-    width: 100%;
-    margin-bottom: math-rem(6);
+    flex: 0 0 calc(50% - math-rem(4.01));
+    max-width: calc(50% - math-rem(4.01));
     justify-content: flex-start;
   }
 
@@ -2325,9 +2354,9 @@ $root: '.miraicms-form-builder';
 
   &__move {
     &-steps {
-      position: absolute;
-      z-index: 6;
-      display: flex;
+      display: none;
+      position: fixed;
+      z-index: 30;
       flex-direction: column;
       min-width: math-rem(168);
       padding: math-rem(4);
@@ -2355,10 +2384,6 @@ $root: '.miraicms-form-builder';
           background: $color-bg;
         }
       }
-
-      display: none;
-      position: fixed;
-      z-index: 30;
 
       &.is-open {
         display: flex;

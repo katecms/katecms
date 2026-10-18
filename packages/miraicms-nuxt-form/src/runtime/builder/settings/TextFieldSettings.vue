@@ -17,6 +17,7 @@ const rootClass = 'miraicms-text-settings'
 const props = defineProps<{
   field: FormField
   item: LayoutItem
+  submitTaken?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -86,6 +87,14 @@ function commit(text: FormTextOptions) {
       ? listedChoiceOptions(text).map(item => ({ label: item.label, value: item.value }))
       : props.field.options,
   })
+}
+
+function setButtonType(value: unknown) {
+  const next = value === 'button' || value === 'reset' ? value : 'submit'
+  if (next === 'submit' && props.submitTaken && options.value.buttonType !== 'submit') {
+    return
+  }
+  patch({ buttonType: next })
 }
 
 function patch(partial: Partial<FormTextOptions>) {
@@ -1996,12 +2005,12 @@ onBeforeUnmount(resetChoiceDrag)
         label: 'Button Type',
         returnFormat: 'value',
         choices: [
-          { val: 'submit', lbl: 'Submit' },
+          { val: 'submit', lbl: 'Submit', disabled: submitTaken && options.buttonType !== 'submit' },
           { val: 'button', lbl: 'Button' },
           { val: 'reset', lbl: 'Reset' },
         ],
       }"
-      @update:model-value="patch({ buttonType: $event === 'button' || $event === 'reset' ? $event : 'submit' })"
+      @update:model-value="setButtonType"
     />
 
     <MiraiCmsTrueFalseField

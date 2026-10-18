@@ -11,6 +11,7 @@ const rootClass = 'miraicms-form-settings'
 const props = defineProps<{
   field: FormField
   item: LayoutItem
+  submitTaken?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -84,6 +85,7 @@ function removeOption(index: number) {
       :key="field.id"
       :field="field"
       :item="item"
+      :submit-taken="submitTaken"
       @update="emit('update', $event)"
       @layout="emit('layout', $event)"
     />

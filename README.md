@@ -1,6 +1,6 @@
 # MiraiCMS
 
-Конфиг Nuxt-модуля `miraicms-nuxt`: ключ `miraicms` в `nuxt.config.ts` и параметры полей.
+Конфиг Nuxt-модуля `miraicms-nuxt`: ключ `miraicms` в `nuxt.config.ts`, параметры полей и вкладки сайдбара дополнений.
 
 ## Навигация
 
@@ -21,6 +21,8 @@
       - [fieldsQuery](#getQueryCollection-fieldsQuery)
     - [getTerms](#getTerms)
   - [Пример](#config-example)
+- [Дополнения](#addons)
+  - [Вкладки сайдбара записи](#addons-entry-sidebar)
 - [Общие параметры полей](#fields-base)
 - [Поля](#fields)
   - [PostObjectField](#PostObjectField)
@@ -511,6 +513,53 @@ export default defineNuxtConfig({
   },
 })
 ```
+
+<a id="addons"></a>
+## Дополнения
+
+Модули `miraicms-nuxt-seo` и `miraicms-nuxt-form` подключаются рядом с `miraicms-nuxt`. Точки расширения админки импортируются из `miraicms-nuxt/extensions`.
+
+```ts
+export default defineNuxtConfig({
+  modules: [
+    'miraicms-nuxt',
+    'miraicms-nuxt-seo',
+  ],
+})
+```
+
+<a id="addons-entry-sidebar"></a>
+### Вкладки сайдбара записи
+
+Сайдбар формы записи (`.miraicms-collection-form__sidebar`) показывает вкладки, когда дополнение зарегистрировало хотя бы одну. Первая вкладка — **Page**: публикация, словари и поля с `position: 'sidebar'`. Дальше идут вкладки дополнений в порядке регистрации. Ключ `page` занят этой вкладкой.
+
+`miraicms-nuxt-seo` регистрирует вкладку **SEO**. Панель — `SeoEntryPanel` в пакете `miraicms-nuxt-seo`. У новой записи на вкладке написано сохранить запись перед редактированием SEO. Сохранение SEO отдельное от кнопки Publish.
+
+Своя вкладка регистрируется из плагина. Компонент к этому моменту уже стоит на Vue-приложении. Повторный вызов с тем же `key` заменяет вкладку.
+
+| Поле | Тип | Смысл |
+|---|---|---|
+| `key` | `string` | Стабильный id. Не `page` |
+| `label` | `string` | Подпись вкладки |
+| `component` | `string` | Имя компонента на приложении |
+
+```ts
+import { registerMiraiCmsEntrySidebarTab } from 'miraicms-nuxt/extensions'
+import MyPanel from './MyPanel.vue'
+
+export default defineNuxtPlugin((nuxtApp) => {
+  nuxtApp.vueApp.component('MiraiCmsMyPanel', MyPanel)
+  registerMiraiCmsEntrySidebarTab({
+    key: 'my-addon',
+    label: 'Notes',
+    component: 'MiraiCmsMyPanel',
+  })
+})
+```
+
+Панель вкладки монтируется при первом открытии и остаётся смонтированной при переключении. Вкладка Page тоже остаётся в дереве.
+
+Пункт меню добавляется через `useMiraiCmsMenuItems()`. Панель под формой термина словаря — список имён компонентов в `useMiraiCmsTermPanels()`.
 
 <a id="fields-base"></a>
 ## Общие параметры полей

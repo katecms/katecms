@@ -567,6 +567,7 @@
 {"n":"MiraiSeoHeadInput","k":"iface","p":"packages/miraicms-nuxt-seo/src/runtime/composables/useMiraiSeoHead.ts"}
 {"n":"monthKey","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/media-library-query.ts"}
 {"n":"monthLabel","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/media-library-query.ts"}
+{"n":"moveFieldToRepeater","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"moveFieldToStep","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"newBlockId","k":"fn","p":"packages/core/src/blocks.ts"}
 {"n":"NewCollection","k":"type","p":"packages/core/src/database/queries/collections.ts"}
@@ -715,6 +716,9 @@
 {"n":"removeField","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"renderTitle","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/utils/title.ts"}
 {"n":"reorderSteps","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"RepeatButtonAlign","k":"type","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
+{"n":"RepeatButtonPosition","k":"type","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
+{"n":"RepeatButtonView","k":"type","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"RepeaterField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/RepeaterField.vue"}
 {"n":"replaceField","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"requireCollection","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}

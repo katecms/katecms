@@ -86,6 +86,7 @@ function removeOption(index: number) {
       :field="field"
       :item="item"
       :submit-taken="submitTaken"
+      :nested="!!field.parentId"
       @update="emit('update', $event)"
       @layout="emit('layout', $event)"
     />

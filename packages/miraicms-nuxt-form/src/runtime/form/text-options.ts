@@ -105,6 +105,10 @@ export interface FormBoundError {
   errorSuffix: FormIcon | null
 }
 
+export type RepeatButtonPosition = 'top' | 'bottom' | 'left' | 'right'
+export type RepeatButtonAlign = 'start' | 'center' | 'end'
+export type RepeatButtonView = 'vertical' | 'vertical-reverse' | 'horizontal' | 'horizontal-reverse'
+
 export interface FormRatingOption {
   id: string
   icon: FormIcon | null
@@ -227,6 +231,16 @@ export interface FormTextOptions {
   imageHeight: number | null
   imageAlt: string
   spacerHeight: number | null
+  repeatDefault: number | null
+  repeatMinimum: FormBoundError
+  repeatMaximum: FormBoundError
+  repeatButtonPosition: RepeatButtonPosition
+  repeatButtonAlign: RepeatButtonAlign
+  repeatButtonView: RepeatButtonView
+  repeatAdd: FormMarkedText
+  repeatRemove: FormMarkedText
+  repeatAddEnd: FormMarkedText
+  repeatAddEndAlign: RepeatButtonAlign
 }
 
 export interface PatternPreset {
@@ -442,6 +456,27 @@ export function defaultTextOptions(label = ''): FormTextOptions {
     imageHeight: null,
     imageAlt: '',
     spacerHeight: 40,
+    repeatDefault: 1,
+    repeatMinimum: emptyBoundError(1, 'Add at least ${minimum} row(s)'),
+    repeatMaximum: emptyBoundError(null, 'Please add no more than ${maximum} row(s)'),
+    repeatButtonPosition: 'bottom',
+    repeatButtonAlign: 'start',
+    repeatButtonView: 'horizontal',
+    repeatAdd: { enabled: true, text: 'Add', prefix: null, suffix: null },
+    repeatRemove: { enabled: true, text: 'Remove', prefix: null, suffix: null },
+    repeatAddEnd: emptyMarkedText('Add to end'),
+    repeatAddEndAlign: 'start',
+  }
+}
+
+function emptyBoundError(value: number | null, errorText: string): FormBoundError {
+  return {
+    value,
+    showError: true,
+    customError: false,
+    errorText,
+    errorPrefix: null,
+    errorSuffix: null,
   }
 }
 
@@ -497,7 +532,7 @@ export function defaultChoiceOptions(): FormChoiceOption[] {
   }))
 }
 
-const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'image_select', 'select', 'radio', 'checkbox', 'title', 'image', 'divider', 'html', 'spacer'])
+const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'image_select', 'select', 'radio', 'checkbox', 'title', 'image', 'divider', 'html', 'spacer', 'repeater'])
 
 const FIELD_OPTIONS: Record<string, number[]> = {
   text: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
@@ -525,6 +560,7 @@ const FIELD_OPTIONS: Record<string, number[]> = {
   divider: [16],
   html: [15],
   spacer: [16],
+  repeater: [1, 3, 70, 71, 72, 73, 74, 7, 15, 18],
 }
 
 export const FILE_TYPE_ACCEPT: Record<Exclude<FileKind, ''>, { label: string, accept: string }> = {
@@ -822,6 +858,41 @@ export function normalizeTextOptions(raw: unknown, fallback: { label?: string, p
     imageHeight: optionalCount(source.imageHeight),
     imageAlt: clip(source.imageAlt, 200),
     spacerHeight: optionalCount(source.spacerHeight) ?? 40,
+    ...normalizeRepeat(source, defaults),
+  }
+}
+
+function normalizeRepeat(source: Record<string, unknown>, defaults: FormTextOptions): Pick<FormTextOptions, 'repeatDefault' | 'repeatMinimum' | 'repeatMaximum' | 'repeatButtonPosition' | 'repeatButtonAlign' | 'repeatButtonView' | 'repeatAdd' | 'repeatRemove' | 'repeatAddEnd' | 'repeatAddEndAlign'> {
+  const minimum = normalizeBoundError(source.repeatMinimum, defaults.repeatMinimum.errorText)
+  const maximum = normalizeBoundError(source.repeatMaximum, defaults.repeatMaximum.errorText)
+  if (minimum.value != null && maximum.value != null && maximum.value < minimum.value) {
+    maximum.value = minimum.value
+  }
+  let repeatDefault = optionalCount(source.repeatDefault)
+  if (repeatDefault == null) {
+    repeatDefault = defaults.repeatDefault
+  }
+  if (repeatDefault != null && minimum.value != null && repeatDefault < minimum.value) {
+    repeatDefault = minimum.value
+  }
+  if (repeatDefault != null && maximum.value != null && repeatDefault > maximum.value) {
+    repeatDefault = maximum.value
+  }
+  const position = source.repeatButtonPosition
+  const align = source.repeatButtonAlign
+  const view = source.repeatButtonView
+  const endAlign = source.repeatAddEndAlign
+  return {
+    repeatDefault,
+    repeatMinimum: minimum,
+    repeatMaximum: maximum,
+    repeatButtonPosition: position === 'top' || position === 'left' || position === 'right' ? position : 'bottom',
+    repeatButtonAlign: align === 'center' || align === 'end' ? align : 'start',
+    repeatButtonView: view === 'vertical' || view === 'vertical-reverse' || view === 'horizontal-reverse' ? view : 'horizontal',
+    repeatAdd: normalizeMarked(source.repeatAdd, 'Add'),
+    repeatRemove: { ...normalizeMarked(source.repeatRemove, 'Remove'), enabled: true },
+    repeatAddEnd: normalizeMarked(source.repeatAddEnd, 'Add to end'),
+    repeatAddEndAlign: endAlign === 'center' || endAlign === 'end' ? endAlign : 'start',
   }
 }
 

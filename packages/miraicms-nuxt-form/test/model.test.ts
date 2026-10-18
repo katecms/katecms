@@ -15,6 +15,9 @@ import {
   notificationFieldErrors,
   createEmptyContent,
   hasSubmitButton,
+  isSubmitButton,
+  moveFieldToRepeater,
+  moveFieldToStep,
   removeField,
   normalizeFormContent,
   overlaps,
@@ -576,4 +579,27 @@ test('conditional logic compares values and changes the target field', () => {
   assert.equal(fieldConditionStates(chain, { name: 'Bob' }).note?.hidden, true)
   assert.equal(fieldConditionStates(chain, { name: 'Sam' }).colors?.hidden, false)
   assert.equal(fieldConditionStates(chain, { name: 'Sam' }).note?.hidden, true)
+})
+
+test('a field can move into a repeater and back onto its step', () => {
+  let content = createEmptyContent()
+  content = addField(content, 'repeater')
+  content = addField(content, 'text')
+  const repeater = content.fields.find(field => field.type === 'repeater')!
+  const text = content.fields.find(field => field.type === 'text')!
+  const submit = content.fields.find(isSubmitButton)!
+  assert.equal(content.layouts.desktop.some(item => item.fieldId === text.id), true)
+  content = moveFieldToRepeater(content, text.id, repeater.id)
+  assert.equal(content.fields.find(field => field.id === text.id)?.parentId, repeater.id)
+  assert.equal(content.layouts.desktop.some(item => item.fieldId === text.id), false)
+  content = moveFieldToRepeater(content, submit.id, repeater.id)
+  assert.equal(content.fields.find(field => field.id === submit.id)?.parentId, undefined)
+  content = moveFieldToStep(content, text.id, repeater.stepId)
+  assert.equal(content.fields.find(field => field.id === text.id)?.parentId, undefined)
+  assert.equal(content.layouts.desktop.some(item => item.fieldId === text.id), true)
+  content = moveFieldToRepeater(content, text.id, repeater.id)
+  content = removeField(content, repeater.id)
+  assert.equal(content.fields.some(field => field.id === repeater.id), false)
+  assert.equal(content.fields.find(field => field.id === text.id)?.parentId, undefined)
+  assert.equal(content.layouts.desktop.some(item => item.fieldId === text.id), true)
 })

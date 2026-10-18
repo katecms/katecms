@@ -2,6 +2,7 @@
 import type { CSSProperties } from 'vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import FieldFace from './FieldFace.vue'
+import FieldItemMenu from './FieldItemMenu.vue'
 import FieldSettings from './FieldSettings.vue'
 import type { Breakpoint, FieldType, FormContent, FormField, LayoutItem } from '../form/model'
 import {
@@ -17,6 +18,7 @@ import {
   notificationFieldErrors,
   deleteStep,
   cloneField,
+  moveFieldToRepeater,
   moveFieldToStep,
   removeField,
   reorderSteps,
@@ -26,6 +28,7 @@ import {
   setLayoutItem,
 } from '../form/model'
 import { clientFormBreakpoints } from '../form/runtime-config'
+import { iconUrl } from '../form/text-options'
 import { provideMiraiCmsFieldErrors } from 'miraicms-nuxt/extensions'
 import ConditionalLogic from './settings/ConditionalLogic.vue'
 import StepSettings from './StepSettings.vue'
@@ -103,7 +106,8 @@ const currentStepId = computed(() => {
   return content.value.steps[0]?.id ?? ''
 })
 const layout = computed(() => (content.value.layouts[breakpoint.value] ?? []).filter((item) => {
-  return content.value.fields.find(field => field.id === item.fieldId)?.stepId === currentStepId.value
+  const field = content.value.fields.find(entry => entry.id === item.fieldId)
+  return field?.stepId === currentStepId.value && !field.parentId
 }).sort((a, b) => a.y - b.y || a.x - b.x || a.fieldId.localeCompare(b.fieldId)))
 watch(selectedId, (id) => {
   if (id) {
@@ -119,6 +123,12 @@ watch(stepSettingsOpen, (open) => {
 
 const selected = computed(() => content.value.fields.find(field => field.id === selectedId.value) ?? null)
 const selectedItem = computed(() => layout.value.find(item => item.fieldId === selectedId.value) ?? null)
+const selectedLayout = computed(() => {
+  if (!selected.value) {
+    return null
+  }
+  return selectedItem.value ?? (selected.value.parentId ? { fieldId: selected.value.id, x: 0, y: 0, w: GRID_COLUMNS } : null)
+})
 const submitTaken = computed(() => {
   const current = selected.value
   if (!current) {
@@ -141,6 +151,7 @@ const baseLabel = computed(() => {
 const palette = [
   { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month'] as FieldType[] },
   { title: 'Option/Choice Fields', types: ['image_select', 'select', 'rating', 'radio', 'checkbox'] as FieldType[] },
+  { title: 'Advanced Fields', types: ['repeater'] as FieldType[] },
   { title: 'Elements', types: ['title', 'image', 'divider', 'html', 'spacer'] as FieldType[] },
 ]
 
@@ -328,6 +339,9 @@ function onUpdateField(field: FormField) {
 }
 
 function onUpdateLayout(item: LayoutItem) {
+  if (selected.value?.parentId) {
+    return
+  }
   content.value = setLayoutItem(content.value, breakpoint.value, item, true)
 }
 
@@ -409,9 +423,39 @@ function onMoveField(fieldId: string, stepId: string) {
   openMoveMenu.value = ''
 }
 
-function otherSteps(fieldId: string) {
-  const stepId = content.value.fields.find(field => field.id === fieldId)?.stepId
-  return content.value.steps.filter(step => step.id !== stepId)
+function onMoveToRepeater(fieldId: string, repeaterId: string) {
+  content.value = moveFieldToRepeater(content.value, fieldId, repeaterId)
+  selectedId.value = fieldId
+  openFieldMenu.value = ''
+  openMoveMenu.value = ''
+}
+
+function repeaterChildren(repeaterId: string) {
+  return content.value.fields.filter(field => field.parentId === repeaterId)
+}
+
+function repeaterTargets(fieldId: string) {
+  return moveRepeaters(fieldId).map(repeater => ({ id: repeater.id, label: repeater.label || repeater.key }))
+}
+
+function moveSteps(fieldId: string) {
+  const field = content.value.fields.find(item => item.id === fieldId)
+  if (!field) {
+    return []
+  }
+  return content.value.steps.filter(step => step.id !== field.stepId || !!field.parentId)
+}
+
+function moveRepeaters(fieldId: string) {
+  const field = content.value.fields.find(item => item.id === fieldId)
+  if (!field || field.locked || field.type === 'repeater' || isSubmitButton(field)) {
+    return []
+  }
+  return content.value.fields.filter(item => item.type === 'repeater' && item.id !== field.parentId)
+}
+
+function canMove(fieldId: string) {
+  return moveSteps(fieldId).length > 0 || moveRepeaters(fieldId).length > 0
 }
 
 function matchDesktop() {
@@ -1018,9 +1062,9 @@ onBeforeUnmount(() => {
             @update="content = $event"
           />
           <FieldSettings
-            v-else-if="selected && selectedItem"
+            v-else-if="selected && selectedLayout"
             :field="selected"
-            :item="selectedItem"
+            :item="selectedLayout"
             :submit-taken="submitTaken"
             @update="onUpdateField"
             @layout="onUpdateLayout"
@@ -1429,259 +1473,124 @@ onBeforeUnmount(() => {
                   preview
                 />
                 <div
-                  :class="`${rootClass}__item-actions`"
+                  v-if="fieldById(item.fieldId)?.type === 'repeater'"
+                  :class="`${rootClass}__repeater`"
+                  :data-position="fieldById(item.fieldId)?.text?.repeatButtonPosition || 'bottom'"
+                  :data-align="fieldById(item.fieldId)?.text?.repeatButtonAlign || 'start'"
                   @pointerdown.stop
                 >
-                  <button
-                    v-if="!fieldLocked(item.fieldId)"
-                    type="button"
-                    :class="`${rootClass}__item-action`"
-                    aria-label="Clone"
-                    title="Clone"
-                    @click="onCloneField(item.fieldId)"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="17"
-                      height="17"
-                      viewBox="0 0 30 30"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M13.89,11.7h10a2.2,2.2,0,0,1,2.22,2.2v9.9A2.2,2.2,0,0,1,23.88,26h-10a2.2,2.2,0,0,1-2.22-2.2V13.9A2.2,2.2,0,0,1,13.89,11.7Z"
-                      />
-                      <path
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M7.23,18.3H6.12A2.2,2.2,0,0,1,3.9,16.1V6.2A2.2,2.2,0,0,1,6.12,4h10a2.2,2.2,0,0,1,2.22,2.2V7.3"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    v-if="!fieldLocked(item.fieldId)"
-                    type="button"
-                    :class="`${rootClass}__item-action`"
-                    aria-label="Remove"
-                    title="Remove"
-                    @click="onRemove(item.fieldId)"
-                  >
-                    <svg
-                      width="19"
-                      height="19"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <g
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="M4 7h16" />
-                        <path d="M10 11v6" />
-                        <path d="M14 11v6" />
-                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12" />
-                        <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
-                      </g>
-                    </svg>
-                  </button>
-                  <div :class="`${rootClass}__more`">
-                    <button
-                      type="button"
-                      :class="`${rootClass}__item-action`"
-                      aria-label="More Options"
-                      title="More Options"
-                      :aria-expanded="openFieldMenu === item.fieldId"
-                      @click="toggleFieldMenu(item.fieldId, $event)"
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <circle
-                          cx="5"
-                          cy="12"
-                          r="1.6"
-                          fill="currentColor"
-                        />
-                        <circle
-                          cx="12"
-                          cy="12"
-                          r="1.6"
-                          fill="currentColor"
-                        />
-                        <circle
-                          cx="19"
-                          cy="12"
-                          r="1.6"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </button>
+                  <div :class="`${rootClass}__repeater-fields`">
                     <div
-                      v-if="openFieldMenu === item.fieldId"
-                      :class="[`${rootClass}__item-menu`, { 'is-left': fieldMenuSide === 'left' }]"
+                      v-for="child in repeaterChildren(item.fieldId)"
+                      :key="child.id"
+                      :class="[`${rootClass}__item`, {
+                        'is-selected': child.id === selectedId,
+                        'is-hidden': canvasState(child.id).hidden,
+                        'is-menu-open': openFieldMenu === child.id,
+                      }]"
+                      @pointerdown.stop
+                      @click="selectedId = child.id"
                     >
-                      <button
-                        type="button"
-                        @click="selectedId = null; openFieldMenu = ''"
-                      >
-                        <svg
-                          width="17"
-                          height="17"
-                          viewBox="0 0 30 30"
-                          aria-hidden="true"
-                        >
-                          <path
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M6.4,4.16H23.6a2.43,2.43,0,0,1,2.45,2.41V23.43a2.43,2.43,0,0,1-2.45,2.41H6.4A2.43,2.43,0,0,1,4,23.43V6.57A2.43,2.43,0,0,1,6.4,4.16Z"
-                          />
-                          <path
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M12.4,20.7H10.3a1,1,0,0,1-1-1V17.6"
-                          />
-                          <path
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M20.7,17.6v2.1a1,1,0,0,1-1,1H17.6"
-                          />
-                          <path
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M17.6,9.3h2.1a1,1,0,0,1,1,1v2.1"
-                          />
-                          <path
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M9.3,12.4V10.3a1,1,0,0,1,1-1h2.1"
-                          />
-                        </svg>
-                        <span>Deselect</span>
-                      </button>
-                      <button
-                        v-if="!fieldLocked(item.fieldId)"
-                        type="button"
-                        @click="onCloneField(item.fieldId)"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="17"
-                          height="17"
-                          viewBox="0 0 30 30"
-                          aria-hidden="true"
-                        >
-                          <path
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M13.89,11.7h10a2.2,2.2,0,0,1,2.22,2.2v9.9A2.2,2.2,0,0,1,23.88,26h-10a2.2,2.2,0,0,1-2.22-2.2V13.9A2.2,2.2,0,0,1,13.89,11.7Z"
-                          />
-                          <path
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M7.23,18.3H6.12A2.2,2.2,0,0,1,3.9,16.1V6.2A2.2,2.2,0,0,1,6.12,4h10a2.2,2.2,0,0,1,2.22,2.2V7.3"
-                          />
-                        </svg>
-                        <span>Clone</span>
-                      </button>
-                      <div
-                        v-if="content.steps.length > 1"
-                        :class="`${rootClass}__move`"
-                        @mouseenter="showMoveMenu(item.fieldId, $event)"
-                        @mouseleave="hideMoveMenu"
-                      >
-                        <button type="button">
-                          <svg
-                            height="15"
-                            width="15"
-                            viewBox="0 0 20 20"
-                            aria-hidden="true"
-                          >
-                            <path
-                              fill="currentColor"
-                              d="M6.97 4.78a.75.75 0 0 0 1.06 0l1.22-1.22v3.19a.75.75 0 0 0 1.5 0V3.56l1.22 1.22a.75.75 0 1 0 1.06-1.06l-2.5-2.5a.75.75 0 0 0-1.06 0l-2.5 2.5a.75.75 0 0 0 0 1.06zM4.78 8.03a.75.75 0 0 0-1.06-1.06l-2.5 2.5a.75.75 0 0 0 0 1.06l2.5 2.5a.75.75 0 0 0 1.06-1.06l-1.22-1.22h3.19a.75.75 0 0 0 0-1.5H3.56l1.22-1.22zm10.44-1.06a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 0 1 0 1.06l-2.5 2.5a.75.75 0 1 1-1.06-1.06l1.22-1.22h-3.19a.75.75 0 0 1 0-1.5h3.19l-1.22-1.22a.75.75 0 0 1 0-1.06zm-5.97 9.47l-1.22-1.22a.75.75 0 0 0-1.06 1.06l2.5 2.5a.75.75 0 0 0 1.06 0l2.5-2.5a.75.75 0 1 0-1.06-1.06l-1.22 1.22v-3.19a.75.75 0 0 0-1.5 0v3.19z"
-                            />
-                          </svg>
-                          <span>Move to</span>
-                        </button>
-                        <div
-                          :class="[`${rootClass}__move-steps`, { 'is-open': openMoveMenu === item.fieldId }]"
-                          :style="openMoveMenu === item.fieldId ? moveMenuStyle : undefined"
-                          @mouseenter="keepMoveMenu"
-                        >
-                          <button
-                            v-for="step in otherSteps(item.fieldId)"
-                            :key="step.id"
-                            type="button"
-                            @click="onMoveField(item.fieldId, step.id)"
-                          >
-                            {{ step.label }}
-                          </button>
-                        </div>
-                      </div>
-                      <button
-                        v-if="!fieldLocked(item.fieldId)"
-                        type="button"
-                        @click="onRemove(item.fieldId)"
-                      >
-                        <svg
-                          width="17"
-                          height="17"
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                        >
-                          <g
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          >
-                            <path d="M4 7h16" />
-                            <path d="M10 11v6" />
-                            <path d="M14 11v6" />
-                            <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12" />
-                            <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
-                          </g>
-                        </svg>
-                        <span>Remove</span>
-                      </button>
+                      <FieldFace
+                        :field="child"
+                        :disabled="canvasState(child.id).disabled"
+                        :logic-readonly="canvasState(child.id).readonly"
+                        preview
+                      />
+                      <FieldItemMenu
+                        :field-id="child.id"
+                        :locked="fieldLocked(child.id)"
+                        :menu-open="openFieldMenu === child.id"
+                        :menu-side="fieldMenuSide"
+                        :move-open="openMoveMenu === child.id"
+                        :move-style="moveMenuStyle"
+                        :steps="moveSteps(child.id)"
+                        :repeaters="repeaterTargets(child.id)"
+                        @clone="onCloneField(child.id)"
+                        @remove="onRemove(child.id)"
+                        @deselect="selectedId = null; openFieldMenu = ''"
+                        @toggle-menu="toggleFieldMenu(child.id, $event)"
+                        @move-enter="showMoveMenu(child.id, $event)"
+                        @move-leave="hideMoveMenu"
+                        @move-keep="keepMoveMenu"
+                        @move-step="onMoveField(child.id, $event)"
+                        @move-repeater="onMoveToRepeater(child.id, $event)"
+                      />
                     </div>
                   </div>
+                  <div
+                    :class="`${rootClass}__repeater-buttons`"
+                    :data-view="fieldById(item.fieldId)?.text?.repeatButtonView || 'horizontal'"
+                  >
+                    <button
+                      v-if="fieldById(item.fieldId)?.text?.repeatAdd.enabled !== false"
+                      type="button"
+                    >
+                      <img
+                        v-if="iconUrl(fieldById(item.fieldId)?.text?.repeatAdd.prefix)"
+                        :src="iconUrl(fieldById(item.fieldId)?.text?.repeatAdd.prefix)"
+                        alt=""
+                      >
+                      <span>{{ fieldById(item.fieldId)?.text?.repeatAdd.text || 'Add' }}</span>
+                      <img
+                        v-if="iconUrl(fieldById(item.fieldId)?.text?.repeatAdd.suffix)"
+                        :src="iconUrl(fieldById(item.fieldId)?.text?.repeatAdd.suffix)"
+                        alt=""
+                      >
+                    </button>
+                    <button type="button">
+                      <img
+                        v-if="iconUrl(fieldById(item.fieldId)?.text?.repeatRemove.prefix)"
+                        :src="iconUrl(fieldById(item.fieldId)?.text?.repeatRemove.prefix)"
+                        alt=""
+                      >
+                      <span>{{ fieldById(item.fieldId)?.text?.repeatRemove.text || 'Remove' }}</span>
+                      <img
+                        v-if="iconUrl(fieldById(item.fieldId)?.text?.repeatRemove.suffix)"
+                        :src="iconUrl(fieldById(item.fieldId)?.text?.repeatRemove.suffix)"
+                        alt=""
+                      >
+                    </button>
+                  </div>
                 </div>
+                <div
+                  v-if="fieldById(item.fieldId)?.type === 'repeater' && fieldById(item.fieldId)?.text?.repeatAddEnd.enabled"
+                  :class="`${rootClass}__repeater-end`"
+                  :data-align="fieldById(item.fieldId)?.text?.repeatAddEndAlign || 'start'"
+                >
+                  <button type="button">
+                    <img
+                      v-if="iconUrl(fieldById(item.fieldId)?.text?.repeatAddEnd.prefix)"
+                      :src="iconUrl(fieldById(item.fieldId)?.text?.repeatAddEnd.prefix)"
+                      alt=""
+                    >
+                    <span>{{ fieldById(item.fieldId)?.text?.repeatAddEnd.text || 'Add to end' }}</span>
+                    <img
+                      v-if="iconUrl(fieldById(item.fieldId)?.text?.repeatAddEnd.suffix)"
+                      :src="iconUrl(fieldById(item.fieldId)?.text?.repeatAddEnd.suffix)"
+                      alt=""
+                    >
+                  </button>
+                </div>
+                <FieldItemMenu
+                  :field-id="item.fieldId"
+                  :locked="fieldLocked(item.fieldId)"
+                  :menu-open="openFieldMenu === item.fieldId"
+                  :menu-side="fieldMenuSide"
+                  :move-open="openMoveMenu === item.fieldId"
+                  :move-style="moveMenuStyle"
+                  :steps="moveSteps(item.fieldId)"
+                  :repeaters="repeaterTargets(item.fieldId)"
+                  @clone="onCloneField(item.fieldId)"
+                  @remove="onRemove(item.fieldId)"
+                  @deselect="selectedId = null; openFieldMenu = ''"
+                  @toggle-menu="toggleFieldMenu(item.fieldId, $event)"
+                  @move-enter="showMoveMenu(item.fieldId, $event)"
+                  @move-leave="hideMoveMenu"
+                  @move-keep="keepMoveMenu"
+                  @move-step="onMoveField(item.fieldId, $event)"
+                  @move-repeater="onMoveToRepeater(item.fieldId, $event)"
+                />
                 <div
                   :class="[`${rootClass}__resizable-handle`, `${rootClass}__resizable-handle--left`]"
                   @pointerdown="onResizePointerDown($event, item, 'left')"
@@ -2295,101 +2204,9 @@ $root: '.miraicms-form-builder';
       opacity: 0.55;
     }
 
-    &-actions {
-      display: none;
-      position: absolute;
-      top: math-rem(-14);
-      right: math-rem(-1);
-      z-index: 99;
-      align-items: center;
-      background-color: $color-accent-wash;
-      border-radius: $border-radius $border-radius 0 $border-radius;
-    }
-
-    &:hover > &-actions,
-    &.is-menu-open > &-actions {
+    &:hover > :deep(#{$root}__item-actions),
+    &.is-menu-open > :deep(#{$root}__item-actions) {
       display: flex;
-    }
-
-    &-action {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: math-rem(28);
-      height: math-rem(28);
-      padding: 0 math-rem(6);
-      border: 0;
-      background: transparent;
-      color: $color-ink;
-      cursor: pointer;
-      box-shadow: none;
-      border-radius: 0;
-
-      &:nth-child(1) {
-        border-radius: $border-radius-inter 0 0 $border-radius-inter;
-      }
-
-      svg {
-        display: block;
-        width: math-rem(18);
-        height: auto;
-      }
-
-      &:hover {
-        background: $color-accent;
-        color: $color-surface;
-      }
-    }
-
-    &-menu {
-      position: absolute;
-      z-index: 6;
-      display: flex;
-      flex-direction: column;
-      min-width: math-rem(168);
-      padding: math-rem(4);
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
-      background: $color-surface;
-      box-shadow: $shadow-md;
-
-      button {
-        display: flex;
-        align-items: center;
-        gap: math-rem(8);
-        width: 100%;
-        padding: math-rem(6) math-rem(8);
-        border: 0;
-        border-radius: math-rem(4);
-        background: transparent;
-        color: $color-ink;
-        font: inherit;
-        font-size: math-rem(13);
-        text-align: left;
-        cursor: pointer;
-
-        &:hover {
-          background: $color-bg;
-        }
-      }
-
-      top: 100%;
-      left: 0;
-      margin-top: math-rem(4);
-
-      &.is-left {
-        left: auto;
-        right: 0;
-      }
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: math-rem(-8);
-        right: 0;
-        left: 0;
-        height: math-rem(8);
-      }
     }
 
     &.is-menu-open {
@@ -2416,71 +2233,124 @@ $root: '.miraicms-form-builder';
     }
   }
 
-  &__more {
-    position: relative;
+  &__repeater {
+    display: flex;
+    gap: math-rem(8);
+    width: 100%;
 
-    #{$root}__item-action {
-      border-radius: 0 $border-radius-inter $border-radius-inter 0;
+    &[data-position='top'] {
+      flex-direction: column-reverse;
+    }
+
+    &[data-position='bottom'] {
+      flex-direction: column;
+    }
+
+    &[data-position='left'] {
+      flex-direction: row-reverse;
+    }
+
+    &[data-position='right'] {
+      flex-direction: row;
+    }
+
+    &[data-position='top'],
+    &[data-position='bottom'] {
+      #{$root}__repeater-buttons {
+        align-self: flex-start;
+      }
+
+      &[data-align='center'] #{$root}__repeater-buttons {
+        align-self: center;
+      }
+
+      &[data-align='end'] #{$root}__repeater-buttons {
+        align-self: flex-end;
+      }
+    }
+
+    &[data-position='left'],
+    &[data-position='right'] {
+      align-items: flex-start;
+
+      &[data-align='center'] {
+        align-items: center;
+      }
+
+      &[data-align='end'] {
+        align-items: flex-end;
+      }
+    }
+
+    &-fields {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      min-width: 0;
+
+      #{$root}__item {
+        width: auto;
+        margin: 0 0 math-rem(8);
+        cursor: default;
+      }
+    }
+
+    &-buttons {
+      display: flex;
+      flex: 0 0 auto;
+      gap: math-rem(8);
+
+      &[data-view='horizontal'] {
+        flex-direction: row;
+      }
+
+      &[data-view='horizontal-reverse'] {
+        flex-direction: row-reverse;
+      }
+
+      &[data-view='vertical'] {
+        flex-direction: column;
+      }
+
+      &[data-view='vertical-reverse'] {
+        flex-direction: column-reverse;
+      }
     }
   }
 
-  &__move {
-    &-steps {
-      display: none;
-      position: fixed;
-      z-index: 30;
-      flex-direction: column;
-      min-width: math-rem(168);
-      padding: math-rem(4);
+  &__repeater-end {
+    display: flex;
+    width: 100%;
+    margin-top: math-rem(8);
+
+    &[data-align='center'] {
+      justify-content: center;
+    }
+
+    &[data-align='end'] {
+      justify-content: flex-end;
+    }
+  }
+
+  &__repeater-buttons,
+  &__repeater-end {
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: math-rem(6);
+      padding: math-rem(6) math-rem(10);
       border: 1px solid $color-border;
       border-radius: $border-radius;
       background: $color-surface;
-      box-shadow: $shadow-md;
-
-      button {
-        display: flex;
-        align-items: center;
-        gap: math-rem(8);
-        width: 100%;
-        padding: math-rem(6) math-rem(8);
-        border: 0;
-        border-radius: math-rem(4);
-        background: transparent;
-        color: $color-ink;
-        font: inherit;
-        font-size: math-rem(13);
-        text-align: left;
-        cursor: pointer;
-
-        &:hover {
-          background: $color-bg;
-        }
-      }
-
-      &.is-open {
-        display: flex;
-      }
+      color: $color-ink;
+      font: inherit;
+      cursor: default;
     }
 
-    position: relative;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      right: 100%;
-      width: math-rem(12);
-    }
-
-    &.is-right::before {
-      right: auto;
-      left: 100%;
-    }
-
-    &:hover > &-steps,
-    &:hover > &-steps.is-open {
-      display: flex;
+    img {
+      width: math-rem(16);
+      height: math-rem(16);
+      object-fit: contain;
     }
   }
 

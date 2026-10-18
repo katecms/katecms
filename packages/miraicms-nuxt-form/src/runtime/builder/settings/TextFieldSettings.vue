@@ -18,6 +18,7 @@ const props = defineProps<{
   field: FormField
   item: LayoutItem
   submitTaken?: boolean
+  nested?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -28,7 +29,17 @@ const emit = defineEmits<{
 const options = computed(() => props.field.text ?? defaultTextOptions(props.field.label))
 
 function has(id: number) {
+  if (id === 16 && props.nested) {
+    return false
+  }
   return fieldHasOption(props.field.type, id)
+}
+
+function repeatCount(value: number | null): number | null {
+  if (value == null || !Number.isFinite(value) || value < 0) {
+    return null
+  }
+  return Math.floor(value)
 }
 
 const checkPositions: { id: CheckPosition, svg: string }[] = [
@@ -1322,6 +1333,181 @@ onBeforeUnmount(resetChoiceDrag)
         />
       </div>
     </div>
+
+    <div
+      v-if="has(70)"
+      :class="`${rootClass}__group`"
+    >
+      <span :class="`${rootClass}__heading`">Repeatable Row Count (Min/Max)</span>
+      <MiraiCmsNumberField
+        :model-value="options.repeatDefault"
+        :field-key="`${field.id}-repeat-default`"
+        :field="{ type: 'number', label: 'Default Row', min: 0, step: 1 }"
+        @update:model-value="patch({ repeatDefault: repeatCount($event) })"
+      />
+      <MiraiCmsNumberField
+        :model-value="options.repeatMinimum.value"
+        :field-key="`${field.id}-repeat-min`"
+        :field="{ type: 'number', label: 'Minimum Row', min: 0, step: 1 }"
+        @update:model-value="patch({ repeatMinimum: { ...options.repeatMinimum, value: repeatCount($event) }, repeatMaximum: { ...options.repeatMaximum, value: options.repeatMaximum.value != null && repeatCount($event) != null && options.repeatMaximum.value < (repeatCount($event) ?? 0) ? repeatCount($event) : options.repeatMaximum.value } })"
+      />
+      <MiraiCmsTrueFalseField
+        :model-value="options.repeatMinimum.showError"
+        :field-key="`${field.id}-repeat-min-show`"
+        :field="{ type: 'true_false', label: 'Show Error Message' }"
+        @update:model-value="patch({ repeatMinimum: { ...options.repeatMinimum, showError: $event === true } })"
+      />
+      <MiraiCmsTrueFalseField
+        v-if="options.repeatMinimum.showError"
+        :model-value="options.repeatMinimum.customError"
+        :field-key="`${field.id}-repeat-min-custom`"
+        :field="{ type: 'true_false', label: 'Custom Error Message' }"
+        @update:model-value="patch({ repeatMinimum: { ...options.repeatMinimum, customError: $event === true } })"
+      />
+      <DecoratedText
+        v-if="options.repeatMinimum.showError && options.repeatMinimum.customError"
+        :field-key="`${field.id}-repeat-min-error`"
+        :model="{ enabled: true, text: options.repeatMinimum.errorText, prefix: options.repeatMinimum.errorPrefix, suffix: options.repeatMinimum.errorSuffix }"
+        text-label="Error message"
+        @update="patch({ repeatMinimum: { ...options.repeatMinimum, errorText: $event.text, errorPrefix: $event.prefix, errorSuffix: $event.suffix } })"
+      />
+      <MiraiCmsNumberField
+        :model-value="options.repeatMaximum.value"
+        :field-key="`${field.id}-repeat-max`"
+        :field="{ type: 'number', label: 'Maximum Row', min: options.repeatMinimum.value ?? 0, step: 1 }"
+        @update:model-value="patch({ repeatMaximum: { ...options.repeatMaximum, value: repeatCount($event) != null && options.repeatMinimum.value != null && (repeatCount($event) ?? 0) < options.repeatMinimum.value ? options.repeatMinimum.value : repeatCount($event) } })"
+      />
+      <MiraiCmsTrueFalseField
+        :model-value="options.repeatMaximum.showError"
+        :field-key="`${field.id}-repeat-max-show`"
+        :field="{ type: 'true_false', label: 'Show Error Message' }"
+        @update:model-value="patch({ repeatMaximum: { ...options.repeatMaximum, showError: $event === true } })"
+      />
+      <MiraiCmsTrueFalseField
+        v-if="options.repeatMaximum.showError"
+        :model-value="options.repeatMaximum.customError"
+        :field-key="`${field.id}-repeat-max-custom`"
+        :field="{ type: 'true_false', label: 'Custom Error Message' }"
+        @update:model-value="patch({ repeatMaximum: { ...options.repeatMaximum, customError: $event === true } })"
+      />
+      <DecoratedText
+        v-if="options.repeatMaximum.showError && options.repeatMaximum.customError"
+        :field-key="`${field.id}-repeat-max-error`"
+        :model="{ enabled: true, text: options.repeatMaximum.errorText, prefix: options.repeatMaximum.errorPrefix, suffix: options.repeatMaximum.errorSuffix }"
+        text-label="Error message"
+        @update="patch({ repeatMaximum: { ...options.repeatMaximum, errorText: $event.text, errorPrefix: $event.prefix, errorSuffix: $event.suffix } })"
+      />
+    </div>
+
+    <div
+      v-if="has(71)"
+      :class="`${rootClass}__group`"
+    >
+      <span :class="`${rootClass}__heading`">Button Layout and Position</span>
+      <MiraiCmsSelectField
+        :model-value="options.repeatButtonPosition"
+        :field-key="`${field.id}-repeat-position`"
+        :field="{
+          type: 'select',
+          label: 'Button Position',
+          returnFormat: 'value',
+          choices: [
+            { val: 'top', lbl: 'Top' },
+            { val: 'bottom', lbl: 'Bottom' },
+            { val: 'left', lbl: 'Left' },
+            { val: 'right', lbl: 'Right' },
+          ],
+        }"
+        @update:model-value="patch({ repeatButtonPosition: $event === 'top' || $event === 'left' || $event === 'right' ? $event : 'bottom' })"
+      />
+      <MiraiCmsSelectField
+        :model-value="options.repeatButtonAlign"
+        :field-key="`${field.id}-repeat-align`"
+        :field="{
+          type: 'select',
+          label: 'Button Alignment',
+          returnFormat: 'value',
+          choices: [
+            { val: 'start', lbl: 'Start' },
+            { val: 'center', lbl: 'Center' },
+            { val: 'end', lbl: 'End' },
+          ],
+        }"
+        @update:model-value="patch({ repeatButtonAlign: $event === 'center' || $event === 'end' ? $event : 'start' })"
+      />
+      <MiraiCmsSelectField
+        :model-value="options.repeatButtonView"
+        :field-key="`${field.id}-repeat-view`"
+        :field="{
+          type: 'select',
+          label: 'Button View',
+          returnFormat: 'value',
+          choices: [
+            { val: 'vertical', lbl: 'Vertical' },
+            { val: 'vertical-reverse', lbl: 'Vertical-reverse' },
+            { val: 'horizontal', lbl: 'Horizontal' },
+            { val: 'horizontal-reverse', lbl: 'Horizontal-Reverse' },
+          ],
+        }"
+        @update:model-value="patch({ repeatButtonView: $event === 'vertical' || $event === 'vertical-reverse' || $event === 'horizontal-reverse' ? $event : 'horizontal' })"
+      />
+    </div>
+
+    <OptionAccordion
+      v-if="has(72)"
+      title="Add Button"
+      :enabled="options.repeatAdd.enabled"
+      @update:enabled="patch({ repeatAdd: { ...options.repeatAdd, enabled: $event } })"
+    >
+      <DecoratedText
+        :field-key="`${field.id}-repeat-add`"
+        :model="options.repeatAdd"
+        text-label="Text"
+        @update="patch({ repeatAdd: $event })"
+      />
+    </OptionAccordion>
+
+    <div
+      v-if="has(73)"
+      :class="`${rootClass}__group`"
+    >
+      <span :class="`${rootClass}__heading`">Remove Button</span>
+      <DecoratedText
+        :field-key="`${field.id}-repeat-remove`"
+        :model="options.repeatRemove"
+        text-label="Text"
+        @update="patch({ repeatRemove: { ...$event, enabled: true } })"
+      />
+    </div>
+
+    <OptionAccordion
+      v-if="has(74)"
+      title="Add To End Button"
+      :enabled="options.repeatAddEnd.enabled"
+      @update:enabled="patch({ repeatAddEnd: { ...options.repeatAddEnd, enabled: $event } })"
+    >
+      <DecoratedText
+        :field-key="`${field.id}-repeat-end`"
+        :model="options.repeatAddEnd"
+        text-label="Text"
+        @update="patch({ repeatAddEnd: $event })"
+      />
+      <MiraiCmsSelectField
+        :model-value="options.repeatAddEndAlign"
+        :field-key="`${field.id}-repeat-end-align`"
+        :field="{
+          type: 'select',
+          label: 'Button Alignment',
+          returnFormat: 'value',
+          choices: [
+            { val: 'start', lbl: 'Start' },
+            { val: 'center', lbl: 'Center' },
+            { val: 'end', lbl: 'End' },
+          ],
+        }"
+        @update:model-value="patch({ repeatAddEndAlign: $event === 'center' || $event === 'end' ? $event : 'start' })"
+      />
+    </OptionAccordion>
 
     <OptionAccordion
       v-if="has(7)"

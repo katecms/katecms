@@ -290,3 +290,39 @@
 67) "Image" - ImageField
 68) number "Width" and number "Height"
 69) textarea "Image Alt Text"
+70) Repeatable Row Count(Min/Max):
+не могут быть отрицательными
+- number "Default Row"
+- number "Minimum Row"
+-- checkbox "Show Error Message"
+-- checkbox "Custom Error Message"
+-- текстовое поле (только если выбрано "Custom Error Message") + Prefix Icon и Suffix Icon
+- number "Maximum Row" - не может быть меньше "Minimum Row"
+  -- checkbox "Show Error Message"
+  -- checkbox "Custom Error Message"
+  -- текстовое поле (только если выбрано "Custom Error Message") + Prefix Icon и Suffix Icon
+71) Button Layout and Position:
+- select "Button Position":
+-- Top
+-- Bottom
+-- Left
+-- Right
+- select "Button Alignment":
+-- Start
+-- Center
+-- End
+- select "Button View":
+-- Vertical
+-- Vertical-reverse
+-- Horizontal
+-- Horizontal-Reverse
+72) "Add Button" - чекбокс в аккордеоне (слева от стрелки), если выбрать, открывается аккордеон (который стает активный и его можно закрыть/открыть) и там есть текстовое поле (textarea) + Prefix Icon и Suffix Icon
+73) "Remove Button" textarea + Prefix Icon и Suffix Icon
+74) "Add To End Button" - чекбокс в аккордеоне (слева от стрелки), если выбрать, открывается аккордеон (который стает активный и его можно закрыть/открыть) и там есть: 
+- textarea
+- Prefix Icon
+- Suffix Icon
+- select "Button Alignment":
+-- Start
+-- Center
+-- End

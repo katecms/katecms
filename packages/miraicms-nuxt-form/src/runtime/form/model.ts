@@ -61,6 +61,7 @@ export const FIELD_TYPES = [
   'hidden',
   'html',
   'button',
+  'repeater',
 ] as const
 export type FieldType = typeof FIELD_TYPES[number]
 
@@ -92,6 +93,7 @@ export const FIELD_LABELS: Record<FieldType, string> = {
   hidden: 'Hidden',
   html: 'HTML',
   button: 'Button',
+  repeater: 'Repeater',
 }
 
 export interface FormFieldOption {
@@ -136,6 +138,8 @@ export interface FormField {
   max: string
   step: string
   text?: FormTextOptions
+  /** Set when this field lives inside a repeater. */
+  parentId?: string
   /** The button created with the form. It cannot be deleted or cloned. */
   locked?: boolean
 }
@@ -605,63 +609,129 @@ export function cloneField(content: FormContent, fieldId: string): FormContent {
   if (!source || source.locked || content.fields.length >= MAX_FIELDS) {
     return content
   }
-  const copy = JSON.parse(JSON.stringify(source)) as FormField
-  copy.id = `f_${crypto.randomUUID()}`
-  copy.locked = undefined
-  copy.key = uniqueKey(source.type, content.fields)
-  if (copy.type === 'button' && copy.text?.buttonType === 'submit' && copy.text) {
-    copy.text = { ...copy.text, buttonType: 'button' }
-  }
+  const copy = clonedField(source, content.fields)
   const index = content.fields.findIndex(field => field.id === fieldId)
-  const fields = [
+  let fields = [
     ...content.fields.slice(0, index + 1),
     copy,
     ...content.fields.slice(index + 1),
   ]
+  if (source.type === 'repeater') {
+    for (const child of content.fields.filter(field => field.parentId === source.id)) {
+      if (fields.length >= MAX_FIELDS) {
+        break
+      }
+      const childCopy = clonedField(child, fields)
+      childCopy.parentId = copy.id
+      const childIndex = fields.findIndex(field => field.id === copy.id)
+      fields = [
+        ...fields.slice(0, childIndex + 1),
+        childCopy,
+        ...fields.slice(childIndex + 1),
+      ]
+    }
+  }
+  if (source.parentId) {
+    return { ...content, fields }
+  }
   const layouts = { ...content.layouts }
   for (const breakpoint of formBreakpoints()) {
     const current = content.layouts[breakpoint] ?? []
     const sourceItem = current.find(item => item.fieldId === fieldId)
     const width = sourceItem?.w ?? defaultWidth(source.type, breakpoint)
-    const sameStep = current.filter(item => stepIdOf(content, item.fieldId) === source.stepId)
-    const otherSteps = current.filter(item => stepIdOf(content, item.fieldId) !== source.stepId)
+    const sameStep = current.filter(item => stepIdOf(content, item.fieldId) === source.stepId && !content.fields.find(field => field.id === item.fieldId)?.parentId)
+    const otherSteps = current.filter(item => stepIdOf(content, item.fieldId) !== source.stepId || content.fields.find(field => field.id === item.fieldId)?.parentId)
     layouts[breakpoint] = [...otherSteps, ...placeAfter(sameStep, sourceItem, copy.id, width)]
   }
   return { ...content, fields, layouts }
 }
 
+function clonedField(source: FormField, existing: FormField[]): FormField {
+  const copy = JSON.parse(JSON.stringify(source)) as FormField
+  copy.id = `f_${crypto.randomUUID()}`
+  copy.locked = undefined
+  copy.key = uniqueKey(source.type, existing)
+  if (copy.type === 'button' && copy.text?.buttonType === 'submit' && copy.text) {
+    copy.text = { ...copy.text, buttonType: 'button' }
+  }
+  return copy
+}
+
 export function moveFieldToStep(content: FormContent, fieldId: string, stepId: string): FormContent {
   const source = content.fields.find(field => field.id === fieldId)
-  if (!source || source.stepId === stepId || !content.steps.some(step => step.id === stepId)) {
+  if (!source || !content.steps.some(step => step.id === stepId)) {
     return content
   }
-  let next: FormContent = {
-    ...content,
-    fields: content.fields.map(field => field.id === fieldId ? { ...field, stepId } : field),
+  if (source.stepId === stepId && !source.parentId) {
+    return content
   }
+  const fields = content.fields.map(field => {
+    if (field.id === fieldId) {
+      return { ...field, stepId, parentId: undefined }
+    }
+    if (field.parentId === fieldId) {
+      return { ...field, stepId }
+    }
+    return field
+  })
+  let next: FormContent = { ...content, fields }
   for (const breakpoint of formBreakpoints()) {
-    const item = next.layouts[breakpoint]?.find(entry => entry.fieldId === fieldId)
-    if (item) {
-      next = setLayoutItem(next, breakpoint, item, true)
+    const current = (next.layouts[breakpoint] ?? []).filter(item => item.fieldId !== fieldId)
+    const anchorId = next.fields.find(field => field.stepId === stepId && isSubmitButton(field) && !field.parentId)?.id
+    const sameStep = current.filter(item => stepIdOf(next, item.fieldId) === stepId)
+    const otherSteps = current.filter(item => stepIdOf(next, item.fieldId) !== stepId)
+    const anchor = anchorId ? sameStep.find(item => item.fieldId === anchorId) : undefined
+    next = {
+      ...next,
+      layouts: {
+        ...next.layouts,
+        [breakpoint]: [...otherSteps, ...readingOrder(placeBeforeItem(sameStep, anchor, fieldId, defaultWidth(source.type, breakpoint)))],
+      },
     }
   }
   return next
+}
+
+export function moveFieldToRepeater(content: FormContent, fieldId: string, repeaterId: string): FormContent {
+  const source = content.fields.find(field => field.id === fieldId)
+  const repeater = content.fields.find(field => field.id === repeaterId && field.type === 'repeater')
+  if (!source || !repeater || source.id === repeater.id || source.parentId === repeater.id) {
+    return content
+  }
+  if (source.locked || source.type === 'repeater' || isSubmitButton(source)) {
+    return content
+  }
+  return {
+    ...content,
+    fields: content.fields.map(field => field.id === fieldId ? { ...field, parentId: repeater.id, stepId: repeater.stepId } : field),
+    layouts: Object.fromEntries(formBreakpoints().map(name => [
+      name,
+      (content.layouts[name] ?? []).filter(item => item.fieldId !== fieldId),
+    ])),
+  }
 }
 
 export function removeField(content: FormContent, fieldId: string): FormContent {
   if (content.fields.some(field => field.id === fieldId && field.locked)) {
     return content
   }
+  const source = content.fields.find(field => field.id === fieldId)
+  let next = content
+  if (source?.type === 'repeater') {
+    for (const child of content.fields.filter(field => field.parentId === fieldId)) {
+      next = moveFieldToStep(next, child.id, source.stepId)
+    }
+  }
   return {
-    ...content,
-    fields: content.fields.filter(field => field.id !== fieldId),
-    conditions: (content.conditions ?? []).flatMap((condition) => {
-      const next = conditionWithoutField(condition, fieldId)
-      return next ? [next] : []
+    ...next,
+    fields: next.fields.filter(field => field.id !== fieldId),
+    conditions: (next.conditions ?? []).flatMap((condition) => {
+      const kept = conditionWithoutField(condition, fieldId)
+      return kept ? [kept] : []
     }),
     layouts: Object.fromEntries(formBreakpoints().map(name => [
       name,
-      (content.layouts[name] ?? []).filter(item => item.fieldId !== fieldId),
+      (next.layouts[name] ?? []).filter(item => item.fieldId !== fieldId),
     ])),
   }
 }
@@ -790,6 +860,21 @@ export function normalizeFormContent(input: unknown): FormContent {
     }
   }
   fields.splice(0, fields.length, ...lockInitialSubmit(fields))
+  const repeaterIds = new Set(fields.filter(field => field.type === 'repeater').map(field => field.id))
+  for (let index = 0; index < fields.length; index += 1) {
+    const field = fields[index]!
+    const parent = field.parentId ? fields.find(item => item.id === field.parentId) : undefined
+    if (!field.parentId) {
+      continue
+    }
+    if (!parent || parent.type !== 'repeater' || field.type === 'repeater' || field.locked || isSubmitButton(field) || !repeaterIds.has(field.parentId)) {
+      fields[index] = { ...field, parentId: undefined }
+      continue
+    }
+    if (field.stepId !== parent.stepId) {
+      fields[index] = { ...field, stepId: parent.stepId }
+    }
+  }
   const rawLayouts = isRecord(source.layouts) ? source.layouts : {}
   const layouts = {} as FormContent['layouts']
   for (const breakpoint of formBreakpoints()) {
@@ -797,7 +882,7 @@ export function normalizeFormContent(input: unknown): FormContent {
     const next: LayoutItem[] = []
     for (const step of steps) {
       let placed: LayoutItem[] = []
-      for (const field of fields.filter(entry => entry.stepId === step.id)) {
+      for (const field of fields.filter(entry => entry.stepId === step.id && !entry.parentId)) {
         const raw = rawItems.find(item => isRecord(item) && item.fieldId === field.id)
         if (raw && Number.isFinite(Number(raw.x)) && Number.isFinite(Number(raw.y)) && Number.isFinite(Number(raw.w))) {
           placed = resolveLayout([
@@ -1378,7 +1463,7 @@ export function textStoredValue(field: FormField, input: unknown): string {
 }
 
 export function storesValue(field: FormField): boolean {
-  return field.type !== 'html' && field.type !== 'button' && field.type !== 'title' && field.type !== 'image' && field.type !== 'divider' && field.type !== 'spacer'
+  return field.type !== 'html' && field.type !== 'button' && field.type !== 'title' && field.type !== 'image' && field.type !== 'divider' && field.type !== 'spacer' && field.type !== 'repeater'
 }
 
 function defaultNotification(): FormNotification {
@@ -1686,6 +1771,7 @@ function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string
     max: isTemporalType(type) ? (text?.rangeMax || '') : text?.valueMax != null ? String(text.valueMax) : (type === 'number' ? clip(raw.max, 40) : ''),
     step: text?.step != null && (type === 'range' || type === 'number') ? String(text.step) : '',
     text,
+    parentId: typeof raw.parentId === 'string' && raw.parentId.trim() ? raw.parentId.trim().slice(0, 80) : undefined,
     locked: raw.locked === true ? true : undefined,
   }
 }

@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import { defineNuxtPlugin, useRuntimeConfig } from '#imports'
-import { MIRAICMS_COLLECTION_HOOK, useMiraiCmsEntrySidebar, useMiraiCmsMenuItems, useMiraiCmsTermPanels } from 'miraicms-nuxt/extensions'
+import { MIRAICMS_COLLECTION_HOOK, registerMiraiCmsEntrySidebarTab, useMiraiCmsMenuItems, useMiraiCmsTermPanels } from 'miraicms-nuxt/extensions'
 import type { MiraiCmsPublicPage } from 'miraicms-nuxt/extensions'
 import SeoEntryPanel from './internal/SeoEntryPanel.vue'
 import SeoTermPanel from './internal/SeoTermPanel.vue'
@@ -28,10 +28,11 @@ export default defineNuxtPlugin((nuxtApp) => {
   })
 
   nuxtApp.vueApp.component('MiraiCmsSeoEntryPanel', SeoEntryPanel)
-  const sidebar = useMiraiCmsEntrySidebar()
-  if (!sidebar.value.includes('MiraiCmsSeoEntryPanel')) {
-    sidebar.value.push('MiraiCmsSeoEntryPanel')
-  }
+  registerMiraiCmsEntrySidebarTab({
+    key: 'seo',
+    label: 'SEO',
+    component: 'MiraiCmsSeoEntryPanel',
+  })
   nuxtApp.vueApp.component('MiraiCmsSeoTermPanel', SeoTermPanel)
   const terms = useMiraiCmsTermPanels()
   if (!terms.value.includes('MiraiCmsSeoTermPanel')) {

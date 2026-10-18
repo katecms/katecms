@@ -829,9 +829,11 @@
     "nuxt": [],
     "nuxt/extensions": [
       "MIRAICMS_COLLECTION_HOOK",
+      "MiraiCmsEntrySidebarTab",
       "MiraiCmsMenuExtra",
       "MiraiCmsPublicPage",
       "provideMiraiCmsFieldErrors",
+      "registerMiraiCmsEntrySidebarTab",
       "registerMiraiCmsField",
       "useMiraiCmsEntrySidebar",
       "useMiraiCmsMenuItems",

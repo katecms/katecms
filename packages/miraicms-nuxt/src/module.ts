@@ -339,6 +339,10 @@ export default defineNuxtModule<MiraiCmsConfig>({
         from: resolver.resolve('./runtime/composables/useMiraiCmsExtensions'),
       },
       {
+        name: 'registerMiraiCmsEntrySidebarTab',
+        from: resolver.resolve('./runtime/composables/useMiraiCmsExtensions'),
+      },
+      {
         name: 'useMiraiCmsTermPanels',
         from: resolver.resolve('./runtime/composables/useMiraiCmsExtensions'),
       },

@@ -13,9 +13,6 @@ const entryId = computed(() => {
 
 <template>
   <div :class="rootClass">
-    <div :class="`${rootClass}__title`">
-      SEO
-    </div>
     <div
       v-if="!entryId"
       :class="`${rootClass}__hint`"
@@ -40,15 +37,6 @@ $root: '.miraicms-seo-panel';
   gap: math-rem(16);
   margin: 0;
   padding: 0 math-rem(8);
-
-  &__title {
-    margin: 0;
-    font-size: math-rem(14);
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: $color-ink;
-  }
 
   &__hint {
     margin: 0 math-rem(16) math-rem(12);

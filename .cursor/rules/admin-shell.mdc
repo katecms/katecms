@@ -10,4 +10,4 @@ alwaysApply: false
 - Admin SFCs live in `runtime/internal/**`. `addAdminComponents` registers them with the `MiraiCms` prefix. Do not add them to the host `components` config.
 - Field `type` maps to `internal/fields/{Pascal}Field.vue` through `resolveField()` (`image_select` to `ImageSelectField.vue`). Add the widget there and the config type in `@miraicms/core`.
 - Host-facing form widgets live in `miraicms-nuxt-form/src/runtime/components` (`addComponentsDir`).
-- Addons add menu items and entry panels through `useMiraiCmsMenuItems` and `useMiraiCmsEntrySidebar` from `miraicms-nuxt/extensions`.
+- Addons add menu items through `useMiraiCmsMenuItems`, collection-entry sidebar tabs through `registerMiraiCmsEntrySidebarTab`, and dictionary term panels through `useMiraiCmsTermPanels`. Import them from `miraicms-nuxt/extensions`. The entry form owns the "Page" tab; an addon registers its own tab and component.

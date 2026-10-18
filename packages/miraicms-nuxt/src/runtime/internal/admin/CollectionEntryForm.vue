@@ -23,8 +23,7 @@ import type {
   ParentOption,
 } from '../../utils/collections'
 import { useMiraiCmsEntrySidebar } from '../../composables/useMiraiCmsExtensions'
-
-const entrySidebar = useMiraiCmsEntrySidebar()
+import type { MiraiCmsEntrySidebarTab } from '../../composables/useMiraiCmsExtensions'
 
 const props = defineProps<{
   collection: AdminCollectionMeta
@@ -51,6 +50,83 @@ const emit = defineEmits<{
 }>()
 
 const rootClass = 'miraicms-collection-form'
+const PAGE_TAB = 'page'
+const entrySidebar = useMiraiCmsEntrySidebar()
+const activeSidebarTab = ref(PAGE_TAB)
+const openedSidebarTabs = ref<Record<string, true>>({})
+
+const sidebarTabs = computed(() => {
+  const seen = new Set<string>()
+  const tabs: MiraiCmsEntrySidebarTab[] = []
+  for (const tab of entrySidebar.value) {
+    if (!tab || typeof tab !== 'object') {
+      continue
+    }
+    const key = tab.key?.trim()
+    const label = tab.label?.trim()
+    const component = tab.component?.trim()
+    if (!key || key === PAGE_TAB || !label || !component || seen.has(key)) {
+      continue
+    }
+    seen.add(key)
+    tabs.push({ key, label, component })
+  }
+  return tabs
+})
+
+watch(sidebarTabs, (tabs) => {
+  if (activeSidebarTab.value === PAGE_TAB) {
+    return
+  }
+  if (!tabs.some(tab => tab.key === activeSidebarTab.value)) {
+    activeSidebarTab.value = PAGE_TAB
+  }
+})
+
+function sidebarTabId(key: string) {
+  return `${rootClass}-tab-${key}`
+}
+
+function sidebarPanelId(key: string) {
+  return `${rootClass}-panel-${key}`
+}
+
+function selectSidebarTab(key: string) {
+  activeSidebarTab.value = key
+  if (key !== PAGE_TAB) {
+    openedSidebarTabs.value = { ...openedSidebarTabs.value, [key]: true }
+  }
+}
+
+function onSidebarTabKeydown(event: KeyboardEvent, index: number) {
+  const keys = [PAGE_TAB, ...sidebarTabs.value.map(tab => tab.key)]
+  let next = index
+  if (event.key === 'ArrowRight') {
+    next = (index + 1) % keys.length
+  }
+  else if (event.key === 'ArrowLeft') {
+    next = (index - 1 + keys.length) % keys.length
+  }
+  else if (event.key === 'Home') {
+    next = 0
+  }
+  else if (event.key === 'End') {
+    next = keys.length - 1
+  }
+  else {
+    return
+  }
+  event.preventDefault()
+  const key = keys[next]
+  if (!key) {
+    return
+  }
+  selectSidebarTab(key)
+  void nextTick(() => {
+    document.getElementById(sidebarTabId(key))?.focus()
+  })
+}
+
 const PUBLISH_FORMAT = DATE_FIELD_FORMATS.datetime.return
 
 const fieldDefs = computed(() => props.collection.fields ?? {})
@@ -546,144 +622,197 @@ watch(
       </div>
     </div>
 
-    <div :class="`${rootClass}__sidebar`">
-      <div :class="`${rootClass}__block`">
-        <div :class="`${rootClass}__block-title`">
-          Publish
-        </div>
-
-        <MiraiCmsUiNotice
-          v-if="isTrash"
-          placement="static"
-          variant="warning"
-          message="This entry is in the trash."
-          :closable="false"
-        />
-
-        <template v-else>
-          <MiraiCmsSelectField
-            :model-value="modelValue.status === 'trash' ? 'draft' : modelValue.status"
-            field-key="cms-entry-status"
-            :field="statusField"
-            @update:model-value="updateCore('status', ($event === 'published' ? 'published' : 'draft') as CollectionStatus)"
-          />
-
-          <MiraiCmsUserField
-            v-model="authorModel"
-            field-key="cms-entry-author"
-            :field="authorField"
-          />
-
-          <MiraiCmsDateTimePickerField
-            v-model="publishedLocal"
-            field-key="cms-entry-published"
-            :field="publishedField"
-          />
-
-          <MiraiCmsNumberField
-            v-model="menuOrderModel"
-            field-key="cms-entry-menu-order"
-            :field="menuOrderField"
-          />
-
-          <MiraiCmsSelectField
-            v-if="collection.hierarchical"
-            v-model="parentModel"
-            field-key="cms-entry-parent"
-            :field="parentField"
-          />
-        </template>
-
-        <div :class="`${rootClass}__block-actions`">
-          <MiraiCmsUiButton
-            v-if="!isTrash && canUpdate"
-            tag="button"
-            type="submit"
-            variant="full"
-            :disabled="!canSubmit"
-          >
-            {{ submitLabel }}
-          </MiraiCmsUiButton>
-
-          <MiraiCmsUiButton
-            v-if="viewUrl && !isTrash"
-            tag="a"
-            :variant="['secondary', 'small', 'full']"
-            :link="{ url: viewUrl, title: 'View', target: '_blank' }"
-          >
-            View
-          </MiraiCmsUiButton>
-
-          <MiraiCmsUiButton
-            v-if="!isTrash && canUpdate"
-            tag="button"
-            type="button"
-            :variant="['red', 'small', 'full']"
-            :disabled="saving"
-            @click="emit('trash')"
-          >
-            Move to trash
-          </MiraiCmsUiButton>
-
-          <MiraiCmsUiButton
-            v-if="isTrash && canUpdate"
-            tag="button"
-            type="button"
-            :disabled="saving"
-            @click="emit('restore')"
-          >
-            Restore
-          </MiraiCmsUiButton>
-
-          <MiraiCmsUiButton
-            v-if="isTrash && canDelete"
-            tag="button"
-            type="button"
-            :variant="['red', 'small']"
-            :disabled="saving"
-            @click="emit('delete')"
-          >
-            Delete permanently
-          </MiraiCmsUiButton>
-        </div>
+    <div :class="[`${rootClass}__sidebar`, { [`${rootClass}__sidebar--tabs`]: sidebarTabs.length }]">
+      <div
+        v-if="sidebarTabs.length"
+        :class="`${rootClass}__tabs`"
+        role="tablist"
+      >
+        <button
+          :id="sidebarTabId(PAGE_TAB)"
+          type="button"
+          role="tab"
+          :aria-selected="activeSidebarTab === PAGE_TAB"
+          :aria-controls="sidebarPanelId(PAGE_TAB)"
+          :tabindex="activeSidebarTab === PAGE_TAB ? 0 : -1"
+          :class="[`${rootClass}__tabs-item`, { 'is-active': activeSidebarTab === PAGE_TAB }]"
+          @click="selectSidebarTab(PAGE_TAB)"
+          @keydown="onSidebarTabKeydown($event, 0)"
+        >
+          Page
+        </button>
+        <button
+          v-for="(tab, index) in sidebarTabs"
+          :id="sidebarTabId(tab.key)"
+          :key="tab.key"
+          type="button"
+          role="tab"
+          :aria-selected="activeSidebarTab === tab.key"
+          :aria-controls="sidebarPanelId(tab.key)"
+          :tabindex="activeSidebarTab === tab.key ? 0 : -1"
+          :class="[`${rootClass}__tabs-item`, { 'is-active': activeSidebarTab === tab.key }]"
+          @click="selectSidebarTab(tab.key)"
+          @keydown="onSidebarTabKeydown($event, index + 1)"
+        >
+          {{ tab.label }}
+        </button>
       </div>
 
       <div
-        v-if="!isTrash && dictionaryPickers.length"
-        :class="`${rootClass}__block`"
+        v-show="!sidebarTabs.length || activeSidebarTab === PAGE_TAB"
+        :id="sidebarTabs.length ? sidebarPanelId(PAGE_TAB) : undefined"
+        :class="sidebarTabs.length ? `${rootClass}__panel` : `${rootClass}__page`"
+        :role="sidebarTabs.length ? 'tabpanel' : undefined"
+        :aria-labelledby="sidebarTabs.length ? sidebarTabId(PAGE_TAB) : undefined"
       >
-        <div :class="`${rootClass}__block-title`">
-          Dictionaries
+        <div :class="`${rootClass}__block`">
+          <div :class="`${rootClass}__block-title`">
+            Publish
+          </div>
+
+          <MiraiCmsUiNotice
+            v-if="isTrash"
+            placement="static"
+            variant="warning"
+            message="This entry is in the trash."
+            :closable="false"
+          />
+
+          <template v-else>
+            <MiraiCmsSelectField
+              :model-value="modelValue.status === 'trash' ? 'draft' : modelValue.status"
+              field-key="cms-entry-status"
+              :field="statusField"
+              @update:model-value="updateCore('status', ($event === 'published' ? 'published' : 'draft') as CollectionStatus)"
+            />
+
+            <MiraiCmsUserField
+              v-model="authorModel"
+              field-key="cms-entry-author"
+              :field="authorField"
+            />
+
+            <MiraiCmsDateTimePickerField
+              v-model="publishedLocal"
+              field-key="cms-entry-published"
+              :field="publishedField"
+            />
+
+            <MiraiCmsNumberField
+              v-model="menuOrderModel"
+              field-key="cms-entry-menu-order"
+              :field="menuOrderField"
+            />
+
+            <MiraiCmsSelectField
+              v-if="collection.hierarchical"
+              v-model="parentModel"
+              field-key="cms-entry-parent"
+              :field="parentField"
+            />
+          </template>
+
+          <div :class="`${rootClass}__block-actions`">
+            <MiraiCmsUiButton
+              v-if="!isTrash && canUpdate"
+              tag="button"
+              type="submit"
+              variant="full"
+              :disabled="!canSubmit"
+            >
+              {{ submitLabel }}
+            </MiraiCmsUiButton>
+
+            <MiraiCmsUiButton
+              v-if="viewUrl && !isTrash"
+              tag="a"
+              :variant="['secondary', 'small', 'full']"
+              :link="{ url: viewUrl, title: 'View', target: '_blank' }"
+            >
+              View
+            </MiraiCmsUiButton>
+
+            <MiraiCmsUiButton
+              v-if="!isTrash && canUpdate"
+              tag="button"
+              type="button"
+              :variant="['red', 'small', 'full']"
+              :disabled="saving"
+              @click="emit('trash')"
+            >
+              Move to trash
+            </MiraiCmsUiButton>
+
+            <MiraiCmsUiButton
+              v-if="isTrash && canUpdate"
+              tag="button"
+              type="button"
+              :disabled="saving"
+              @click="emit('restore')"
+            >
+              Restore
+            </MiraiCmsUiButton>
+
+            <MiraiCmsUiButton
+              v-if="isTrash && canDelete"
+              tag="button"
+              type="button"
+              :variant="['red', 'small']"
+              :disabled="saving"
+              @click="emit('delete')"
+            >
+              Delete permanently
+            </MiraiCmsUiButton>
+          </div>
         </div>
-        <MiraiCmsSelectField
-          v-for="picker in dictionaryPickers"
-          :key="picker.slug"
-          :model-value="dictionaryValue(picker)"
-          :field-key="`cms-entry-dictionary-${picker.slug}`"
-          :field="dictionaryField(picker)"
-          @update:model-value="setDictionaryValue(picker, $event)"
-        />
+
+        <div
+          v-if="!isTrash && dictionaryPickers.length"
+          :class="`${rootClass}__block`"
+        >
+          <div :class="`${rootClass}__block-title`">
+            Dictionaries
+          </div>
+          <MiraiCmsSelectField
+            v-for="picker in dictionaryPickers"
+            :key="picker.slug"
+            :model-value="dictionaryValue(picker)"
+            :field-key="`cms-entry-dictionary-${picker.slug}`"
+            :field="dictionaryField(picker)"
+            @update:model-value="setDictionaryValue(picker, $event)"
+          />
+        </div>
+
+        <div
+          v-if="sidebarFields.length"
+          :class="`${rootClass}__block`"
+        >
+          <component
+            :is="resolveField(field.type)"
+            v-for="[key, field] in sidebarFields"
+            :key="key"
+            v-model="values[key]"
+            :field-key="key"
+            :field="field"
+          />
+        </div>
       </div>
 
-      <div
-        v-if="sidebarFields.length"
-        :class="`${rootClass}__block`"
+      <template
+        v-for="tab in sidebarTabs"
+        :key="tab.key"
       >
-        <component
-          :is="resolveField(field.type)"
-          v-for="[key, field] in sidebarFields"
-          :key="key"
-          v-model="values[key]"
-          :field-key="key"
-          :field="field"
-        />
-      </div>
-
-      <component
-        :is="panel"
-        v-for="panel in entrySidebar"
-        :key="panel"
-      />
+        <div
+          v-if="openedSidebarTabs[tab.key]"
+          v-show="activeSidebarTab === tab.key"
+          :id="sidebarPanelId(tab.key)"
+          :class="`${rootClass}__panel`"
+          role="tabpanel"
+          :aria-labelledby="sidebarTabId(tab.key)"
+        >
+          <component :is="tab.component" />
+        </div>
+      </template>
     </div>
   </form>
 </template>
@@ -701,7 +830,7 @@ $root: '.miraicms-collection-form';
     min-height: 0;
     overflow: hidden;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) math-rem(300);
+    grid-template-columns: minmax(0, 1fr) math-rem(350);
     grid-template-rows: minmax(0, 1fr);
 
     @media (max-width: 1100px) {
@@ -743,6 +872,75 @@ $root: '.miraicms-collection-form';
       @media (max-width: 1100px) {
         overflow: visible;
       }
+
+      &--tabs {
+        padding-top: 0;
+        gap: 0;
+      }
+    }
+
+    &__tabs {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      flex-shrink: 0;
+      overflow-x: auto;
+      background: $color-bg;
+      border-bottom: 1px solid $color-border;
+
+      &-item {
+        flex: 1 0 auto;
+        min-width: math-rem(72);
+        margin: 0;
+        padding: math-rem(12) math-rem(14);
+        border: 0;
+        border-right: 1px solid $color-border;
+        background: transparent;
+        color: $color-muted;
+        font: inherit;
+        font-size: math-rem(13);
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        cursor: pointer;
+
+        &:last-child {
+          border-right: 0;
+        }
+
+        &:hover {
+          color: $color-ink;
+          background: $color-accent-wash;
+        }
+
+        &.is-active {
+          color: $color-ink;
+          background: $color-surface;
+          box-shadow: inset 0 -2px 0 $color-accent;
+        }
+
+        &:focus {
+          outline: none;
+        }
+
+        &:focus-visible {
+          outline: 2px solid rgba($color-accent, 0.35);
+          outline-offset: -2px;
+        }
+      }
+    }
+
+    &__page {
+      display: contents;
+    }
+
+    &__panel {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(16);
+      min-width: 0;
+      padding-top: math-rem(16);
     }
 
     &__fields {

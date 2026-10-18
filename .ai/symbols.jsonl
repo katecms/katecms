@@ -517,6 +517,7 @@
 {"n":"MiraiCmsDictionaryField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/DictionaryField.vue"}
 {"n":"MiraiCmsDictionaryTermForm","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/admin/DictionaryTermForm.vue"}
 {"n":"MiraiCmsEmailField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/EmailField.vue"}
+{"n":"MiraiCmsEntrySidebarTab","k":"iface","p":"packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"}
 {"n":"MiraiCmsFieldAddon","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/parts/FieldAddon.vue"}
 {"n":"miraiCmsFieldErrorsKey","k":"const","p":"packages/miraicms-nuxt/src/runtime/utils/field-errors.ts"}
 {"n":"MiraiCmsFieldInstructions","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/parts/FieldInstructions.vue"}
@@ -695,6 +696,7 @@
 {"n":"RegenerateTarget","k":"iface","p":"packages/miraicms-nuxt/src/runtime/server/utils/regenerate.ts"}
 {"n":"regenerateVariants","k":"fn","p":"packages/core/src/media/image.ts"}
 {"n":"RegenerateVariantsOptions","k":"iface","p":"packages/core/src/media/image.ts"}
+{"n":"registerMiraiCmsEntrySidebarTab","k":"fn","p":"packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"}
 {"n":"registerMiraiCmsField","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/helpers.ts"}
 {"n":"RELATION_PICKER_LIMIT","k":"const","p":"packages/miraicms-nuxt/src/runtime/server/utils/relation.ts"}
 {"n":"RelationArchiveOption","k":"iface","p":"packages/miraicms-nuxt/src/runtime/utils/relation.ts"}

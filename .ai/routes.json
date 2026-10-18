@@ -463,6 +463,10 @@
       "p": "packages/miraicms-nuxt-seo/src/runtime/composables/useMiraiSeoHead.ts"
     },
     {
+      "n": "registerMiraiCmsEntrySidebarTab",
+      "p": "packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"
+    },
+    {
       "n": "useCmsPaths",
       "p": "packages/miraicms-nuxt/src/runtime/composables/useCmsPaths.ts"
     },

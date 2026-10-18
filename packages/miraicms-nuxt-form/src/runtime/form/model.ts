@@ -138,6 +138,8 @@ export interface FormField {
   max: string
   step: string
   text?: FormTextOptions
+  /** Extra classes for the public field container. Not applied in the builder. */
+  containerClass?: string
   /** Set when this field lives inside a repeater. */
   parentId?: string
   /** The button created with the form. It cannot be deleted or cloned. */
@@ -1832,6 +1834,7 @@ function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string
     max: isTemporalType(type) ? (text?.rangeMax || '') : text?.valueMax != null ? String(text.valueMax) : (type === 'number' ? clip(raw.max, 40) : ''),
     step: text?.step != null && (type === 'range' || type === 'number') ? String(text.step) : '',
     text,
+    containerClass: clip(raw.containerClass, 400).trim() || undefined,
     parentId: typeof raw.parentId === 'string' && raw.parentId.trim() ? raw.parentId.trim().slice(0, 80) : undefined,
     locked: raw.locked === true ? true : undefined,
   }

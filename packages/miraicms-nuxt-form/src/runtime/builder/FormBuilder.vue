@@ -446,7 +446,19 @@ function bindRepeaterGrid(repeaterId: string) {
 }
 
 function repeaterTargets(fieldId: string) {
-  return moveRepeaters(fieldId).map(repeater => ({ id: repeater.id, label: repeater.label || repeater.key }))
+  return moveRepeaters(fieldId).map(repeater => ({ id: repeater.id, label: repeaterName(repeater) }))
+}
+
+function repeaterName(repeater: FormField): string {
+  const marked = repeater.text?.label
+  if (marked) {
+    const label = marked.text.trim()
+    if (!marked.enabled || !label) {
+      return repeater.key
+    }
+    return label
+  }
+  return repeater.label.trim() || repeater.key
 }
 
 function moveSteps(fieldId: string) {
@@ -744,11 +756,11 @@ function onPointerMove(event: PointerEvent) {
   if (current.mode === 'resize-left') {
     const right = current.startX + current.startW
     const x = clamp(point.col, 0, right - 1)
-    content.value = setLayoutItem(content.value, breakpoint.value, {
-      ...item,
+  content.value = setLayoutItem(content.value, breakpoint.value, {
+    ...item,
       x,
       w: right - x,
-    }, false)
+  }, false)
     return
   }
 }
@@ -933,8 +945,8 @@ onBeforeUnmount(() => {
     >
       <div :class="`${rootClass}__sidebar`">
         <div :class="`${rootClass}__tabs`">
-          <button
-            type="button"
+      <button
+        type="button"
             :class="[
               `${rootClass}__tab`,
               { 'is-active': sidebarTab === 'fields' },
@@ -1056,9 +1068,9 @@ onBeforeUnmount(() => {
               tag="button"
               variant="secondary"
               :class="`${rootClass}__add`"
-              @click="add(type)"
-            >
-              {{ FIELD_LABELS[type] }}
+        @click="add(type)"
+      >
+        {{ FIELD_LABELS[type] }}
             </MiraiCmsUiButton>
           </div>
         </div>
@@ -1284,8 +1296,8 @@ onBeforeUnmount(() => {
                   </g>
                 </svg>
               </span>
-              <button
-                type="button"
+          <button
+            type="button"
                 :class="`${rootClass}__step-label`"
                 @click="selectStep(step.id)"
               >
@@ -1387,8 +1399,8 @@ onBeforeUnmount(() => {
                     <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
                   </svg>
                   <span>Delete Step</span>
-                </button>
-              </div>
+          </button>
+        </div>
             </div>
           </template>
           <div
@@ -1396,8 +1408,8 @@ onBeforeUnmount(() => {
             :class="`${rootClass}__step-placeholder`"
             :style="stepPlaceholderStyle"
           />
-          <button
-            type="button"
+        <button
+          type="button"
             :class="`${rootClass}__step-icon`"
             aria-label="Add step"
             :disabled="content.steps.length >= 20"
@@ -1414,7 +1426,7 @@ onBeforeUnmount(() => {
             >
               <path d="M12 5v14M5 12h14" />
             </svg>
-          </button>
+        </button>
           <button
             v-if="content.steps.length > 1"
             type="button"
@@ -1443,27 +1455,27 @@ onBeforeUnmount(() => {
               />
             </svg>
           </button>
-        </div>
+      </div>
         <div :class="`${rootClass}__scroll`">
-          <div
+        <div
             :class="`${rootClass}__frame`"
-            :style="frameStyle"
-          >
-            <div
-              ref="gridRef"
+          :style="frameStyle"
+        >
+          <div
+            ref="gridRef"
               :class="`${rootClass}__grid`"
-              @pointerdown.self="selectedId = null"
+            @pointerdown.self="selectedId = null"
               @input="readCanvasValues"
               @change="readCanvasValues"
-            >
+          >
               <div
                 v-if="movePlaceholder(layout)"
                 :class="`${rootClass}__drop-placeholder`"
                 :style="movePlaceholder(layout)"
               />
-              <div
-                v-for="item in layout"
-                :key="item.fieldId"
+            <div
+              v-for="item in layout"
+              :key="item.fieldId"
                 :class="[`${rootClass}__item`, {
                   'is-selected': item.fieldId === selectedId,
                   'is-dragging': drag?.fieldId === item.fieldId && drag?.mode !== 'move',
@@ -1472,8 +1484,8 @@ onBeforeUnmount(() => {
                   'is-menu-open': openFieldMenu === item.fieldId,
                 }]"
                 :style="itemVisualStyle(item)"
-                @pointerdown="onItemPointerDown($event, item)"
-              >
+              @pointerdown="onItemPointerDown($event, item)"
+            >
                 <FieldFace
                   v-if="fieldById(item.fieldId)"
                   :field="fieldById(item.fieldId)"
@@ -1554,7 +1566,7 @@ onBeforeUnmount(() => {
                             fill="white"
                           />
                         </svg>
-                      </div>
+            </div>
                       <div
                         :class="[`${rootClass}__resizable-handle`, `${rootClass}__resizable-handle--right`]"
                         @pointerdown="onResizePointerDown($event, child, 'right', repeaterGrids.get(item.fieldId))"
@@ -1571,9 +1583,9 @@ onBeforeUnmount(() => {
                             fill="white"
                           />
                         </svg>
-                      </div>
-                    </div>
-                  </div>
+          </div>
+        </div>
+      </div>
                   <div
                     :class="`${rootClass}__repeater-buttons`"
                     :data-view="fieldById(item.fieldId)?.text?.repeatButtonView || 'horizontal'"
@@ -1771,7 +1783,7 @@ onBeforeUnmount(() => {
               @update:model-value="setNotification(field.key, String($event ?? ''))"
             />
             <MiraiCmsTextField
-              v-else
+        v-else
               :field-key="`notify-${field.key}`"
               :model-value="content.notification?.[field.key] ?? ''"
               :field="{ type: 'text', label: field.label, maxLength: field.maxLength }"
@@ -1808,13 +1820,13 @@ onBeforeUnmount(() => {
           Form
         </div>
         <MiraiCmsTextField
-          v-model="name"
+            v-model="name"
           field-key="form-name"
           :field="{ type: 'text', label: 'Name', maxLength: 160 }"
         />
         <div :class="`${rootClass}__usage`">
           Forms render with <span>&lt;MiraiCmsForm form="1" /&gt;</span>
-        </div>
+      </div>
       </div>
       -->
     </div>
@@ -1940,20 +1952,20 @@ $root: '.miraicms-form-builder';
     }
 
     &-item {
-      width: 100%;
-      padding: math-rem(8) math-rem(10);
+    width: 100%;
+    padding: math-rem(8) math-rem(10);
       border: 0;
-      border-radius: $border-radius;
+    border-radius: $border-radius;
       background: transparent;
-      color: $color-ink;
-      font: inherit;
+    color: $color-ink;
+    font: inherit;
       font-size: math-rem(13);
       line-height: 1.4;
-      text-align: left;
-      cursor: pointer;
+    text-align: left;
+    cursor: pointer;
 
       &.is-active {
-        background: $color-accent-wash;
+      background: $color-accent-wash;
         color: $color-accent;
       }
     }
@@ -2045,16 +2057,16 @@ $root: '.miraicms-form-builder';
       display: inline-flex;
       align-items: center;
       height: math-rem(32);
-      border: 1px solid $color-border;
-      border-radius: $border-radius;
+    border: 1px solid $color-border;
+    border-radius: $border-radius;
       background: $color-surface;
       color: $color-ink;
       font-size: math-rem(13);
       cursor: pointer;
 
       &:hover:not(:disabled) {
-        background: $color-bg;
-      }
+    background: $color-bg;
+  }
 
       &.is-active {
         background: $color-accent-wash;
@@ -2072,12 +2084,12 @@ $root: '.miraicms-form-builder';
 
     &-label,
     &-menu {
-      border: 0;
-      background: transparent;
+    border: 0;
+    background: transparent;
       color: inherit;
-      font: inherit;
-      cursor: pointer;
-    }
+    font: inherit;
+    cursor: pointer;
+  }
 
     &-label {
       padding: 0 math-rem(38) 0 math-rem(36);
@@ -2094,7 +2106,7 @@ $root: '.miraicms-form-builder';
       padding: 0;
       width: 22px;
       height: 22px;
-      border: 1px solid $color-border;
+    border: 1px solid $color-border;
       border-radius: $border-radius-inter;
       transition: border .2s;
       top: math-rem(4);
@@ -2123,7 +2135,7 @@ $root: '.miraicms-form-builder';
       padding: math-rem(4);
       border: 1px solid $color-border;
       border-radius: $border-radius;
-      background: $color-surface;
+    background: $color-surface;
       box-shadow: $shadow-md;
 
       button {
@@ -2146,7 +2158,7 @@ $root: '.miraicms-form-builder';
         }
 
         &:disabled {
-          color: $color-muted;
+    color: $color-muted;
           cursor: not-allowed;
         }
       }
@@ -2279,18 +2291,18 @@ $root: '.miraicms-form-builder';
     }
 
     &-label {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: math-rem(13);
-    }
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: math-rem(13);
+  }
 
     &-meta {
-      margin-left: auto;
-      color: $color-muted;
-      font-size: math-rem(11);
-    }
+    margin-left: auto;
+    color: $color-muted;
+    font-size: math-rem(11);
+  }
 
     &:hover #{$root}__resizable-handle,
     &.is-dragging #{$root}__resizable-handle {
@@ -2308,7 +2320,7 @@ $root: '.miraicms-form-builder';
     }
 
     &[data-position='bottom'] {
-      flex-direction: column;
+    flex-direction: column;
     }
 
     &[data-position='left'] {
@@ -2366,7 +2378,7 @@ $root: '.miraicms-form-builder';
       }
 
       &[data-view='vertical'] {
-        flex-direction: column;
+      flex-direction: column;
       }
 
       &[data-view='vertical-reverse'] {
@@ -2377,7 +2389,7 @@ $root: '.miraicms-form-builder';
 
   &__repeater-end {
     display: flex;
-    width: 100%;
+      width: 100%;
     margin-top: math-rem(8);
 
     &[data-align='center'] {

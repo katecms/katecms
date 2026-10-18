@@ -66,7 +66,7 @@ const cells = computed(() => {
       for (const name of names) {
         const item = findLayout(content.layouts[name], field.id)
         if (!item) {
-          return null
+        return null
         }
         layouts[name] = item
       }
@@ -139,7 +139,7 @@ function readFormPayload(form: HTMLFormElement, fields: FormField[]) {
         ? selected.map(item => ({ name: item.name, type: item.type, size: item.size }))
         : selected[0]
           ? { name: selected[0].name, type: selected[0].type, size: selected[0].size }
-          : null
+        : null
     }
     else if (field.type !== 'html' && field.type !== 'button') {
       input[field.key] = String(data.get(field.key) ?? '')
@@ -575,13 +575,13 @@ function formatBytes(size: number): string {
         <div :class="`${rootClass}__grid`">
           <div
             v-for="cell in group.cells"
-            :key="cell.field.id"
-            :class="`${rootClass}__cell`"
-            :data-field="cell.field.key"
-            :data-type="cell.field.type"
+        :key="cell.field.id"
+            :class="[`${rootClass}__cell`, cell.field.containerClass || undefined]"
+        :data-field="cell.field.key"
+        :data-type="cell.field.type"
             :data-step="stepNumber(cell.field.stepId)"
             :data-required="fieldRequired(cell.field) ? 'true' : undefined"
-            :data-invalid="fieldErrors[cell.field.key] ? 'true' : undefined"
+        :data-invalid="fieldErrors[cell.field.key] ? 'true' : undefined"
             :data-hidden="conditionState(cell.field.id).hidden ? 'true' : undefined"
             v-bind="layoutAttrs(cell.layouts)"
             :hidden="(conditionState(cell.field.id).hidden || (richField(cell.field) && textOptions(cell.field).hidden)) ? true : undefined"
@@ -1107,148 +1107,148 @@ function formatBytes(size: number): string {
             </template>
 
             <template v-else-if="isText(cell.field)">
-              <label
+          <label
                 :class="`${rootClass}__label`"
-                :for="controlId(cell.field)"
-              >
-                {{ cell.field.label }}
-                <span
-                  v-if="cell.field.required"
+            :for="controlId(cell.field)"
+          >
+            {{ cell.field.label }}
+            <span
+              v-if="cell.field.required"
                   :class="`${rootClass}__required`"
-                >*</span>
-              </label>
-              <input
-                :id="controlId(cell.field)"
+            >*</span>
+          </label>
+          <input
+            :id="controlId(cell.field)"
                 :class="`${rootClass}__control`"
-                :type="inputType(cell.field.type)"
-                :name="cell.field.key"
-                :placeholder="cell.field.placeholder || undefined"
+            :type="inputType(cell.field.type)"
+            :name="cell.field.key"
+            :placeholder="cell.field.placeholder || undefined"
                 :required="fieldRequired(cell.field)"
                 :disabled="fieldDisabled(cell.field)"
-                :min="cell.field.type === 'number' && cell.field.min ? cell.field.min : undefined"
-                :max="cell.field.type === 'number' && cell.field.max ? cell.field.max : undefined"
-                :step="cell.field.type === 'number' && cell.field.step ? cell.field.step : undefined"
-              >
-            </template>
+            :min="cell.field.type === 'number' && cell.field.min ? cell.field.min : undefined"
+            :max="cell.field.type === 'number' && cell.field.max ? cell.field.max : undefined"
+            :step="cell.field.type === 'number' && cell.field.step ? cell.field.step : undefined"
+          >
+        </template>
 
-            <template v-else-if="cell.field.type === 'select'">
-              <label
+        <template v-else-if="cell.field.type === 'select'">
+          <label
                 :class="`${rootClass}__label`"
-                :for="controlId(cell.field)"
-              >
-                {{ cell.field.label }}
-                <span
-                  v-if="cell.field.required"
+            :for="controlId(cell.field)"
+          >
+            {{ cell.field.label }}
+            <span
+              v-if="cell.field.required"
                   :class="`${rootClass}__required`"
-                >*</span>
-              </label>
-              <select
-                :id="controlId(cell.field)"
+            >*</span>
+          </label>
+          <select
+            :id="controlId(cell.field)"
                 :class="`${rootClass}__control`"
-                :name="cell.field.key"
+            :name="cell.field.key"
                 :required="fieldRequired(cell.field)"
                 :disabled="fieldDisabled(cell.field)"
-              >
-                <option value="">
-                  {{ cell.field.placeholder }}
-                </option>
-                <option
-                  v-for="option in cell.field.options"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
-            </template>
+          >
+            <option value="">
+              {{ cell.field.placeholder }}
+            </option>
+            <option
+              v-for="option in cell.field.options"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </template>
 
-            <div
-              v-else-if="cell.field.type === 'radio' || cell.field.type === 'checkbox'"
+        <div
+          v-else-if="cell.field.type === 'radio' || cell.field.type === 'checkbox'"
               :class="`${rootClass}__choices`"
-              role="group"
-              :aria-labelledby="controlId(cell.field)"
-            >
-              <div
-                :id="controlId(cell.field)"
+          role="group"
+          :aria-labelledby="controlId(cell.field)"
+        >
+          <div
+            :id="controlId(cell.field)"
                 :class="`${rootClass}__label`"
-              >
-                {{ cell.field.label }}
-                <span
-                  v-if="cell.field.required"
+          >
+            {{ cell.field.label }}
+            <span
+              v-if="cell.field.required"
                   :class="`${rootClass}__required`"
-                >*</span>
-              </div>
-              <label
-                v-for="option in cell.field.options"
-                :key="option.value"
+            >*</span>
+          </div>
+          <label
+            v-for="option in cell.field.options"
+            :key="option.value"
                 :class="`${rootClass}__choice`"
-              >
-                <input
+          >
+            <input
                   :class="`${rootClass}__control`"
-                  :type="cell.field.type === 'radio' ? 'radio' : 'checkbox'"
-                  :name="cell.field.key"
-                  :value="option.value"
+              :type="cell.field.type === 'radio' ? 'radio' : 'checkbox'"
+              :name="cell.field.key"
+              :value="option.value"
                   :disabled="fieldDisabled(cell.field)"
-                >
+            >
                 <span :class="`${rootClass}__choice-label`">{{ option.label }}</span>
-              </label>
-            </div>
+          </label>
+        </div>
 
-            <template v-else-if="cell.field.type === 'file'">
-              <label
+        <template v-else-if="cell.field.type === 'file'">
+          <label
                 :class="`${rootClass}__label`"
-                :for="controlId(cell.field)"
-              >
-                {{ cell.field.label }}
-                <span
-                  v-if="cell.field.required"
+            :for="controlId(cell.field)"
+          >
+            {{ cell.field.label }}
+            <span
+              v-if="cell.field.required"
                   :class="`${rootClass}__required`"
-                >*</span>
-              </label>
-              <input
-                :id="controlId(cell.field)"
+            >*</span>
+          </label>
+          <input
+            :id="controlId(cell.field)"
                 :class="`${rootClass}__control`"
-                type="file"
-                :name="cell.field.key"
-                :accept="cell.field.accept || undefined"
+            type="file"
+            :name="cell.field.key"
+            :accept="cell.field.accept || undefined"
                 :required="fieldRequired(cell.field)"
                 :disabled="fieldDisabled(cell.field)"
-              >
-            </template>
+          >
+        </template>
 
-            <input
-              v-else-if="cell.field.type === 'hidden'"
-              type="hidden"
-              :name="cell.field.key"
-              :value="cell.field.value"
-            >
+        <input
+          v-else-if="cell.field.type === 'hidden'"
+          type="hidden"
+          :name="cell.field.key"
+          :value="cell.field.value"
+        >
 
-            <div
-              v-else-if="cell.field.type === 'html'"
+        <div
+          v-else-if="cell.field.type === 'html'"
               :class="`${rootClass}__html`"
-              v-html="cell.field.html"
-            />
+          v-html="cell.field.html"
+        />
 
-            <button
-              v-else-if="cell.field.type === 'button'"
+        <button
+          v-else-if="cell.field.type === 'button'"
               :class="`${rootClass}__button`"
-              type="submit"
+          type="submit"
               :disabled="fieldDisabled(cell.field)"
-            >
-              {{ cell.field.buttonLabel || 'Submit' }}
-            </button>
+        >
+          {{ cell.field.buttonLabel || 'Submit' }}
+        </button>
 
             <div
               v-if="cell.field.help && !richField(cell.field) && cell.field.type !== 'hidden' && cell.field.type !== 'html' && cell.field.type !== 'button'"
               :class="`${rootClass}__help`"
-            >
-              {{ cell.field.help }}
+        >
+          {{ cell.field.help }}
             </div>
             <div
               v-if="fieldErrors[cell.field.key] && !richField(cell.field)"
               :class="`${rootClass}__error`"
-            >
-              {{ fieldErrors[cell.field.key] }}
+        >
+          {{ fieldErrors[cell.field.key] }}
             </div>
             </template>
           </div>

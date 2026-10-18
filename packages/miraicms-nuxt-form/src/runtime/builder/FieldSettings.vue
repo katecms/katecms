@@ -255,6 +255,18 @@ function removeOption(index: number) {
         />
       </div>
     </template>
+    <MiraiCmsTextField
+      :model-value="field.containerClass ?? ''"
+      :field-key="`${field.id}-container-class`"
+      :field="{
+        type: 'text',
+        label: 'Container Class',
+        placeholder: 'e.g. class1 class2 class3',
+        instructions: 'Container Class allows you to add custom CSS classes to the field container. You can use this to apply custom styles to the field wrapper.',
+        maxLength: 400,
+      }"
+      @update:model-value="patch({ containerClass: String($event ?? '').slice(0, 400) || undefined })"
+    />
   </div>
 </template>
 

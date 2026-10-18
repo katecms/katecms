@@ -22,6 +22,7 @@ import {
   resolveLayout,
   setLayoutItem,
   setFormBreakpoints,
+  fieldConditionStates,
   submissionErrors,
   textStoredValue,
 } from '../src/runtime/form/model.ts'
@@ -415,4 +416,164 @@ test('choice fields keep their options and enforce a checkbox minimum', () => {
   assert.deepEqual(ordered.fields[0]?.options.map(option => option.value), ['before', 'paris', 'middle', 'tokyo'])
   const short = submissionErrors(grouped, { city: ['paris'] }, {}, 1024)
   assert.equal(short.city, 'Select at least 2 option(s)')
+})
+
+function conditionForm(conditions: unknown) {
+  return normalizeFormContent({
+    fields: [
+      { id: 'name', type: 'text', key: 'name', label: 'Name' },
+      { id: 'note', type: 'text', key: 'note', label: 'Note', required: true },
+      { id: 'colors', type: 'checkbox', key: 'colors', label: 'Colors', options: [{ label: 'Red', value: 'red' }, { label: 'Blue', value: 'blue' }] },
+      { id: 'go', type: 'button', key: 'go', label: 'Submit', locked: true, text: { buttonType: 'submit' } },
+    ],
+    conditions,
+  })
+}
+
+function rule(logic: string, value = '') {
+  return { id: `r-${logic}`, logic, value }
+}
+
+test('conditional logic compares values and changes the target field', () => {
+  const equal = conditionForm([{
+    id: 'c1',
+    enabled: true,
+    title: 'Show note',
+    fieldId: 'name',
+    groups: [{ id: 'g1', match: 'all', rules: [rule('equal', 'Ann')] }],
+    action: 'show',
+    targetFieldIds: ['note'],
+  }])
+  assert.equal(fieldConditionStates(equal, { name: '' }).note?.hidden, true)
+  assert.equal(fieldConditionStates(equal, { name: 'Ann' }).note?.hidden, false)
+  assert.equal(submissionErrors(equal, { name: '', note: '' }, {}, 1024).note, undefined)
+
+  const notEqual = conditionForm([{
+    id: 'c2',
+    enabled: true,
+    fieldId: 'name',
+    groups: [{ id: 'g1', match: 'all', rules: [rule('not_equal', 'Ann')] }],
+    action: 'show',
+    targetFieldIds: ['note'],
+  }])
+  assert.equal(fieldConditionStates(notEqual, { name: 'Ann' }).note?.hidden, true)
+  assert.equal(fieldConditionStates(notEqual, { name: 'Bob' }).note?.hidden, false)
+
+  const empty = conditionForm([{
+    id: 'c3',
+    enabled: true,
+    fieldId: 'name',
+    groups: [{ id: 'g1', match: 'all', rules: [rule('null')] }],
+    action: 'show',
+    targetFieldIds: ['note'],
+  }])
+  assert.equal(fieldConditionStates(empty, { name: '' }).note?.hidden, false)
+  assert.equal(fieldConditionStates(empty, { name: 'Ann' }).note?.hidden, true)
+
+  const contains = conditionForm([{
+    id: 'c4',
+    enabled: true,
+    fieldId: 'name',
+    groups: [{ id: 'g1', match: 'all', rules: [rule('contain', 'an')] }],
+    action: 'show',
+    targetFieldIds: ['note'],
+  }])
+  assert.equal(fieldConditionStates(contains, { name: 'Anna' }).note?.hidden, false)
+  assert.equal(fieldConditionStates(contains, { name: 'Bob' }).note?.hidden, true)
+
+  const all = conditionForm([{
+    id: 'c5',
+    enabled: true,
+    fieldId: 'colors',
+    groups: [{ id: 'g1', match: 'all', rules: [rule('contain_all', 'red,blue')] }],
+    action: 'show',
+    targetFieldIds: ['note'],
+  }])
+  assert.equal(fieldConditionStates(all, { colors: ['red'] }).note?.hidden, true)
+  assert.equal(fieldConditionStates(all, { colors: ['blue', 'red'] }).note?.hidden, false)
+
+  const span = conditionForm([{
+    id: 'c6',
+    enabled: true,
+    fieldId: 'name',
+    groups: [{ id: 'g1', match: 'all', rules: [rule('between', JSON.stringify({ min: '1', max: '10' }))] }],
+    action: 'show',
+    targetFieldIds: ['note'],
+  }])
+  assert.equal(fieldConditionStates(span, { name: '10' }).note?.hidden, false)
+  assert.equal(fieldConditionStates(span, { name: '11' }).note?.hidden, true)
+
+  const andGroup = conditionForm([{
+    id: 'c7',
+    enabled: true,
+    fieldId: 'name',
+    groups: [{ id: 'g1', match: 'all', rules: [rule('equal', 'Ann'), rule('equal', 'Bob')] }],
+    action: 'show',
+    targetFieldIds: ['note'],
+  }])
+  assert.equal(fieldConditionStates(andGroup, { name: 'Ann' }).note?.hidden, true)
+
+  const orGroup = conditionForm([{
+    id: 'c8',
+    enabled: true,
+    fieldId: 'name',
+    groups: [{ id: 'g1', match: 'any', rules: [rule('equal', 'Ann'), rule('equal', 'Bob')] }],
+    action: 'show',
+    targetFieldIds: ['note'],
+  }])
+  assert.equal(fieldConditionStates(orGroup, { name: 'Ann' }).note?.hidden, false)
+
+  const dropped = conditionForm([{
+    id: 'gone',
+    enabled: true,
+    fieldId: 'missing',
+    groups: [{ id: 'g1', match: 'all', rules: [rule('equal', 'Ann')] }],
+    action: 'show',
+    targetFieldIds: ['note'],
+  }, {
+    id: 'self',
+    enabled: true,
+    fieldId: 'name',
+    groups: [{ id: 'g1', match: 'all', rules: [rule('equal', 'Ann')] }],
+    action: 'hide',
+    targetFieldIds: ['name'],
+  }])
+  assert.deepEqual(dropped.conditions, [])
+
+  const chain = conditionForm([{
+    id: 'c9',
+    enabled: true,
+    title: 'Chain',
+    branches: [
+      {
+        id: 'if',
+        kind: 'if',
+        fieldId: 'name',
+        groups: [{ id: 'g1', match: 'all', rules: [rule('equal', 'Ann')] }],
+        action: 'show',
+        targetFieldIds: ['note'],
+      },
+      {
+        id: 'elif',
+        kind: 'else_if',
+        fieldId: 'name',
+        groups: [{ id: 'g2', match: 'all', rules: [rule('equal', 'Bob')] }],
+        action: 'hide',
+        targetFieldIds: ['note'],
+      },
+      {
+        id: 'else',
+        kind: 'else',
+        fieldId: '',
+        groups: [],
+        action: 'show',
+        targetFieldIds: ['colors'],
+      },
+    ],
+  }])
+  assert.equal(fieldConditionStates(chain, { name: 'Ann' }).note?.hidden, false)
+  assert.equal(fieldConditionStates(chain, { name: 'Ann' }).colors?.hidden, true)
+  assert.equal(fieldConditionStates(chain, { name: 'Bob' }).note?.hidden, true)
+  assert.equal(fieldConditionStates(chain, { name: 'Sam' }).colors?.hidden, false)
+  assert.equal(fieldConditionStates(chain, { name: 'Sam' }).note?.hidden, true)
 })

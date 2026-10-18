@@ -164,11 +164,83 @@ export interface FormConfirmation {
   redirectPage: string
 }
 
+export const FORM_CONDITION_LOGICS = [
+  'equal',
+  'not_equal',
+  'null',
+  'not_null',
+  'contain',
+  'not_contain',
+  'contain_all',
+  'greater',
+  'less',
+  'greater_or_equal',
+  'less_or_equal',
+  'start_with',
+  'end_with',
+  'between',
+] as const
+
+export type FormConditionLogic = typeof FORM_CONDITION_LOGICS[number]
+
+export const FORM_CONDITION_ACTIONS = [
+  'show',
+  'hide',
+  'enable',
+  'disable',
+  'readonly',
+  'writable',
+  'required',
+] as const
+
+export type FormConditionAction = typeof FORM_CONDITION_ACTIONS[number]
+
+export interface FormConditionRule {
+  id: string
+  /** Field this rule tests. Missing means the branch field. */
+  fieldId?: string
+  logic: FormConditionLogic
+  value: string
+}
+
+export interface FormConditionGroup {
+  id: string
+  /** `all` is And. `any` is Or. */
+  match: 'all' | 'any'
+  rules: FormConditionRule[]
+}
+
+export interface FormConditionBranch {
+  id: string
+  kind: 'if' | 'else_if' | 'else'
+  /** Empty on an else branch. */
+  fieldId: string
+  /** Empty on an else branch. Groups are combined with And. */
+  groups: FormConditionGroup[]
+  action: FormConditionAction
+  targetFieldIds: string[]
+}
+
+export interface FormCondition {
+  id: string
+  enabled: boolean
+  title: string
+  branches: FormConditionBranch[]
+}
+
+export interface FormFieldConditionState {
+  hidden: boolean
+  disabled: boolean
+  readonly: boolean
+  required: boolean
+}
+
 export interface FormContent {
   steps: FormStep[]
   stepHeader: FormStepHeader
   fields: FormField[]
   layouts: Record<Breakpoint, LayoutItem[]>
+  conditions: FormCondition[]
   /** When set, every breakpoint layout follows the active breakpoint’s field order. */
   syncFieldOrder?: boolean
   /** Validate a field when the visitor leaves it. Missing means enabled. */
@@ -382,6 +454,7 @@ export function createEmptyContent(): FormContent {
     emptySubmitMessage: EMPTY_SUBMIT_MESSAGE,
     notification: defaultNotification(),
     confirmation: defaultConfirmation(),
+    conditions: [],
   }, 'button')
 }
 
@@ -582,6 +655,10 @@ export function removeField(content: FormContent, fieldId: string): FormContent 
   return {
     ...content,
     fields: content.fields.filter(field => field.id !== fieldId),
+    conditions: (content.conditions ?? []).flatMap((condition) => {
+      const next = conditionWithoutField(condition, fieldId)
+      return next ? [next] : []
+    }),
     layouts: Object.fromEntries(formBreakpoints().map(name => [
       name,
       (content.layouts[name] ?? []).filter(item => item.fieldId !== fieldId),
@@ -749,6 +826,7 @@ export function normalizeFormContent(input: unknown): FormContent {
     emptySubmitMessage: clip(source.emptySubmitMessage, 400).trim() || EMPTY_SUBMIT_MESSAGE,
     notification: normalizeNotification(source.notification),
     confirmation: normalizeConfirmation(source.confirmation),
+    conditions: normalizeConditions(source.conditions, fields),
     steps,
     stepHeader: normalizeStepHeader(source.stepHeader),
     fields,
@@ -802,14 +880,455 @@ export function submissionErrors(
   files: Record<string, UploadedFile | UploadedFile[] | null>,
   maxFileBytes: number,
 ): Record<string, string> {
+  const states = fieldConditionStates(content, conditionInputValues(content, input))
   const errors: Record<string, string> = {}
   for (const field of content.fields) {
-    const message = fieldSubmissionError(field, input, files[field.key] ?? null, maxFileBytes)
+    const state = states[field.id]
+    if (state?.hidden || state?.disabled) {
+      continue
+    }
+    const message = fieldSubmissionError(fieldForCondition(field, state), input, files[field.key] ?? null, maxFileBytes)
     if (message) {
       errors[field.key] = message
     }
   }
   return errors
+}
+
+export function conditionInputValues(content: FormContent, input: Record<string, unknown>): Record<string, string | string[]> {
+  const values: Record<string, string | string[]> = {}
+  for (const field of content.fields) {
+    values[field.id] = conditionStoredValue(field, input[field.key])
+  }
+  return values
+}
+
+export function fieldConditionStates(content: FormContent, values: Record<string, string | string[]>): Record<string, FormFieldConditionState> {
+  const conditions = acyclicConditions(content.conditions ?? [])
+  const states: Record<string, FormFieldConditionState> = {}
+  for (const field of content.fields) {
+    const targeted = (action: FormConditionAction) => conditions.some(condition => condition.enabled && conditionBranches(condition).some(branch => branch.action === action && branch.targetFieldIds.includes(field.id)))
+    states[field.id] = {
+      hidden: field.text?.hidden === true || targeted('show'),
+      disabled: field.text?.disabled === true || targeted('enable'),
+      readonly: field.text?.readOnly === true || targeted('writable'),
+      required: targeted('required') ? false : field.required || field.text?.required.enabled === true,
+    }
+  }
+  for (const condition of conditions) {
+    if (!condition.enabled) {
+      continue
+    }
+    const branch = conditionBranches(condition).find(item => item.kind === 'else' || branchMatches(content, item, values))
+    if (!branch) {
+      continue
+    }
+    for (const targetId of branch.targetFieldIds) {
+      const state = states[targetId]
+      if (!state) {
+        continue
+      }
+      if (branch.action === 'show') state.hidden = false
+      if (branch.action === 'hide') state.hidden = true
+      if (branch.action === 'enable') state.disabled = false
+      if (branch.action === 'disable') state.disabled = true
+      if (branch.action === 'writable') state.readonly = false
+      if (branch.action === 'readonly') state.readonly = true
+      if (branch.action === 'required') state.required = true
+    }
+  }
+  return states
+}
+
+export function fieldForCondition(field: FormField, state: FormFieldConditionState | undefined): FormField {
+  const required = state?.required ?? (field.required || field.text?.required.enabled === true)
+  if (!field.text) {
+    return { ...field, required }
+  }
+  return {
+    ...field,
+    required,
+    text: {
+      ...field.text,
+      required: { ...field.text.required, enabled: required },
+    },
+  }
+}
+
+function conditionStoredValue(field: FormField, raw: unknown): string | string[] {
+  if (isConditionMulti(field)) {
+    if (Array.isArray(raw)) {
+      return raw.map(item => String(item).trim()).filter(Boolean)
+    }
+    if (typeof raw === 'string' && raw.trim()) {
+      return raw.split(',').map(item => item.trim()).filter(Boolean)
+    }
+    return []
+  }
+  if (Array.isArray(raw)) {
+    return raw[0] == null ? '' : String(raw[0])
+  }
+  return raw == null ? '' : String(raw)
+}
+
+function isConditionMulti(field: FormField): boolean {
+  return field.type === 'checkbox'
+    || (field.type === 'image_select' && field.text?.allowMultiple === true)
+    || (field.type === 'select' && field.text?.selectMultiple.enabled === true)
+}
+
+function branchMatches(content: FormContent, branch: FormConditionBranch, values: Record<string, string | string[]>): boolean {
+  if (branch.kind === 'else' || !branch.groups.length) {
+    return false
+  }
+  return branch.groups.every(group => groupMatches(content, branch.fieldId, values, group))
+}
+
+function groupMatches(content: FormContent, fallbackFieldId: string, values: Record<string, string | string[]>, group: FormConditionGroup): boolean {
+  if (!group.rules.length) {
+    return false
+  }
+  const checks = group.rules.map((rule) => {
+    const field = content.fields.find(item => item.id === (rule.fieldId || fallbackFieldId))
+    if (!field) {
+      return false
+    }
+    return ruleMatches(field, values[field.id] ?? (isConditionMulti(field) ? [] : ''), rule)
+  })
+  return group.match === 'any' ? checks.some(Boolean) : checks.every(Boolean)
+}
+
+function ruleMatches(field: FormField, raw: string | string[], rule: FormConditionRule): boolean {
+  const empty = isConditionMulti(field) ? (Array.isArray(raw) ? raw.length === 0 : !raw) : String(raw).trim() === ''
+  if (rule.logic === 'null') {
+    return empty
+  }
+  if (rule.logic === 'not_null') {
+    return !empty
+  }
+  if (isConditionMulti(field)) {
+    const selected = Array.isArray(raw) ? raw : []
+    const expected = rule.value.split(',').map(item => item.trim()).filter(Boolean)
+    if (rule.logic === 'equal') {
+      return sameMembers(selected, expected)
+    }
+    if (rule.logic === 'not_equal') {
+      return !sameMembers(selected, expected)
+    }
+    if (rule.logic === 'contain') {
+      return expected.some(item => selected.includes(item))
+    }
+    if (rule.logic === 'contain_all') {
+      return expected.length > 0 && expected.every(item => selected.includes(item))
+    }
+    if (rule.logic === 'not_contain') {
+      return expected.every(item => !selected.includes(item))
+    }
+  }
+  const value = Array.isArray(raw) ? raw.join(',') : raw
+  const expected = rule.value
+  if (rule.logic === 'equal') {
+    return value === expected
+  }
+  if (rule.logic === 'not_equal') {
+    return value !== expected
+  }
+  if (rule.logic === 'contain') {
+    return expected !== '' && value.toLowerCase().includes(expected.toLowerCase())
+  }
+  if (rule.logic === 'not_contain') {
+    return expected === '' || !value.toLowerCase().includes(expected.toLowerCase())
+  }
+  if (rule.logic === 'contain_all') {
+    const parts = expected.split(',').map(item => item.trim()).filter(Boolean)
+    return parts.length > 0 && parts.every(item => value.toLowerCase().includes(item.toLowerCase()))
+  }
+  if (rule.logic === 'start_with') {
+    return expected !== '' && value.toLowerCase().startsWith(expected.toLowerCase())
+  }
+  if (rule.logic === 'end_with') {
+    return expected !== '' && value.toLowerCase().endsWith(expected.toLowerCase())
+  }
+  if (rule.logic === 'between') {
+    return betweenMatch(value, expected)
+  }
+  const order = compareCondition(value, expected)
+  if (rule.logic === 'greater') return order > 0
+  if (rule.logic === 'less') return order < 0
+  if (rule.logic === 'greater_or_equal') return order >= 0
+  if (rule.logic === 'less_or_equal') return order <= 0
+  return false
+}
+
+function sameMembers(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) {
+    return false
+  }
+  const pending = [...right]
+  return left.every((item) => {
+    const index = pending.indexOf(item)
+    if (index < 0) {
+      return false
+    }
+    pending.splice(index, 1)
+    return true
+  })
+}
+
+function betweenMatch(value: string, raw: string): boolean {
+  let min = ''
+  let max = ''
+  try {
+    const parsed = JSON.parse(raw) as { min?: unknown, max?: unknown }
+    min = parsed.min == null ? '' : String(parsed.min)
+    max = parsed.max == null ? '' : String(parsed.max)
+  }
+  catch {
+    return false
+  }
+  if (min !== '' && compareCondition(value, min) < 0) {
+    return false
+  }
+  if (max !== '' && compareCondition(value, max) > 0) {
+    return false
+  }
+  return min !== '' || max !== ''
+}
+
+function compareCondition(left: string, right: string): number {
+  const leftNumber = Number(left)
+  const rightNumber = Number(right)
+  if (left.trim() !== '' && right.trim() !== '' && Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) {
+    return leftNumber - rightNumber
+  }
+  if (left < right) return -1
+  if (left > right) return 1
+  return 0
+}
+
+function acyclicConditions(conditions: FormCondition[]): FormCondition[] {
+  const edges = new Map<string, Set<string>>()
+  const kept: FormCondition[] = []
+  for (const condition of conditions) {
+    if (!condition.enabled) {
+      kept.push(condition)
+      continue
+    }
+    const branches: FormConditionBranch[] = []
+    const ifSources = watchedFieldIds(conditionBranches(condition).find(branch => branch.kind === 'if'))
+    for (const branch of conditionBranches(condition)) {
+      const sources = branch.kind === 'else' ? ifSources : watchedFieldIds(branch)
+      const showHide = branch.action === 'show' || branch.action === 'hide'
+      if (showHide && sources.some(source => branch.targetFieldIds.some(target => target === source || reaches(edges, target, source)))) {
+        continue
+      }
+      branches.push(branch)
+      if (!showHide) {
+        continue
+      }
+      for (const source of sources) {
+        const next = edges.get(source) ?? new Set<string>()
+        for (const target of branch.targetFieldIds) {
+          next.add(target)
+        }
+        edges.set(source, next)
+      }
+    }
+    if (branches.some(branch => branch.kind === 'if')) {
+      kept.push({ ...condition, branches })
+    }
+  }
+  return kept
+}
+
+function watchedFieldIds(branch: FormConditionBranch | undefined): string[] {
+  if (!branch || branch.kind === 'else') {
+    return []
+  }
+  const ids = new Set<string>()
+  if (branch.fieldId) {
+    ids.add(branch.fieldId)
+  }
+  for (const group of branch.groups) {
+    for (const rule of group.rules) {
+      if (rule.fieldId) {
+        ids.add(rule.fieldId)
+      }
+    }
+  }
+  return [...ids]
+}
+
+export function conditionBranches(condition: FormCondition): FormConditionBranch[] {
+  if (condition.branches?.length) {
+    return condition.branches
+  }
+  const legacy = condition as FormCondition & {
+    fieldId?: string
+    groups?: FormConditionGroup[]
+    action?: FormConditionAction
+    targetFieldIds?: string[]
+  }
+  if (!legacy.fieldId || !legacy.action || !legacy.groups?.length || !legacy.targetFieldIds?.length) {
+    return []
+  }
+  return [{
+    id: `${condition.id || 'c'}-if`,
+    kind: 'if',
+    fieldId: legacy.fieldId,
+    groups: legacy.groups,
+    action: legacy.action,
+    targetFieldIds: legacy.targetFieldIds,
+  }]
+}
+
+function conditionWithoutField(condition: FormCondition, fieldId: string): FormCondition | null {
+  const branches = conditionBranches(condition).flatMap((branch) => {
+    const groups = branch.kind === 'else'
+      ? []
+      : branch.groups
+          .map(group => ({ ...group, rules: group.rules.filter(rule => rule.fieldId !== fieldId) }))
+          .filter(group => group.rules.length)
+    const stillWatchesRemoved = branch.kind !== 'else' && branch.fieldId === fieldId && groups.every(group => group.rules.every(rule => !rule.fieldId))
+    if (stillWatchesRemoved || (branch.kind !== 'else' && !groups.length)) {
+      return []
+    }
+    const targetFieldIds = branch.targetFieldIds.filter(id => id !== fieldId)
+    if (!targetFieldIds.length) {
+      return []
+    }
+    const nextFieldId = branch.fieldId === fieldId ? (groups[0]?.rules.find(rule => rule.fieldId)?.fieldId || '') : branch.fieldId
+    return [{ ...branch, fieldId: nextFieldId, groups, targetFieldIds }]
+  })
+  if (!branches.some(branch => branch.kind === 'if')) {
+    return null
+  }
+  return { ...condition, branches }
+}
+
+function reaches(edges: Map<string, Set<string>>, from: string, target: string): boolean {
+  const seen = new Set<string>()
+  const stack = [from]
+  while (stack.length) {
+    const current = stack.pop()!
+    if (current === target) {
+      return true
+    }
+    if (seen.has(current)) {
+      continue
+    }
+    seen.add(current)
+    for (const next of edges.get(current) ?? []) {
+      stack.push(next)
+    }
+  }
+  return false
+}
+
+function normalizeConditions(raw: unknown, fields: FormField[]): FormCondition[] {
+  if (!Array.isArray(raw)) {
+    return []
+  }
+  const ids = new Set(fields.map(field => field.id))
+  const conditions: FormCondition[] = []
+  for (const item of raw.slice(0, 100)) {
+    if (!isRecord(item)) {
+      continue
+    }
+    const branches = normalizeBranches(item, ids)
+    if (!branches.some(branch => branch.kind === 'if')) {
+      continue
+    }
+    conditions.push({
+      id: typeof item.id === 'string' && item.id.trim() ? item.id.trim().slice(0, 80) : `c_${crypto.randomUUID()}`,
+      enabled: item.enabled === true,
+      title: clip(item.title, 80) || 'Condition',
+      branches,
+    })
+  }
+  return conditions
+}
+
+function normalizeBranches(item: Record<string, unknown>, ids: Set<string>): FormConditionBranch[] {
+  const rawBranches = Array.isArray(item.branches) ? item.branches : [item]
+  const ifs: FormConditionBranch[] = []
+  const elseIfs: FormConditionBranch[] = []
+  const elses: FormConditionBranch[] = []
+  for (const raw of rawBranches.slice(0, 20)) {
+    if (!isRecord(raw)) {
+      continue
+    }
+    const kind = raw.kind === 'else' || raw.kind === 'else_if' ? raw.kind : 'if'
+    const action = FORM_CONDITION_ACTIONS.includes(raw.action as FormConditionAction) ? raw.action as FormConditionAction : null
+    if (!action) {
+      continue
+    }
+    const groups = kind === 'else' ? [] : normalizeConditionGroups(raw.groups, ids)
+    const fieldId = kind === 'else'
+      ? ''
+      : (typeof raw.fieldId === 'string' && ids.has(raw.fieldId) ? raw.fieldId : groups.flatMap(group => group.rules).find(rule => rule.fieldId)?.fieldId || '')
+    const watched = new Set(kind === 'else' ? [] : [fieldId, ...groups.flatMap(group => group.rules.map(rule => rule.fieldId || fieldId))])
+    const targetFieldIds = Array.isArray(raw.targetFieldIds)
+      ? raw.targetFieldIds.filter((id): id is string => typeof id === 'string' && ids.has(id) && !watched.has(id))
+      : []
+    if (!targetFieldIds.length || (kind !== 'else' && (!fieldId || !groups.length))) {
+      continue
+    }
+    const branch: FormConditionBranch = {
+      id: typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim().slice(0, 80) : `b_${crypto.randomUUID()}`,
+      kind,
+      fieldId,
+      groups,
+      action,
+      targetFieldIds,
+    }
+    if (kind === 'else') elses.push(branch)
+    else if (kind === 'else_if') elseIfs.push(branch)
+    else ifs.push(branch)
+  }
+  const branches = [...ifs, ...elseIfs]
+  const fallback = elses[0]
+  if (fallback) {
+    branches.push(fallback)
+  }
+  if (branches[0] && branches[0].kind !== 'if') {
+    branches[0] = { ...branches[0], kind: 'if' }
+  }
+  return branches
+}
+
+function normalizeConditionGroups(raw: unknown, ids: Set<string>): FormConditionGroup[] {
+  if (!Array.isArray(raw)) {
+    return []
+  }
+  const groups: FormConditionGroup[] = []
+  for (const item of raw.slice(0, 10)) {
+    if (!isRecord(item) || !Array.isArray(item.rules)) {
+      continue
+    }
+    const rules: FormConditionRule[] = []
+    for (const rule of item.rules.slice(0, 20)) {
+      if (!isRecord(rule) || !FORM_CONDITION_LOGICS.includes(rule.logic as FormConditionLogic)) {
+        continue
+      }
+      const fieldId = typeof rule.fieldId === 'string' && ids.has(rule.fieldId) ? rule.fieldId : ''
+      rules.push({
+        id: typeof rule.id === 'string' && rule.id.trim() ? rule.id.trim().slice(0, 80) : `r_${crypto.randomUUID()}`,
+        ...(fieldId ? { fieldId } : {}),
+        logic: rule.logic as FormConditionLogic,
+        value: clip(rule.value, 500),
+      })
+    }
+    if (!rules.length) {
+      continue
+    }
+    groups.push({
+      id: typeof item.id === 'string' && item.id.trim() ? item.id.trim().slice(0, 80) : `g_${crypto.randomUUID()}`,
+      match: item.match === 'any' ? 'any' : 'all',
+      rules,
+    })
+  }
+  return groups
 }
 
 export function emptySubmissionError(

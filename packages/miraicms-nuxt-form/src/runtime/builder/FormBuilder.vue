@@ -21,11 +21,13 @@ import {
   removeField,
   reorderSteps,
   replaceField,
+  fieldConditionStates,
   isSubmitButton,
   setLayoutItem,
 } from '../form/model'
 import { clientFormBreakpoints } from '../form/runtime-config'
 import { provideMiraiCmsFieldErrors } from 'miraicms-nuxt/extensions'
+import ConditionalLogic from './settings/ConditionalLogic.vue'
 import StepSettings from './StepSettings.vue'
 
 const rootClass = 'miraicms-form-builder'
@@ -41,6 +43,7 @@ provideMiraiCmsFieldErrors(notificationErrors)
 
 const rootRef = ref<HTMLElement | null>(null)
 const gridRef = ref<HTMLElement | null>(null)
+const canvasValues = ref<Record<string, string | string[]>>({})
 const formBreakpointList = clientFormBreakpoints()
 const breakpoint = ref<Breakpoint>(baseBreakpoint())
 const activeStepId = ref('')
@@ -53,7 +56,7 @@ const moveMenuStyle = ref<{ top: string, left?: string, right?: string }>({ top:
 let moveMenuTimer: ReturnType<typeof setTimeout> | undefined
 const selectedId = ref<string | null>(null)
 const editorMode = ref<'builder' | 'settings'>('builder')
-const settingsSection = ref<'form' | 'email' | 'confirmations'>('form')
+const settingsSection = ref<'form' | 'email' | 'confirmations' | 'conditions'>('form')
 const emailFields = [
   { key: 'to', label: 'To', maxLength: 500 },
   { key: 'fromMail', label: 'From Mail', maxLength: 200 },
@@ -534,6 +537,58 @@ const dropPlaceholderStyle = computed((): CSSProperties | undefined => {
 
 function fieldById(fieldId: string): FormField | undefined {
   return content.value.fields.find(field => field.id === fieldId)
+}
+
+function canvasState(fieldId: string) {
+  return fieldConditionStates(content.value, canvasValues.value)[fieldId] ?? {
+    hidden: false,
+    disabled: false,
+    readonly: false,
+    required: false,
+  }
+}
+
+function readCanvasValues() {
+  const root = gridRef.value
+  if (!root) {
+    return
+  }
+  const next: Record<string, string | string[]> = {}
+  for (const field of content.value.fields) {
+    const nodes = [...root.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[name="${CSS.escape(field.key)}"]`)]
+    const multiple = field.type === 'checkbox'
+      || (field.type === 'image_select' && field.text?.allowMultiple === true)
+      || (field.type === 'select' && field.text?.selectMultiple.enabled === true)
+    if (multiple && nodes[0] instanceof HTMLSelectElement) {
+      next[field.id] = [...nodes[0].selectedOptions].map(option => option.value)
+    }
+    else if (multiple) {
+      next[field.id] = nodes.flatMap(node => node instanceof HTMLInputElement && node.checked ? [node.value] : [])
+    }
+    else if (nodes.some(node => node instanceof HTMLInputElement && (node.type === 'radio' || node.type === 'checkbox'))) {
+      const checked = nodes.find(node => node instanceof HTMLInputElement && node.checked)
+      next[field.id] = checked instanceof HTMLInputElement ? checked.value : ''
+    }
+    else {
+      next[field.id] = nodes[0]?.value ?? ''
+    }
+  }
+  for (let pass = 0; pass < content.value.fields.length; pass += 1) {
+    const states = fieldConditionStates(content.value, next)
+    let changed = false
+    for (const field of content.value.fields) {
+      const current = next[field.id]
+      const empty = Array.isArray(current) ? current.length === 0 : !String(current ?? '').trim()
+      if (states[field.id]?.hidden && !empty) {
+        next[field.id] = Array.isArray(current) ? [] : ''
+        changed = true
+      }
+    }
+    if (!changed) {
+      break
+    }
+  }
+  canvasValues.value = next
 }
 
 function focusBoard() {
@@ -1344,6 +1399,8 @@ onBeforeUnmount(() => {
               ref="gridRef"
               :class="`${rootClass}__grid`"
               @pointerdown.self="selectedId = null"
+              @input="readCanvasValues"
+              @change="readCanvasValues"
             >
               <div
                 v-if="dropPlaceholderStyle"
@@ -1357,7 +1414,7 @@ onBeforeUnmount(() => {
                   'is-selected': item.fieldId === selectedId,
                   'is-dragging': drag?.fieldId === item.fieldId && drag?.mode !== 'move',
                   'is-floating': drag?.fieldId === item.fieldId && drag?.mode === 'move',
-                  'is-hidden': fieldById(item.fieldId)?.text?.hidden,
+                  'is-hidden': canvasState(item.fieldId).hidden,
                   'is-menu-open': openFieldMenu === item.fieldId,
                 }]"
                 :style="itemVisualStyle(item)"
@@ -1367,6 +1424,8 @@ onBeforeUnmount(() => {
                   v-if="fieldById(item.fieldId)"
                   :field="fieldById(item.fieldId)"
                   :height="item.h"
+                  :disabled="canvasState(item.fieldId).disabled"
+                  :logic-readonly="canvasState(item.fieldId).readonly"
                   preview
                 />
                 <div
@@ -1690,6 +1749,13 @@ onBeforeUnmount(() => {
         >
           Confirmations
         </button>
+        <button
+          type="button"
+          :class="[`${rootClass}__settings-item`, { 'is-active': settingsSection === 'conditions' }]"
+          @click="settingsSection = 'conditions'"
+        >
+          Conditional Logic
+        </button>
       </div>
       <div :class="`${rootClass}__settings-panel`">
         <div
@@ -1749,7 +1815,7 @@ onBeforeUnmount(() => {
           </template>
         </div>
         <div
-          v-else
+          v-else-if="settingsSection === 'confirmations'"
           :class="`${rootClass}__form`"
         >
           <MiraiCmsWysiwygField
@@ -1765,6 +1831,11 @@ onBeforeUnmount(() => {
             @update:model-value="setRedirectPage"
           />
         </div>
+        <ConditionalLogic
+          v-else
+          :content="content"
+          @update="content = { ...content, conditions: $event }"
+        />
       </div>
       <!--
       <div :class="`${rootClass}__form`">
@@ -2207,11 +2278,12 @@ $root: '.miraicms-form-builder';
       border-color: $color-accent;
       border-style: dashed;
       background-color: rgba($color-accent-wash, .4);
+      z-index: 2;
     }
 
     &.is-dragging {
       opacity: 0.85;
-      z-index: 2;
+      z-index: 5;
     }
 
     &.is-floating {

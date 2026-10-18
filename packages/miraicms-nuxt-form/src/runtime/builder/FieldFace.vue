@@ -10,12 +10,14 @@ const props = withDefaults(defineProps<{
   field?: FormField
   preview?: boolean
   disabled?: boolean
+  logicReadonly?: boolean
   invalid?: boolean
   error?: string
   height?: number
 }>(), {
   preview: false,
   disabled: false,
+  logicReadonly: false,
   invalid: false,
   error: '',
 })
@@ -35,11 +37,32 @@ const ratingMessage = computed(() => {
 })
 const rules = computed(() => props.field?.type === 'password' ? passwordRuleStates(options.value, draft.value) : [])
 const draft = ref(props.field?.value || '')
+const choiceDraft = ref<string[]>([])
 
 watch(() => props.field?.id, () => {
   draft.value = props.field?.value || options.value.defaultValue || ''
+  choiceDraft.value = listedChoiceOptions(options.value).filter(item => item.checked).map(item => item.value)
   revealed.value = false
 }, { immediate: true })
+
+function onChoiceChange(event: Event) {
+  const input = event.target
+  if (!(input instanceof HTMLInputElement)) {
+    return
+  }
+  if (input.type === 'radio') {
+    choiceDraft.value = input.checked ? [input.value] : []
+    return
+  }
+  const next = new Set(choiceDraft.value)
+  if (input.checked) {
+    next.add(input.value)
+  }
+  else {
+    next.delete(input.value)
+  }
+  choiceDraft.value = [...next]
+}
 
 watch(() => options.value.defaultValue, (value) => {
   if (props.preview) {
@@ -302,7 +325,7 @@ function onInput(event: Event) {
         <span v-if="ratingMessage">{{ ratingMessage }}</span>
         <input
           type="hidden"
-          :name="preview ? undefined : field.key"
+          :name="field.key"
           :value="draft"
         >
       </div>
@@ -331,12 +354,12 @@ function onInput(event: Event) {
         v-else-if="field.type === 'select'"
         :id="controlId"
         v-model="selectModel"
-        :name="preview ? undefined : field.key"
+        :name="field.key"
         :choices="selectChoices"
         :placeholder="options.placeholder"
         :multiple="options.selectMultiple.enabled"
         :required="options.required.enabled"
-        :disabled="disabled || options.disabled || options.readOnly"
+        :disabled="disabled || logicReadonly || options.disabled || options.readOnly"
         :min="options.selectMultiple.enabled ? (options.selectMultiple.minimum.value ?? 0) : 0"
         :max="options.selectMultiple.enabled ? (options.selectMultiple.maximum.value ?? undefined) : undefined"
         :search="options.showSearch"
@@ -358,11 +381,12 @@ function onInput(event: Event) {
         >
           <input
             :type="field.type"
-            :name="preview ? undefined : field.key"
+            :name="field.key"
             :value="option.value"
-            :checked="option.checked"
+            :checked="preview ? choiceDraft.includes(option.value) : option.checked"
             :disabled="option.disabled || disabled || options.disabled"
             :required="field.type === 'checkbox' ? option.required : options.required.enabled"
+            @change="onChoiceChange"
           >
           <span>{{ option.label }}</span>
         </label>
@@ -379,11 +403,12 @@ function onInput(event: Event) {
         >
           <input
             :type="options.allowMultiple ? 'checkbox' : 'radio'"
-            :name="preview ? undefined : field.key"
+            :name="field.key"
             :value="option.value"
-            :checked="option.checked"
+            :checked="preview ? choiceDraft.includes(option.value) : option.checked"
             :disabled="option.disabled || disabled || options.disabled"
             :required="option.required"
+            @change="onChoiceChange"
             :style="checkPositionStyle(options.checkPosition)"
           >
           <img
@@ -400,7 +425,7 @@ function onInput(event: Event) {
         :id="controlId"
         :class="`${rootClass}__input`"
         type="file"
-        :name="preview ? undefined : field.key"
+        :name="field.key"
         :accept="fileAccept(options.fileType) || undefined"
         :multiple="options.fileMultiple.enabled || undefined"
         :required="options.required.enabled"
@@ -412,9 +437,9 @@ function onInput(event: Event) {
         v-model="draft"
         :class="`${rootClass}__input`"
         :type="temporalInputType(field.type)"
-        :name="preview ? undefined : field.key"
+        :name="field.key"
         :required="options.required.enabled"
-        :readonly="preview || options.readOnly"
+        :readonly="logicReadonly || options.readOnly"
         :disabled="disabled || options.disabled"
         :min="options.rangeMin || undefined"
         :max="options.rangeMax || undefined"
@@ -424,11 +449,11 @@ function onInput(event: Event) {
         :id="controlId"
         v-model="draft"
         :class="`${rootClass}__input`"
-        :name="preview ? undefined : field?.key"
+        :name="field?.key"
         :rows="field?.rows || 4"
         :placeholder="options.placeholder || undefined"
         :required="options.required.enabled"
-        :readonly="preview || options.readOnly"
+        :readonly="logicReadonly || options.readOnly"
         :disabled="disabled || options.disabled"
         :maxlength="options.maxLength ?? undefined"
         :minlength="options.minLength ?? undefined"
@@ -443,10 +468,10 @@ function onInput(event: Event) {
         v-model="draft"
         :class="`${rootClass}__input`"
         :type="controlType()"
-        :name="preview ? undefined : field?.key"
+        :name="field?.key"
         :placeholder="options.placeholder || undefined"
         :required="options.required.enabled"
-        :readonly="preview || options.readOnly"
+        :readonly="logicReadonly || options.readOnly"
         :disabled="disabled || options.disabled"
         :maxlength="options.maxLength ?? undefined"
         :minlength="options.minLength ?? undefined"
@@ -554,7 +579,7 @@ function onInput(event: Event) {
         :class="`${rootClass}__input`"
         :type="field?.type === 'password' && !revealed ? 'password' : field?.type === 'email' ? 'email' : 'text'"
         :placeholder="options.confirm.placeholder || undefined"
-        :readonly="preview"
+        :readonly="logicReadonly"
       >
       <div
         v-if="options.confirm.helper.enabled && options.confirm.helper.text"

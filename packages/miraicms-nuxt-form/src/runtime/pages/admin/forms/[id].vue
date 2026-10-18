@@ -7,7 +7,6 @@ import { useFormPaths } from '../../../form/paths'
 
 const rootClass = 'miraicms-form-editor'
 
-
 const route = useRoute()
 const paths = useFormPaths()
 const form = ref<FormRecord | null>(null)
@@ -105,7 +104,7 @@ watch(id, (formId) => {
         :disabled="saving || loading || !form || mailInvalid"
         @click="save"
       >
-        {{ saving ? 'Saving…' : 'Save' }}
+        {{ saving ? 'Updating Form...' : 'Update Form' }}
       </MiraiCmsUiButton>
     </MiraiCmsAdminHeader>
 
@@ -134,7 +133,7 @@ watch(id, (formId) => {
       v-else-if="saved"
       placement="static"
       variant="success"
-      message="Form saved."
+      message="Form updated successfully."
       @close="saved = false"
     />
 
@@ -163,7 +162,6 @@ watch(id, (formId) => {
 <style scoped lang="scss">
 @use "miraicms-nuxt/styles" as *;
 $root: '.miraicms-form-editor';
-
 
 @include miraicms-wrapper {
   #{$root} {

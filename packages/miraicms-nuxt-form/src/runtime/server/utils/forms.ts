@@ -11,7 +11,9 @@ import type {
 } from '../../form/model'
 import {
   createEmptyContent,
+  fieldConditionStates,
   hasSubmitButton,
+  conditionInputValues,
   normalizeFormContent,
   notificationFieldErrors,
   parseContent,
@@ -184,9 +186,11 @@ export async function submitForm(event: H3Event, id: number): Promise<{ ok: true
   const submissionId = Number(inserted.rows[0]?.id)
   const storedKeys: string[] = []
   try {
+    const states = fieldConditionStates(form.content, conditionInputValues(form.content, input))
     const values: { key: string, value: string }[] = []
     for (const field of form.content.fields) {
-      if (!storesValue(field)) {
+      const state = states[field.id]
+      if (!storesValue(field) || state?.hidden || state?.disabled) {
         continue
       }
       if (field.type === 'file') {

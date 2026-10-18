@@ -123,6 +123,8 @@
 {"n":"computeIndexDiff","k":"fn","p":"packages/core/src/indexes/definitions.ts"}
 {"n":"Condition","k":"iface","p":"packages/core/src/config/types/conditional-logic.ts"}
 {"n":"ConditionalLogic","k":"type","p":"packages/core/src/config/types/conditional-logic.ts"}
+{"n":"conditionBranches","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"conditionInputValues","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"ConditionValue","k":"type","p":"packages/core/src/config/types/conditional-logic.ts"}
 {"n":"confirmationTarget","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"ConfirmDialog","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/admin/ConfirmDialog.vue"}
@@ -240,6 +242,8 @@
 {"n":"FIELD_OPERATORS","k":"const","p":"packages/core/src/fields/visibility.ts"}
 {"n":"FIELD_TYPES","k":"const","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FieldAddon","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/parts/FieldAddon.vue"}
+{"n":"fieldConditionStates","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"fieldForCondition","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"fieldHasOption","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FieldInstructions","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/parts/FieldInstructions.vue"}
 {"n":"FieldLabel","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/parts/FieldLabel.vue"}
@@ -277,6 +281,8 @@
 {"n":"FlexibleContentField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/FlexibleContentField.vue"}
 {"n":"FlexibleLayout","k":"iface","p":"packages/core/src/config/types/fields.ts"}
 {"n":"Form","k":"cmp","p":"packages/miraicms-nuxt-form/src/runtime/components/Form.vue"}
+{"n":"FORM_CONDITION_ACTIONS","k":"const","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FORM_CONDITION_LOGICS","k":"const","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"formatDate","k":"fn","p":"packages/core/src/fields/datetime.ts"}
 {"n":"formatRequiredFieldsError","k":"fn","p":"packages/core/src/fields/required.ts"}
 {"n":"FormBoundError","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
@@ -285,12 +291,19 @@
 {"n":"FormChoiceEntry","k":"type","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormChoiceGroup","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormChoiceOption","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
+{"n":"FormCondition","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FormConditionAction","k":"type","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FormConditionBranch","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FormConditionGroup","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FormConditionLogic","k":"type","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FormConditionRule","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FormConfig","k":"iface","p":"packages/core/src/config/types/form.ts"}
 {"n":"FormConfirmation","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FormConfirmField","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormContent","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"formDictionarySelection","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/collections.ts"}
 {"n":"FormField","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FormFieldConditionState","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FormFieldOption","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FormFileLimit","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormFileMultiple","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}

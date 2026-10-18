@@ -2,8 +2,9 @@
 import { computed, ref, watch } from 'vue'
 import { $fetch } from '#imports'
 import type { FormField, LayoutItem, PublicForm, UploadedFile } from '../form/model'
-import { baseBreakpoint, confirmationTarget, emptySubmissionError, fieldSubmissionError, formBreakpoints, sanitizeHtml, submissionErrors } from '../form/model'
-import { applyInputMask, checkPositionStyle, choiceMatches, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, resolveChoiceEntries, temporalInputType } from '../form/text-options'
+import { baseBreakpoint, conditionInputValues, confirmationTarget, emptySubmissionError, fieldConditionStates, fieldForCondition, fieldSubmissionError, formBreakpoints, sanitizeHtml, submissionErrors } from '../form/model'
+import type { FormFieldConditionState } from '../form/model'
+import { applyInputMask, checkPositionStyle, choiceMatches, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, listedChoiceOptions, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, resolveChoiceEntries, temporalInputType } from '../form/text-options'
 import { clientFormBreakpoints } from '../form/runtime-config'
 import { stepIconSvg } from '../form/icons'
 
@@ -36,12 +37,20 @@ const state = ref<'loading' | 'missing' | 'idle' | 'submitting' | 'success' | 'i
 const fieldErrors = ref<Record<string, string>>({})
 const alertMessage = ref('')
 const drafts = ref<Record<string, string>>({})
+const liveValues = ref<Record<string, string | string[]>>({})
 const selectQuery = ref<Record<string, string>>({})
 const chosenFiles = ref<Record<string, { name: string, size: number, url: string }[]>>({})
 const revealed = ref<Record<string, boolean>>({})
 const hoverRating = ref<Record<string, string>>({})
 
 const locked = computed(() => state.value === 'submitting' || state.value === 'success')
+const conditionStates = computed(() => {
+  const content = definition.value?.content
+  if (!content) {
+    return {} as Record<string, FormFieldConditionState>
+  }
+  return fieldConditionStates(content, liveValues.value)
+})
 const successHtml = computed(() => sanitizeHtml(definition.value?.content.confirmation?.successMessage || ''))
 
 const cells = computed(() => {
@@ -108,6 +117,7 @@ async function load() {
       }
     }
     drafts.value = next
+    liveValues.value = withoutHiddenValues(definition.value.content, seedConditionValues(definition.value.content, next))
     state.value = 'idle'
   }
   catch {
@@ -141,6 +151,100 @@ function readFormPayload(form: HTMLFormElement, fields: FormField[]) {
   return { input, files }
 }
 
+function onFormInput(event: Event) {
+  const form = event.currentTarget
+  if (form instanceof HTMLFormElement) {
+    syncLiveValues(form)
+  }
+}
+
+function seedConditionValues(content: PublicForm['content'], defaults: Record<string, string>): Record<string, string | string[]> {
+  const seeded: Record<string, string | string[]> = {}
+  for (const field of content.fields) {
+    const multiple = field.type === 'checkbox'
+      || (field.type === 'image_select' && field.text?.allowMultiple === true)
+      || (field.type === 'select' && field.text?.selectMultiple.enabled === true)
+    if (multiple && field.text) {
+      seeded[field.id] = listedChoiceOptions(field.text).filter(option => option.checked).map(option => option.value)
+    }
+    else if ((field.type === 'radio' || field.type === 'image_select' || field.type === 'select') && field.text) {
+      seeded[field.id] = listedChoiceOptions(field.text).find(option => option.checked)?.value || ''
+    }
+    else {
+      seeded[field.id] = defaults[field.id] || field.text?.defaultValue || ''
+    }
+  }
+  return seeded
+}
+
+function withoutHiddenValues(content: PublicForm['content'], values: Record<string, string | string[]>): Record<string, string | string[]> {
+  const next = { ...values }
+  for (let pass = 0; pass < content.fields.length; pass += 1) {
+    const states = fieldConditionStates(content, next)
+    let changed = false
+    for (const field of content.fields) {
+      const current = next[field.id]
+      const empty = Array.isArray(current) ? current.length === 0 : !String(current ?? '').trim()
+      if (states[field.id]?.hidden && !empty) {
+        next[field.id] = Array.isArray(current) ? [] : ''
+        changed = true
+      }
+    }
+    if (!changed) {
+      break
+    }
+  }
+  return next
+}
+
+function readControlValues(form: HTMLFormElement, fields: FormField[]): Record<string, unknown> {
+  const input: Record<string, unknown> = {}
+  for (const field of fields) {
+    const nodes = [...form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[name="${CSS.escape(field.key)}"]`)]
+    const multiple = field.type === 'checkbox'
+      || (field.type === 'image_select' && field.text?.allowMultiple === true)
+      || (field.type === 'select' && field.text?.selectMultiple.enabled === true)
+    if (multiple && nodes[0] instanceof HTMLSelectElement) {
+      input[field.key] = [...nodes[0].selectedOptions].map(option => option.value)
+    }
+    else if (multiple) {
+      input[field.key] = nodes.flatMap(node => node instanceof HTMLInputElement && node.checked ? [node.value] : [])
+    }
+    else if (nodes.some(node => node instanceof HTMLInputElement && (node.type === 'radio' || node.type === 'checkbox'))) {
+      const checked = nodes.find(node => node instanceof HTMLInputElement && node.checked)
+      input[field.key] = checked instanceof HTMLInputElement ? checked.value : ''
+    }
+    else {
+      input[field.key] = nodes[0]?.value ?? ''
+    }
+  }
+  return input
+}
+
+function syncLiveValues(form: HTMLFormElement) {
+  const current = definition.value
+  if (!current) {
+    return
+  }
+  liveValues.value = withoutHiddenValues(current.content, conditionInputValues(current.content, readControlValues(form, current.content.fields)))
+}
+
+function conditionState(fieldId: string): FormFieldConditionState {
+  return conditionStates.value[fieldId] ?? { hidden: false, disabled: false, readonly: false, required: false }
+}
+
+function fieldDisabled(field: FormField): boolean {
+  return locked.value || textOptions(field).disabled || conditionState(field.id).disabled
+}
+
+function fieldReadonly(field: FormField): boolean {
+  return textOptions(field).readOnly || conditionState(field.id).readonly
+}
+
+function fieldRequired(field: FormField): boolean {
+  return conditionState(field.id).required
+}
+
 function onFieldFocusOut(field: FormField, event: FocusEvent) {
   const current = definition.value
   if (!current || current.content.validateOnBlur === false || locked.value) {
@@ -158,7 +262,17 @@ function onFieldFocusOut(field: FormField, event: FocusEvent) {
     return
   }
   const { input, files } = readFormPayload(form, current.content.fields)
-  const message = fieldSubmissionError(field, input, files[field.key] ?? null, current.maxFileBytes)
+  syncLiveValues(form)
+  const fieldState = conditionState(field.id)
+  if (fieldState.hidden || fieldState.disabled) {
+    const next = Object.fromEntries(Object.entries(fieldErrors.value).filter(([key]) => key !== field.key))
+    fieldErrors.value = next
+    if (!Object.keys(next).length && state.value === 'invalid') {
+      state.value = 'idle'
+    }
+    return
+  }
+  const message = fieldSubmissionError(fieldForCondition(field, fieldState), input, files[field.key] ?? null, current.maxFileBytes)
   const next = Object.fromEntries(Object.entries(fieldErrors.value).filter(([key]) => key !== field.key))
   fieldErrors.value = message ? { ...next, [field.key]: message } : next
   if (Object.keys(fieldErrors.value).length) {
@@ -392,6 +506,8 @@ function formatBytes(size: number): string {
     :data-form="form"
     :data-state="state"
     novalidate
+    @input="onFormInput"
+    @change="onFormInput"
     @submit.prevent="onSubmit"
   >
     <div
@@ -464,12 +580,14 @@ function formatBytes(size: number): string {
             :data-field="cell.field.key"
             :data-type="cell.field.type"
             :data-step="stepNumber(cell.field.stepId)"
-            :data-required="cell.field.required ? 'true' : undefined"
+            :data-required="fieldRequired(cell.field) ? 'true' : undefined"
             :data-invalid="fieldErrors[cell.field.key] ? 'true' : undefined"
+            :data-hidden="conditionState(cell.field.id).hidden ? 'true' : undefined"
             v-bind="layoutAttrs(cell.layouts)"
-            :hidden="richField(cell.field) && textOptions(cell.field).hidden ? true : undefined"
+            :hidden="(conditionState(cell.field.id).hidden || (richField(cell.field) && textOptions(cell.field).hidden)) ? true : undefined"
             @focusout="onFieldFocusOut(cell.field, $event)"
           >
+            <template v-if="!conditionState(cell.field.id).hidden">
             <template v-if="richField(cell.field)">
               <div
                 v-if="cell.field.type === 'title'"
@@ -539,17 +657,17 @@ function formatBytes(size: number): string {
                   alt=""
                 >
                 <span
-                  v-if="textOptions(cell.field).required.enabled && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'left'"
+                  v-if="fieldRequired(cell.field) && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'left'"
                   :class="`${rootClass}__required`"
                 >*</span>
                 <label :for="controlId(cell.field)">
                   <span
-                    v-if="textOptions(cell.field).required.enabled && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'before'"
+                    v-if="fieldRequired(cell.field) && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'before'"
                     :class="`${rootClass}__required`"
                   >*</span>
                   <span>{{ textOptions(cell.field).label.text }}</span>
                   <span
-                    v-if="textOptions(cell.field).required.enabled && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'after'"
+                    v-if="fieldRequired(cell.field) && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'after'"
                     :class="`${rootClass}__required`"
                   >*</span>
                 </label>
@@ -560,7 +678,7 @@ function formatBytes(size: number): string {
                   alt=""
                 >
                 <span
-                  v-if="textOptions(cell.field).required.enabled && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'right'"
+                  v-if="fieldRequired(cell.field) && textOptions(cell.field).required.showAsterisk && textOptions(cell.field).required.asteriskPosition === 'right'"
                   :class="`${rootClass}__required`"
                 >*</span>
               </div>
@@ -634,7 +752,7 @@ function formatBytes(size: number): string {
                   v-else-if="cell.field.type === 'button'"
                   :class="`${rootClass}__button`"
                   :type="textOptions(cell.field).buttonType"
-                  :disabled="locked || textOptions(cell.field).disabled"
+                  :disabled="fieldDisabled(cell.field)"
                   :data-align="textOptions(cell.field).fullWidth ? undefined : textOptions(cell.field).buttonAlign"
                   :data-full-width="textOptions(cell.field).fullWidth ? 'true' : undefined"
                   :style="{ width: textOptions(cell.field).fullWidth ? '100%' : undefined }"
@@ -677,8 +795,8 @@ function formatBytes(size: number): string {
                     :class="`${rootClass}__control`"
                     :name="cell.field.key"
                     :multiple="textOptions(cell.field).selectMultiple.enabled || undefined"
-                    :required="textOptions(cell.field).required.enabled"
-                    :disabled="locked || textOptions(cell.field).disabled || textOptions(cell.field).readOnly"
+                    :required="fieldRequired(cell.field)"
+                    :disabled="fieldDisabled(cell.field) || fieldReadonly(cell.field)"
                   >
                     <option
                       v-if="!textOptions(cell.field).selectMultiple.enabled"
@@ -727,7 +845,7 @@ function formatBytes(size: number): string {
                           :name="cell.field.key"
                           :value="entry.option.value"
                           :checked="entry.option.checked"
-                          :disabled="locked || entry.option.disabled || textOptions(cell.field).disabled"
+                          :disabled="fieldDisabled(cell.field) || entry.option.disabled"
                         >
                         <img
                           v-if="iconUrl(entry.option.image)"
@@ -747,7 +865,7 @@ function formatBytes(size: number): string {
                             :name="cell.field.key"
                             :value="option.value"
                             :checked="option.checked"
-                            :disabled="locked || option.disabled || textOptions(cell.field).disabled"
+                            :disabled="fieldDisabled(cell.field) || option.disabled"
                           >
                           <img
                             v-if="iconUrl(option.image)"
@@ -780,8 +898,8 @@ function formatBytes(size: number): string {
                       :name="cell.field.key"
                       :value="option.value"
                       :checked="option.checked"
-                      :disabled="locked || option.disabled || textOptions(cell.field).disabled"
-                      :required="cell.field.type === 'checkbox' ? option.required : textOptions(cell.field).required.enabled"
+                      :disabled="fieldDisabled(cell.field) || option.disabled"
+                      :required="cell.field.type === 'checkbox' ? option.required : fieldRequired(cell.field)"
                     >
                     <span>{{ option.label }}</span>
                   </label>
@@ -800,7 +918,7 @@ function formatBytes(size: number): string {
                       :name="cell.field.key"
                       :value="option.value"
                       :checked="option.checked"
-                      :disabled="locked || option.disabled || textOptions(cell.field).disabled"
+                      :disabled="fieldDisabled(cell.field) || option.disabled"
                       :required="option.required"
                       :style="checkPositionStyle(textOptions(cell.field).checkPosition)"
                     >
@@ -821,8 +939,8 @@ function formatBytes(size: number): string {
                   :name="cell.field.key"
                   :accept="fileAccept(textOptions(cell.field).fileType) || undefined"
                   :multiple="textOptions(cell.field).fileMultiple.enabled || undefined"
-                  :required="textOptions(cell.field).required.enabled"
-                  :disabled="locked || textOptions(cell.field).disabled"
+                  :required="fieldRequired(cell.field)"
+                  :disabled="fieldDisabled(cell.field)"
                   @change="onChosenFiles(cell.field, $event)"
                 >
                 <input
@@ -832,9 +950,9 @@ function formatBytes(size: number): string {
                   :type="temporalInputType(cell.field.type)"
                   :name="cell.field.key"
                   :value="drafts[cell.field.id]"
-                  :required="textOptions(cell.field).required.enabled"
-                  :readonly="textOptions(cell.field).readOnly"
-                  :disabled="locked || textOptions(cell.field).disabled"
+                  :required="fieldRequired(cell.field)"
+                  :readonly="fieldReadonly(cell.field)"
+                  :disabled="fieldDisabled(cell.field)"
                   :min="textOptions(cell.field).rangeMin || undefined"
                   :max="textOptions(cell.field).rangeMax || undefined"
                   @input="onDraft(cell.field, $event)"
@@ -847,9 +965,9 @@ function formatBytes(size: number): string {
                   :rows="cell.field.rows"
                   :value="drafts[cell.field.id]"
                   :placeholder="textOptions(cell.field).placeholder || undefined"
-                  :required="textOptions(cell.field).required.enabled"
-                  :readonly="textOptions(cell.field).readOnly"
-                  :disabled="locked || textOptions(cell.field).disabled"
+                  :required="fieldRequired(cell.field)"
+                  :readonly="fieldReadonly(cell.field)"
+                  :disabled="fieldDisabled(cell.field)"
                   :maxlength="textOptions(cell.field).maxLength ?? undefined"
                   :minlength="textOptions(cell.field).minLength ?? undefined"
                   :autocomplete="textOptions(cell.field).autocomplete || undefined"
@@ -865,9 +983,9 @@ function formatBytes(size: number): string {
                   :name="cell.field.key"
                   :value="drafts[cell.field.id]"
                   :placeholder="textOptions(cell.field).placeholder || undefined"
-                  :required="textOptions(cell.field).required.enabled"
-                  :readonly="textOptions(cell.field).readOnly"
-                  :disabled="locked || textOptions(cell.field).disabled"
+                  :required="fieldRequired(cell.field)"
+                  :readonly="fieldReadonly(cell.field)"
+                  :disabled="fieldDisabled(cell.field)"
                   :maxlength="textOptions(cell.field).maxLength ?? undefined"
                   :minlength="textOptions(cell.field).minLength ?? undefined"
                   :autocomplete="cell.field.type === 'password' ? 'new-password' : (textOptions(cell.field).autocomplete || undefined)"
@@ -980,7 +1098,7 @@ function formatBytes(size: number): string {
                   :type="liveInputType(cell.field, revealed[cell.field.id] === true)"
                   :name="`${cell.field.key}__confirm`"
                   :placeholder="textOptions(cell.field).confirm.placeholder || undefined"
-                  :disabled="locked || textOptions(cell.field).disabled"
+                  :disabled="fieldDisabled(cell.field)"
                 >
                 <span v-if="textOptions(cell.field).confirm.helper.enabled">
                   {{ textOptions(cell.field).confirm.helper.text }}
@@ -1005,8 +1123,8 @@ function formatBytes(size: number): string {
                 :type="inputType(cell.field.type)"
                 :name="cell.field.key"
                 :placeholder="cell.field.placeholder || undefined"
-                :required="cell.field.required"
-                :disabled="locked"
+                :required="fieldRequired(cell.field)"
+                :disabled="fieldDisabled(cell.field)"
                 :min="cell.field.type === 'number' && cell.field.min ? cell.field.min : undefined"
                 :max="cell.field.type === 'number' && cell.field.max ? cell.field.max : undefined"
                 :step="cell.field.type === 'number' && cell.field.step ? cell.field.step : undefined"
@@ -1028,8 +1146,8 @@ function formatBytes(size: number): string {
                 :id="controlId(cell.field)"
                 :class="`${rootClass}__control`"
                 :name="cell.field.key"
-                :required="cell.field.required"
-                :disabled="locked"
+                :required="fieldRequired(cell.field)"
+                :disabled="fieldDisabled(cell.field)"
               >
                 <option value="">
                   {{ cell.field.placeholder }}
@@ -1070,7 +1188,7 @@ function formatBytes(size: number): string {
                   :type="cell.field.type === 'radio' ? 'radio' : 'checkbox'"
                   :name="cell.field.key"
                   :value="option.value"
-                  :disabled="locked"
+                  :disabled="fieldDisabled(cell.field)"
                 >
                 <span :class="`${rootClass}__choice-label`">{{ option.label }}</span>
               </label>
@@ -1093,8 +1211,8 @@ function formatBytes(size: number): string {
                 type="file"
                 :name="cell.field.key"
                 :accept="cell.field.accept || undefined"
-                :required="cell.field.required"
-                :disabled="locked"
+                :required="fieldRequired(cell.field)"
+                :disabled="fieldDisabled(cell.field)"
               >
             </template>
 
@@ -1115,7 +1233,7 @@ function formatBytes(size: number): string {
               v-else-if="cell.field.type === 'button'"
               :class="`${rootClass}__button`"
               type="submit"
-              :disabled="locked"
+              :disabled="fieldDisabled(cell.field)"
             >
               {{ cell.field.buttonLabel || 'Submit' }}
             </button>
@@ -1132,6 +1250,7 @@ function formatBytes(size: number): string {
             >
               {{ fieldErrors[cell.field.key] }}
             </div>
+            </template>
           </div>
         </div>
       </div>

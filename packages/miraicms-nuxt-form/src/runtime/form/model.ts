@@ -361,16 +361,10 @@ function placeAfter(layout: LayoutItem[], source: LayoutItem | undefined, fieldI
 }
 
 export function defaultWidth(type: FieldType, breakpoint: Breakpoint): number {
-  if (breakpoint !== baseBreakpoint()) {
-    return GRID_COLUMNS
-  }
-  if (type === 'button') {
+  if (breakpoint === baseBreakpoint() && type === 'button') {
     return 15
   }
-  if (type === 'html' || type === 'textarea' || type === 'checkbox' || type === 'radio' || type === 'title' || type === 'divider' || type === 'spacer') {
-    return GRID_COLUMNS
-  }
-  return 30
+  return GRID_COLUMNS
 }
 
 export function createEmptyContent(): FormContent {
@@ -833,7 +827,8 @@ export function emptySubmissionError(
     if (fieldHasVisitorValue(field, input[field.key], files[field.key] ?? null)) {
       return null
     }
-    if (field.text?.confirm.enabled && cleanText(typeof input[`${field.key}__confirm`] === 'string' ? input[`${field.key}__confirm`] : '').trim()) {
+    const rawConfirm = input[`${field.key}__confirm`]
+    if (field.text?.confirm.enabled && cleanText(typeof rawConfirm === 'string' ? rawConfirm : '').trim()) {
       return null
     }
   }
@@ -1294,9 +1289,6 @@ function fieldError(field: FormField, raw: unknown, file: UploadedFile | Uploade
     if (allowed.size > 0 && !allowed.has(value)) {
       return invalidErrorText(field.text) || 'Choose a rating.'
     }
-  }
-  if ((field.type === 'select' || field.type === 'radio') && !field.options.some(option => option.value === value)) {
-    return 'Choose a valid option.'
   }
   return null
 }

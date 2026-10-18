@@ -36,7 +36,7 @@ import StepSettings from './StepSettings.vue'
 const rootClass = 'miraicms-form-builder'
 
 defineModel<string>('name', { required: true })
-const content = defineModel<FormContent>('content', { required: true })
+const content = defineModel<FormContent, string, FormContent, FormContent>('content', { required: true })
 
 const notificationErrors = ref<Record<string, string>>({})
 watch(() => content.value.notification, (notification) => {
@@ -46,6 +46,8 @@ provideMiraiCmsFieldErrors(notificationErrors)
 
 const rootRef = ref<HTMLElement | null>(null)
 const gridRef = ref<HTMLElement | null>(null)
+const dragGrid = ref<HTMLElement | null>(null)
+const repeaterGrids = new Map<string, HTMLElement>()
 const canvasValues = ref<Record<string, string | string[]>>({})
 const formBreakpointList = clientFormBreakpoints()
 const breakpoint = ref<Breakpoint>(baseBreakpoint())
@@ -122,7 +124,7 @@ watch(stepSettingsOpen, (open) => {
 })
 
 const selected = computed(() => content.value.fields.find(field => field.id === selectedId.value) ?? null)
-const selectedItem = computed(() => layout.value.find(item => item.fieldId === selectedId.value) ?? null)
+const selectedItem = computed(() => (content.value.layouts[breakpoint.value] ?? []).find(item => item.fieldId === selectedId.value) ?? null)
 const selectedLayout = computed(() => {
   if (!selected.value) {
     return null
@@ -339,9 +341,6 @@ function onUpdateField(field: FormField) {
 }
 
 function onUpdateLayout(item: LayoutItem) {
-  if (selected.value?.parentId) {
-    return
-  }
   content.value = setLayoutItem(content.value, breakpoint.value, item, true)
 }
 
@@ -430,8 +429,20 @@ function onMoveToRepeater(fieldId: string, repeaterId: string) {
   openMoveMenu.value = ''
 }
 
-function repeaterChildren(repeaterId: string) {
-  return content.value.fields.filter(field => field.parentId === repeaterId)
+function repeaterLayout(repeaterId: string) {
+  return (content.value.layouts[breakpoint.value] ?? []).filter((item) => {
+    return content.value.fields.find(field => field.id === item.fieldId)?.parentId === repeaterId
+  }).sort((a, b) => a.y - b.y || a.x - b.x || a.fieldId.localeCompare(b.fieldId))
+}
+
+function bindRepeaterGrid(repeaterId: string) {
+  return (element: unknown) => {
+    if (element instanceof HTMLElement) {
+      repeaterGrids.set(repeaterId, element)
+      return
+    }
+    repeaterGrids.delete(repeaterId)
+  }
 }
 
 function repeaterTargets(fieldId: string) {
@@ -452,10 +463,6 @@ function moveRepeaters(fieldId: string) {
     return []
   }
   return content.value.fields.filter(item => item.type === 'repeater' && item.id !== field.parentId)
-}
-
-function canMove(fieldId: string) {
-  return moveSteps(fieldId).length > 0 || moveRepeaters(fieldId).length > 0
 }
 
 function matchDesktop() {
@@ -565,11 +572,11 @@ function itemVisualStyle(item: LayoutItem): CSSProperties {
   return itemStyle(item)
 }
 
-const dropPlaceholderStyle = computed((): CSSProperties | undefined => {
+function movePlaceholder(items: LayoutItem[]): CSSProperties | undefined {
   if (drag.value?.mode !== 'move' || !dragGhost.value) {
     return undefined
   }
-  const item = layout.value.find(entry => entry.fieldId === drag.value?.fieldId)
+  const item = items.find(entry => entry.fieldId === drag.value?.fieldId)
   if (!item) {
     return undefined
   }
@@ -577,7 +584,7 @@ const dropPlaceholderStyle = computed((): CSSProperties | undefined => {
     ...itemStyle(item),
     height: `${dragGhost.value.height}px`,
   }
-})
+}
 
 function fieldById(fieldId: string): FormField | undefined {
   return content.value.fields.find(field => field.id === fieldId)
@@ -639,10 +646,11 @@ function focusBoard() {
   rootRef.value?.focus()
 }
 
-function onItemPointerDown(event: PointerEvent, item: LayoutItem) {
+function onItemPointerDown(event: PointerEvent, item: LayoutItem, grid?: HTMLElement | null) {
   if (event.button !== 0) {
     return
   }
+  dragGrid.value = grid || gridRef.value
   selectedId.value = item.fieldId
   stepSettingsOpen.value = false
   focusBoard()
@@ -675,8 +683,9 @@ function onItemPointerDown(event: PointerEvent, item: LayoutItem) {
   })
 }
 
-function onResizePointerDown(event: PointerEvent, item: LayoutItem, edge: 'left' | 'right') {
+function onResizePointerDown(event: PointerEvent, item: LayoutItem, edge: 'left' | 'right', grid?: HTMLElement | null) {
   event.stopPropagation()
+  dragGrid.value = grid || gridRef.value
   selectedId.value = item.fieldId
   stepSettingsOpen.value = false
   focusBoard()
@@ -774,6 +783,7 @@ function endDrag() {
   drag.value = null
   dragGhost.value = null
   dragBase.value = null
+  dragGrid.value = null
   document.body.style.userSelect = ''
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)
@@ -781,7 +791,7 @@ function endDrag() {
 }
 
 function cellFromEvent(event: PointerEvent): { col: number, row: number } {
-  const grid = gridRef.value
+  const grid = dragGrid.value || gridRef.value
   if (!grid) {
     return { col: 0, row: 0 }
   }
@@ -1447,9 +1457,9 @@ onBeforeUnmount(() => {
               @change="readCanvasValues"
             >
               <div
-                v-if="dropPlaceholderStyle"
+                v-if="movePlaceholder(layout)"
                 :class="`${rootClass}__drop-placeholder`"
-                :style="dropPlaceholderStyle"
+                :style="movePlaceholder(layout)"
               />
               <div
                 v-for="item in layout"
@@ -1479,43 +1489,89 @@ onBeforeUnmount(() => {
                   :data-align="fieldById(item.fieldId)?.text?.repeatButtonAlign || 'start'"
                   @pointerdown.stop
                 >
-                  <div :class="`${rootClass}__repeater-fields`">
+                  <div
+                    :ref="bindRepeaterGrid(item.fieldId)"
+                    :class="[`${rootClass}__grid`, `${rootClass}__grid--nested`, `${rootClass}__repeater-fields`]"
+                  >
                     <div
-                      v-for="child in repeaterChildren(item.fieldId)"
-                      :key="child.id"
+                      v-if="movePlaceholder(repeaterLayout(item.fieldId))"
+                      :class="`${rootClass}__drop-placeholder`"
+                      :style="movePlaceholder(repeaterLayout(item.fieldId))"
+                    />
+                    <div
+                      v-for="child in repeaterLayout(item.fieldId)"
+                      :key="child.fieldId"
                       :class="[`${rootClass}__item`, {
-                        'is-selected': child.id === selectedId,
-                        'is-hidden': canvasState(child.id).hidden,
-                        'is-menu-open': openFieldMenu === child.id,
+                        'is-selected': child.fieldId === selectedId,
+                        'is-dragging': drag?.fieldId === child.fieldId && drag?.mode !== 'move',
+                        'is-floating': drag?.fieldId === child.fieldId && drag?.mode === 'move',
+                        'is-hidden': canvasState(child.fieldId).hidden,
+                        'is-menu-open': openFieldMenu === child.fieldId,
                       }]"
-                      @pointerdown.stop
-                      @click="selectedId = child.id"
+                      :style="itemVisualStyle(child)"
+                      @pointerdown="onItemPointerDown($event, child, repeaterGrids.get(item.fieldId))"
                     >
                       <FieldFace
-                        :field="child"
-                        :disabled="canvasState(child.id).disabled"
-                        :logic-readonly="canvasState(child.id).readonly"
+                        v-if="fieldById(child.fieldId)"
+                        :field="fieldById(child.fieldId)"
+                        :height="child.h"
+                        :disabled="canvasState(child.fieldId).disabled"
+                        :logic-readonly="canvasState(child.fieldId).readonly"
                         preview
                       />
                       <FieldItemMenu
-                        :field-id="child.id"
-                        :locked="fieldLocked(child.id)"
-                        :menu-open="openFieldMenu === child.id"
+                        :field-id="child.fieldId"
+                        :locked="fieldLocked(child.fieldId)"
+                        :menu-open="openFieldMenu === child.fieldId"
                         :menu-side="fieldMenuSide"
-                        :move-open="openMoveMenu === child.id"
+                        :move-open="openMoveMenu === child.fieldId"
                         :move-style="moveMenuStyle"
-                        :steps="moveSteps(child.id)"
-                        :repeaters="repeaterTargets(child.id)"
-                        @clone="onCloneField(child.id)"
-                        @remove="onRemove(child.id)"
+                        :steps="moveSteps(child.fieldId)"
+                        :repeaters="repeaterTargets(child.fieldId)"
+                        @clone="onCloneField(child.fieldId)"
+                        @remove="onRemove(child.fieldId)"
                         @deselect="selectedId = null; openFieldMenu = ''"
-                        @toggle-menu="toggleFieldMenu(child.id, $event)"
-                        @move-enter="showMoveMenu(child.id, $event)"
+                        @toggle-menu="toggleFieldMenu(child.fieldId, $event)"
+                        @move-enter="showMoveMenu(child.fieldId, $event)"
                         @move-leave="hideMoveMenu"
                         @move-keep="keepMoveMenu"
-                        @move-step="onMoveField(child.id, $event)"
-                        @move-repeater="onMoveToRepeater(child.id, $event)"
+                        @move-step="onMoveField(child.fieldId, $event)"
+                        @move-repeater="onMoveToRepeater(child.fieldId, $event)"
                       />
+                      <div
+                        :class="[`${rootClass}__resizable-handle`, `${rootClass}__resizable-handle--left`]"
+                        @pointerdown="onResizePointerDown($event, child, 'left', repeaterGrids.get(item.fieldId))"
+                      >
+                        <svg
+                          width="15"
+                          height="93"
+                          viewBox="0 0 15 93"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M15 7.3421C15 8.79424 14.5601 10.2138 13.736 11.4212C12.9119 12.6286 11.7406 13.5696 10.3701 14.1253C8.99968 14.681 7.49168 14.8264 6.03682 14.5431C4.58197 14.2598 3.2456 13.5606 2.1967 12.5338C1.14781 11.5069 0.433503 10.1987 0.144114 8.77448C-0.145275 7.35025 0.00324964 5.874 0.570907 4.5324C1.13856 3.19081 2.09986 2.04413 3.33323 1.23737C4.5666 0.430608 6.01664 0 7.5 0C9.48831 0.00259009 11.3944 0.776963 12.8004 2.15331C14.2063 3.52966 14.9974 5.39565 15 7.3421ZM7.5 39.1579C6.01664 39.1579 4.5666 39.5885 3.33323 40.3953C2.09986 41.202 1.13856 42.3487 0.570907 43.6903C0.00324964 45.0319 -0.145275 46.5081 0.144114 47.9324C0.433503 49.3566 1.14781 50.6648 2.1967 51.6917C3.2456 52.7185 4.58197 53.4177 6.03682 53.701C7.49168 53.9843 8.99968 53.8389 10.3701 53.2832C11.7406 52.7275 12.9119 51.7865 13.736 50.5791C14.5601 49.3717 15 47.9521 15 46.5C14.9974 44.5535 14.2063 42.6876 12.8004 41.3112C11.3944 39.9349 9.48831 39.1605 7.5 39.1579ZM7.5 78.3158C6.01664 78.3158 4.5666 78.7464 3.33323 79.5532C2.09986 80.3599 1.13856 81.5066 0.570907 82.8482C0.00324964 84.1898 -0.145275 85.666 0.144114 87.0903C0.433503 88.5145 1.14781 89.8227 2.1967 90.8495C3.2456 91.8764 4.58197 92.5756 6.03682 92.8589C7.49168 93.1422 8.99968 92.9968 10.3701 92.4411C11.7406 91.8854 12.9119 90.9444 13.736 89.7369C14.5601 88.5295 15 87.11 15 85.6579C14.9974 83.7114 14.2063 81.8455 12.8004 80.4691C11.3944 79.0928 9.48831 78.3184 7.5 78.3158Z"
+                            fill="white"
+                          />
+                        </svg>
+                      </div>
+                      <div
+                        :class="[`${rootClass}__resizable-handle`, `${rootClass}__resizable-handle--right`]"
+                        @pointerdown="onResizePointerDown($event, child, 'right', repeaterGrids.get(item.fieldId))"
+                      >
+                        <svg
+                          width="15"
+                          height="93"
+                          viewBox="0 0 15 93"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M15 7.3421C15 8.79424 14.5601 10.2138 13.736 11.4212C12.9119 12.6286 11.7406 13.5696 10.3701 14.1253C8.99968 14.681 7.49168 14.8264 6.03682 14.5431C4.58197 14.2598 3.2456 13.5606 2.1967 12.5338C1.14781 11.5069 0.433503 10.1987 0.144114 8.77448C-0.145275 7.35025 0.00324964 5.874 0.570907 4.5324C1.13856 3.19081 2.09986 2.04413 3.33323 1.23737C4.5666 0.430608 6.01664 0 7.5 0C9.48831 0.00259009 11.3944 0.776963 12.8004 2.15331C14.2063 3.52966 14.9974 5.39565 15 7.3421ZM7.5 39.1579C6.01664 39.1579 4.5666 39.5885 3.33323 40.3953C2.09986 41.202 1.13856 42.3487 0.570907 43.6903C0.00324964 45.0319 -0.145275 46.5081 0.144114 47.9324C0.433503 49.3566 1.14781 50.6648 2.1967 51.6917C3.2456 52.7185 4.58197 53.4177 6.03682 53.701C7.49168 53.9843 8.99968 53.8389 10.3701 53.2832C11.7406 52.7275 12.9119 51.7865 13.736 50.5791C14.5601 49.3717 15 47.9521 15 46.5C14.9974 44.5535 14.2063 42.6876 12.8004 41.3112C11.3944 39.9349 9.48831 39.1605 7.5 39.1579ZM7.5 78.3158C6.01664 78.3158 4.5666 78.7464 3.33323 79.5532C2.09986 80.3599 1.13856 81.5066 0.570907 82.8482C0.00324964 84.1898 -0.145275 85.666 0.144114 87.0903C0.433503 88.5145 1.14781 89.8227 2.1967 90.8495C3.2456 91.8764 4.58197 92.5756 6.03682 92.8589C7.49168 93.1422 8.99968 92.9968 10.3701 92.4411C11.7406 91.8854 12.9119 90.9444 13.736 89.7369C14.5601 88.5295 15 87.11 15 85.6579C14.9974 83.7114 14.2063 81.8455 12.8004 80.4691C11.3944 79.0928 9.48831 78.3184 7.5 78.3158Z"
+                            fill="white"
+                          />
+                        </svg>
+                      </div>
                     </div>
                   </div>
                   <div
@@ -2151,6 +2207,15 @@ $root: '.miraicms-form-builder';
     box-shadow: $shadow-sm;
     border-radius: $border-radius;
     padding: math-rem(16) math-rem(16);
+
+    &--nested {
+      min-height: math-rem(72);
+      border: 0;
+      box-shadow: none;
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
+    }
   }
 
   &__drop {
@@ -2283,16 +2348,8 @@ $root: '.miraicms-form-builder';
     }
 
     &-fields {
-      display: flex;
       flex: 1 1 auto;
-      flex-direction: column;
       min-width: 0;
-
-      #{$root}__item {
-        width: auto;
-        margin: 0 0 math-rem(8);
-        cursor: default;
-      }
     }
 
     &-buttons {

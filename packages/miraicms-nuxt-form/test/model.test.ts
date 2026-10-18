@@ -589,9 +589,14 @@ test('a field can move into a repeater and back onto its step', () => {
   const text = content.fields.find(field => field.type === 'text')!
   const submit = content.fields.find(isSubmitButton)!
   assert.equal(content.layouts.desktop.some(item => item.fieldId === text.id), true)
+  const submitBefore = content.layouts.desktop.find(item => item.fieldId === submit.id)
   content = moveFieldToRepeater(content, text.id, repeater.id)
   assert.equal(content.fields.find(field => field.id === text.id)?.parentId, repeater.id)
-  assert.equal(content.layouts.desktop.some(item => item.fieldId === text.id), false)
+  assert.equal(content.layouts.desktop.some(item => item.fieldId === text.id), true)
+  assert.deepEqual(content.layouts.desktop.find(item => item.fieldId === submit.id), submitBefore)
+  content = setLayoutItem(content, 'desktop', { fieldId: text.id, x: 10, y: 1, w: 20 }, true)
+  assert.equal(content.layouts.desktop.find(item => item.fieldId === text.id)?.x, 10)
+  assert.deepEqual(content.layouts.desktop.find(item => item.fieldId === submit.id), submitBefore)
   content = moveFieldToRepeater(content, submit.id, repeater.id)
   assert.equal(content.fields.find(field => field.id === submit.id)?.parentId, undefined)
   content = moveFieldToStep(content, text.id, repeater.stepId)

@@ -18,7 +18,6 @@ const props = defineProps<{
   field: FormField
   item: LayoutItem
   submitTaken?: boolean
-  nested?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -29,9 +28,6 @@ const emit = defineEmits<{
 const options = computed(() => props.field.text ?? defaultTextOptions(props.field.label))
 
 function has(id: number) {
-  if (id === 16 && props.nested) {
-    return false
-  }
   return fieldHasOption(props.field.type, id)
 }
 

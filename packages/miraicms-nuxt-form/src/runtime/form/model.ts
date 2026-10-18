@@ -595,8 +595,8 @@ export function addField(content: FormContent, type: FieldType, stepId?: string)
   const layouts = { ...content.layouts }
   for (const breakpoint of formBreakpoints()) {
     const current = content.layouts[breakpoint] ?? []
-    const sameStep = current.filter(item => stepIdOf(content, item.fieldId) === target)
-    const otherSteps = current.filter(item => stepIdOf(content, item.fieldId) !== target)
+    const sameStep = current.filter(item => topLevelOnStep(content, item.fieldId, target))
+    const otherSteps = current.filter(item => !topLevelOnStep(content, item.fieldId, target))
     const anchor = submit ? sameStep.find(item => item.fieldId === submit.id) : undefined
     const width = field.locked ? GRID_COLUMNS : defaultWidth(type, breakpoint)
     layouts[breakpoint] = [...otherSteps, ...readingOrder(placeBeforeItem(sameStep, anchor, field.id, width))]
@@ -616,6 +616,7 @@ export function cloneField(content: FormContent, fieldId: string): FormContent {
     copy,
     ...content.fields.slice(index + 1),
   ]
+  const copiedChildren: { from: string, to: string }[] = []
   if (source.type === 'repeater') {
     for (const child of content.fields.filter(field => field.parentId === source.id)) {
       if (fields.length >= MAX_FIELDS) {
@@ -623,6 +624,7 @@ export function cloneField(content: FormContent, fieldId: string): FormContent {
       }
       const childCopy = clonedField(child, fields)
       childCopy.parentId = copy.id
+      copiedChildren.push({ from: child.id, to: childCopy.id })
       const childIndex = fields.findIndex(field => field.id === copy.id)
       fields = [
         ...fields.slice(0, childIndex + 1),
@@ -631,17 +633,22 @@ export function cloneField(content: FormContent, fieldId: string): FormContent {
       ]
     }
   }
-  if (source.parentId) {
-    return { ...content, fields }
-  }
   const layouts = { ...content.layouts }
   for (const breakpoint of formBreakpoints()) {
     const current = content.layouts[breakpoint] ?? []
     const sourceItem = current.find(item => item.fieldId === fieldId)
     const width = sourceItem?.w ?? defaultWidth(source.type, breakpoint)
-    const sameStep = current.filter(item => stepIdOf(content, item.fieldId) === source.stepId && !content.fields.find(field => field.id === item.fieldId)?.parentId)
-    const otherSteps = current.filter(item => stepIdOf(content, item.fieldId) !== source.stepId || content.fields.find(field => field.id === item.fieldId)?.parentId)
-    layouts[breakpoint] = [...otherSteps, ...placeAfter(sameStep, sourceItem, copy.id, width)]
+    const grouped = { ...content, fields }
+    const sameGroup = current.filter(item => sameLayoutGroup(grouped, fieldId, item.fieldId))
+    const otherGroups = current.filter(item => !sameLayoutGroup(grouped, fieldId, item.fieldId))
+    const placed = placeAfter(sameGroup, sourceItem, copy.id, width)
+    for (const child of copiedChildren) {
+      const childItem = current.find(item => item.fieldId === child.from)
+      if (childItem) {
+        placed.push({ ...childItem, fieldId: child.to })
+      }
+    }
+    layouts[breakpoint] = [...otherGroups, ...placed]
   }
   return { ...content, fields, layouts }
 }
@@ -678,8 +685,8 @@ export function moveFieldToStep(content: FormContent, fieldId: string, stepId: s
   for (const breakpoint of formBreakpoints()) {
     const current = (next.layouts[breakpoint] ?? []).filter(item => item.fieldId !== fieldId)
     const anchorId = next.fields.find(field => field.stepId === stepId && isSubmitButton(field) && !field.parentId)?.id
-    const sameStep = current.filter(item => stepIdOf(next, item.fieldId) === stepId)
-    const otherSteps = current.filter(item => stepIdOf(next, item.fieldId) !== stepId)
+    const sameStep = current.filter(item => topLevelOnStep(next, item.fieldId, stepId))
+    const otherSteps = current.filter(item => !topLevelOnStep(next, item.fieldId, stepId))
     const anchor = anchorId ? sameStep.find(item => item.fieldId === anchorId) : undefined
     next = {
       ...next,
@@ -701,14 +708,28 @@ export function moveFieldToRepeater(content: FormContent, fieldId: string, repea
   if (source.locked || source.type === 'repeater' || isSubmitButton(source)) {
     return content
   }
-  return {
-    ...content,
-    fields: content.fields.map(field => field.id === fieldId ? { ...field, parentId: repeater.id, stepId: repeater.stepId } : field),
-    layouts: Object.fromEntries(formBreakpoints().map(name => [
-      name,
-      (content.layouts[name] ?? []).filter(item => item.fieldId !== fieldId),
-    ])),
+  const fields = content.fields.map(field => field.id === fieldId ? { ...field, parentId: repeater.id, stepId: repeater.stepId } : field)
+  let next: FormContent = { ...content, fields }
+  for (const breakpoint of formBreakpoints()) {
+    const current = next.layouts[breakpoint] ?? []
+    const previous = current.find(item => item.fieldId === fieldId)
+    const without = current.filter(item => item.fieldId !== fieldId)
+    const siblings = without.filter(item => next.fields.find(field => field.id === item.fieldId)?.parentId === repeater.id)
+    const rest = without.filter(item => next.fields.find(field => field.id === item.fieldId)?.parentId !== repeater.id)
+    next = {
+      ...next,
+      layouts: {
+        ...next.layouts,
+        [breakpoint]: [...rest, ...placeAtEnd(siblings, fieldId, previous?.w ?? defaultWidth(source.type, breakpoint))],
+      },
+    }
   }
+  return next
+}
+
+function topLevelOnStep(content: FormContent, fieldId: string, stepId: string): boolean {
+  const field = content.fields.find(item => item.id === fieldId)
+  return !!field && !field.parentId && field.stepId === stepId
 }
 
 export function removeField(content: FormContent, fieldId: string): FormContent {
@@ -759,18 +780,37 @@ export function isSubmitButton(field: FormField): boolean {
 }
 
 export function setLayoutItem(content: FormContent, breakpoint: Breakpoint, item: LayoutItem, resolve = true): FormContent {
-  const stepId = stepIdOf(content, item.fieldId)
   const all = content.layouts[breakpoint] ?? []
-  const sameStep = all.filter(entry => entry.fieldId === item.fieldId || stepIdOf(content, entry.fieldId) === stepId)
-  const otherSteps = all.filter(entry => entry.fieldId !== item.fieldId && stepIdOf(content, entry.fieldId) !== stepId)
-  const nextSame = sameStep.map(current => current.fieldId === item.fieldId ? clampItem(item) : current)
+  const sameGroup = all.filter(entry => entry.fieldId === item.fieldId || sameLayoutGroup(content, item.fieldId, entry.fieldId))
+  const otherGroups = all.filter(entry => entry.fieldId !== item.fieldId && !sameLayoutGroup(content, item.fieldId, entry.fieldId))
+  const nextSame = sameGroup.map(current => current.fieldId === item.fieldId ? clampItem(item) : current)
   return {
     ...content,
     layouts: {
       ...content.layouts,
-      [breakpoint]: [...otherSteps, ...(resolve ? resolveLayout(nextSame, item.fieldId) : nextSame)],
+      [breakpoint]: [...otherGroups, ...(resolve ? resolveLayout(nextSame, item.fieldId) : nextSame)],
     },
   }
+}
+
+function sameLayoutGroup(content: FormContent, fieldId: string, otherId: string): boolean {
+  const parent = content.fields.find(field => field.id === fieldId)?.parentId || ''
+  const otherParent = content.fields.find(field => field.id === otherId)?.parentId || ''
+  if (parent || otherParent) {
+    return parent !== '' && parent === otherParent
+  }
+  return stepIdOf(content, fieldId) === stepIdOf(content, otherId)
+}
+
+function layoutGroups(content: FormContent): Set<string>[] {
+  const groups: Set<string>[] = []
+  for (const step of content.steps) {
+    groups.push(new Set(content.fields.filter(field => field.stepId === step.id && !field.parentId).map(field => field.id)))
+  }
+  for (const repeater of content.fields.filter(field => field.type === 'repeater')) {
+    groups.push(new Set(content.fields.filter(field => field.parentId === repeater.id).map(field => field.id)))
+  }
+  return groups
 }
 
 function readingOrder(items: LayoutItem[]): LayoutItem[] {
@@ -816,10 +856,9 @@ export function syncFieldOrderLayouts(content: FormContent, source: Breakpoint):
     }
     const target = content.layouts[name] ?? []
     const next: LayoutItem[] = []
-    for (const step of content.steps) {
-      const stepFields = new Set(content.fields.filter(field => field.stepId === step.id).map(field => field.id))
-      const sourceStep = readingOrder(sourceItems.filter(item => stepFields.has(item.fieldId)))
-      const targetStep = target.filter(item => stepFields.has(item.fieldId))
+    for (const group of layoutGroups(content)) {
+      const sourceStep = readingOrder(sourceItems.filter(item => group.has(item.fieldId)))
+      const targetStep = target.filter(item => group.has(item.fieldId))
       next.push(...flowInOrder(targetStep, sourceStep.map(item => item.fieldId)))
     }
     layouts[name] = next
@@ -834,8 +873,8 @@ export function copyDesktopLayout(content: FormContent, breakpoint: Breakpoint):
   }
   const copied = (content.layouts[source] ?? []).map(item => ({ ...item }))
   const next: LayoutItem[] = []
-  for (const step of content.steps) {
-    next.push(...resolveLayout(copied.filter(item => stepIdOf(content, item.fieldId) === step.id)))
+  for (const group of layoutGroups(content)) {
+    next.push(...resolveLayout(copied.filter(item => group.has(item.fieldId))))
   }
   return {
     ...content,
@@ -883,6 +922,28 @@ export function normalizeFormContent(input: unknown): FormContent {
     for (const step of steps) {
       let placed: LayoutItem[] = []
       for (const field of fields.filter(entry => entry.stepId === step.id && !entry.parentId)) {
+        const raw = rawItems.find(item => isRecord(item) && item.fieldId === field.id)
+        if (raw && Number.isFinite(Number(raw.x)) && Number.isFinite(Number(raw.y)) && Number.isFinite(Number(raw.w))) {
+          placed = resolveLayout([
+            ...placed,
+            clampItem({
+              fieldId: field.id,
+              x: Number(raw.x),
+              y: Number(raw.y),
+              w: Number(raw.w),
+              h: Number.isFinite(Number(raw.h)) ? Number(raw.h) : undefined,
+            }),
+          ], field.id)
+        }
+        else {
+          placed = placeField(placed, field.id, defaultWidth(field.type, breakpoint))
+        }
+      }
+      next.push(...placed)
+    }
+    for (const repeater of fields.filter(field => field.type === 'repeater')) {
+      let placed: LayoutItem[] = []
+      for (const field of fields.filter(entry => entry.parentId === repeater.id)) {
         const raw = rawItems.find(item => isRecord(item) && item.fieldId === field.id)
         if (raw && Number.isFinite(Number(raw.x)) && Number.isFinite(Number(raw.y)) && Number.isFinite(Number(raw.w))) {
           placed = resolveLayout([

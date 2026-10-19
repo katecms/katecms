@@ -71,7 +71,7 @@ export const FIELD_LABELS: Record<FieldType, string> = {
   text: 'Text',
   textarea: 'Multiline Text',
   email: 'Email',
-  phone: 'Phone',
+  phone: 'Phone Number',
   number: 'Number',
   password: 'Password',
   range: 'Slider',
@@ -1950,7 +1950,7 @@ function fieldError(field: FormField, raw: unknown, file: UploadedFile | Uploade
     return invalidErrorText(field.text) || 'Password does not meet the requirements.'
   }
   if (field.type === 'phone' && !PHONE_PATTERN.test(value)) {
-    return 'Enter a valid phone number.'
+    return invalidErrorText(field.text) || 'Enter a valid phone number.'
   }
   if (isTemporalType(field.type) && !isTemporalValue(field.type, value)) {
     return 'Enter a valid value.'

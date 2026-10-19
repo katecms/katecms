@@ -634,3 +634,19 @@ test('a decision box stores its checked or unchecked value', () => {
   assert.equal(submissionErrors(required, { [field.key]: 'Rejected' }, {}, 1024)[field.key], 'This field is required.')
   assert.equal(submissionErrors(required, { [field.key]: 'Accepted' }, {}, 1024)[field.key], undefined)
 })
+
+test('a phone number uses its pattern and invalid message', () => {
+  let content = createEmptyContent()
+  content = addField(content, 'phone')
+  const field = content.fields.find(item => item.type === 'phone')!
+  assert.equal(field.label, 'Phone Number')
+  assert.equal(submissionErrors(content, { [field.key]: 'abc' }, {}, 1024)[field.key], 'Enter a valid phone number.')
+  assert.equal(submissionErrors(content, { [field.key]: '+1 555 0100' }, {}, 1024)[field.key], undefined)
+  const patterned = {
+    ...content,
+    fields: content.fields.map(item => item.id === field.id && item.text
+      ? { ...item, text: { ...item.text, pattern: '^[0-9]+$', invalid: { ...item.text.invalid, enabled: true, showError: true, customError: true, errorText: 'Digits only.' } } }
+      : item),
+  }
+  assert.equal(submissionErrors(patterned, { [field.key]: '555-0100' }, {}, 1024)[field.key], 'Digits only.')
+})

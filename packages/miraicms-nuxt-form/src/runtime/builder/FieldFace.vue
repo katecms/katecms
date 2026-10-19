@@ -122,6 +122,9 @@ function controlType() {
   if (props.field?.type === 'email') {
     return 'email'
   }
+  if (props.field?.type === 'phone') {
+    return 'tel'
+  }
   if (props.field?.type === 'number') {
     return 'number'
   }
@@ -288,6 +291,7 @@ function onInput(event: Event) {
     />
     <div
       v-else-if="field.type === 'spacer'"
+      :class="`${rootClass}__spacer`"
       :style="{ height: `${height ?? options.spacerHeight ?? 40}px` }"
     />
     <div
@@ -696,6 +700,10 @@ $root: '.miraicms-field-face';
   &__divider {
     width: 100%;
     border-top: 1px solid currentColor;
+  }
+
+  &__spacer {
+    background: repeating-linear-gradient(-45deg, #e5e5e5, #e5e5e5 15px, #fff 0, #fff 30px);
   }
 
   &.is-hidden {

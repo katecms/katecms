@@ -413,6 +413,9 @@ function liveInputType(field: FormField, revealed: boolean) {
   if (field.type === 'password') {
     return revealed ? 'text' : 'password'
   }
+  if (field.type === 'phone') {
+    return 'tel'
+  }
   if (field.type === 'email' || field.type === 'number' || field.type === 'url' || field.type === 'color' || field.type === 'range') {
     return field.type
   }

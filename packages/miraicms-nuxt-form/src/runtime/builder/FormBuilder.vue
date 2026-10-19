@@ -153,8 +153,8 @@ const baseLabel = computed(() => {
 })
 
 const palette = [
-  { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'decision_box'] as FieldType[] },
-  { title: 'Option/Choice Fields', types: ['image_select', 'select', 'rating', 'radio', 'checkbox'] as FieldType[] },
+  { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'phone', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'decision_box'] as FieldType[] },
+  { title: 'Option/Choice Fields', types: ['image_select', 'select', 'radio', 'checkbox'] as FieldType[] },
   { title: 'Advanced Fields', types: ['repeater', 'section'] as FieldType[] },
   { title: 'Elements', types: ['title', 'image', 'divider', 'html', 'spacer'] as FieldType[] },
 ]

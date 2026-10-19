@@ -540,12 +540,13 @@ export function defaultChoiceOptions(): FormChoiceOption[] {
   }))
 }
 
-const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'image_select', 'select', 'radio', 'checkbox', 'decision_box', 'title', 'image', 'divider', 'html', 'spacer', 'repeater', 'section'])
+const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'phone', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'image_select', 'select', 'radio', 'checkbox', 'decision_box', 'title', 'image', 'divider', 'html', 'spacer', 'repeater', 'section'])
 
 const FIELD_OPTIONS: Record<string, number[]> = {
   text: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
   textarea: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
   email: [1, 2, 3, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16, 17, 18, 19, 20],
+  phone: [1, 2, 3, 4, 5, 7, 13, 20, 14, 15, 17, 18],
   number: [1, 2, 3, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16, 17, 18, 20, 21],
   password: [1, 2, 3, 4, 6, 7, 13, 14, 15, 16, 17, 18, 22, 23, 24],
   range: [1, 2, 3, 21, 25, 5, 7, 15, 17, 16, 18],
@@ -655,6 +656,13 @@ export function isRichFieldType(type: string): boolean {
 
 export function fieldHasOption(type: string, id: number): boolean {
   return FIELD_OPTIONS[type]?.includes(id) ?? false
+}
+
+export function fieldOptionBefore(type: string, id: number, other: number): boolean {
+  const list = FIELD_OPTIONS[type] ?? []
+  const left = list.indexOf(id)
+  const right = list.indexOf(other)
+  return left !== -1 && right !== -1 && left < right
 }
 
 export const DEFAULT_RATING_ICON = new URL('../assets/img/star.svg', import.meta.url).href

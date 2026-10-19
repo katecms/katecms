@@ -21,7 +21,6 @@ const emit = defineEmits<{
 
 const choice = computed(() => props.field.type === 'select' || props.field.type === 'radio' || props.field.type === 'checkbox')
 const richText = computed(() => isRichFieldType(props.field.type))
-const textLike = computed(() => props.field.type === 'phone')
 
 function patch(partial: Partial<FormField>) {
   emit('update', { ...props.field, ...partial })
@@ -107,7 +106,7 @@ function removeOption(index: number) {
       />
 
       <MiraiCmsTextField
-        v-if="textLike || field.type === 'select'"
+        v-if="field.type === 'select'"
         :model-value="field.placeholder"
         :field-key="`${field.id}-placeholder`"
         :field="{ type: 'text', label: field.type === 'select' ? 'Empty option' : 'Placeholder', maxLength: 200 }"

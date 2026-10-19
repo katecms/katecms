@@ -3,7 +3,7 @@ import type { CSSProperties } from 'vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { FormField, LayoutItem } from '../../form/model'
 import { GRID_COLUMNS } from '../../form/model'
-import { AUTOCOMPLETE_CHOICES, FILE_TYPE_ACCEPT, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultTextOptions, fieldHasOption, fileAccept, headingTag, isTemporalType, listedChoiceOptions, normalizeIcon, resolveChoiceEntries, temporalInputType } from '../../form/text-options'
+import { AUTOCOMPLETE_CHOICES, FILE_TYPE_ACCEPT, INPUT_MODE_CHOICES, PATTERN_PRESETS, defaultTextOptions, fieldHasOption, fieldOptionBefore, fileAccept, headingTag, isTemporalType, listedChoiceOptions, normalizeIcon, resolveChoiceEntries, temporalInputType } from '../../form/text-options'
 import type { CheckPosition, FormChoiceGroup, FormChoiceOption, FormMarkedText, FormTextOptions, HeadingTag, LayoutAlign, LayoutDirection } from '../../form/text-options'
 import ChoiceOptions from './ChoiceOptions.vue'
 import DecoratedText from './DecoratedText.vue'
@@ -30,6 +30,8 @@ const options = computed(() => props.field.text ?? defaultTextOptions(props.fiel
 function has(id: number) {
   return fieldHasOption(props.field.type, id)
 }
+
+const invalidBeforeReadOnly = computed(() => fieldOptionBefore(props.field.type, 20, 14))
 
 function repeatCount(value: number | null): number | null {
   if (value == null || !Number.isFinite(value) || value < 0) {
@@ -1956,6 +1958,35 @@ onBeforeUnmount(resetChoiceDrag)
       />
     </div>
 
+    <OptionAccordion
+      v-if="has(20) && invalidBeforeReadOnly"
+      title="Invalid Error Message"
+      :enabled="options.invalid.enabled"
+      @update:enabled="patch({ invalid: { ...options.invalid, enabled: $event } })"
+    >
+      <MiraiCmsTrueFalseField
+        :model-value="options.invalid.showError"
+        :field-key="`${field.id}-invalid-show`"
+        :field="{ type: 'true_false', label: 'Show Error Message' }"
+        @update:model-value="patch({ invalid: { ...options.invalid, showError: $event === true } })"
+      />
+      <template v-if="options.invalid.showError">
+        <MiraiCmsTrueFalseField
+          :model-value="options.invalid.customError"
+          :field-key="`${field.id}-invalid-custom`"
+          :field="{ type: 'true_false', label: 'Custom Error Message' }"
+          @update:model-value="patch({ invalid: { ...options.invalid, customError: $event === true } })"
+        />
+        <DecoratedText
+          v-if="options.invalid.customError"
+          :field-key="`${field.id}-invalid-text`"
+          :model="{ enabled: true, text: options.invalid.errorText, prefix: options.invalid.errorPrefix, suffix: options.invalid.errorSuffix }"
+          text-label="Error message"
+          @update="patch({ invalid: { ...options.invalid, errorText: $event.text, errorPrefix: $event.prefix, errorSuffix: $event.suffix } })"
+        />
+      </template>
+    </OptionAccordion>
+
     <MiraiCmsTrueFalseField
       v-if="has(14)"
       :model-value="options.readOnly"
@@ -2073,7 +2104,7 @@ onBeforeUnmount(resetChoiceDrag)
     </OptionAccordion>
 
     <OptionAccordion
-      v-if="has(20)"
+      v-if="has(20) && !invalidBeforeReadOnly"
       title="Invalid Error Message"
       :enabled="options.invalid.enabled"
       @update:enabled="patch({ invalid: { ...options.invalid, enabled: $event } })"

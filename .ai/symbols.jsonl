@@ -247,6 +247,7 @@
 {"n":"fieldHasOption","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FieldInstructions","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/parts/FieldInstructions.vue"}
 {"n":"FieldLabel","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/parts/FieldLabel.vue"}
+{"n":"fieldOptionBefore","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"Fields","k":"type","p":"packages/core/src/config/types/fields.ts"}
 {"n":"FieldsQuery","k":"iface","p":"packages/core/src/database/queries/fields-query.ts"}
 {"n":"FieldsQueryCast","k":"type","p":"packages/core/src/database/queries/fields-query.ts"}

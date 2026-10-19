@@ -27,6 +27,7 @@ import {
   isFieldContainer,
   isSubmitButton,
   setLayoutItem,
+  textStoredValue,
 } from '../form/model'
 import { clientFormBreakpoints } from '../form/runtime-config'
 import { iconUrl } from '../form/text-options'
@@ -152,7 +153,7 @@ const baseLabel = computed(() => {
 })
 
 const palette = [
-  { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month'] as FieldType[] },
+  { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'decision_box'] as FieldType[] },
   { title: 'Option/Choice Fields', types: ['image_select', 'select', 'rating', 'radio', 'checkbox'] as FieldType[] },
   { title: 'Advanced Fields', types: ['repeater', 'section'] as FieldType[] },
   { title: 'Elements', types: ['title', 'image', 'divider', 'html', 'spacer'] as FieldType[] },
@@ -634,6 +635,10 @@ function readCanvasValues() {
     }
     else if (multiple) {
       next[field.id] = nodes.flatMap(node => node instanceof HTMLInputElement && node.checked ? [node.value] : [])
+    }
+    else if (field.type === 'decision_box') {
+      const checked = nodes.find(node => node instanceof HTMLInputElement && node.checked)
+      next[field.id] = textStoredValue(field, checked instanceof HTMLInputElement ? checked.value : '')
     }
     else if (nodes.some(node => node instanceof HTMLInputElement && (node.type === 'radio' || node.type === 'checkbox'))) {
       const checked = nodes.find(node => node instanceof HTMLInputElement && node.checked)

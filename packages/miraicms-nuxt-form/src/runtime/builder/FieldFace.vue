@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { SelectChoice, SelectChoiceItem, SelectModelValue } from '@miraicms/core'
-import type { FormField } from '../form/model'
+import { sanitizeHtml, type FormField } from '../form/model'
 import { applyInputMask, checkPositionStyle, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, listedChoiceOptions, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, resolveChoiceEntries, temporalInputType } from '../form/text-options'
 
 const rootClass = 'miraicms-field-face'
@@ -38,12 +38,20 @@ const ratingMessage = computed(() => {
 const rules = computed(() => props.field?.type === 'password' ? passwordRuleStates(options.value, draft.value) : [])
 const draft = ref(props.field?.value || '')
 const choiceDraft = ref<string[]>([])
+const decisionDraft = ref<boolean | null>(null)
+const decisionLabel = computed(() => sanitizeHtml(options.value.decisionLabel))
+const decisionIsChecked = computed(() => decisionDraft.value ?? options.value.decisionChecked)
 
 watch(() => props.field?.id, () => {
   draft.value = props.field?.value || options.value.defaultValue || ''
   choiceDraft.value = listedChoiceOptions(options.value).filter(item => item.checked).map(item => item.value)
+  decisionDraft.value = null
   revealed.value = false
 }, { immediate: true })
+
+watch(() => options.value.decisionChecked, () => {
+  decisionDraft.value = null
+})
 
 function onChoiceChange(event: Event) {
   const input = event.target
@@ -372,6 +380,21 @@ function onInput(event: Event) {
         :option-icon="options.optionIcon"
         :aria-label="options.label.text || field.label"
       />
+      <label
+        v-else-if="field.type === 'decision_box'"
+        :class="`${rootClass}__decision`"
+      >
+        <input
+          type="checkbox"
+          :name="field.key"
+          :value="options.decisionCheckedValue"
+          :checked="decisionIsChecked"
+          :disabled="disabled || logicReadonly || options.disabled"
+          :required="options.required.enabled"
+          @change="decisionDraft = ($event.target as HTMLInputElement).checked"
+        >
+        <span v-html="decisionLabel" />
+      </label>
       <div
         v-else-if="field.type === 'radio' || field.type === 'checkbox'"
         :class="`${rootClass}__choices`"
@@ -770,6 +793,17 @@ $root: '.miraicms-field-face';
 
   &__error {
     color: $color-danger;
+  }
+
+  &__decision {
+    display: flex;
+    align-items: flex-start;
+    gap: math-rem(8);
+    font-size: math-rem(13);
+
+    input {
+      margin-top: math-rem(3);
+    }
   }
 
   &__choices {

@@ -829,6 +829,14 @@ onBeforeUnmount(resetChoiceDrag)
       />
     </OptionAccordion>
 
+    <MiraiCmsWysiwygField
+      v-if="has(76)"
+      :model-value="options.decisionLabel"
+      :field-key="`${field.id}-decision-label`"
+      :field="{ type: 'wysiwyg', label: 'Label' }"
+      @update:model-value="patch({ decisionLabel: String($event ?? '') })"
+    />
+
     <OptionAccordion
       v-if="has(2)"
       title="Required"
@@ -878,6 +886,28 @@ onBeforeUnmount(resetChoiceDrag)
         @update:model-value="patch({ required: { ...options.required, asteriskPosition: $event === 'left' || $event === 'before' || $event === 'right' ? $event : 'after' } })"
       />
     </OptionAccordion>
+
+    <MiraiCmsTrueFalseField
+      v-if="has(77)"
+      :model-value="options.decisionChecked"
+      :field-key="`${field.id}-decision-checked`"
+      :field="{ type: 'true_false', label: 'Checked by Default' }"
+      @update:model-value="patch({ decisionChecked: $event === true })"
+    />
+    <MiraiCmsTextField
+      v-if="has(78)"
+      :model-value="options.decisionCheckedValue"
+      :field-key="`${field.id}-decision-checked-value`"
+      :field="{ type: 'text', label: 'Checked Value' }"
+      @update:model-value="patch({ decisionCheckedValue: String($event ?? '').slice(0, 200) || 'Accepted' })"
+    />
+    <MiraiCmsTextField
+      v-if="has(79)"
+      :model-value="options.decisionUncheckedValue"
+      :field-key="`${field.id}-decision-unchecked-value`"
+      :field="{ type: 'text', label: 'Unchecked Value' }"
+      @update:model-value="patch({ decisionUncheckedValue: String($event ?? '').slice(0, 200) || 'Rejected' })"
+    />
 
     <OptionAccordion
       v-if="has(3)"

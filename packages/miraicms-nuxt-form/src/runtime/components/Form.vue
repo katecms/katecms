@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { $fetch } from '#imports'
 import type { FormField, LayoutItem, PublicForm, UploadedFile } from '../form/model'
-import { baseBreakpoint, conditionInputValues, confirmationTarget, emptySubmissionError, fieldConditionStates, fieldForCondition, fieldSubmissionError, formBreakpoints, sanitizeHtml, submissionErrors } from '../form/model'
+import { baseBreakpoint, conditionInputValues, confirmationTarget, emptySubmissionError, fieldConditionStates, fieldForCondition, fieldSubmissionError, formBreakpoints, sanitizeHtml, submissionErrors, textStoredValue } from '../form/model'
 import type { FormFieldConditionState } from '../form/model'
 import { applyInputMask, checkPositionStyle, choiceMatches, defaultTextOptions, fileAccept, headingTag, iconUrl, isRichFieldType, isTemporalType, layoutFlexStyle, listedChoiceOptions, passwordRuleStates, ratingIconSrc, ratingSelectedIndex, RATING_FILTER_OFF, RATING_FILTER_ON, resolveChoiceEntries, temporalInputType } from '../form/text-options'
 import { clientFormBreakpoints } from '../form/runtime-config'
@@ -167,6 +167,9 @@ function seedConditionValues(content: PublicForm['content'], defaults: Record<st
     if (multiple && field.text) {
       seeded[field.id] = listedChoiceOptions(field.text).filter(option => option.checked).map(option => option.value)
     }
+    else if (field.type === 'decision_box') {
+      seeded[field.id] = textStoredValue(field, field.text?.decisionChecked ? 'on' : '')
+    }
     else if ((field.type === 'radio' || field.type === 'image_select' || field.type === 'select') && field.text) {
       seeded[field.id] = listedChoiceOptions(field.text).find(option => option.checked)?.value || ''
     }
@@ -209,6 +212,10 @@ function readControlValues(form: HTMLFormElement, fields: FormField[]): Record<s
     }
     else if (multiple) {
       input[field.key] = nodes.flatMap(node => node instanceof HTMLInputElement && node.checked ? [node.value] : [])
+    }
+    else if (field.type === 'decision_box') {
+      const checked = nodes.find(node => node instanceof HTMLInputElement && node.checked)
+      input[field.key] = textStoredValue(field, checked instanceof HTMLInputElement ? checked.value : '')
     }
     else if (nodes.some(node => node instanceof HTMLInputElement && (node.type === 'radio' || node.type === 'checkbox'))) {
       const checked = nodes.find(node => node instanceof HTMLInputElement && node.checked)
@@ -885,6 +892,17 @@ function formatBytes(size: number): string {
                     Clear
                   </button>
                 </div>
+                <label v-else-if="cell.field.type === 'decision_box'">
+                  <input
+                    type="checkbox"
+                    :name="cell.field.key"
+                    :value="textOptions(cell.field).decisionCheckedValue"
+                    :checked="textOptions(cell.field).decisionChecked"
+                    :disabled="fieldDisabled(cell.field) || fieldReadonly(cell.field)"
+                    :required="fieldRequired(cell.field)"
+                  >
+                  <span v-html="sanitizeHtml(textOptions(cell.field).decisionLabel)" />
+                </label>
                 <div
                   v-else-if="cell.field.type === 'radio' || cell.field.type === 'checkbox'"
                   :style="{ display: 'grid', gridTemplateColumns: `repeat(${textOptions(cell.field).optionsColumn || 1}, minmax(0, 1fr))`, gap: '8px' }"

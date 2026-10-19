@@ -48,6 +48,7 @@ export const FIELD_TYPES = [
   'image_select',
   'radio',
   'checkbox',
+  'decision_box',
   'title',
   'image',
   'divider',
@@ -81,6 +82,7 @@ export const FIELD_LABELS: Record<FieldType, string> = {
   image_select: 'Image Select',
   radio: 'Radio Button',
   checkbox: 'Check Box',
+  decision_box: 'Decision Box',
   title: 'Title',
   image: 'Image',
   divider: 'Divider',
@@ -1110,6 +1112,9 @@ export function fieldForCondition(field: FormField, state: FormFieldConditionSta
 }
 
 function conditionStoredValue(field: FormField, raw: unknown): string | string[] {
+  if (field.type === 'decision_box') {
+    return textStoredValue(field, raw)
+  }
   if (isConditionMulti(field)) {
     if (Array.isArray(raw)) {
       return raw.map(item => String(item).trim()).filter(Boolean)
@@ -1515,6 +1520,9 @@ function fieldHasVisitorValue(field: FormField, raw: unknown, file: UploadedFile
   if (field.type === 'checkbox' || (field.type === 'image_select' && field.text?.allowMultiple) || (field.type === 'select' && field.text?.selectMultiple.enabled)) {
     return asList(raw).length > 0
   }
+  if (field.type === 'decision_box') {
+    return decisionChecked(field, raw)
+  }
   return cleanText(typeof raw === 'string' ? raw : raw == null ? '' : String(raw)).trim().length > 0
 }
 
@@ -1524,6 +1532,10 @@ export function textStoredValue(field: FormField, input: unknown): string {
   }
   if (field.type === 'checkbox') {
     return JSON.stringify(allowedChoices(field, asList(input)))
+  }
+  if (field.type === 'decision_box') {
+    const checkedValue = field.text?.decisionCheckedValue || 'Accepted'
+    return decisionChecked(field, input) ? checkedValue : (field.text?.decisionUncheckedValue || 'Rejected')
   }
   if (field.type === 'number') {
     return cleanText(typeof input === 'string' ? input : input == null ? '' : String(input)).trim()
@@ -1787,7 +1799,7 @@ function textOptionsFor(type: FieldType, existing: FormField[]) {
   if (type === 'select') {
     text.choiceEntries = text.choiceOptions.map(option => ({ type: 'option', option }))
   }
-  if (type === 'title' || type === 'image' || type === 'divider' || type === 'spacer' || type === 'html') {
+  if (type === 'title' || type === 'image' || type === 'divider' || type === 'spacer' || type === 'html' || type === 'decision_box') {
     text.label.enabled = false
   }
   return text
@@ -1817,6 +1829,10 @@ function normalizeField(raw: unknown, existing: FormField[], stepIds: Set<string
         options: legacyOptions,
       })
     : undefined
+  if (text && type === 'decision_box') {
+    text.decisionLabel = sanitizeHtml(text.decisionLabel)
+    text.label.enabled = false
+  }
   const listed = text ? listedChoiceOptions(text) : []
   const options = listed.length
     ? listed.map(item => ({ label: item.label, value: item.value }))
@@ -1892,6 +1908,15 @@ function uniqueKey(type: FieldType, existing: FormField[]): string {
   return `${base}_${n}`
 }
 
+function decisionChecked(field: FormField, raw: unknown): boolean {
+  if (raw === true || raw === 'on' || raw === 'true') {
+    return true
+  }
+  const value = cleanText(typeof raw === 'string' ? raw : raw == null ? '' : String(raw)).trim()
+  const checkedValue = field.text?.decisionCheckedValue || 'Accepted'
+  return value.length > 0 && value === checkedValue
+}
+
 function fieldError(field: FormField, raw: unknown, file: UploadedFile | UploadedFile[] | null, maxFileBytes: number): string | null {
   if (field.type === 'html' || field.type === 'button' || field.type === 'hidden' || field.type === 'title' || field.type === 'image' || field.type === 'divider' || field.type === 'spacer') {
     return null
@@ -1901,6 +1926,9 @@ function fieldError(field: FormField, raw: unknown, file: UploadedFile | Uploade
   }
   if (field.type === 'checkbox' || field.type === 'image_select' || field.type === 'select' || field.type === 'radio') {
     return choiceFieldError(field, raw)
+  }
+  if (field.type === 'decision_box') {
+    return decisionChecked(field, raw) || !field.required ? null : customErrorText(field.text) || 'This field is required.'
   }
   const value = cleanText(typeof raw === 'string' ? raw : raw == null ? '' : String(raw)).trim()
   if (!value) {

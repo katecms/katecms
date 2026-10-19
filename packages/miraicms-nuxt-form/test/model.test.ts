@@ -616,3 +616,21 @@ test('a field can move into a repeater and back onto its step', () => {
   content = moveFieldToRepeater(content, section.id, another.id)
   assert.equal(content.fields.find(field => field.id === section.id)?.parentId, undefined)
 })
+
+test('a decision box stores its checked or unchecked value', () => {
+  let content = createEmptyContent()
+  content = addField(content, 'decision_box')
+  const field = content.fields.find(item => item.type === 'decision_box')!
+  assert.equal(field.text?.decisionLabel, '<p>Decision Box</p>')
+  assert.equal(field.text?.decisionCheckedValue, 'Accepted')
+  assert.equal(field.text?.decisionUncheckedValue, 'Rejected')
+  assert.equal(field.text?.label.enabled, false)
+  assert.equal(textStoredValue(field, 'Accepted'), 'Accepted')
+  assert.equal(textStoredValue(field, ''), 'Rejected')
+  const required = {
+    ...content,
+    fields: content.fields.map(item => item.id === field.id ? { ...item, required: true, text: item.text ? { ...item.text, required: { ...item.text.required, enabled: true } } : item.text } : item),
+  }
+  assert.equal(submissionErrors(required, { [field.key]: 'Rejected' }, {}, 1024)[field.key], 'This field is required.')
+  assert.equal(submissionErrors(required, { [field.key]: 'Accepted' }, {}, 1024)[field.key], undefined)
+})

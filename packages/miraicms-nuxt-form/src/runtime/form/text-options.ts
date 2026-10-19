@@ -241,6 +241,10 @@ export interface FormTextOptions {
   repeatRemove: FormMarkedText
   repeatAddEnd: FormMarkedText
   repeatAddEndAlign: RepeatButtonAlign
+  decisionLabel: string
+  decisionChecked: boolean
+  decisionCheckedValue: string
+  decisionUncheckedValue: string
 }
 
 export interface PatternPreset {
@@ -466,6 +470,10 @@ export function defaultTextOptions(label = ''): FormTextOptions {
     repeatRemove: { enabled: true, text: 'Remove', prefix: null, suffix: null },
     repeatAddEnd: emptyMarkedText('Add to end'),
     repeatAddEndAlign: 'start',
+    decisionLabel: '<p>Decision Box</p>',
+    decisionChecked: false,
+    decisionCheckedValue: 'Accepted',
+    decisionUncheckedValue: 'Rejected',
   }
 }
 
@@ -532,7 +540,7 @@ export function defaultChoiceOptions(): FormChoiceOption[] {
   }))
 }
 
-const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'image_select', 'select', 'radio', 'checkbox', 'title', 'image', 'divider', 'html', 'spacer', 'repeater', 'section'])
+const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'image_select', 'select', 'radio', 'checkbox', 'decision_box', 'title', 'image', 'divider', 'html', 'spacer', 'repeater', 'section'])
 
 const FIELD_OPTIONS: Record<string, number[]> = {
   text: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
@@ -555,6 +563,7 @@ const FIELD_OPTIONS: Record<string, number[]> = {
   select: [1, 2, 3, 4, 61, 44, 54, 7, 55, 56, 57, 58, 14, 15, 17, 18],
   radio: [1, 2, 3, 44, 7, 51, 15, 17, 18],
   checkbox: [1, 2, 3, 44, 7, 51, 52, 53, 15, 17, 18],
+  decision_box: [76, 2, 77, 78, 79, 15, 17, 18],
   title: [62, 63, 65, 66, 16],
   image: [67, 68, 69, 16],
   divider: [16],
@@ -860,6 +869,10 @@ export function normalizeTextOptions(raw: unknown, fallback: { label?: string, p
     imageAlt: clip(source.imageAlt, 200),
     spacerHeight: optionalCount(source.spacerHeight) ?? 40,
     ...normalizeRepeat(source, defaults),
+    decisionLabel: clip(source.decisionLabel, 50000) || '<p>Decision Box</p>',
+    decisionChecked: source.decisionChecked === true,
+    decisionCheckedValue: clip(source.decisionCheckedValue, 200).trim() || 'Accepted',
+    decisionUncheckedValue: clip(source.decisionUncheckedValue, 200).trim() || 'Rejected',
   }
 }
 

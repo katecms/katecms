@@ -607,4 +607,12 @@ test('a field can move into a repeater and back onto its step', () => {
   assert.equal(content.fields.some(field => field.id === repeater.id), false)
   assert.equal(content.fields.find(field => field.id === text.id)?.parentId, undefined)
   assert.equal(content.layouts.desktop.some(item => item.fieldId === text.id), true)
+  content = addField(content, 'section')
+  content = addField(content, 'repeater')
+  const section = content.fields.find(field => field.type === 'section')!
+  const another = content.fields.filter(field => field.type === 'repeater').at(-1)!
+  content = moveFieldToRepeater(content, text.id, section.id)
+  assert.equal(content.fields.find(field => field.id === text.id)?.parentId, section.id)
+  content = moveFieldToRepeater(content, section.id, another.id)
+  assert.equal(content.fields.find(field => field.id === section.id)?.parentId, undefined)
 })

@@ -286,7 +286,7 @@ function onInput(event: Event) {
       v-else-if="field.type === 'html'"
       v-html="field.html"
     />
-    <template v-else-if="field.type === 'repeater'" />
+    <template v-else-if="field.type === 'repeater' || field.type === 'section'" />
     <div
       v-else
       :class="`${rootClass}__control`"

@@ -389,6 +389,7 @@
 {"n":"isCollectionQueryOrderBy","k":"fn","p":"packages/core/src/database/queries/collections.ts"}
 {"n":"isColorArrayValue","k":"fn","p":"packages/core/src/fields/values.ts"}
 {"n":"isDictionaryPublic","k":"fn","p":"packages/core/src/rewrite.ts"}
+{"n":"isFieldContainer","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"isFieldType","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"isFieldValueEmpty","k":"fn","p":"packages/core/src/fields/required.ts"}
 {"n":"isImageMedia","k":"fn","p":"packages/core/src/media/types.ts"}

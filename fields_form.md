@@ -326,3 +326,4 @@
 -- Start
 -- Center
 -- End
+75) text "Container Class" (Info: Container Class allows you to add custom CSS classes to the field container. You can use this to apply custom styles to the field wrapper.) placeholder e.g. class1 class2 class3

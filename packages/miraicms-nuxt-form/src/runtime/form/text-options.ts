@@ -532,7 +532,7 @@ export function defaultChoiceOptions(): FormChoiceOption[] {
   }))
 }
 
-const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'image_select', 'select', 'radio', 'checkbox', 'title', 'image', 'divider', 'html', 'spacer', 'repeater'])
+const RICH_FIELD_TYPES = new Set(['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'rating', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month', 'image_select', 'select', 'radio', 'checkbox', 'title', 'image', 'divider', 'html', 'spacer', 'repeater', 'section'])
 
 const FIELD_OPTIONS: Record<string, number[]> = {
   text: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
@@ -561,6 +561,7 @@ const FIELD_OPTIONS: Record<string, number[]> = {
   html: [15],
   spacer: [16],
   repeater: [1, 3, 70, 71, 72, 73, 74, 7, 15, 18],
+  section: [1, 3, 7, 16, 15, 18],
 }
 
 export const FILE_TYPE_ACCEPT: Record<Exclude<FileKind, ''>, { label: string, accept: string }> = {

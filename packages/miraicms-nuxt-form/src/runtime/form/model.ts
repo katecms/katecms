@@ -62,6 +62,7 @@ export const FIELD_TYPES = [
   'html',
   'button',
   'repeater',
+  'section',
 ] as const
 export type FieldType = typeof FIELD_TYPES[number]
 
@@ -94,6 +95,7 @@ export const FIELD_LABELS: Record<FieldType, string> = {
   html: 'HTML',
   button: 'Button',
   repeater: 'Repeater',
+  section: 'Section',
 }
 
 export interface FormFieldOption {
@@ -619,7 +621,7 @@ export function cloneField(content: FormContent, fieldId: string): FormContent {
     ...content.fields.slice(index + 1),
   ]
   const copiedChildren: { from: string, to: string }[] = []
-  if (source.type === 'repeater') {
+  if (isFieldContainer(source)) {
     for (const child of content.fields.filter(field => field.parentId === source.id)) {
       if (fields.length >= MAX_FIELDS) {
         break
@@ -703,11 +705,11 @@ export function moveFieldToStep(content: FormContent, fieldId: string, stepId: s
 
 export function moveFieldToRepeater(content: FormContent, fieldId: string, repeaterId: string): FormContent {
   const source = content.fields.find(field => field.id === fieldId)
-  const repeater = content.fields.find(field => field.id === repeaterId && field.type === 'repeater')
+  const repeater = content.fields.find(field => field.id === repeaterId && isFieldContainer(field))
   if (!source || !repeater || source.id === repeater.id || source.parentId === repeater.id) {
     return content
   }
-  if (source.locked || source.type === 'repeater' || isSubmitButton(source)) {
+  if (source.locked || isFieldContainer(source) || isSubmitButton(source)) {
     return content
   }
   const fields = content.fields.map(field => field.id === fieldId ? { ...field, parentId: repeater.id, stepId: repeater.stepId } : field)
@@ -740,7 +742,7 @@ export function removeField(content: FormContent, fieldId: string): FormContent 
   }
   const source = content.fields.find(field => field.id === fieldId)
   let next = content
-  if (source?.type === 'repeater') {
+  if (source && isFieldContainer(source)) {
     for (const child of content.fields.filter(field => field.parentId === fieldId)) {
       next = moveFieldToStep(next, child.id, source.stepId)
     }
@@ -781,6 +783,10 @@ export function isSubmitButton(field: FormField): boolean {
   return field.type === 'button' && field.text?.buttonType === 'submit'
 }
 
+export function isFieldContainer(field: FormField): boolean {
+  return field.type === 'repeater' || field.type === 'section'
+}
+
 export function setLayoutItem(content: FormContent, breakpoint: Breakpoint, item: LayoutItem, resolve = true): FormContent {
   const all = content.layouts[breakpoint] ?? []
   const sameGroup = all.filter(entry => entry.fieldId === item.fieldId || sameLayoutGroup(content, item.fieldId, entry.fieldId))
@@ -809,7 +815,7 @@ function layoutGroups(content: FormContent): Set<string>[] {
   for (const step of content.steps) {
     groups.push(new Set(content.fields.filter(field => field.stepId === step.id && !field.parentId).map(field => field.id)))
   }
-  for (const repeater of content.fields.filter(field => field.type === 'repeater')) {
+  for (const repeater of content.fields.filter(field => isFieldContainer(field))) {
     groups.push(new Set(content.fields.filter(field => field.parentId === repeater.id).map(field => field.id)))
   }
   return groups
@@ -901,14 +907,14 @@ export function normalizeFormContent(input: unknown): FormContent {
     }
   }
   fields.splice(0, fields.length, ...lockInitialSubmit(fields))
-  const repeaterIds = new Set(fields.filter(field => field.type === 'repeater').map(field => field.id))
+  const repeaterIds = new Set(fields.filter(field => isFieldContainer(field)).map(field => field.id))
   for (let index = 0; index < fields.length; index += 1) {
     const field = fields[index]!
     const parent = field.parentId ? fields.find(item => item.id === field.parentId) : undefined
     if (!field.parentId) {
       continue
     }
-    if (!parent || parent.type !== 'repeater' || field.type === 'repeater' || field.locked || isSubmitButton(field) || !repeaterIds.has(field.parentId)) {
+    if (!parent || !isFieldContainer(parent) || isFieldContainer(field) || field.locked || isSubmitButton(field) || !repeaterIds.has(field.parentId)) {
       fields[index] = { ...field, parentId: undefined }
       continue
     }
@@ -943,7 +949,7 @@ export function normalizeFormContent(input: unknown): FormContent {
       }
       next.push(...placed)
     }
-    for (const repeater of fields.filter(field => field.type === 'repeater')) {
+    for (const repeater of fields.filter(field => isFieldContainer(field))) {
       let placed: LayoutItem[] = []
       for (const field of fields.filter(entry => entry.parentId === repeater.id)) {
         const raw = rawItems.find(item => isRecord(item) && item.fieldId === field.id)
@@ -1526,7 +1532,7 @@ export function textStoredValue(field: FormField, input: unknown): string {
 }
 
 export function storesValue(field: FormField): boolean {
-  return field.type !== 'html' && field.type !== 'button' && field.type !== 'title' && field.type !== 'image' && field.type !== 'divider' && field.type !== 'spacer' && field.type !== 'repeater'
+  return field.type !== 'html' && field.type !== 'button' && field.type !== 'title' && field.type !== 'image' && field.type !== 'divider' && field.type !== 'spacer' && !isFieldContainer(field)
 }
 
 function defaultNotification(): FormNotification {

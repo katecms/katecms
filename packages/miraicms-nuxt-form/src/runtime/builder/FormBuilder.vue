@@ -24,6 +24,7 @@ import {
   reorderSteps,
   replaceField,
   fieldConditionStates,
+  isFieldContainer,
   isSubmitButton,
   setLayoutItem,
 } from '../form/model'
@@ -153,7 +154,7 @@ const baseLabel = computed(() => {
 const palette = [
   { title: 'Basic Fields', types: ['text', 'textarea', 'email', 'number', 'password', 'range', 'url', 'color', 'button', 'file', 'date', 'time', 'datetime', 'week', 'month'] as FieldType[] },
   { title: 'Option/Choice Fields', types: ['image_select', 'select', 'rating', 'radio', 'checkbox'] as FieldType[] },
-  { title: 'Advanced Fields', types: ['repeater'] as FieldType[] },
+  { title: 'Advanced Fields', types: ['repeater', 'section'] as FieldType[] },
   { title: 'Elements', types: ['title', 'image', 'divider', 'html', 'spacer'] as FieldType[] },
 ]
 
@@ -446,7 +447,21 @@ function bindRepeaterGrid(repeaterId: string) {
 }
 
 function repeaterTargets(fieldId: string) {
-  return moveRepeaters(fieldId).map(repeater => ({ id: repeater.id, label: repeaterName(repeater) }))
+  return containerTargets(fieldId, 'repeater')
+}
+
+function sectionTargets(fieldId: string) {
+  return containerTargets(fieldId, 'section')
+}
+
+function containerTargets(fieldId: string, type: 'repeater' | 'section') {
+  const field = content.value.fields.find(item => item.id === fieldId)
+  if (!field || field.locked || isFieldContainer(field) || isSubmitButton(field)) {
+    return []
+  }
+  return content.value.fields
+    .filter(item => item.type === type && item.id !== field.parentId)
+    .map(item => ({ id: item.id, label: repeaterName(item) }))
 }
 
 function repeaterName(repeater: FormField): string {
@@ -467,14 +482,6 @@ function moveSteps(fieldId: string) {
     return []
   }
   return content.value.steps.filter(step => step.id !== field.stepId || !!field.parentId)
-}
-
-function moveRepeaters(fieldId: string) {
-  const field = content.value.fields.find(item => item.id === fieldId)
-  if (!field || field.locked || field.type === 'repeater' || isSubmitButton(field)) {
-    return []
-  }
-  return content.value.fields.filter(item => item.type === 'repeater' && item.id !== field.parentId)
 }
 
 function matchDesktop() {
@@ -1495,7 +1502,7 @@ onBeforeUnmount(() => {
                   preview
                 />
                 <div
-                  v-if="fieldById(item.fieldId)?.type === 'repeater'"
+                  v-if="fieldById(item.fieldId) && isFieldContainer(fieldById(item.fieldId)!)"
                   :class="`${rootClass}__repeater`"
                   :data-position="fieldById(item.fieldId)?.text?.repeatButtonPosition || 'bottom'"
                   :data-align="fieldById(item.fieldId)?.text?.repeatButtonAlign || 'start'"
@@ -1540,6 +1547,7 @@ onBeforeUnmount(() => {
                         :move-style="moveMenuStyle"
                         :steps="moveSteps(child.fieldId)"
                         :repeaters="repeaterTargets(child.fieldId)"
+                        :sections="sectionTargets(child.fieldId)"
                         @clone="onCloneField(child.fieldId)"
                         @remove="onRemove(child.fieldId)"
                         @deselect="selectedId = null; openFieldMenu = ''"
@@ -1587,6 +1595,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
                   <div
+                    v-if="fieldById(item.fieldId)?.type === 'repeater'"
                     :class="`${rootClass}__repeater-buttons`"
                     :data-view="fieldById(item.fieldId)?.text?.repeatButtonView || 'horizontal'"
                   >
@@ -1649,6 +1658,7 @@ onBeforeUnmount(() => {
                   :move-style="moveMenuStyle"
                   :steps="moveSteps(item.fieldId)"
                   :repeaters="repeaterTargets(item.fieldId)"
+                  :sections="sectionTargets(item.fieldId)"
                   @clone="onCloneField(item.fieldId)"
                   @remove="onRemove(item.fieldId)"
                   @deselect="selectedId = null; openFieldMenu = ''"

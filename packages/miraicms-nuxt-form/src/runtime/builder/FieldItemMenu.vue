@@ -10,6 +10,7 @@ defineProps<{
   moveStyle?: CSSProperties
   steps: { id: string, label: string }[]
   repeaters: { id: string, label: string }[]
+  sections: { id: string, label: string }[]
 }>()
 
 const emit = defineEmits<{
@@ -218,7 +219,7 @@ const rootClass = 'miraicms-form-builder'
           <span>Clone</span>
         </button>
         <div
-          v-if="steps.length || repeaters.length"
+          v-if="steps.length || repeaters.length || sections.length"
           :class="`${rootClass}__move`"
           @mouseenter="emit('move-enter', $event)"
           @mouseleave="emit('move-leave')"
@@ -242,7 +243,7 @@ const rootClass = 'miraicms-form-builder'
             :style="moveOpen ? moveStyle : undefined"
             @mouseenter="emit('move-keep')"
           >
-            <span v-if="steps.length && repeaters.length">Steps</span>
+            <span v-if="steps.length && (repeaters.length || sections.length)">Steps</span>
             <button
               v-for="step in steps"
               :key="step.id"
@@ -259,6 +260,15 @@ const rootClass = 'miraicms-form-builder'
               @click="emit('move-repeater', repeater.id)"
             >
               {{ repeater.label }}
+            </button>
+            <span v-if="sections.length">Sections</span>
+            <button
+              v-for="section in sections"
+              :key="section.id"
+              type="button"
+              @click="emit('move-repeater', section.id)"
+            >
+              {{ section.label }}
             </button>
           </div>
         </div>

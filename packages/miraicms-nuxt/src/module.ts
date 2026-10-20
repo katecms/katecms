@@ -134,6 +134,10 @@ export default defineNuxtModule<MiraiCmsConfig>({
     }
 
     addServerPlugin(resolver.resolve('./runtime/server/plugins/auto-migrate'))
+    addServerHandler({
+      middleware: true,
+      handler: resolver.resolve('./runtime/server/middleware/admin-headers'),
+    })
 
     const uploadsDir = join(nuxt.options.rootDir, 'public', 'uploads')
     nuxt.hook('nitro:config', (config) => {

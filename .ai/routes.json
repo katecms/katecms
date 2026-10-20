@@ -477,6 +477,11 @@
       "p": "packages/miraicms-nuxt-seo/src/runtime/server/middleware/redirect.ts"
     },
     {
+      "n": "admin-headers",
+      "global": true,
+      "p": "packages/miraicms-nuxt/src/runtime/server/middleware/admin-headers.ts"
+    },
+    {
       "n": "miraicms-auth-guard",
       "global": true,
       "p": "packages/miraicms-nuxt/src/runtime/middleware/auth-guard.ts"

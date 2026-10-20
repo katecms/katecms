@@ -99,6 +99,13 @@ watch(id, (formId) => {
       :meta="form ? `ID Form ${form.id}` : ''"
     >
       <MiraiCmsUiButton
+        tag="a"
+        variant="secondary"
+        :link="{ url: paths.entries(id), title: 'Entries' }"
+      >
+        Entries
+      </MiraiCmsUiButton>
+      <MiraiCmsUiButton
         tag="button"
         aria-label="Save"
         :disabled="saving || loading || !form || mailInvalid"

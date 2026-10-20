@@ -260,6 +260,8 @@ export interface FormContent {
   preventEmptySubmit?: boolean
   /** Shown when an empty submission is blocked. */
   emptySubmitMessage?: string
+  /** When true, a valid submission is not written to the database. */
+  disableEntryStorage?: boolean
   notification: FormNotification
   confirmation: FormConfirmation
 }
@@ -276,7 +278,36 @@ export interface FormListItem {
   id: number
   name: string
   fieldCount: number
+  submissionCount: number
   updatedAt: string
+}
+
+export interface FormSubmissionListItem {
+  id: number
+  createdAt: string
+  preview: string
+}
+
+export interface FormSubmissionFile {
+  name: string
+  size: number
+  index: number
+}
+
+export interface FormSubmissionValue {
+  key: string
+  label: string
+  text: string
+  files: FormSubmissionFile[]
+}
+
+export interface FormSubmissionDetail {
+  id: number
+  formId: number
+  formName: string
+  createdAt: string
+  ip: string
+  values: FormSubmissionValue[]
 }
 
 /** Public form body. Notification addresses are an admin-only part of {@link FormContent}. */
@@ -984,6 +1015,7 @@ export function normalizeFormContent(input: unknown): FormContent {
     validateOnBlur: source.validateOnBlur !== false,
     preventEmptySubmit: source.preventEmptySubmit !== false,
     emptySubmitMessage: clip(source.emptySubmitMessage, 400).trim() || EMPTY_SUBMIT_MESSAGE,
+    disableEntryStorage: source.disableEntryStorage === true,
     notification: normalizeNotification(source.notification),
     confirmation: normalizeConfirmation(source.confirmation),
     conditions: normalizeConditions(source.conditions, fields),

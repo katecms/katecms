@@ -42,8 +42,9 @@ function readStoredContent(value: unknown) {
 }
 
 export async function listForms(): Promise<FormListItem[]> {
-  const result = await sql<Pick<FormRow, 'id' | 'name' | 'content' | 'updated_at'>>`
-    SELECT id, name, content, updated_at
+  const result = await sql<Pick<FormRow, 'id' | 'name' | 'content' | 'updated_at'> & { submission_count: number | string }>`
+    SELECT id, name, content, updated_at,
+      (SELECT COUNT(*) FROM miraicms_form_submissions WHERE form_id = miraicms_forms.id) AS submission_count
     FROM miraicms_forms
     ORDER BY updated_at DESC, id DESC
   `.execute(getFormDb())
@@ -53,6 +54,7 @@ export async function listForms(): Promise<FormListItem[]> {
       id: Number(row.id),
       name: row.name,
       fieldCount: content.fields.length,
+      submissionCount: Number(row.submission_count) || 0,
       updatedAt: asIso(row.updated_at),
     }
   })
@@ -175,6 +177,10 @@ export async function submitForm(event: H3Event, id: number): Promise<{ ok: true
       statusMessage: 'Check the highlighted fields.',
       data: { errors },
     })
+  }
+
+  if (form.content.disableEntryStorage) {
+    return { ok: true, id: 0 }
   }
 
   const db = getFormDb()

@@ -73,6 +73,7 @@
 {"n":"clampItem","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"clampUtcOffsetMinutes","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/media-library-query.ts"}
 {"n":"clearUserSession","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/session.ts"}
+{"n":"clientAddress","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/client-address.ts"}
 {"n":"ClientFormBreakpoint","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/runtime-config.ts"}
 {"n":"clientFormBreakpoints","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/runtime-config.ts"}
 {"n":"cloneField","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
@@ -128,6 +129,7 @@
 {"n":"ConditionValue","k":"type","p":"packages/core/src/config/types/conditional-logic.ts"}
 {"n":"confirmationTarget","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"ConfirmDialog","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/admin/ConfirmDialog.vue"}
+{"n":"contentMatchesMime","k":"fn","p":"packages/core/src/media/filename.ts"}
 {"n":"copyDesktopLayout","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"countCollections","k":"fn","p":"packages/core/src/database/queries/collections.ts"}
 {"n":"countCollectionStatuses","k":"fn","p":"packages/core/src/database/queries/collections.ts"}
@@ -179,6 +181,7 @@
 {"n":"deleteCollectionMeta","k":"fn","p":"packages/core/src/database/queries/collection-meta.ts"}
 {"n":"deleteDictionary","k":"fn","p":"packages/core/src/database/queries/dictionaries.ts"}
 {"n":"deleteForm","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/forms.ts"}
+{"n":"deleteFormSubmission","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/submissions.ts"}
 {"n":"deleteFormUploads","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/uploads.ts"}
 {"n":"deleteMedia","k":"fn","p":"packages/core/src/database/queries/media.ts"}
 {"n":"deleteOption","k":"fn","p":"packages/core/src/database/queries/options.ts"}
@@ -210,6 +213,7 @@
 {"n":"DOCUMENT_MIME_TYPES","k":"const","p":"packages/miraicms-nuxt/src/runtime/utils/media-library-query.ts"}
 {"n":"EMAIL_RE","k":"const","p":"packages/core/src/auth/account.ts"}
 {"n":"EmailField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/EmailField.vue"}
+{"n":"embedUrlFromHtml","k":"fn","p":"packages/core/src/oembed.ts"}
 {"n":"EMPTY_SUBMIT_MESSAGE","k":"const","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"emptyDictionarySelection","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/collections.ts"}
 {"n":"emptyMarkedText","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
@@ -230,6 +234,7 @@
 {"n":"escapeSqlString","k":"fn","p":"packages/core/src/indexes/definitions.ts"}
 {"n":"evaluateCondition","k":"fn","p":"packages/core/src/fields/visibility.ts"}
 {"n":"existingTerm","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/server/utils/documents.ts"}
+{"n":"extensionForMime","k":"fn","p":"packages/core/src/media/filename.ts"}
 {"n":"extractExpressionFromIndexDef","k":"fn","p":"packages/core/src/indexes/definitions.ts"}
 {"n":"fail","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
 {"n":"fail","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/users.ts"}
@@ -323,6 +328,10 @@
 {"n":"FormSelectMultiple","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormStep","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FormStepHeader","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FormSubmissionDetail","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FormSubmissionFile","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FormSubmissionListItem","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"FormSubmissionValue","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"FormSuggestion","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormTextOptions","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormValues","k":"type","p":"packages/core/src/fields/visibility.ts"}
@@ -390,6 +399,7 @@
 {"n":"isCollectionQueryOrderBy","k":"fn","p":"packages/core/src/database/queries/collections.ts"}
 {"n":"isColorArrayValue","k":"fn","p":"packages/core/src/fields/values.ts"}
 {"n":"isDictionaryPublic","k":"fn","p":"packages/core/src/rewrite.ts"}
+{"n":"isDisallowedAddress","k":"fn","p":"packages/core/src/oembed.ts"}
 {"n":"isFieldContainer","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"isFieldType","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"isFieldValueEmpty","k":"fn","p":"packages/core/src/fields/required.ts"}
@@ -448,6 +458,7 @@
 {"n":"listDictionaryParentOptions","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/dictionaries.ts"}
 {"n":"listedChoiceOptions","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"listForms","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/forms.ts"}
+{"n":"listFormSubmissions","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/submissions.ts"}
 {"n":"listMedia","k":"fn","p":"packages/core/src/database/queries/media.ts"}
 {"n":"listMediaMonths","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/media-list.ts"}
 {"n":"listOptions","k":"fn","p":"packages/core/src/database/queries/options.ts"}
@@ -567,6 +578,7 @@
 {"n":"MiraiCmsUserField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/UserField.vue"}
 {"n":"MiraiCmsWysiwygField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/WysiwygField.vue"}
 {"n":"MiraiSeoHeadInput","k":"iface","p":"packages/miraicms-nuxt-seo/src/runtime/composables/useMiraiSeoHead.ts"}
+{"n":"missingForm","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/submissions.ts"}
 {"n":"monthKey","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/media-library-query.ts"}
 {"n":"monthLabel","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/media-library-query.ts"}
 {"n":"moveFieldToRepeater","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
@@ -644,6 +656,7 @@
 {"n":"PublicDictionaryNav","k":"iface","p":"packages/miraicms-nuxt/src/runtime/utils/dictionaries.ts"}
 {"n":"PublicDictionaryTerm","k":"iface","p":"packages/miraicms-nuxt/src/runtime/utils/collections.ts"}
 {"n":"PublicForm","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"PublicFormContent","k":"type","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"PublicOptionNav","k":"iface","p":"packages/miraicms-nuxt/src/runtime/utils/options.ts"}
 {"n":"PublicTermEntry","k":"iface","p":"packages/miraicms-nuxt/src/runtime/utils/collections.ts"}
 {"n":"publishedEntry","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/server/utils/documents.ts"}
@@ -672,6 +685,7 @@
 {"n":"readEntrySeo","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/server/utils/documents.ts"}
 {"n":"readFields","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
 {"n":"readForm","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/forms.ts"}
+{"n":"readFormSubmission","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/submissions.ts"}
 {"n":"readImageSize","k":"fn","p":"packages/core/src/media/filename.ts"}
 {"n":"readListStatus","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
 {"n":"readMailSettings","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/mail.ts"}
@@ -688,7 +702,9 @@
 {"n":"readSite","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/server/utils/documents.ts"}
 {"n":"readSlug","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
 {"n":"readStatus","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
+{"n":"readStoredFile","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/uploads.ts"}
 {"n":"readStringList","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/relation.ts"}
+{"n":"readSubmissionFile","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/submissions.ts"}
 {"n":"readTermSeo","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/server/utils/documents.ts"}
 {"n":"readTitle","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
 {"n":"recordAuthAttemptFailure","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/auth-rate-limit.ts"}
@@ -727,6 +743,7 @@
 {"n":"RequiredFieldIssue","k":"iface","p":"packages/core/src/fields/required.ts"}
 {"n":"requireDictionary","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/dictionaries.ts"}
 {"n":"requireEntryPermission","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/permissions.ts"}
+{"n":"requireFormAccess","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/access.ts"}
 {"n":"requireOptionFields","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/options.ts"}
 {"n":"requireOptionPage","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/options.ts"}
 {"n":"requirePermission","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/permissions.ts"}
@@ -873,6 +890,7 @@
 {"n":"toUserFieldValue","k":"fn","p":"packages/core/src/fields/user.ts"}
 {"n":"transliterate","k":"fn","p":"packages/core/src/text.ts"}
 {"n":"TrueFalseField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/TrueFalseField.vue"}
+{"n":"trustedProxyHops","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/client-address.ts"}
 {"n":"UiButton","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/ui/UiButton.vue"}
 {"n":"UiNotice","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/ui/UiNotice.vue"}
 {"n":"UiSelect","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/ui/UiSelect.vue"}
@@ -888,6 +906,7 @@
 {"n":"updateUser","k":"fn","p":"packages/core/src/database/queries/users.ts"}
 {"n":"UploadedFile","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"uploaderNames","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/media.ts"}
+{"n":"uploadResponseHeaders","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/upload-headers.ts"}
 {"n":"uploadRoot","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/uploads.ts"}
 {"n":"UPLOADS_PUBLIC_PATH","k":"const","p":"packages/miraicms-nuxt/src/runtime/server/utils/media.ts"}
 {"n":"UrlField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/UrlField.vue"}

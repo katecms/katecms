@@ -51,6 +51,26 @@ export default defineNuxtModule({
       handler: resolver.resolve('./runtime/server/api/item/[id].delete'),
     })
     addServerHandler({
+      route: '/api/_miraicms/forms/item/:id/submissions',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/item/submissions.get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/forms/item/:id/submissions/:submissionId',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/item/submissions/[submissionId].get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/forms/item/:id/submissions/:submissionId',
+      method: 'delete',
+      handler: resolver.resolve('./runtime/server/api/item/submissions/[submissionId].delete'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/forms/item/:id/submissions/:submissionId/files/:index',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/item/submissions/[submissionId]/files/[index].get'),
+    })
+    addServerHandler({
       route: '/api/_miraicms/forms/view/:id',
       method: 'get',
       handler: resolver.resolve('./runtime/server/api/view/[id].get'),
@@ -83,6 +103,16 @@ export default defineNuxtModule({
           name: 'admin-forms',
           path: 'forms',
           file: resolver.resolve('./runtime/pages/admin/forms/index.vue'),
+        },
+        {
+          name: 'admin-forms-entries',
+          path: 'forms/:id(\\d+)/entries',
+          file: resolver.resolve('./runtime/pages/admin/forms/entries.vue'),
+        },
+        {
+          name: 'admin-forms-entry',
+          path: 'forms/:id(\\d+)/entries/:submissionId(\\d+)',
+          file: resolver.resolve('./runtime/pages/admin/forms/entry.vue'),
         },
         {
           name: 'admin-forms-mail',

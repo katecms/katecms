@@ -76,6 +76,16 @@
       "p": "packages/miraicms-nuxt-form/src/runtime/pages/admin/forms/[id].vue"
     },
     {
+      "n": "admin-forms-entries",
+      "path": "/{adminPath}/forms/:id(\\\\d+)/entries",
+      "p": "packages/miraicms-nuxt-form/src/runtime/pages/admin/forms/entries.vue"
+    },
+    {
+      "n": "admin-forms-entry",
+      "path": "/{adminPath}/forms/:id(\\\\d+)/entries/:submissionId(\\\\d+)",
+      "p": "packages/miraicms-nuxt-form/src/runtime/pages/admin/forms/entry.vue"
+    },
+    {
       "n": "admin-forms-mail",
       "path": "/{adminPath}/forms/mail",
       "p": "packages/miraicms-nuxt-form/src/runtime/pages/admin/forms/mail.vue"
@@ -211,6 +221,26 @@
       "m": "PUT",
       "path": "/api/_miraicms/forms/item/:id",
       "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/[id].put.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/forms/item/:id/submissions",
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/submissions.get.ts"
+    },
+    {
+      "m": "DELETE",
+      "path": "/api/_miraicms/forms/item/:id/submissions/:submissionId",
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/submissions/[submissionId].delete.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/forms/item/:id/submissions/:submissionId",
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/submissions/[submissionId].get.ts"
+    },
+    {
+      "m": "GET",
+      "path": "/api/_miraicms/forms/item/:id/submissions/:submissionId/files/:index",
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/submissions/[submissionId]/files/[index].get.ts"
     },
     {
       "m": "GET",

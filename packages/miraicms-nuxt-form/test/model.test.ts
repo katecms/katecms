@@ -121,6 +121,7 @@ test('normalize repairs missing layout cells and strips scripts', () => {
   assert.equal(content.layouts.tablet[0]?.w, 60)
   assert.equal(content.validateOnBlur, true)
   assert.equal(content.preventEmptySubmit, true)
+  assert.equal(content.disableEntryStorage, false)
   assert.equal(content.emptySubmitMessage, 'Empty form cannot be submitted.')
   assert.equal(content.notification.to, '')
   assert.equal(content.confirmation.successMessage, '')

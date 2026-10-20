@@ -1,4 +1,4 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, resolve, sep } from 'node:path'
 import { randomBytes } from 'node:crypto'
 import { useRuntimeConfig } from '#imports'
@@ -29,13 +29,34 @@ export async function saveFormFile(formId: number, submissionId: number, name: s
   return key
 }
 
+export async function readStoredFile(key: string): Promise<Buffer | null> {
+  const located = storedPath(key)
+  if (!located) {
+    return null
+  }
+  try {
+    return await readFile(located)
+  }
+  catch {
+    return null
+  }
+}
+
 export async function deleteStoredFile(key: string): Promise<void> {
-  const root = uploadRoot()
-  const full = resolve(root, key)
-  if (full !== root && !full.startsWith(root + sep)) {
+  const full = storedPath(key)
+  if (!full) {
     return
   }
   await rm(full, { force: true })
+}
+
+function storedPath(key: string): string | null {
+  const root = uploadRoot()
+  const full = resolve(root, key)
+  if (full !== root && !full.startsWith(root + sep)) {
+    return null
+  }
+  return full
 }
 
 export async function deleteFormUploads(formId: number): Promise<void> {

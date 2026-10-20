@@ -164,6 +164,13 @@ onMounted(load)
           <MiraiCmsUiButton
             tag="a"
             :variant="['secondary', 'small']"
+            :link="{ url: paths.entries(form.id), title: 'Entries' }"
+          >
+            Entries{{ form.submissionCount ? ` (${form.submissionCount})` : '' }}
+          </MiraiCmsUiButton>
+          <MiraiCmsUiButton
+            tag="a"
+            :variant="['secondary', 'small']"
             :link="{ url: paths.edit(form.id), title: 'Edit' }"
           >
             Edit
@@ -222,7 +229,7 @@ $root: '.miraicms-form-list';
 
     &__row {
       display: grid;
-      grid-template-columns: minmax(math-rem(160), 1.4fr) minmax(math-rem(140), 1fr) minmax(math-rem(160), 1fr) math-rem(180);
+      grid-template-columns: minmax(math-rem(160), 1.4fr) minmax(math-rem(140), 1fr) minmax(math-rem(160), 1fr) math-rem(280);
       align-items: center;
       min-width: math-rem(760);
       border-bottom: 1px solid $color-border;

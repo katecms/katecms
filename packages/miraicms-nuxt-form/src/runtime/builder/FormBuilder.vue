@@ -514,6 +514,10 @@ function setPreventEmptySubmit(enabled: boolean) {
   }
 }
 
+function setDisableEntryStorage(enabled: boolean) {
+  content.value = { ...content.value, disableEntryStorage: enabled }
+}
+
 function setEmptySubmitMessage(value: string) {
   content.value = { ...content.value, emptySubmitMessage: value }
 }
@@ -1780,6 +1784,16 @@ onBeforeUnmount(() => {
             :model-value="content.emptySubmitMessage || 'Empty form cannot be submitted.'"
             :field="{ type: 'text', label: 'Error message', maxLength: 400 }"
             @update:model-value="setEmptySubmitMessage"
+          />
+          <MiraiCmsTrueFalseField
+            field-key="disable-entry-storage"
+            :model-value="content.disableEntryStorage === true"
+            :field="{
+              type: 'true_false',
+              label: 'Disable entry storage in the database',
+              instructions: 'Submitted entries will not be saved in the database.',
+            }"
+            @update:model-value="setDisableEntryStorage($event === true)"
           />
         </div>
         <div

@@ -1,7 +1,9 @@
 import type { ResolvedRole, ResourceRights, RoleAction, ScopedRights } from '../config/types/roles'
 
 /** Resources that rights can be granted on. */
-export type Resource = 'collections' | 'dictionaries' | 'media' | 'users' | 'options' | 'forms'
+export const RESOURCES = ['collections', 'dictionaries', 'media', 'users', 'options', 'forms'] as const
+
+export type Resource = typeof RESOURCES[number]
 
 /** Keyed resources whose rights are scoped by an entry slug. */
 const SCOPED_RESOURCES = new Set<Resource>(['collections', 'dictionaries', 'options'])

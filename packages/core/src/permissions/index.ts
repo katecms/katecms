@@ -1,4 +1,5 @@
 export {
+  RESOURCES,
   can,
   canOnEntry,
   getRole,

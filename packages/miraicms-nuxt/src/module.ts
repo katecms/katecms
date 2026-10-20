@@ -235,6 +235,11 @@ export default defineNuxtModule<MiraiCmsConfig>({
       handler: resolver.resolve('./runtime/server/api/_miraicms/auth/state.get'),
     })
     addServerHandler({
+      route: '/api/_miraicms/menu',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/menu.get'),
+    })
+    addServerHandler({
       route: '/api/_miraicms/auth/login',
       method: 'post',
       handler: resolver.resolve('./runtime/server/api/_miraicms/auth/login.post'),

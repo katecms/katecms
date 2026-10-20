@@ -319,6 +319,7 @@
 {"n":"FormFileLimit","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormFileMultiple","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormHeading","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
+{"n":"formHtmlSanitizer","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/plugins/html-sanitize.ts"}
 {"n":"FormIcon","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormInputMode","k":"type","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
 {"n":"FormInvalidError","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
@@ -518,6 +519,7 @@
 {"n":"MediaUpdate","k":"type","p":"packages/core/src/database/queries/media.ts"}
 {"n":"MediaVariant","k":"iface","p":"packages/core/src/media/types.ts"}
 {"n":"MediaVariantsStatus","k":"type","p":"packages/core/src/media/types.ts"}
+{"n":"MenuAccess","k":"iface","p":"packages/miraicms-nuxt/src/runtime/composables/useMenuAccess.ts"}
 {"n":"MergedMiraiCmsConfig","k":"type","p":"packages/core/src/config/merge.ts"}
 {"n":"mergeMiraiCmsConfig","k":"fn","p":"packages/core/src/config/merge.ts"}
 {"n":"migratePostgres","k":"fn","p":"packages/core/src/database/migrations/postgres/migrate.ts"}
@@ -804,6 +806,7 @@
 {"n":"ResolveTermResponse","k":"iface","p":"packages/miraicms-nuxt/src/runtime/utils/collections.ts"}
 {"n":"Resource","k":"type","p":"packages/core/src/permissions/can.ts"}
 {"n":"ResourceRights","k":"type","p":"packages/core/src/config/types/roles.ts"}
+{"n":"RESOURCES","k":"const","p":"packages/core/src/permissions/can.ts"}
 {"n":"rethrowCollectionWriteError","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
 {"n":"rethrowDictionaryWriteError","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/dictionaries.ts"}
 {"n":"revisionAuthorId","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/revisions.ts"}
@@ -937,6 +940,7 @@
 {"n":"useCmsPaths","k":"fn","p":"packages/miraicms-nuxt/src/runtime/composables/useCmsPaths.ts"}
 {"n":"useFormPaths","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/paths.ts"}
 {"n":"useMediaLibrary","k":"fn","p":"packages/miraicms-nuxt/src/runtime/composables/useMediaLibrary.ts"}
+{"n":"useMenuAccess","k":"fn","p":"packages/miraicms-nuxt/src/runtime/composables/useMenuAccess.ts"}
 {"n":"useMiraiCmsEntrySidebar","k":"fn","p":"packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"}
 {"n":"useMiraiCmsFieldError","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/field-errors.ts"}
 {"n":"useMiraiCmsFieldValues","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/field-values.ts"}

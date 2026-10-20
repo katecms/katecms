@@ -314,6 +314,11 @@
     },
     {
       "m": "GET",
+      "path": "/api/_miraicms/menu",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/menu.get.ts"
+    },
+    {
+      "m": "GET",
       "path": "/api/_miraicms/oembed",
       "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/oembed.get.ts"
     },

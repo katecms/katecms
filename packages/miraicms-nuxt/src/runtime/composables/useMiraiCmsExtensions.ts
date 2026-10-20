@@ -28,6 +28,11 @@ export interface MiraiCmsMenuExtra {
   to: string
   /** Inline SVG markup, same shape as the built-in menu icons. */
   icon?: string
+  /**
+   * Resource the user must be allowed to read (`GET /api/_miraicms/menu`).
+   * Omit to show the item to everyone who can open the admin.
+   */
+  access?: string
 }
 
 /**

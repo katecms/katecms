@@ -89,7 +89,7 @@ export default defineEventHandler(async (event): Promise<{ user: SafeUser }> => 
     })
 
     recordAuthAttemptSuccess(attemptKey)
-    await setUserSession(event, user.id)
+    await setUserSession(event, user.id, user.session_version)
     return { user: toSafeUser(user) }
   }
   catch (error) {

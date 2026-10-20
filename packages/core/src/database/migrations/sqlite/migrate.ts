@@ -243,6 +243,14 @@ async function applyOne(driver: SqliteDriver, id: string, sql: string): Promise<
   )
 }
 
+async function ensureSqliteUserSessionVersion(driver: SqliteDriver): Promise<void> {
+  const columns = await driver.all<{ name: string }>(`PRAGMA table_info(users)`)
+  if (columns.length === 0 || columns.some(column => column.name === 'session_version')) {
+    return
+  }
+  await driver.exec('ALTER TABLE users ADD COLUMN session_version INTEGER NOT NULL DEFAULT 0')
+}
+
 async function applySchemas(driver: SqliteDriver, extra?: SchemaJob): Promise<MigrationResult> {
   await driver.exec('PRAGMA foreign_keys = ON')
   if (driver.sessionTransaction) {
@@ -266,6 +274,7 @@ async function applySchemas(driver: SqliteDriver, extra?: SchemaJob): Promise<Mi
       applied.push(job.id)
       done.add(job.id)
     }
+    await ensureSqliteUserSessionVersion(driver)
 
     if (driver.sessionTransaction) {
       await driver.exec('COMMIT')

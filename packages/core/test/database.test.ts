@@ -116,7 +116,11 @@ describe('database layer', () => {
         email: 'Ada@example.com',
         password_hash: 'hash',
       })
-      await updateUser(db, user.id, { email: '  Ada@example.com  ' })
+      expect(user.session_version).toBe(0)
+      const renamed = await updateUser(db, user.id, { email: '  Ada@example.com  ' })
+      expect(renamed?.session_version).toBe(0)
+      const rehashed = await updateUser(db, user.id, { password_hash: 'next' })
+      expect(rehashed?.session_version).toBe(1)
       const found = await findUserByEmail(db, 'ada@example.com')
       expect(found?.email).toBe('ada@example.com')
 

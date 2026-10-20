@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS users (
   avatar        jsonb,
   role          text NOT NULL DEFAULT 'subscriber',
   status        text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'banned')),
+  session_version integer NOT NULL DEFAULT 0,
   created_at    timestamptz NOT NULL DEFAULT now(),
   updated_at    timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT users_id_positive CHECK (id > 0)

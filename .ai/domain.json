@@ -862,7 +862,7 @@
   "tables": [
     {
       "n": "users",
-      "cols": "id:number*,email:string,password_hash:string,name:string?,avatar:json?,role:string*,status:UserStatus*,created_at:ts,updated_at:ts"
+      "cols": "id:number*,email:string,password_hash:string,name:string?,avatar:json?,role:string*,status:UserStatus*,session_version:number*,created_at:ts,updated_at:ts"
     },
     {
       "n": "collections",

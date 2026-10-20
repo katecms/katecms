@@ -101,6 +101,13 @@ export async function updateUser(
   if (Object.keys(patch).length === 0) {
     return findUserById(db, id)
   }
+  if (patch.password_hash !== undefined) {
+    const current = await findUserById(db, id)
+    if (!current) {
+      return undefined
+    }
+    patch.session_version = current.session_version + 1
+  }
   if (patch.role !== undefined && patch.role !== OWNER_ROLE) {
     const current = await findUserById(db, id)
     if (current?.role === OWNER_ROLE) {

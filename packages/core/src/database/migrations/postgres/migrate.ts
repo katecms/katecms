@@ -140,6 +140,9 @@ async function applySchemas(
       applied.push(job.id)
       done.add(job.id)
     }
+    await client.query(
+      'ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version integer NOT NULL DEFAULT 0',
+    )
 
     await client.query('COMMIT')
     return { applied, alreadyApplied, database: db }

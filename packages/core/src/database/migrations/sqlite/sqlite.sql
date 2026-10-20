@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   avatar        TEXT,
   role          TEXT NOT NULL DEFAULT 'subscriber',
   status        TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'banned')),
+  session_version INTEGER NOT NULL DEFAULT 0,
   created_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   updated_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   CONSTRAINT users_id_positive CHECK (id > 0)

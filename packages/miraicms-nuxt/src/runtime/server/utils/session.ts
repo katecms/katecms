@@ -6,6 +6,8 @@ import { getDb } from './db'
 
 interface SessionData {
   userId?: number
+  /** Matches `users.session_version`. Missing cookies count as 0. */
+  sessionVersion?: number
 }
 
 const SESSION_COOKIE = 'miraicms_session'
@@ -56,10 +58,14 @@ function getCmsSession(event: H3Event) {
   })
 }
 
-/** Persist the authenticated user's id into the sealed session cookie. */
-export async function setUserSession(event: H3Event, userId: number): Promise<void> {
+/** Persist the authenticated user's id and password session version. */
+export async function setUserSession(
+  event: H3Event,
+  userId: number,
+  sessionVersion = 0,
+): Promise<void> {
   const session = await getCmsSession(event)
-  await session.update({ userId })
+  await session.update({ userId, sessionVersion })
 }
 
 /** Drop the session cookie (logout). */
@@ -83,6 +89,10 @@ export async function getCurrentUser(event: H3Event): Promise<SafeUser | null> {
 
   const user = await findUserById(getDb(), userId)
   if (!user || user.status === 'banned') {
+    return null
+  }
+  const sessionVersion = session.data.sessionVersion ?? 0
+  if ((user.session_version ?? 0) !== sessionVersion) {
     return null
   }
 

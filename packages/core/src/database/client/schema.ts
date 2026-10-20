@@ -40,6 +40,8 @@ export interface UsersTable {
   avatar: Json | null
   role: Generated<string>
   status: Generated<UserStatus>
+  /** Bumped when the password changes so older session cookies stop working. */
+  session_version: Generated<number>
   created_at: Timestamp
   updated_at: Timestamp
 }

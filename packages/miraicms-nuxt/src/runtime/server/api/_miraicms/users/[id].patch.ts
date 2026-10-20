@@ -22,7 +22,7 @@ import {
   recordAuthAttemptSuccess,
   throwTooManyAttempts,
 } from '../../../utils/auth-rate-limit'
-import { requireUser } from '../../../utils/session'
+import { requireUser, setUserSession } from '../../../utils/session'
 import {
   fail,
   readAvatar,
@@ -159,6 +159,9 @@ export default defineEventHandler(async (event): Promise<{ user: AdminUser }> =>
     const row = await updateUser(db, id, patch)
     if (!row) {
       fail(404, 'User not found.')
+    }
+    if (isSelf && patch.password_hash) {
+      await setUserSession(event, row.id, row.session_version)
     }
     return { user: toAdminUser(row) }
   }

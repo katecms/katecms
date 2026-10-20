@@ -154,18 +154,104 @@ async function onFileChange(event: Event) {
     <div :class="`${rootClass}__actions`">
       <MiraiCmsUiButton
         tag="button"
-        :variant="['secondary', 'small']"
+        :variant="['secondary', 'small', 'icon']"
+        :aria-label="model ? 'Change' : 'Choose avatar'"
+        :title="model ? 'Change' : 'Choose avatar'"
         @click="openModal"
       >
-        {{ model ? 'Change' : 'Choose avatar' }}
+        <svg
+          data-v-b9a9df7f=""
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        ><path
+          data-v-b9a9df7f=""
+          d="M6.00033 4.66406H4.00033C3.6467 4.66406 3.30756 4.80454 3.05752 5.05459C2.80747 5.30464 2.66699 5.64377 2.66699 5.9974V11.9974C2.66699 12.351 2.80747 12.6902 3.05752 12.9402C3.30756 13.1903 3.6467 13.3307 4.00033 13.3307H10.0003C10.3539 13.3307 10.6931 13.1903 10.9431 12.9402C11.1932 12.6902 11.3337 12.351 11.3337 11.9974V9.9974"
+          stroke="currentColor"
+          stroke-width="1.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        /><path
+          data-v-b9a9df7f=""
+          d="M6 9.99885H8L13.6667 4.33218C13.9319 4.06697 14.0809 3.70726 14.0809 3.33218C14.0809 2.95711 13.9319 2.5974 13.6667 2.33218C13.4015 2.06697 13.0417 1.91797 12.6667 1.91797C12.2916 1.91797 11.9319 2.06697 11.6667 2.33218L6 7.99885V9.99885Z"
+          stroke="currentColor"
+          stroke-width="1.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        /><path
+          data-v-b9a9df7f=""
+          d="M10.667 3.33203L12.667 5.33203"
+          stroke="currentColor"
+          stroke-width="1.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        /></svg>
       </MiraiCmsUiButton>
       <MiraiCmsUiButton
         v-if="model"
         tag="button"
-        :variant="['red', 'small']"
+        :variant="['red', 'small', 'icon']"
+        aria-label="Remove"
+        title="Remove"
         @click="clearAvatar"
       >
-        Remove
+        <svg
+          data-v-b9a9df7f=""
+          data-v-e86d7870=""
+          data-v-dc89e617=""
+          width="18"
+          height="18"
+          viewBox="0 0 18 18"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        ><path
+          data-v-b9a9df7f=""
+          data-v-e86d7870=""
+          data-v-dc89e617=""
+          d="M3 5.25H15"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke="currentColor"
+        /><path
+          data-v-b9a9df7f=""
+          data-v-e86d7870=""
+          data-v-dc89e617=""
+          d="M7.5 8.25V12.75"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke="currentColor"
+        /><path
+          data-v-b9a9df7f=""
+          data-v-e86d7870=""
+          data-v-dc89e617=""
+          d="M10.5 8.25V12.75"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke="currentColor"
+        /><path
+          data-v-b9a9df7f=""
+          data-v-e86d7870=""
+          data-v-dc89e617=""
+          d="M3.75 5.25L4.5 14.25C4.5 14.6478 4.65804 15.0294 4.93934 15.3107C5.22064 15.592 5.60218 15.75 6 15.75H12C12.3978 15.75 12.7794 15.592 13.0607 15.3107C13.342 15.0294 13.5 14.6478 13.5 14.25L14.25 5.25"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke="currentColor"
+        /><path
+          data-v-b9a9df7f=""
+          data-v-e86d7870=""
+          data-v-dc89e617=""
+          d="M6.75 5.25V3C6.75 2.80109 6.82902 2.61032 6.96967 2.46967C7.11032 2.32902 7.30109 2.25 7.5 2.25H10.5C10.6989 2.25 10.8897 2.32902 11.0303 2.46967C11.171 2.61032 11.25 2.80109 11.25 3V5.25"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke="currentColor"
+        /></svg>
       </MiraiCmsUiButton>
     </div>
 

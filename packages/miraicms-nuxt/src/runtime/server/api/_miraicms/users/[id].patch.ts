@@ -11,10 +11,17 @@ import {
   updateUser,
   validateEmail,
   validatePassword,
+  verifyPassword,
 } from '@miraicms/core'
 import type { UserStatus } from '@miraicms/core'
 import type { AdminUser } from '../../../../utils/admin-users'
 import { getDb } from '../../../utils/db'
+import {
+  assertAuthAttemptAllowed,
+  recordAuthAttemptFailure,
+  recordAuthAttemptSuccess,
+  throwTooManyAttempts,
+} from '../../../utils/auth-rate-limit'
 import { requireUser } from '../../../utils/session'
 import {
   fail,
@@ -26,6 +33,7 @@ import {
 interface UpdateBody {
   email?: unknown
   password?: unknown
+  currentPassword?: unknown
   name?: unknown
   avatar?: unknown
   role?: unknown
@@ -38,7 +46,9 @@ const STATUSES: readonly UserStatus[] = ['active', 'banned']
  * Update a user.
  *
  * Access rules:
- * - editing your own account is always allowed (name / email / password / avatar);
+ * - editing your own account is always allowed (name / email / avatar);
+ * - changing your own password also requires `currentPassword`;
+ * - a manager may set another account's password without the old one;
  * - editing someone else requires the `users` update permission;
  * - `role` and `status` can only be changed by a manager editing *another*
  *   account (you can't change your own role/status, which prevents both
@@ -94,6 +104,20 @@ export default defineEventHandler(async (event): Promise<{ user: AdminUser }> =>
     const passwordCheck = validatePassword(body.password)
     if (!passwordCheck.ok) {
       fail(422, passwordCheck.error)
+    }
+    if (isSelf) {
+      const attemptKey = `password:${actor.id}`
+      assertAuthAttemptAllowed(event, attemptKey)
+      const currentPassword = typeof body.currentPassword === 'string' ? body.currentPassword : ''
+      const matches = currentPassword.length > 0 && await verifyPassword(currentPassword, target.password_hash)
+      if (!matches) {
+        const { retryAfterMs } = recordAuthAttemptFailure(attemptKey)
+        if (retryAfterMs > 0) {
+          throwTooManyAttempts(event, retryAfterMs)
+        }
+        fail(422, 'Current password is incorrect.')
+      }
+      recordAuthAttemptSuccess(attemptKey)
     }
     patch.password_hash = await hashPassword(body.password)
   }

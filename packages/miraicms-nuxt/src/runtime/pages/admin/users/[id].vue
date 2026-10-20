@@ -35,6 +35,7 @@ const notice = ref<{
 const form = reactive({
   email: '',
   name: '',
+  currentPassword: '',
   password: '',
   role: SUBSCRIBER_ROLE,
   status: 'active' as AdminUser['status'],
@@ -45,6 +46,11 @@ useHead({ title: () => form.name.trim() || form.email || 'Edit user' })
 
 const emailField = { type: 'email' as const, label: 'Email', required: true }
 const nameField = { label: 'Name' }
+const currentPasswordField = {
+  type: 'password' as const,
+  label: 'Current password',
+  instructions: 'Required when you set a new password.',
+}
 const passwordField = {
   type: 'password' as const,
   label: 'Password',
@@ -153,6 +159,9 @@ async function submit() {
   }
   if (form.password) {
     body.password = form.password
+    if (isSelf.value) {
+      body.currentPassword = form.currentPassword
+    }
   }
   if (canEditRoleStatus.value) {
     body.role = form.role
@@ -168,6 +177,7 @@ async function submit() {
       await refreshAuth()
     }
     form.password = ''
+    form.currentPassword = ''
     notice.value = {
       variant: 'success',
       message: 'Changes saved.',
@@ -265,6 +275,14 @@ onMounted(load)
           autocomplete="off"
         />
       </MiraiCmsFieldWrapper>
+
+      <MiraiCmsPasswordField
+        v-if="isSelf"
+        v-model="form.currentPassword"
+        field-key="cms-user-current-password"
+        :field="currentPasswordField"
+        autocomplete="current-password"
+      />
 
       <MiraiCmsPasswordField
         v-model="form.password"

@@ -1,6 +1,7 @@
 import type { H3Event } from 'h3'
-import { createError, getRequestIP, setHeader } from 'h3'
+import { createError, getRequestHeader, getRequestIP, setHeader } from 'h3'
 import { createAuthRateLimiter } from '@miraicms/core'
+import { clientAddress, trustedProxyHops } from './client-address'
 
 const limiter = createAuthRateLimiter()
 
@@ -9,7 +10,12 @@ export function getAuthAttemptKey(
   action: 'login' | 'register',
   email: string,
 ): string {
-  const ip = getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'
+  const hops = trustedProxyHops()
+  const ip = clientAddress({
+    forwardedFor: hops > 0 ? getRequestHeader(event, 'x-forwarded-for') : undefined,
+    hops,
+    socketAddress: getRequestIP(event),
+  })
   return `${action}:${ip}:${email.trim().toLowerCase()}`
 }
 

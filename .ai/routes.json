@@ -458,6 +458,10 @@
       "p": "packages/miraicms-nuxt-form/src/runtime/server/plugins/migrate.ts"
     },
     {
+      "side": "server",
+      "p": "packages/miraicms-nuxt-form/src/runtime/server/plugins/html-sanitize.ts"
+    },
+    {
       "side": "client",
       "p": "packages/miraicms-nuxt-seo/src/runtime/plugin.ts"
     },

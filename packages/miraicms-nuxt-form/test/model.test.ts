@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { reactive } from 'vue'
+import { installFormHtmlSanitizer } from '../src/runtime/server/utils/html-sanitize.ts'
+
+installFormHtmlSanitizer()
 import {
   addField,
   cloneField,

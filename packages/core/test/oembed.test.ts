@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildOembedEndpoint,
+  embedUrlFromHtml,
   fetchOembed,
+  isDisallowedAddress,
   parseOembedLink,
   parseSafeUrl,
 } from '../src'
+
+const publicResolve = async () => ['93.184.216.34']
 
 describe('parseSafeUrl', () => {
   it('accepts public http(s) URLs', () => {
@@ -43,16 +47,21 @@ describe('fetchOembed', () => {
     const calls: string[] = []
     const fetchFn: typeof fetch = async (input) => {
       calls.push(String(input))
-      return new Response(JSON.stringify({ html: '<iframe></iframe>', type: 'video' }), {
+      return new Response(JSON.stringify({
+        html: '<iframe src="https://www.youtube.com/embed/abc"></iframe><script>alert(1)</script>',
+        type: 'video',
+      }), {
         status: 200,
         headers: { 'content-type': 'application/json' },
       })
     }
 
-    const result = await fetchOembed({ url: 'https://youtu.be/abc', fetch: fetchFn })
+    const result = await fetchOembed({ url: 'https://youtu.be/abc', fetch: fetchFn, resolve: publicResolve })
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.data.type).toBe('video')
+      expect(result.data).not.toHaveProperty('html')
+      expect(result.data.embedUrl).toBe('https://www.youtube.com/embed/abc')
     }
     expect(calls).toHaveLength(1)
     expect(calls[0]).toContain('youtube.com/oembed')
@@ -64,7 +73,7 @@ describe('fetchOembed', () => {
       calls.push(String(input))
       return new Response('<html></html>', { status: 200 })
     }
-    const result = await fetchOembed({ url: 'https://notyoutube.com/watch?v=abc', fetch: fetchFn })
+    const result = await fetchOembed({ url: 'https://notyoutube.com/watch?v=abc', fetch: fetchFn, resolve: publicResolve })
     expect(calls[0]).not.toContain('youtube.com/oembed')
     expect(calls[0]).toContain('notyoutube.com')
     expect(result.ok).toBe(false)
@@ -86,7 +95,7 @@ describe('fetchOembed', () => {
       })
     }
 
-    const result = await fetchOembed({ url: 'https://blog.example.com/p/1', fetch: fetchFn })
+    const result = await fetchOembed({ url: 'https://blog.example.com/p/1', fetch: fetchFn, resolve: publicResolve })
     expect(calls).toBe(2)
     expect(result).toEqual({ ok: true, data: { title: 'Post' } })
   })
@@ -105,5 +114,37 @@ describe('fetchOembed', () => {
     if (!result.ok) {
       expect(result.status).toBe(422)
     }
+  })
+
+  it('does not fetch a name that resolves to a loopback address', async () => {
+    let called = false
+    const result = await fetchOembed({
+      url: 'https://public.example/watch',
+      resolve: async () => ['127.0.0.1'],
+      fetch: async () => {
+        called = true
+        return new Response('no')
+      },
+    })
+    expect(called).toBe(false)
+    expect(result).toMatchObject({ ok: false, status: 422, error: 'This host is not allowed.' })
+  })
+})
+
+describe('embedUrlFromHtml', () => {
+  it('keeps an https iframe on a known host and drops everything else', () => {
+    expect(embedUrlFromHtml('<iframe src="https://www.youtube.com/embed/abc"></iframe>')).toBe('https://www.youtube.com/embed/abc')
+    expect(embedUrlFromHtml('<iframe src="https://evil.example/embed"></iframe>')).toBeUndefined()
+    expect(embedUrlFromHtml('<iframe src="http://www.youtube.com/embed/abc"></iframe>')).toBeUndefined()
+    expect(embedUrlFromHtml('<script>alert(1)</script>')).toBeUndefined()
+  })
+
+  it('treats loopback and link-local addresses as disallowed', () => {
+    expect(isDisallowedAddress('127.0.0.1')).toBe(true)
+    expect(isDisallowedAddress('10.1.1.1')).toBe(true)
+    expect(isDisallowedAddress('169.254.169.254')).toBe(true)
+    expect(isDisallowedAddress('::1')).toBe(true)
+    expect(isDisallowedAddress('fd00::1')).toBe(true)
+    expect(isDisallowedAddress('93.184.216.34')).toBe(false)
   })
 })

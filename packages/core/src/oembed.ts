@@ -1,12 +1,13 @@
 /** Subset of an oEmbed response that the CMS needs. */
 export interface OembedResponse {
   type?: string
-  html?: string
   title?: string
   width?: number
   height?: number
   thumbnail_url?: string
   provider_name?: string
+  /** HTTPS iframe URL on a known provider host. Raw provider HTML is never returned. */
+  embedUrl?: string
 }
 
 export type OembedResult
@@ -83,9 +84,9 @@ export type ParseSafeUrlResult
     | { ok: false, error: string }
 
 /**
- * SSRF guard: only http(s). Rejects localhost, `*.localhost`, private IPv4
- * (including decimal and IPv4-mapped IPv6 forms), and unique-local IPv6.
- * DNS is not resolved, so this is not a complete defense.
+ * String-level SSRF guard: only http(s). Rejects localhost, `*.localhost`,
+ * private IPv4 (including decimal and IPv4-mapped IPv6 forms), and unique-local IPv6.
+ * Hostnames are checked after DNS when {@link fetchOembed} is given `resolve`.
  */
 export function parseSafeUrl(raw: string): ParseSafeUrlResult {
   let parsed: URL
@@ -147,12 +148,65 @@ export function parseOembedLink(html: string): string | null {
   return href.replace(/&amp;/g, '&')
 }
 
+const EMBED_HOSTS = [
+  'youtube.com',
+  'youtube-nocookie.com',
+  'youtu.be',
+  'vimeo.com',
+  'twitter.com',
+  'x.com',
+  'soundcloud.com',
+  'flickr.com',
+]
+
 export interface FetchOembedOptions {
   url: string
   maxwidth?: string
   maxheight?: string
   /** Injected `fetch`. Defaults to global fetch. */
   fetch?: typeof fetch
+  /**
+   * Resolves a hostname to IP addresses before the request is sent.
+   * The Nuxt handler passes a DNS lookup. Addresses in private, loopback,
+   * and link-local ranges are rejected.
+   */
+  resolve?: (hostname: string) => Promise<string[]>
+}
+
+/** True for loopback, private, link-local, and unique-local addresses. */
+export function isDisallowedAddress(address: string): boolean {
+  const ip = address.trim().toLowerCase().replace(/^\[|\]$/g, '')
+  if (!ip || ip.includes('%')) {
+    return true
+  }
+  const ipv4 = extractIpv4(ip)
+  if (ipv4) {
+    return isPrivateIpv4(ipv4)
+  }
+  if (ip === '::' || ip === '::1') {
+    return true
+  }
+  if (/^(?:fc|fd|fe80)/i.test(ip)) {
+    return true
+  }
+  return !ip.includes(':')
+}
+
+/** iframe src from provider HTML, limited to HTTPS on a known embed host. */
+export function embedUrlFromHtml(html: string | undefined): string | undefined {
+  if (!html) {
+    return undefined
+  }
+  const src = html.match(/<iframe\b[^>]*\ssrc=["']([^"']+)["']/i)?.[1]
+  if (!src) {
+    return undefined
+  }
+  const parsed = parseSafeUrl(src)
+  if (!parsed.ok || parsed.url.protocol !== 'https:') {
+    return undefined
+  }
+  const allowed = EMBED_HOSTS.some(host => hostnameMatches(parsed.url.hostname, host))
+  return allowed ? parsed.url.toString() : undefined
 }
 
 function findProvider(url: URL) {
@@ -161,15 +215,37 @@ function findProvider(url: URL) {
   )
 }
 
+async function assertResolvedHost(
+  hostname: string,
+  resolve: ((hostname: string) => Promise<string[]>) | undefined,
+): Promise<void> {
+  if (!resolve) {
+    return
+  }
+  const host = hostname.replace(/^\[|\]$/g, '')
+  let addresses: string[]
+  try {
+    addresses = await resolve(host)
+  }
+  catch {
+    throw new Error('Failed to resolve host.')
+  }
+  if (addresses.length === 0 || addresses.some(address => isDisallowedAddress(address))) {
+    throw new Error('This host is not allowed.')
+  }
+}
+
 async function safeFetch(
   fetchFn: typeof fetch,
   rawUrl: string,
   redirectsLeft: number,
+  resolve: ((hostname: string) => Promise<string[]>) | undefined,
 ): Promise<Response> {
   const parsed = parseSafeUrl(rawUrl)
   if (!parsed.ok) {
     throw new Error(parsed.error)
   }
+  await assertResolvedHost(parsed.url.hostname, resolve)
   const res = await fetchFn(parsed.url.toString(), {
     headers: { 'user-agent': USER_AGENT },
     redirect: 'manual',
@@ -183,7 +259,7 @@ async function safeFetch(
     if (!location) {
       throw new Error('Redirect without Location.')
     }
-    return safeFetch(fetchFn, new URL(location, parsed.url).toString(), redirectsLeft - 1)
+    return safeFetch(fetchFn, new URL(location, parsed.url).toString(), redirectsLeft - 1, resolve)
   }
   const buffer = Buffer.from(await res.arrayBuffer())
   if (buffer.byteLength > MAX_BODY_BYTES) {
@@ -192,11 +268,43 @@ async function safeFetch(
   return new Response(buffer, { status: res.status, headers: res.headers })
 }
 
+function toPublicOembed(raw: unknown): OembedResponse {
+  const source = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {}
+  const data: OembedResponse = {}
+  if (typeof source.type === 'string') {
+    data.type = source.type
+  }
+  if (typeof source.title === 'string') {
+    data.title = source.title
+  }
+  if (typeof source.provider_name === 'string') {
+    data.provider_name = source.provider_name
+  }
+  if (typeof source.width === 'number' && Number.isFinite(source.width)) {
+    data.width = source.width
+  }
+  if (typeof source.height === 'number' && Number.isFinite(source.height)) {
+    data.height = source.height
+  }
+  if (typeof source.thumbnail_url === 'string') {
+    const thumb = parseSafeUrl(source.thumbnail_url)
+    if (thumb.ok && thumb.url.protocol === 'https:') {
+      data.thumbnail_url = thumb.url.toString()
+    }
+  }
+  const embedUrl = embedUrlFromHtml(typeof source.html === 'string' ? source.html : undefined)
+  if (embedUrl) {
+    data.embedUrl = embedUrl
+  }
+  return data
+}
+
 async function discoverEndpoint(
   target: string,
   fetchFn: typeof fetch,
+  resolve: ((hostname: string) => Promise<string[]>) | undefined,
 ): Promise<string | null> {
-  const res = await safeFetch(fetchFn, target, MAX_REDIRECTS)
+  const res = await safeFetch(fetchFn, target, MAX_REDIRECTS, resolve)
   if (!res.ok) {
     return null
   }
@@ -220,6 +328,7 @@ export async function fetchOembed(options: FetchOembedOptions): Promise<OembedRe
   }
 
   const fetchFn = options.fetch ?? globalThis.fetch
+  const resolve = options.resolve
   const provider = findProvider(parsed.url)
   let endpoint = provider
     ? buildOembedEndpoint(provider.endpoint, target, options.maxwidth, options.maxheight)
@@ -227,7 +336,7 @@ export async function fetchOembed(options: FetchOembedOptions): Promise<OembedRe
 
   try {
     if (!endpoint) {
-      const discovered = await discoverEndpoint(target, fetchFn)
+      const discovered = await discoverEndpoint(target, fetchFn, resolve)
       if (!discovered) {
         return { ok: false, error: 'oEmbed is not available for this URL.', status: 404 }
       }
@@ -239,13 +348,17 @@ export async function fetchOembed(options: FetchOembedOptions): Promise<OembedRe
       endpoint = absolute
     }
 
-    const res = await safeFetch(fetchFn, endpoint, MAX_REDIRECTS)
+    const res = await safeFetch(fetchFn, endpoint, MAX_REDIRECTS, resolve)
     if (!res.ok) {
       return { ok: false, error: 'The oEmbed provider returned an error.', status: 502 }
     }
-    return { ok: true, data: (await res.json()) as OembedResponse }
+    return { ok: true, data: toPublicOembed(await res.json()) }
   }
-  catch {
+  catch (error) {
+    const message = error instanceof Error ? error.message : ''
+    if (message === 'This host is not allowed.' || message === 'Enter a valid URL.' || message === 'Only http(s) URLs are allowed.') {
+      return { ok: false, error: 'This host is not allowed.', status: 422 }
+    }
     return { ok: false, error: 'Failed to fetch oEmbed.', status: 502 }
   }
 }

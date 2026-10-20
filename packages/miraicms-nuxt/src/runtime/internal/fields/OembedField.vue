@@ -14,9 +14,11 @@ const props = withDefaults(defineProps<{
 const model = defineModel<string>()
 
 const rootClass = 'miraicms-oembed-field'
-const html = ref<string | null>(null)
+const embedUrl = ref<string | null>(null)
+const title = ref<string | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
+let requestId = 0
 
 const inputField = computed(() => ({
   placeholder: 'https://www.youtube.com/watch?v=...',
@@ -30,35 +32,62 @@ function errorMessage(err: unknown): string {
   return data?.statusMessage || data?.message || 'Failed to fetch embed.'
 }
 
+function pageHref(value: string | undefined): string | null {
+  try {
+    const url = new URL(value || '')
+    if (url.protocol === 'https:' || url.protocol === 'http:') {
+      return url.toString()
+    }
+  }
+  catch {
+    return null
+  }
+  return null
+}
+
 async function load(url: string) {
+  const current = ++requestId
   loading.value = true
   error.value = null
-  html.value = null
+  embedUrl.value = null
+  title.value = null
   try {
-    const data = await $fetch<{ html?: string }>('/api/_miraicms/oembed', {
+    const data = await $fetch<{ embedUrl?: string, title?: string }>('/api/_miraicms/oembed', {
       query: {
         url,
         maxwidth: props.field?.width ?? undefined,
         maxheight: props.field?.height ?? undefined,
       },
     })
-    html.value = data?.html ?? null
-    if (!html.value) {
+    if (current !== requestId) {
+      return
+    }
+    embedUrl.value = data?.embedUrl || null
+    title.value = data?.title || null
+    if (!embedUrl.value && !title.value) {
       error.value = 'Failed to fetch embed.'
     }
   }
   catch (err) {
+    if (current !== requestId) {
+      return
+    }
     error.value = errorMessage(err)
   }
   finally {
-    loading.value = false
+    if (current === requestId) {
+      loading.value = false
+    }
   }
 }
 
 watch(model, (url) => {
   clearTimeout(timer)
-  html.value = null
+  requestId += 1
+  embedUrl.value = null
+  title.value = null
   error.value = null
+  loading.value = false
   const value = (url || '').trim()
   if (!value) {
     return
@@ -92,10 +121,25 @@ onBeforeUnmount(() => {
       </div>
 
       <div
-        v-else-if="html"
+        v-else-if="embedUrl"
         :class="`${rootClass}__preview`"
-        v-html="html"
-      />
+      >
+        <iframe
+          :src="embedUrl"
+          :title="title || 'Embedded media'"
+          sandbox="allow-scripts allow-same-origin allow-presentation"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        />
+      </div>
+
+      <a
+        v-else-if="title && pageHref(model)"
+        :class="`${rootClass}__link`"
+        :href="pageHref(model) || undefined"
+        target="_blank"
+        rel="noopener noreferrer"
+      >{{ title }}</a>
 
       <div
         v-else-if="error"
@@ -117,14 +161,17 @@ $root: '.miraicms-oembed-field';
   flex-direction: column;
   gap: math-rem(10);
 
-  &__preview {
-    :deep(iframe) {
-      width: 100%;
-      height: auto;
-      aspect-ratio: 16/9;
-      margin: 0;
-      display: block;
-    }
+  &__preview iframe {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+    margin: 0;
+    display: block;
+    border: 0;
+  }
+
+  &__link {
+    color: $color-accent;
   }
 
   &__status {

@@ -22,6 +22,7 @@ import {
   toAdminEntry,
   toCollectionMeta,
   toParentOption,
+  collectionRevisionsEnabled,
 } from '../../../utils/collections'
 import type { CollectionEntryResponse } from '../../../../utils/collections'
 import {
@@ -29,6 +30,7 @@ import {
   loadCollectionDictionaryPickers,
   selectedDictionaryIds,
 } from '../../../utils/dictionaries'
+import { entryRevisionSnapshot, recordEntryRevision } from '../../../utils/revisions'
 
 interface CreateBody {
   title?: unknown
@@ -87,6 +89,9 @@ export default defineEventHandler(async (event): Promise<CollectionEntryResponse
     const meta = toCollectionMeta(collectionSlug, def)
     const pickers = await loadCollectionDictionaryPickers(db, collectionSlug)
     const dictionaryIds = await selectedDictionaryIds(db, row.id, pickers)
+    if (collectionRevisionsEnabled(def)) {
+      await recordEntryRevision(db, row.id, actor.id, null, entryRevisionSnapshot(row, dictionaryIds))
+    }
     const response: CollectionEntryResponse = {
       collection: meta,
       entry: toAdminEntry(row, slugPath, { ...flags, dictionaryIds }),

@@ -12,6 +12,7 @@ import type {
   CollectionDictionaryPicker,
   CollectionEntryFormModel,
   CollectionEntryResponse,
+  EntryRevisionItem,
   ParentOption,
 } from '../../../utils/collections'
 import { useCmsPaths } from '../../../composables/useCmsPaths'
@@ -39,6 +40,9 @@ const canDelete = ref(false)
 const savedStatus = ref<CollectionEntryFormModel['status']>('draft')
 const savedNoticeId = ref(0)
 const savedNoticeText = ref('')
+const revisions = ref<EntryRevisionItem[]>([])
+const revisionsLoading = ref(false)
+const revisionsError = ref('')
 
 const form = reactive<CollectionEntryFormModel>({
   title: '',
@@ -153,17 +157,43 @@ async function load() {
   found.value = false
   formBaseline.value = ''
   dirty.value = false
+  revisions.value = []
+  revisionsError.value = ''
   try {
     const res = await $fetch<CollectionEntryResponse>(
       collectionApi(collectionSlug.value, entryId.value),
     )
     applyEntry(res)
+    await loadRevisions()
   }
   catch (err) {
     error.value = parseAuthError(err, 'Could not load the entry.').message
   }
   finally {
     loading.value = false
+  }
+}
+
+async function loadRevisions() {
+  if (collection.value?.revisions === false) {
+    revisions.value = []
+    revisionsError.value = ''
+    return
+  }
+  revisionsLoading.value = true
+  revisionsError.value = ''
+  try {
+    const res = await $fetch<{ revisions: EntryRevisionItem[] }>(
+      `${collectionApi(collectionSlug.value, entryId.value)}/revisions`,
+    )
+    revisions.value = res.revisions
+  }
+  catch (err) {
+    revisions.value = []
+    revisionsError.value = parseAuthError(err, 'Could not load revisions.').message
+  }
+  finally {
+    revisionsLoading.value = false
   }
 }
 
@@ -268,6 +298,7 @@ async function submit(): Promise<boolean> {
     if (res.entry.status === 'published' || res.entry.status === 'draft') {
       flashSavedNotice(res.entry.status)
     }
+    await loadRevisions()
     return true
   }
   catch (err) {
@@ -319,6 +350,38 @@ async function restore() {
   }
   catch (err) {
     error.value = parseAuthError(err, 'Could not restore the entry.').message
+  }
+  finally {
+    saving.value = false
+  }
+}
+
+async function restoreRevision(revisionId: number) {
+  if (!canUpdate.value || saving.value) {
+    return
+  }
+  const message = dirty.value
+    ? 'Restore this revision? Unsaved changes will be lost.'
+    : 'Restore this revision? The current entry will be replaced.'
+  if (!window.confirm(message)) {
+    return
+  }
+  saving.value = true
+  error.value = null
+  try {
+    const res = await $fetch<CollectionEntryResponse>(
+      `${collectionApi(collectionSlug.value, entryId.value)}/revisions/${revisionId}`,
+      { method: 'POST' },
+    )
+    applyEntry(res)
+    await nextTick()
+    markFormClean()
+    savedNoticeText.value = 'Revision restored.'
+    savedNoticeId.value += 1
+    await loadRevisions()
+  }
+  catch (err) {
+    error.value = parseAuthError(err, 'Could not restore the revision.').message
   }
   finally {
     saving.value = false
@@ -400,11 +463,15 @@ watch(() => route.query.notice, consumeRouteNotice, { immediate: true })
     :can-update="canUpdate"
     :can-delete="canDelete"
     :saved-status="savedStatus"
+    :revisions="revisions"
+    :revisions-loading="revisionsLoading"
+    :revisions-error="revisionsError"
     @update:model-value="(value: CollectionEntryFormModel) => Object.assign(form, value)"
     @ready="markFormClean"
     @submit="submit"
     @trash="moveToTrash"
     @restore="restore"
+    @restore-revision="restoreRevision"
     @delete="removePermanent"
   />
 

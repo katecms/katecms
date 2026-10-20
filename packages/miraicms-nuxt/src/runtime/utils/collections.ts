@@ -9,6 +9,8 @@ export interface AdminCollectionMeta {
   }
   hierarchical: boolean
   autosave: boolean
+  /** `false` only when the collection config sets `revisions: false`. */
+  revisions: boolean
   public: boolean
   has_archive: boolean | string
   perPage: number
@@ -52,6 +54,15 @@ export interface AdminEntry {
   dictionaryIds?: Record<string, number[]>
   /** Assigned terms keyed by dictionary slug (public resolve). */
   dictionaries?: Record<string, PublicDictionaryTerm[]>
+}
+
+/** One saved version of a collection entry, without the field payload. */
+export interface EntryRevisionItem {
+  id: number
+  createdAt: string
+  authorName: string
+  title: string
+  status: CollectionStatus
 }
 
 export interface ParentOption {

@@ -156,6 +156,7 @@
       "dev": [
         "@nuxt/module-builder",
         "@types/node",
+        "@types/nodemailer",
         "@types/sanitize-html",
         "nuxt",
         "sass-embedded",

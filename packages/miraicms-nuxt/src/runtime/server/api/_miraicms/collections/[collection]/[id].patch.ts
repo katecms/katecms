@@ -24,6 +24,7 @@ import {
   toAdminEntry,
   toCollectionMeta,
   toParentOption,
+  collectionRevisionsEnabled,
 } from '../../../../utils/collections'
 import type { CollectionEntryResponse } from '../../../../../utils/collections'
 import {
@@ -31,6 +32,7 @@ import {
   loadCollectionDictionaryPickers,
   selectedDictionaryIds,
 } from '../../../../utils/dictionaries'
+import { entryRevisionSnapshot, recordEntryRevision } from '../../../../utils/revisions'
 interface PatchBody {
   title?: unknown
   slug?: unknown
@@ -114,6 +116,12 @@ export default defineEventHandler(async (event): Promise<CollectionEntryResponse
     requirePublishedFields(def, nextStatus, nextFields)
   }
 
+  const trackRevisions = collectionRevisionsEnabled(def)
+  const pickersBefore = await loadCollectionDictionaryPickers(db, collectionSlug)
+  const previous = trackRevisions
+    ? entryRevisionSnapshot(existing, await selectedDictionaryIds(db, id, pickersBefore))
+    : null
+
   try {
     const row = await updateCollection(db, id, patch)
     if (!row) {
@@ -125,8 +133,11 @@ export default defineEventHandler(async (event): Promise<CollectionEntryResponse
     const slugPath = (await loadCollectionSlugPath(db, collectionSlug, id)) || row.slug
     const flags = entryFlags(actor, row, roles)
     const meta = toCollectionMeta(collectionSlug, def)
-    const pickers = await loadCollectionDictionaryPickers(db, collectionSlug)
+    const pickers = pickersBefore
     const dictionaryIds = await selectedDictionaryIds(db, id, pickers)
+    if (trackRevisions && previous) {
+      await recordEntryRevision(db, id, actor.id, previous, entryRevisionSnapshot(row, dictionaryIds))
+    }
     const response: CollectionEntryResponse = {
       collection: meta,
       entry: toAdminEntry(row, slugPath, { ...flags, dictionaryIds }),

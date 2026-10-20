@@ -137,16 +137,8 @@ export default defineNuxtModule<MiraiCmsConfig>({
 
     const uploadsDir = join(nuxt.options.rootDir, 'public', 'uploads')
     nuxt.hook('nitro:config', (config) => {
-      for (const asset of config.publicAssets || []) {
-        if (!asset || typeof asset === 'string') {
-          continue
-        }
-        const dir = String(asset.dir || '').replace(/\\/g, '/')
-        if (!dir.endsWith('/public')) {
-          continue
-        }
-        asset.ignore = [...new Set([...(asset.ignore || []), 'uploads/**'])]
-      }
+      // PublicAssetDir has no ignore. From the server dir this becomes !uploads/** while copying public/.
+      config.ignore = [...new Set([...(config.ignore ?? []), '../public/uploads/**'])]
     })
     nuxt.hook('vite:serverCreated', (server) => {
       const root = resolve(uploadsDir)
@@ -278,6 +270,16 @@ export default defineNuxtModule<MiraiCmsConfig>({
       route: '/api/_miraicms/collections/:collection',
       method: 'post',
       handler: resolver.resolve('./runtime/server/api/_miraicms/collections/[collection].post'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/collections/:collection/:id/revisions',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/collections/[collection]/revisions.get'),
+    })
+    addServerHandler({
+      route: '/api/_miraicms/collections/:collection/:id/revisions/:revisionId',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/collections/[collection]/revisions/[revisionId].post'),
     })
     addServerHandler({
       route: '/api/_miraicms/collections/:collection/:id',

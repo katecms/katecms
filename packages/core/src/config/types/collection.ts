@@ -22,6 +22,11 @@ export interface CollectionDefinition {
    */
   autosave?: boolean
   /**
+   * Save a revision whenever an entry is created or changed, and show the
+   * Revisions tab in the editor. Default: `true`. Set `false` to turn both off.
+   */
+  revisions?: boolean
+  /**
    * Whether this collection is public. Default: `true`.
    *
    * When `false`, the collection stays in the admin menu, but public

@@ -75,12 +75,17 @@ export function toCollectionMeta(slug: string, def: CollectionDefinition): Admin
     },
     hierarchical: def.hierarchical === true,
     autosave: def.autosave === true,
+    revisions: def.revisions !== false,
     public: def.public !== false,
     has_archive: typeof def.has_archive === 'string' ? def.has_archive : def.has_archive === true,
     perPage: collectionPerPage(def),
     rewrite: def.rewrite,
     fields: (def.fields ?? {}) as Fields,
   }
+}
+
+export function collectionRevisionsEnabled(def: CollectionDefinition): boolean {
+  return def.revisions !== false
 }
 
 function toIso(value: Date | string | null | undefined): string | null {

@@ -621,6 +621,7 @@ export default defineNuxtConfig({
             returnFormat: 'YYYY-MM-DD',
           },
         },
+        revisions: false,
       },
     },
     dictionaries: {

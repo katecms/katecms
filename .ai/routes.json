@@ -174,6 +174,16 @@
     },
     {
       "m": "GET",
+      "path": "/api/_miraicms/collections/:collection/:id/revisions",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection]/revisions.get.ts"
+    },
+    {
+      "m": "POST",
+      "path": "/api/_miraicms/collections/:collection/:id/revisions/:revisionId",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection]/revisions/[revisionId].post.ts"
+    },
+    {
+      "m": "GET",
       "path": "/api/_miraicms/dictionaries/:dictionary",
       "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/dictionaries/[dictionary].get.ts"
     },

@@ -20,8 +20,10 @@ import type {
   AdminCollectionMeta,
   CollectionDictionaryPicker,
   CollectionEntryFormModel,
+  EntryRevisionItem,
   ParentOption,
 } from '../../utils/collections'
+import EntryRevisions from './EntryRevisions.vue'
 import { useMiraiCmsEntrySidebar } from '../../composables/useMiraiCmsExtensions'
 import type { MiraiCmsEntrySidebarTab } from '../../composables/useMiraiCmsExtensions'
 
@@ -38,6 +40,9 @@ const props = defineProps<{
   /** Saved status from the server (trash vs live form status). */
   savedStatus?: CollectionStatus
   dictionaryPickers?: CollectionDictionaryPicker[]
+  revisions?: EntryRevisionItem[]
+  revisionsLoading?: boolean
+  revisionsError?: string
 }>()
 
 const emit = defineEmits<{
@@ -46,14 +51,17 @@ const emit = defineEmits<{
   'submit': []
   'trash': []
   'restore': []
+  'restoreRevision': [id: number]
   'delete': []
 }>()
 
 const rootClass = 'miraicms-collection-form'
 const PAGE_TAB = 'page'
+const REVISIONS_TAB = 'revisions'
 const entrySidebar = useMiraiCmsEntrySidebar()
 const activeSidebarTab = ref(PAGE_TAB)
 const openedSidebarTabs = ref<Record<string, true>>({})
+const showRevisionsTab = computed(() => props.entryKey != null && props.collection.revisions !== false)
 
 const sidebarTabs = computed(() => {
   const seen = new Set<string>()
@@ -74,11 +82,21 @@ const sidebarTabs = computed(() => {
   return tabs
 })
 
-watch(sidebarTabs, (tabs) => {
-  if (activeSidebarTab.value === PAGE_TAB) {
-    return
+const showTabBar = computed(() => showRevisionsTab.value || sidebarTabs.value.length > 0)
+
+const tabKeys = computed(() => {
+  const keys = [PAGE_TAB]
+  if (showRevisionsTab.value) {
+    keys.push(REVISIONS_TAB)
   }
-  if (!tabs.some(tab => tab.key === activeSidebarTab.value)) {
+  for (const tab of sidebarTabs.value) {
+    keys.push(tab.key)
+  }
+  return keys
+})
+
+watch(tabKeys, (keys) => {
+  if (!keys.includes(activeSidebarTab.value)) {
     activeSidebarTab.value = PAGE_TAB
   }
 })
@@ -99,7 +117,7 @@ function selectSidebarTab(key: string) {
 }
 
 function onSidebarTabKeydown(event: KeyboardEvent, index: number) {
-  const keys = [PAGE_TAB, ...sidebarTabs.value.map(tab => tab.key)]
+  const keys = tabKeys.value
   let next = index
   if (event.key === 'ArrowRight') {
     next = (index + 1) % keys.length
@@ -622,9 +640,9 @@ watch(
       </div>
     </div>
 
-    <div :class="[`${rootClass}__sidebar`, { [`${rootClass}__sidebar--tabs`]: sidebarTabs.length }]">
+    <div :class="[`${rootClass}__sidebar`, { [`${rootClass}__sidebar--tabs`]: showTabBar }]">
       <div
-        v-if="sidebarTabs.length"
+        v-if="showTabBar"
         :class="`${rootClass}__tabs`"
         role="tablist"
       >
@@ -642,6 +660,20 @@ watch(
           Page
         </button>
         <button
+          v-if="showRevisionsTab"
+          :id="sidebarTabId(REVISIONS_TAB)"
+          type="button"
+          role="tab"
+          :aria-selected="activeSidebarTab === REVISIONS_TAB"
+          :aria-controls="sidebarPanelId(REVISIONS_TAB)"
+          :tabindex="activeSidebarTab === REVISIONS_TAB ? 0 : -1"
+          :class="[`${rootClass}__tabs-item`, { 'is-active': activeSidebarTab === REVISIONS_TAB }]"
+          @click="selectSidebarTab(REVISIONS_TAB)"
+          @keydown="onSidebarTabKeydown($event, 1)"
+        >
+          Revisions
+        </button>
+        <button
           v-for="(tab, index) in sidebarTabs"
           :id="sidebarTabId(tab.key)"
           :key="tab.key"
@@ -652,18 +684,18 @@ watch(
           :tabindex="activeSidebarTab === tab.key ? 0 : -1"
           :class="[`${rootClass}__tabs-item`, { 'is-active': activeSidebarTab === tab.key }]"
           @click="selectSidebarTab(tab.key)"
-          @keydown="onSidebarTabKeydown($event, index + 1)"
+          @keydown="onSidebarTabKeydown($event, index + (showRevisionsTab ? 2 : 1))"
         >
           {{ tab.label }}
         </button>
       </div>
 
       <div
-        v-show="!sidebarTabs.length || activeSidebarTab === PAGE_TAB"
-        :id="sidebarTabs.length ? sidebarPanelId(PAGE_TAB) : undefined"
-        :class="sidebarTabs.length ? `${rootClass}__panel` : `${rootClass}__page`"
-        :role="sidebarTabs.length ? 'tabpanel' : undefined"
-        :aria-labelledby="sidebarTabs.length ? sidebarTabId(PAGE_TAB) : undefined"
+        v-show="!showTabBar || activeSidebarTab === PAGE_TAB"
+        :id="showTabBar ? sidebarPanelId(PAGE_TAB) : undefined"
+        :class="showTabBar ? `${rootClass}__panel` : `${rootClass}__page`"
+        :role="showTabBar ? 'tabpanel' : undefined"
+        :aria-labelledby="showTabBar ? sidebarTabId(PAGE_TAB) : undefined"
       >
         <div :class="`${rootClass}__block`">
           <div :class="`${rootClass}__block-title`">
@@ -794,6 +826,26 @@ watch(
             v-model="values[key]"
             :field-key="key"
             :field="field"
+          />
+        </div>
+      </div>
+
+      <div
+        v-if="showRevisionsTab && openedSidebarTabs[REVISIONS_TAB]"
+        v-show="activeSidebarTab === REVISIONS_TAB"
+        :id="sidebarPanelId(REVISIONS_TAB)"
+        :class="`${rootClass}__panel`"
+        role="tabpanel"
+        :aria-labelledby="sidebarTabId(REVISIONS_TAB)"
+      >
+        <div :class="`${rootClass}__block`">
+          <EntryRevisions
+            :items="revisions ?? []"
+            :loading="revisionsLoading"
+            :error="revisionsError"
+            :can-restore="canUpdate === true"
+            :disabled="saving || canUpdate !== true"
+            @restore="emit('restoreRevision', $event)"
           />
         </div>
       </div>

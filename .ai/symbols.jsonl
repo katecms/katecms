@@ -231,6 +231,10 @@
 {"n":"EntryAuthor","k":"iface","p":"packages/core/src/permissions/can.ts"}
 {"n":"entryEditorPayload","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/server/utils/editor.ts"}
 {"n":"entryFlags","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
+{"n":"EntryRevisionData","k":"iface","p":"packages/miraicms-nuxt/src/runtime/server/utils/revisions.ts"}
+{"n":"EntryRevisionItem","k":"iface","p":"packages/miraicms-nuxt/src/runtime/utils/collections.ts"}
+{"n":"EntryRevisions","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/admin/EntryRevisions.vue"}
+{"n":"entryRevisionSnapshot","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/revisions.ts"}
 {"n":"escapeSqlString","k":"fn","p":"packages/core/src/indexes/definitions.ts"}
 {"n":"evaluateCondition","k":"fn","p":"packages/core/src/fields/visibility.ts"}
 {"n":"existingTerm","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/server/utils/documents.ts"}
@@ -457,6 +461,7 @@
 {"n":"listDictionariesByCollection","k":"fn","p":"packages/core/src/database/queries/collection-dictionaries.ts"}
 {"n":"listDictionaryParentOptions","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/dictionaries.ts"}
 {"n":"listedChoiceOptions","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/text-options.ts"}
+{"n":"listEntryRevisions","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/revisions.ts"}
 {"n":"listForms","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/forms.ts"}
 {"n":"listFormSubmissions","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/submissions.ts"}
 {"n":"listMedia","k":"fn","p":"packages/core/src/database/queries/media.ts"}
@@ -530,6 +535,7 @@
 {"n":"MiraiCmsDictionaryField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/DictionaryField.vue"}
 {"n":"MiraiCmsDictionaryTermForm","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/admin/DictionaryTermForm.vue"}
 {"n":"MiraiCmsEmailField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/EmailField.vue"}
+{"n":"MiraiCmsEntryRevisions","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/admin/EntryRevisions.vue"}
 {"n":"MiraiCmsEntrySidebarTab","k":"iface","p":"packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"}
 {"n":"MiraiCmsFieldAddon","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/parts/FieldAddon.vue"}
 {"n":"miraiCmsFieldErrorsKey","k":"const","p":"packages/miraicms-nuxt/src/runtime/utils/field-errors.ts"}
@@ -682,6 +688,7 @@
 {"n":"readDictionaryAssignments","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/dictionaries.ts"}
 {"n":"readDictionarySlug","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/dictionaries.ts"}
 {"n":"readEntryId","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
+{"n":"readEntryRevisionData","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/revisions.ts"}
 {"n":"readEntrySeo","k":"fn","p":"packages/miraicms-nuxt-seo/src/runtime/server/utils/documents.ts"}
 {"n":"readFields","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
 {"n":"readForm","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/forms.ts"}
@@ -709,6 +716,7 @@
 {"n":"readTitle","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
 {"n":"recordAuthAttemptFailure","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/auth-rate-limit.ts"}
 {"n":"recordAuthAttemptSuccess","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/auth-rate-limit.ts"}
+{"n":"recordEntryRevision","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/revisions.ts"}
 {"n":"REDIRECT_STATUS_CODES","k":"const","p":"packages/miraicms-nuxt-seo/src/runtime/server/utils/redirects.ts"}
 {"n":"RedirectStatusCode","k":"type","p":"packages/miraicms-nuxt-seo/src/runtime/server/utils/redirects.ts"}
 {"n":"regenerateMedia","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/regenerate.ts"}
@@ -791,6 +799,7 @@
 {"n":"ResourceRights","k":"type","p":"packages/core/src/config/types/roles.ts"}
 {"n":"rethrowCollectionWriteError","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
 {"n":"rethrowDictionaryWriteError","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/dictionaries.ts"}
+{"n":"revisionAuthorId","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/revisions.ts"}
 {"n":"rewriteAdminComponents","k":"fn","p":"packages/miraicms-nuxt/src/admin-components.ts"}
 {"n":"Role","k":"iface","p":"packages/core/src/config/types/roles.ts"}
 {"n":"RoleAction","k":"type","p":"packages/core/src/config/types/roles.ts"}

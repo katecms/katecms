@@ -19,13 +19,16 @@
   "dependencies": {
     "@miraicms/core": "workspace:*",
     "@nuxt/kit": "^4.5.2",
+    "dompurify": "^3.4.17",
     "kysely": "^0.29.4",
     "miraicms-nuxt": "workspace:*",
-    "nodemailer": "^7.0.6"
+    "nodemailer": "^7.0.6",
+    "sanitize-html": "^2.18.1"
   },
   "devDependencies": {
     "@nuxt/module-builder": "^1.0.3",
     "@types/node": "latest",
+    "@types/sanitize-html": "^2.16.2",
     "nuxt": "^4.5.2",
     "sass-embedded": "^1.100.0",
     "typescript": "^5.9.3",

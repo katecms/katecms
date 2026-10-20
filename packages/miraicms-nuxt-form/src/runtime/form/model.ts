@@ -1,3 +1,4 @@
+import createDOMPurify from 'dompurify'
 import type { FormTextOptions } from './text-options.ts'
 import { customErrorText, defaultChoiceOptions, defaultTextOptions, fileAccept, invalidErrorText, isRichFieldType, isTemporalType, listedChoiceOptions, normalizeTextOptions, passwordRuleStates, textConstraintError } from './text-options.ts'
 
@@ -681,7 +682,7 @@ export function moveFieldToStep(content: FormContent, fieldId: string, stepId: s
   if (source.stepId === stepId && !source.parentId) {
     return content
   }
-  const fields = content.fields.map(field => {
+  const fields = content.fields.map((field) => {
     if (field.id === fieldId) {
       return { ...field, stepId, parentId: undefined }
     }
@@ -1139,14 +1140,14 @@ function isConditionMulti(field: FormField): boolean {
     || (field.type === 'select' && field.text?.selectMultiple.enabled === true)
 }
 
-function branchMatches(content: FormContent, branch: FormConditionBranch, values: Record<string, string | string[]>): boolean {
+function branchMatches(content: PublicFormContent, branch: FormConditionBranch, values: Record<string, string | string[]>): boolean {
   if (branch.kind === 'else' || !branch.groups.length) {
     return false
   }
   return branch.groups.every(group => groupMatches(content, branch.fieldId, values, group))
 }
 
-function groupMatches(content: FormContent, fallbackFieldId: string, values: Record<string, string | string[]>, group: FormConditionGroup): boolean {
+function groupMatches(content: PublicFormContent, fallbackFieldId: string, values: Record<string, string | string[]>, group: FormConditionGroup): boolean {
   if (!group.rules.length) {
     return false
   }
@@ -1238,8 +1239,8 @@ function sameMembers(left: string[], right: string[]): boolean {
 }
 
 function betweenMatch(value: string, raw: string): boolean {
-  let min = ''
-  let max = ''
+  let min: string
+  let max: string
   try {
     const parsed = JSON.parse(raw) as { min?: unknown, max?: unknown }
     min = parsed.min == null ? '' : String(parsed.min)
@@ -2192,29 +2193,56 @@ function isValidDate(value: string): boolean {
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
 }
 
-export function sanitizeHtml(html: string): string {
-  return stripScripts(html)
-    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-    .replace(/javascript:/gi, '')
+const HTML_TAGS = [
+  'a', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'hr', 'i', 'img', 'li', 'ol', 'p', 'pre', 'span', 'strong', 'ul',
+]
+const HTML_ATTRS = ['href', 'name', 'target', 'rel', 'src', 'alt', 'title', 'width', 'height']
+
+const NODE_HTML_OPTIONS = {
+  allowedTags: HTML_TAGS,
+  allowedAttributes: {
+    a: ['href', 'name', 'target', 'rel'],
+    img: ['src', 'alt', 'title', 'width', 'height'],
+  },
+  allowedSchemes: ['http', 'https', 'mailto'],
+  allowProtocolRelative: false,
+  disallowedTagsMode: 'discard' as const,
 }
 
-function stripScripts(html: string): string {
-  const lower = html.toLowerCase()
-  let result = ''
-  let index = 0
-  while (index < html.length) {
-    const start = lower.indexOf('<script', index)
-    if (start < 0) {
-      return result + html.slice(index)
-    }
-    const end = lower.indexOf('</script>', start + 7)
-    result += html.slice(index, start)
-    if (end < 0) {
-      return result + html.slice(start)
-    }
-    index = end + '</script>'.length
+const BROWSER_HTML_OPTIONS = {
+  ALLOWED_TAGS: HTML_TAGS,
+  ALLOWED_ATTR: HTML_ATTRS,
+  ALLOW_DATA_ATTR: false,
+}
+
+let browserPurifier: ReturnType<typeof createDOMPurify> | undefined
+
+function sanitizeOnServer(html: string): string {
+  const builtin = (process as { getBuiltinModule?: (id: string) => { createRequire: (url: string) => NodeRequire } }).getBuiltinModule?.('node:module')
+  if (!builtin) {
+    return ''
   }
-  return result
+  const sanitize = builtin.createRequire(import.meta.url)('sanitize-html') as (value: string, options: typeof NODE_HTML_OPTIONS) => string
+  return sanitize(html, NODE_HTML_OPTIONS)
+}
+
+function sanitizeInBrowser(html: string): string {
+  if (!browserPurifier) {
+    browserPurifier = createDOMPurify(window)
+  }
+  return String(browserPurifier.sanitize(html, BROWSER_HTML_OPTIONS))
+}
+
+/** Allowlisted HTML for form copy. Event handlers, scripts, and SVG are removed. */
+export function sanitizeHtml(html: string): string {
+  if (!html) {
+    return ''
+  }
+  if (typeof window === 'undefined') {
+    return sanitizeOnServer(html)
+  }
+  return sanitizeInBrowser(html)
 }
 
 function cleanText(value: string): string {

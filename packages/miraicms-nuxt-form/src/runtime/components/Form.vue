@@ -654,7 +654,7 @@ function formatBytes(size: number): string {
               />
               <div
                 v-else-if="cell.field.type === 'html'"
-                v-html="cell.field.html"
+                v-html="sanitizeHtml(cell.field.html)"
               />
               <div
                 v-if="!isDisplay(cell.field.type) && textOptions(cell.field).label.enabled"
@@ -1247,7 +1247,7 @@ function formatBytes(size: number): string {
         <div
           v-else-if="cell.field.type === 'html'"
               :class="`${rootClass}__html`"
-          v-html="cell.field.html"
+          v-html="sanitizeHtml(cell.field.html)"
         />
 
         <button

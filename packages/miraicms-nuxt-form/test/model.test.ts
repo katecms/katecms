@@ -107,13 +107,16 @@ test('placeField uses the next row when the row is full', () => {
 test('normalize repairs missing layout cells and strips scripts', () => {
   const content = normalizeFormContent({
     fields: [
-      { id: 'keep', type: 'html', key: 'note', label: 'Note', html: '<p onclick="nope()">Hi</p><script>alert(1)</script>' },
+      { id: 'keep', type: 'html', key: 'note', label: 'Note', html: '<p onclick="nope()">Hi</p><script>alert(1)</script><svg/onload=alert(1)>' },
       { type: 'nope' },
     ],
   })
   assert.equal(content.fields.length, 1)
   assert.equal(content.fields[0]?.html.includes('script'), false)
   assert.equal(content.fields[0]?.html.includes('onclick'), false)
+  assert.equal(content.fields[0]?.html.includes('onload'), false)
+  assert.equal(content.fields[0]?.html.includes('<svg'), false)
+  assert.equal(content.fields[0]?.html.includes('Hi'), true)
   assert.equal(content.layouts.tablet[0]?.fieldId, 'keep')
   assert.equal(content.layouts.tablet[0]?.w, 60)
   assert.equal(content.validateOnBlur, true)

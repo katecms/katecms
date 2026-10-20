@@ -296,7 +296,7 @@ function onInput(event: Event) {
     />
     <div
       v-else-if="field.type === 'html'"
-      v-html="field.html"
+      v-html="sanitizeHtml(field.html)"
     />
     <template v-else-if="field.type === 'repeater' || field.type === 'section'" />
     <div
@@ -667,7 +667,7 @@ function onInput(event: Event) {
     >Hidden</span>
     <div
       v-else-if="field.type === 'html'"
-      v-html="field.html"
+      v-html="sanitizeHtml(field.html)"
     />
     <MiraiCmsUiButton
       v-else-if="field.type === 'button'"

@@ -11,6 +11,7 @@ import {
   generateVariants,
   isImageMedia,
   isMediaItem,
+  contentMatchesMime,
   isProcessableImage,
   prepareUploadKey,
   readImageSize,
@@ -85,6 +86,20 @@ describe('sanitizeFilename / uniqueFilename', () => {
 
   it('falls back to file.<ext> when the original name is missing', async () => {
     expect(await prepareUploadKey(undefined, 'image/png', async () => false)).toBe('file.png')
+  })
+
+  it('takes the extension from the MIME type, not the uploaded name', async () => {
+    expect(await prepareUploadKey('evil.svg', 'image/jpeg', async () => false)).toBe('evil.jpg')
+    expect(await prepareUploadKey('notes.html', 'image/png', async () => false)).toBe('notes.png')
+  })
+
+  it('accepts a signature only when it matches the declared type', () => {
+    const jpeg = Buffer.from([0xFF, 0xD8, 0xFF, 0xD9])
+    const svg = Buffer.from('<svg/onload=alert(1)></svg>')
+    expect(contentMatchesMime(jpeg, 'image/jpeg')).toBe(true)
+    expect(contentMatchesMime(svg, 'image/jpeg')).toBe(false)
+    expect(contentMatchesMime(svg, 'image/svg+xml')).toBe(true)
+    expect(contentMatchesMime(jpeg, 'image/svg+xml')).toBe(false)
   })
 
   it('bumps a numeric suffix before the extension', () => {

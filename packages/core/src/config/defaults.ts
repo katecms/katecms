@@ -26,7 +26,6 @@ export const defaults = {
       'image/png',
       'image/webp',
       'image/gif',
-      'image/svg+xml',
       'application/pdf',
       'video/mp4',
     ],

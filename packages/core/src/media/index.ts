@@ -9,6 +9,8 @@ export type {
 } from './types'
 export { isImageMedia, isMediaItem } from './types'
 export {
+  contentMatchesMime,
+  extensionForMime,
   prepareUploadKey,
   readImageSize,
   resolveExtension,

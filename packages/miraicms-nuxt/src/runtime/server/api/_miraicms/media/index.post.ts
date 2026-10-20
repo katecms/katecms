@@ -1,6 +1,7 @@
 import { createError, defineEventHandler, readMultipartFormData } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import {
+  contentMatchesMime,
   createMedia,
   generateVariants,
   hasImageWork,
@@ -33,8 +34,8 @@ export default defineEventHandler(async (event): Promise<{ media: MediaItem }> =
     throw createError({ statusCode: 400, statusMessage: 'File is missing.' })
   }
 
-  const mimeType = filePart.type || 'application/octet-stream'
-  if (!isMimeAllowed(mimeType, config.allowedMimeTypes)) {
+  const mimeType = (filePart.type || 'application/octet-stream').toLowerCase().split(';')[0]?.trim() || 'application/octet-stream'
+  if (!isMimeAllowed(mimeType, config.allowedMimeTypes) || !contentMatchesMime(filePart.data, mimeType)) {
     throw createError({
       statusCode: 415,
       statusMessage: `File type is not allowed: ${mimeType}.`,

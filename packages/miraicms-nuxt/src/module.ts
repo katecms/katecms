@@ -1,4 +1,5 @@
-import { isAbsolute, join } from 'node:path'
+import { createReadStream, existsSync } from 'node:fs'
+import { isAbsolute, join, resolve, sep } from 'node:path'
 import {
   defineNuxtModule,
   createResolver,
@@ -17,6 +18,7 @@ import {
   resolveMiraiCmsConfig,
 } from '@miraicms/core'
 import { addAdminComponents } from './admin-components'
+import { uploadResponseHeaders } from './runtime/server/utils/upload-headers'
 
 function resolveModuleSqliteFilename(rootDir: string, filename: string): string {
   const value = filename.trim()
@@ -132,6 +134,57 @@ export default defineNuxtModule<MiraiCmsConfig>({
     }
 
     addServerPlugin(resolver.resolve('./runtime/server/plugins/auto-migrate'))
+
+    const uploadsDir = join(nuxt.options.rootDir, 'public', 'uploads')
+    nuxt.hook('nitro:config', (config) => {
+      for (const asset of config.publicAssets || []) {
+        if (!asset || typeof asset === 'string') {
+          continue
+        }
+        const dir = String(asset.dir || '').replace(/\\/g, '/')
+        if (!dir.endsWith('/public')) {
+          continue
+        }
+        asset.ignore = [...new Set([...(asset.ignore || []), 'uploads/**'])]
+      }
+    })
+    nuxt.hook('vite:serverCreated', (server) => {
+      const root = resolve(uploadsDir)
+      server.middlewares.stack.unshift({
+        route: '',
+        handle(req: { url?: string }, res: { statusCode: number, setHeader: (name: string, value: string) => void, end: () => void }, next: () => void) {
+          const raw = (req.url || '').split('?')[0] || ''
+          if (!raw.startsWith('/uploads/')) {
+            next()
+            return
+          }
+          let key = ''
+          try {
+            key = decodeURIComponent(raw.slice('/uploads/'.length))
+          }
+          catch {
+            res.statusCode = 404
+            res.end()
+            return
+          }
+          if (!key || key.split(/[/\\]/).some(part => part === '..' || part === '')) {
+            res.statusCode = 404
+            res.end()
+            return
+          }
+          const file = resolve(root, key)
+          const inside = file === root || file.startsWith(root + sep)
+          if (!inside || !existsSync(file)) {
+            next()
+            return
+          }
+          for (const [name, value] of Object.entries(uploadResponseHeaders(key))) {
+            res.setHeader(name, value)
+          }
+          createReadStream(file).pipe(res as unknown as NodeJS.WritableStream)
+        },
+      })
+    })
 
     addServerHandler({
       route: '/api/_miraicms/oembed',

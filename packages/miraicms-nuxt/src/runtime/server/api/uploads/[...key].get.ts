@@ -1,19 +1,6 @@
-import { extname } from 'node:path'
 import { createError, defineEventHandler, getRequestURL, setHeader } from 'h3'
 import { getMediaStorage } from '../../utils/media'
-
-const MIME_BY_EXT: Record<string, string> = {
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.png': 'image/png',
-  '.webp': 'image/webp',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.avif': 'image/avif',
-  '.pdf': 'application/pdf',
-  '.mp4': 'video/mp4',
-  '.mp3': 'audio/mpeg',
-}
+import { uploadResponseHeaders } from '../../utils/upload-headers'
 
 /** Serve uploaded files from the media storage directory. */
 export default defineEventHandler(async (event) => {
@@ -25,12 +12,22 @@ export default defineEventHandler(async (event) => {
 
   const key = decodeURIComponent(pathname.slice(prefix.length))
   const storage = getMediaStorage()
-  if (!key || !(await storage.exists(key))) {
+  let data: Buffer
+  try {
+    if (!key || !(await storage.exists(key))) {
+      throw createError({ statusCode: 404, statusMessage: 'File not found.' })
+    }
+    data = await storage.get(key)
+  }
+  catch (error) {
+    if (error && typeof error === 'object' && 'statusCode' in error) {
+      throw error
+    }
     throw createError({ statusCode: 404, statusMessage: 'File not found.' })
   }
 
-  const data = await storage.get(key)
-  setHeader(event, 'Content-Type', MIME_BY_EXT[extname(key).toLowerCase()] || 'application/octet-stream')
-  setHeader(event, 'Cache-Control', 'public, max-age=31536000, immutable')
+  for (const [name, value] of Object.entries(uploadResponseHeaders(key))) {
+    setHeader(event, name, value)
+  }
   return data
 })

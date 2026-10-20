@@ -79,18 +79,89 @@ export async function uniqueFilename(
   return candidate
 }
 
+/** Canonical extension for a MIME type. Unknown types become `bin`. */
+export function extensionForMime(mimeType: string): string {
+  const mime = mimeType.toLowerCase().split(';')[0]?.trim() || ''
+  return MIME_TO_EXT[mime] || 'bin'
+}
+
+/**
+ * Whether `data` has the signature of `mimeType`.
+ * The client-supplied Content-Type is not trusted on its own.
+ */
+export function contentMatchesMime(data: Buffer, mimeType: string): boolean {
+  const mime = mimeType.toLowerCase().split(';')[0]?.trim() || ''
+  if (mime === 'image/jpeg') {
+    return data.length >= 3 && data[0] === 0xFF && data[1] === 0xD8 && data[2] === 0xFF
+  }
+  if (mime === 'image/png') {
+    return data.length >= 8
+      && data[0] === 0x89 && data[1] === 0x50 && data[2] === 0x4E && data[3] === 0x47
+  }
+  if (mime === 'image/gif') {
+    return data.length >= 6 && data.subarray(0, 4).toString('ascii') === 'GIF8'
+  }
+  if (mime === 'image/webp') {
+    return data.length >= 12
+      && data.subarray(0, 4).toString('ascii') === 'RIFF'
+      && data.subarray(8, 12).toString('ascii') === 'WEBP'
+  }
+  if (mime === 'application/pdf') {
+    return data.length >= 5 && data.subarray(0, 5).toString('ascii') === '%PDF-'
+  }
+  if (mime === 'video/mp4' || mime === 'image/avif') {
+    const brand = ftypBrand(data)
+    if (!brand) {
+      return false
+    }
+    const avif = brand === 'avif' || brand === 'avis' || brand === 'mif1'
+    return mime === 'image/avif' ? avif : !avif
+  }
+  if (mime === 'audio/mpeg') {
+    return data.length >= 3 && (
+      data.subarray(0, 3).toString('ascii') === 'ID3'
+      || (data[0] === 0xFF && (data[1]! & 0xE0) === 0xE0)
+    )
+  }
+  if (mime === 'image/svg+xml') {
+    return looksLikeSvg(data)
+  }
+  return false
+}
+
+function ftypBrand(data: Buffer): string | null {
+  if (data.length < 12 || data.subarray(4, 8).toString('ascii') !== 'ftyp') {
+    return null
+  }
+  return data.subarray(8, 12).toString('ascii').toLowerCase()
+}
+
+function looksLikeSvg(data: Buffer): boolean {
+  const head = data.subarray(0, Math.min(data.length, 512)).toString('utf8').replace(/^\uFEFF/, '').trimStart().toLowerCase()
+  if (!head || head.includes('\0')) {
+    return false
+  }
+  return head.startsWith('<svg')
+    || head.startsWith('<!doctype svg')
+    || (head.startsWith('<?xml') && head.includes('<svg'))
+}
+
 /**
  * Build a collision-free storage key from an upload's original name and MIME type.
+ * The extension always comes from the MIME type, not from the original file name.
  */
 export async function prepareUploadKey(
   originalName: string | undefined,
   mimeType: string,
   exists: (key: string) => Promise<boolean>,
 ): Promise<string> {
-  const baseName = originalName
-    ? sanitizeFilename(originalName)
-    : `file.${resolveExtension(originalName, mimeType)}`
-  return uniqueFilename(baseName, exists)
+  const ext = extensionForMime(mimeType)
+  let stem = 'file'
+  if (originalName) {
+    const cleaned = sanitizeFilename(originalName).replace(/\.[^.]+$/, '').replace(/^\.+/, '')
+    stem = cleaned || 'file'
+  }
+  return uniqueFilename(`${stem}.${ext}`, exists)
 }
 
 /** Append or bump a numeric suffix before the extension (`a.jpg` → `a-1.jpg` → `a-2.jpg`). */

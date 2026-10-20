@@ -423,6 +423,11 @@
       "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/users.post.ts"
     },
     {
+      "m": "DELETE",
+      "path": "/api/_miraicms/users/:id",
+      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/users/[id].delete.ts"
+    },
+    {
       "m": "PATCH",
       "path": "/api/_miraicms/users/:id",
       "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/users/[id].patch.ts"

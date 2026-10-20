@@ -17,6 +17,8 @@ const roles = ref<RoleOption[]>([])
 const currentUserId = ref<number | null>(null)
 const canCreate = ref(false)
 const canUpdate = ref(false)
+const canDelete = ref(false)
+const deletingId = ref<number | null>(null)
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -45,6 +47,38 @@ function canEditRow(user: AdminUser): boolean {
   return canUpdate.value && user.role !== OWNER_ROLE
 }
 
+function canDeleteRow(user: AdminUser): boolean {
+  if (!canDelete.value || user.id === currentUserId.value) {
+    return false
+  }
+  if (user.role !== OWNER_ROLE) {
+    return true
+  }
+  return users.value.some(entry => entry.id === currentUserId.value && entry.role === OWNER_ROLE)
+}
+
+async function remove(user: AdminUser) {
+  if (!canDeleteRow(user) || deletingId.value != null) {
+    return
+  }
+  const label = user.name?.trim() || user.email
+  if (!window.confirm(`Delete “${label}” permanently? This cannot be undone.`)) {
+    return
+  }
+  deletingId.value = user.id
+  error.value = null
+  try {
+    await $fetch(`/api/_miraicms/users/${user.id}`, { method: 'DELETE' })
+    users.value = users.value.filter(entry => entry.id !== user.id)
+  }
+  catch (err) {
+    error.value = parseAuthError(err, 'Could not delete the user.').message
+  }
+  finally {
+    deletingId.value = null
+  }
+}
+
 async function load() {
   loading.value = true
   error.value = null
@@ -55,6 +89,7 @@ async function load() {
     currentUserId.value = res.currentUserId
     canCreate.value = res.canCreate
     canUpdate.value = res.canUpdate
+    canDelete.value = res.canDelete
   }
   catch (err) {
     error.value = parseAuthError(err, 'Could not load users.').message
@@ -178,6 +213,17 @@ onMounted(load)
             >
               Edit
             </MiraiCmsUiButton>
+            <MiraiCmsUiButton
+              v-if="canDeleteRow(user)"
+              tag="button"
+              type="button"
+              :variant="['red', 'small']"
+              :disabled="deletingId === user.id"
+              :aria-label="`Delete ${user.name || user.email}`"
+              @click="remove(user)"
+            >
+              {{ deletingId === user.id ? 'Deleting…' : 'Delete' }}
+            </MiraiCmsUiButton>
           </div>
         </div>
       </div>
@@ -216,7 +262,7 @@ $root: '.miraicms-users';
 
     &__columns {
       display: grid;
-      grid-template-columns: math-rem(56) minmax(math-rem(180), 1.6fr) minmax(math-rem(120), 1.2fr) math-rem(140) math-rem(110) math-rem(180) minmax(math-rem(72), auto);
+      grid-template-columns: math-rem(56) minmax(math-rem(180), 1.6fr) minmax(math-rem(120), 1.2fr) math-rem(140) math-rem(110) math-rem(180) minmax(math-rem(148), auto);
       align-items: center;
       min-width: math-rem(860);
 
@@ -320,6 +366,7 @@ $root: '.miraicms-users';
     &__actions {
       display: flex;
       justify-content: flex-end;
+      gap: math-rem(8);
       white-space: nowrap;
     }
   }

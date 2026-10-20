@@ -260,6 +260,11 @@ export default defineNuxtModule<MiraiCmsConfig>({
       method: 'patch',
       handler: resolver.resolve('./runtime/server/api/_miraicms/users/[id].patch'),
     })
+    addServerHandler({
+      route: '/api/_miraicms/users/:id',
+      method: 'delete',
+      handler: resolver.resolve('./runtime/server/api/_miraicms/users/[id].delete'),
+    })
 
     addServerHandler({
       route: '/api/_miraicms/collections/:collection',

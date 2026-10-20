@@ -17,6 +17,7 @@ export interface UsersResponse {
   currentUserId: number
   canCreate: boolean
   canUpdate: boolean
+  canDelete: boolean
 }
 
 /** Prefer a compact image variant for avatars, then the original URL. */

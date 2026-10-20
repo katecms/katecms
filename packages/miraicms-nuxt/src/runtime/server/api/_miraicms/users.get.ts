@@ -25,7 +25,8 @@ export default defineEventHandler(async (event): Promise<UsersResponse> => {
 
   const canCreate = can(actor, 'users', 'create', { roles })
   const canUpdate = can(actor, 'users', 'update', { roles })
-  const isManager = can(actor, 'users', 'read', { roles }) || canCreate || canUpdate
+  const canDelete = can(actor, 'users', 'delete', { roles })
+  const isManager = can(actor, 'users', 'read', { roles }) || canCreate || canUpdate || canDelete
 
   let rows: User[]
   if (isManager) {
@@ -42,5 +43,6 @@ export default defineEventHandler(async (event): Promise<UsersResponse> => {
     currentUserId: actor.id,
     canCreate,
     canUpdate,
+    canDelete,
   }
 })

@@ -107,6 +107,7 @@
 {"n":"collectionPerPage","k":"fn","p":"packages/core/src/config/types/collection.ts"}
 {"n":"CollectionQueryOrderBy","k":"type","p":"packages/core/src/database/queries/collections.ts"}
 {"n":"CollectionRevision","k":"type","p":"packages/core/src/database/queries/collection-revisions.ts"}
+{"n":"collectionRevisionsEnabled","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/collections.ts"}
 {"n":"CollectionRevisionsTable","k":"iface","p":"packages/core/src/database/client/schema.ts"}
 {"n":"CollectionRouteMatch","k":"type","p":"packages/core/src/rewrite.ts"}
 {"n":"Collections","k":"type","p":"packages/core/src/config/types/collection.ts"}

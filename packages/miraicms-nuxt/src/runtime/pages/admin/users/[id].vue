@@ -21,7 +21,9 @@ const userId = Number(route.params.id)
 
 const roles = ref<RoleOption[]>([])
 const currentUserId = ref<number | null>(null)
+const actorRole = ref('')
 const canUpdate = ref(false)
+const canDelete = ref(false)
 const found = ref(false)
 
 const loading = ref(true)
@@ -96,6 +98,16 @@ const isSelf = computed(() => currentUserId.value === userId)
  */
 const canEditRoleStatus = computed(() => canUpdate.value && !isSelf.value)
 
+const canDeleteUser = computed(() => {
+  if (!found.value || !canDelete.value || isSelf.value) {
+    return false
+  }
+  if (form.role !== OWNER_ROLE) {
+    return true
+  }
+  return actorRole.value === OWNER_ROLE
+})
+
 const canSubmit = computed(() => found.value && !saving.value && form.email.trim().length > 0)
 
 async function load() {
@@ -110,7 +122,9 @@ async function load() {
     const res = await $fetch<UsersResponse>('/api/_miraicms/users')
     roles.value = res.roles
     currentUserId.value = res.currentUserId
+    actorRole.value = res.users.find(entry => entry.id === res.currentUserId)?.role ?? ''
     canUpdate.value = res.canUpdate
+    canDelete.value = res.canDelete
 
     const user = res.users.find(entry => entry.id === userId)
     if (!user) {
@@ -194,6 +208,29 @@ async function submit() {
   }
 }
 
+async function remove() {
+  if (!canDeleteUser.value || saving.value) {
+    return
+  }
+  const label = form.name.trim() || form.email.trim() || 'this user'
+  if (!window.confirm(`Delete “${label}” permanently? This cannot be undone.`)) {
+    return
+  }
+  saving.value = true
+  notice.value = null
+  try {
+    await $fetch(`/api/_miraicms/users/${userId}`, { method: 'DELETE' })
+    await navigateTo(paths.users)
+  }
+  catch (err) {
+    notice.value = {
+      variant: 'danger',
+      message: parseAuthError(err, 'Could not delete the user.').message,
+    }
+    saving.value = false
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -203,6 +240,16 @@ onMounted(load)
       :title="`Edit user: ${form.name || form.email || 'Unknown'}`"
       :back-to="paths.users"
     >
+      <MiraiCmsUiButton
+        v-if="canDeleteUser"
+        tag="button"
+        type="button"
+        :variant="['red', 'small']"
+        :disabled="saving"
+        @click="remove"
+      >
+        Delete
+      </MiraiCmsUiButton>
       <MiraiCmsUiButton
         tag="button"
         type="submit"

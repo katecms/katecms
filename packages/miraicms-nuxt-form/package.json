@@ -28,6 +28,7 @@
   "devDependencies": {
     "@nuxt/module-builder": "^1.0.3",
     "@types/node": "latest",
+    "@types/nodemailer": "^8.0.2",
     "@types/sanitize-html": "^2.16.2",
     "nuxt": "^4.5.2",
     "sass-embedded": "^1.100.0",

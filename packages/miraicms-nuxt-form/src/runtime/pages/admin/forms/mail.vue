@@ -155,6 +155,12 @@ onMounted(load)
       @close="tested = false"
     />
 
+    <p
+      v-if="!loading"
+      :class="`${rootClass}__hint`"
+    >
+      Forms with a To address use these settings to email each submission.
+    </p>
     <div
       v-if="loading"
       :class="`${rootClass}__hint`"

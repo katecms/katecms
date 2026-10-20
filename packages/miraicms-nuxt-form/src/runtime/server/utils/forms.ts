@@ -24,6 +24,7 @@ import {
 } from '../../form/model'
 import { getFormDb, maxFileBytes } from './db'
 import { applyServerFormBreakpoints } from './breakpoints'
+import { sendSubmissionMail, type SubmissionMail } from './mail'
 import { deleteFormUploads, deleteStoredFile, saveFormFile } from './uploads'
 
 interface FormRow {
@@ -179,7 +180,9 @@ export async function submitForm(event: H3Event, id: number): Promise<{ ok: true
     })
   }
 
+  const message = submissionMail(form, input, files)
   if (form.content.disableEntryStorage) {
+    await deliverSubmissionMail(message, true)
     return { ok: true, id: 0 }
   }
 
@@ -235,7 +238,106 @@ export async function submitForm(event: H3Event, id: number): Promise<{ ok: true
     await Promise.all(storedKeys.map(key => deleteStoredFile(key)))
     throw error
   }
+  await deliverSubmissionMail(message, false)
   return { ok: true, id: submissionId }
+}
+
+type SubmissionUpload = UploadedFile & { data: Buffer }
+
+function submissionMail(
+  form: FormRecord,
+  input: Record<string, unknown>,
+  files: Record<string, SubmissionUpload | SubmissionUpload[] | null>,
+): SubmissionMail | null {
+  const notification = form.content.notification
+  if (!notification.to.trim()) {
+    return null
+  }
+  const states = fieldConditionStates(form.content, conditionInputValues(form.content, input))
+  const lines: SubmissionMail['lines'] = []
+  const attachments: SubmissionMail['files'] = []
+  for (const field of form.content.fields) {
+    const state = states[field.id]
+    if (!storesValue(field) || state?.hidden || state?.disabled) {
+      continue
+    }
+    const label = field.label || field.key
+    if (field.type === 'file') {
+      const uploaded = files[field.key]
+      const list = (Array.isArray(uploaded) ? uploaded : uploaded ? [uploaded] : [])
+        .filter(item => item.data && item.size > 0)
+      if (!list.length) {
+        continue
+      }
+      lines.push({ label, value: list.map(item => item.name.replace(/[\r\n]/g, ' ')).join(', ') })
+      for (const item of list) {
+        attachments.push({ name: item.name, type: item.type, content: item.data })
+      }
+      continue
+    }
+    const value = readableValue(textStoredValue(field, input[field.key]))
+    if (!value) {
+      continue
+    }
+    lines.push({ label, value })
+  }
+  return {
+    formName: form.name,
+    to: notification.to,
+    fromMail: notification.fromMail,
+    fromName: notification.fromName,
+    cc: notification.cc,
+    bcc: notification.bcc,
+    replyTo: notification.replyTo,
+    lines,
+    files: attachments,
+  }
+}
+
+async function deliverSubmissionMail(message: SubmissionMail | null, required: boolean): Promise<void> {
+  if (!message) {
+    return
+  }
+  try {
+    await sendSubmissionMail(message)
+  }
+  catch (error) {
+    const detail = mailFailureDetail(error)
+    console.error('[miraicms] form notification email failed', detail)
+    if (!required) {
+      return
+    }
+    const statusMessage = detail === 'Set the SMTP host and from address first.'
+      ? detail
+      : 'Could not send the form email.'
+    throw createError({ statusCode: 400, statusMessage, data: { message: statusMessage } })
+  }
+}
+
+function mailFailureDetail(error: unknown): string {
+  if (error && typeof error === 'object' && 'statusMessage' in error && typeof error.statusMessage === 'string') {
+    return error.statusMessage
+  }
+  return error instanceof Error ? error.message.slice(0, 300) : 'Could not send the form email.'
+}
+
+function readableValue(value: string): string {
+  const trimmed = value.replace(/\r/g, '').trim()
+  if (!trimmed) {
+    return ''
+  }
+  if (trimmed.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(trimmed) as unknown
+      if (Array.isArray(parsed)) {
+        return parsed.map(item => String(item)).join(', ')
+      }
+    }
+    catch {
+      // Keep the stored text when it is not a choice list.
+    }
+  }
+  return trimmed
 }
 
 async function readSubmission(event: H3Event, content: FormContent): Promise<{

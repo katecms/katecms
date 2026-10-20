@@ -823,6 +823,7 @@
 {"n":"SelectField","k":"iface","p":"packages/core/src/config/types/fields.ts"}
 {"n":"SelectField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/SelectField.vue"}
 {"n":"SelectModelValue","k":"type","p":"packages/core/src/config/types/fields.ts"}
+{"n":"sendSubmissionMail","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/mail.ts"}
 {"n":"sendTestMail","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/mail.ts"}
 {"n":"SeoEditorPayload","k":"iface","p":"packages/miraicms-nuxt-seo/src/runtime/types.ts"}
 {"n":"SeoEntry","k":"iface","p":"packages/miraicms-nuxt-seo/src/runtime/types.ts"}
@@ -849,6 +850,8 @@
 {"n":"storedVariants","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/media.ts"}
 {"n":"storesValue","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"submissionErrors","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
+{"n":"SubmissionMail","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/mail.ts"}
+{"n":"SubmissionMailFile","k":"iface","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/mail.ts"}
 {"n":"submitForm","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/server/utils/forms.ts"}
 {"n":"SUBSCRIBER_ROLE","k":"const","p":"packages/core/src/config/resolve-roles.ts"}
 {"n":"syncCollectionFieldIndexes","k":"fn","p":"packages/core/src/indexes/apply.ts"}

@@ -1808,7 +1808,13 @@ onBeforeUnmount(() => {
               v-if="field.key !== 'fromName'"
               :field-key="`notify-${field.key}`"
               :model-value="content.notification?.[field.key] ?? ''"
-              :field="{ type: 'email', label: field.label }"
+              :field="{
+                type: 'email',
+                label: field.label,
+                instructions: field.key === 'to'
+                  ? 'The entry is emailed here when the form is submitted. Separate several addresses with commas. Leave this empty to skip email.'
+                  : '',
+              }"
               @update:model-value="setNotification(field.key, String($event ?? ''))"
             />
             <MiraiCmsTextField

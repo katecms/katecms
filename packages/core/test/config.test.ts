@@ -36,7 +36,7 @@ describe('resolveRoles', () => {
     expect(roles.editor?.rights.forms).toBe(true)
     expect(roles.author?.rights.forms).toBe(false)
     expect(roles.author?.rights.collections).toEqual(['read', 'create', 'update'])
-    expect(roles.subscriber?.rights.collections).toEqual(['read'])
+    expect(roles.subscriber?.rights.collections).toBe(false)
     expect(roles.subscriber?.rights.forms).toBe(false)
   })
 
@@ -158,16 +158,16 @@ describe('resolveMiraiCmsConfig', () => {
     })
     expect(resolved.adminPath).toBe('backoffice')
     expect(resolved.loginPath).toBe('login')
-    expect(resolved.registration).toBe(true)
+    expect(resolved.registration).toBe(false)
     expect(resolved.dictionaries).toEqual({})
     expect(resolved.options).toEqual({})
     expect(resolved.roles.owner?.superuser).toBe(true)
     expect(resolved.warnings.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('lets registration be turned off without affecting the default', () => {
-    expect(resolveMiraiCmsConfig().registration).toBe(true)
-    expect(resolveMiraiCmsConfig({ registration: false }).registration).toBe(false)
+  it('keeps registration closed unless config opens it', () => {
+    expect(resolveMiraiCmsConfig().registration).toBe(false)
+    expect(resolveMiraiCmsConfig({ registration: true }).registration).toBe(true)
   })
 
   it('resolves form defaults and custom breakpoints', () => {
@@ -255,7 +255,7 @@ describe('can', () => {
     expect(can({ role: 'admin' }, 'media', 'delete', { roles })).toBe(true)
     expect(can({ role: 'author' }, 'media', 'create', { roles })).toBe(true)
     expect(can({ role: 'author' }, 'media', 'delete', { roles })).toBe(false)
-    expect(can({ role: 'subscriber' }, 'collections', 'read', { roles, scope: 'pages' })).toBe(true)
+    expect(can({ role: 'subscriber' }, 'collections', 'read', { roles, scope: 'pages' })).toBe(false)
     expect(can({ role: 'subscriber' }, 'collections', 'update', { roles, scope: 'pages' })).toBe(false)
     expect(can({ role: 'editor' }, 'forms', 'update', { roles })).toBe(true)
     expect(can({ role: 'subscriber' }, 'forms', 'read', { roles })).toBe(false)

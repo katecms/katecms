@@ -10,7 +10,7 @@ export const defaults = {
   adminPath: 'admin',
   loginPath: 'login',
   registerPath: 'register',
-  registration: true,
+  registration: false,
   collections: {} as Collections,
   dictionaries: {} as Dictionaries,
   options: {} as OptionPages,

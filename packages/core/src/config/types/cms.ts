@@ -14,9 +14,10 @@ export interface MiraiCmsConfig {
   registerPath?: string
   /**
    * Self-service registration at `/${adminPath}/${registerPath}`.
-   * `false` blocks every account after the first. The first account is still
-   * created as `owner`. Creating users from the admin is unaffected.
-   * Default: `true`.
+   * `true` leaves it open after the first account. `false` blocks every later
+   * account. The first account is still created as `owner`. Creating users
+   * from the admin is unaffected.
+   * Default: `false`.
    */
   registration?: boolean
   collections?: Collections

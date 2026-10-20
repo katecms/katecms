@@ -16,7 +16,7 @@ useHead({
 })
 
 const paths = useCmsPaths()
-const registrationOpen = useRuntimeConfig().public.miraicms?.registration !== false
+const registrationOpen = useRuntimeConfig().public.miraicms?.registration === true
 const { remainingSec, locked, start: startCooldown } = useAuthCooldown()
 const emailField = { label: 'Email', required: true }
 const passwordField = { type: 'password' as const, label: 'Password', required: true }

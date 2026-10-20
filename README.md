@@ -87,7 +87,7 @@ export default defineNuxtConfig({
 | `adminPath` | `string` | `'admin'` | Сегмент URL админки |
 | `loginPath` | `string` | `'login'` | Сегмент входа, URL `/${adminPath}/login` |
 | `registerPath` | `string` | `'register'` | Сегмент регистрации, URL `/${adminPath}/register` |
-| `registration` | `boolean` | `true` | Саморегистрация. `false` — закрыта после первого пользователя (`owner`). Создание пользователей в админке не зависит от этого флага |
+| `registration` | `boolean` | `false` | Саморегистрация. `true` — открыта после первого пользователя. `false` — закрыта; первый аккаунт всё равно создаётся как `owner`. Создание пользователей в админке не зависит от этого флага |
 | `collections` | `Collections` | `{}` | Типы записей. Ключ объекта = slug |
 | `dictionaries` | `Dictionaries` | `{}` | Словари. Ключ объекта = slug |
 | `blocks` | `Blocks` | `{}` | Реестр блоков. Ключ объекта = slug |
@@ -164,7 +164,7 @@ media: {
 <a id="config-roles"></a>
 ### Роли
 
-Встроенные: `owner`, `admin`, `editor`, `author`, `subscriber`. Карта `roles` добавляет роль, полностью заменяет встроенную или прячет (`author: false`).
+Встроенные: `owner`, `admin`, `editor`, `author`, `subscriber`. Карта `roles` добавляет роль, полностью заменяет встроенную или прячет (`author: false`). У `subscriber` по умолчанию нет прав на ресурсы: админский список, черновики и коллекции с `public: false` ему закрыты. Опубликованные публичные записи по-прежнему отдаёт фронт без входа.
 
 - `owner` зарезервирован, запись в конфиге игнорируется.
 - `admin` нельзя скрыть (`admin: false` игнорируется), определение `Role` заменяет права.

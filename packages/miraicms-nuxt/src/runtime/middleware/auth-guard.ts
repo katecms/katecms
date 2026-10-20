@@ -37,7 +37,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  const registrationOpen = paths?.registration !== false
+  const registrationOpen = paths?.registration === true
   const entry = hasUsers ? login : register
 
   if (isAdmin) {

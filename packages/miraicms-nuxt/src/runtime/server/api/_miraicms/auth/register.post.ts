@@ -69,7 +69,7 @@ export default defineEventHandler(async (event): Promise<{ user: SafeUser }> => 
   }
 
   const passwordHash = await hashPassword(password)
-  const registrationOpen = useRuntimeConfig().miraicms?.registration !== false
+  const registrationOpen = useRuntimeConfig().miraicms?.registration === true
 
   try {
     const user = await getDb().transaction().execute(async (trx) => {

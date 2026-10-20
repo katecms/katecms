@@ -54,9 +54,9 @@ export const BUILT_IN_ROLES: Roles = {
   },
   subscriber: {
     label: 'Subscriber',
-    rights: {
-      collections: ['read'],
-    },
+    // No admin read. Published public entries stay on the public query API.
+    // Drafts and collections with public: false are not included.
+    rights: {},
   },
 }
 

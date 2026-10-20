@@ -1,5 +1,6 @@
 import { defineEventHandler } from 'h3'
-import { hasAnyUser, type AuthState } from '@miraicms/core'
+import { useRuntimeConfig } from '#imports'
+import { can, hasAnyUser, type AuthState } from '@miraicms/core'
 import { getDb } from '../../../utils/db'
 import { getCurrentUser } from '../../../utils/session'
 
@@ -12,5 +13,12 @@ import { getCurrentUser } from '../../../utils/session'
 export default defineEventHandler(async (event): Promise<AuthState> => {
   const hasUsers = await hasAnyUser(getDb())
   const user = await getCurrentUser(event)
-  return { user, hasUsers }
+  const roles = useRuntimeConfig().miraicms?.roles ?? {}
+  return {
+    user,
+    hasUsers,
+    access: {
+      forms: user != null && can(user, 'forms', 'read', { roles }),
+    },
+  }
 })

@@ -1,7 +1,7 @@
 import type { ResolvedRole, ResourceRights, RoleAction, ScopedRights } from '../config/types/roles'
 
 /** Resources that rights can be granted on. */
-export type Resource = 'collections' | 'dictionaries' | 'media' | 'users' | 'options'
+export type Resource = 'collections' | 'dictionaries' | 'media' | 'users' | 'options' | 'forms'
 
 /** Keyed resources whose rights are scoped by an entry slug. */
 const SCOPED_RESOURCES = new Set<Resource>(['collections', 'dictionaries', 'options'])
@@ -30,9 +30,12 @@ export function isOwner(user: RoleHolder, roles: RoleMap): boolean {
   return getRole(roles, user.role)?.superuser === true
 }
 
-function resourceAllows(right: ResourceRights, action: RoleAction): boolean {
+function resourceAllows(right: ResourceRights | undefined, action: RoleAction): boolean {
   if (typeof right === 'boolean') {
     return right
+  }
+  if (!Array.isArray(right)) {
+    return false
   }
   return right.includes(action)
 }

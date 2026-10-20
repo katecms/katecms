@@ -1,9 +1,9 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
-import { requireUser } from 'miraicms-nuxt/server'
+import { requireFormAccess } from '../../utils/access'
 import { deleteForm } from '../../utils/forms'
 
 export default defineEventHandler(async (event) => {
-  await requireUser(event)
+  await requireFormAccess(event, 'delete')
   await deleteForm(routeId(event))
   return { ok: true }
 })

@@ -23,6 +23,7 @@ const FULL_RIGHTS: RoleRights = {
   media: true,
   users: true,
   options: true,
+  forms: true,
 }
 
 /**
@@ -41,6 +42,7 @@ export const BUILT_IN_ROLES: Roles = {
       collections: true,
       dictionaries: true,
       media: true,
+      forms: true,
     },
   },
   author: {
@@ -66,6 +68,7 @@ function normalizeRights(rights?: RoleRights): ResolvedRoleRights {
     media: rights?.media ?? false,
     users: rights?.users ?? false,
     options: rights?.options ?? false,
+    forms: rights?.forms ?? false,
   }
 }
 

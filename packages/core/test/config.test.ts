@@ -33,8 +33,11 @@ describe('resolveRoles', () => {
     expect(roles.admin?.rights.users).toBe(true)
     expect(roles.editor?.rights.dictionaries).toBe(true)
     expect(roles.editor?.rights.users).toBe(false)
+    expect(roles.editor?.rights.forms).toBe(true)
+    expect(roles.author?.rights.forms).toBe(false)
     expect(roles.author?.rights.collections).toEqual(['read', 'create', 'update'])
     expect(roles.subscriber?.rights.collections).toEqual(['read'])
+    expect(roles.subscriber?.rights.forms).toBe(false)
   })
 
   it('ignores owner overrides and records a warning', () => {
@@ -254,6 +257,10 @@ describe('can', () => {
     expect(can({ role: 'author' }, 'media', 'delete', { roles })).toBe(false)
     expect(can({ role: 'subscriber' }, 'collections', 'read', { roles, scope: 'pages' })).toBe(true)
     expect(can({ role: 'subscriber' }, 'collections', 'update', { roles, scope: 'pages' })).toBe(false)
+    expect(can({ role: 'editor' }, 'forms', 'update', { roles })).toBe(true)
+    expect(can({ role: 'subscriber' }, 'forms', 'read', { roles })).toBe(false)
+    expect(can({ role: 'author' }, 'forms', 'create', { roles })).toBe(false)
+    expect(can({ role: 'intern' }, 'forms', 'read', { roles })).toBe(false)
   })
 
   it('scopes collection rights by slug', () => {

@@ -73,11 +73,12 @@ export async function readPublicForm(id: number): Promise<PublicForm | null> {
   if (!record) {
     return null
   }
+  const { notification: _notification, ...content } = record.content
   return {
     id: record.id,
     name: record.name,
     maxFileBytes: maxFileBytes(),
-    content: record.content,
+    content,
   }
 }
 

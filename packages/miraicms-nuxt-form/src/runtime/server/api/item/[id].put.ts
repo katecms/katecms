@@ -1,9 +1,9 @@
 import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
-import { requireUser } from 'miraicms-nuxt/server'
+import { requireFormAccess } from '../../utils/access'
 import { updateForm } from '../../utils/forms'
 
 export default defineEventHandler(async (event) => {
-  await requireUser(event)
+  await requireFormAccess(event, 'update')
   return updateForm(routeId(event), await readBody(event))
 })
 

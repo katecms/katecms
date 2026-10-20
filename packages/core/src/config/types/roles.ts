@@ -43,6 +43,11 @@ export interface RoleRights {
   users?: ResourceRights
   /** Per-page rights (keyed by option page slug) or a blanket boolean. */
   options?: ScopedRights
+  /**
+   * Form builder and its SMTP settings. Not scoped: one grant covers every form.
+   * Omitted means no access.
+   */
+  forms?: ResourceRights
 }
 
 /** A single role definition. */
@@ -75,6 +80,7 @@ export interface ResolvedRoleRights {
   media: ResourceRights
   users: ResourceRights
   options: ScopedRights
+  forms: ResourceRights
 }
 
 /**

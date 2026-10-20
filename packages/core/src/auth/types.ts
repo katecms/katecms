@@ -15,4 +15,11 @@ export interface SafeUser {
 export interface AuthState {
   user: SafeUser | null
   hasUsers: boolean
+  /**
+   * Rights already evaluated for this session. The admin shell uses them to
+   * show or hide addon navigation. API handlers still check the same rights.
+   */
+  access: {
+    forms: boolean
+  }
 }

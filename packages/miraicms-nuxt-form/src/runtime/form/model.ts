@@ -278,11 +278,14 @@ export interface FormListItem {
   updatedAt: string
 }
 
+/** Public form body. Notification addresses are an admin-only part of {@link FormContent}. */
+export type PublicFormContent = Omit<FormContent, 'notification'>
+
 export interface PublicForm {
   id: number
   name: string
   maxFileBytes: number
-  content: FormContent
+  content: PublicFormContent
 }
 
 export interface MailSettings {
@@ -1031,7 +1034,7 @@ export function fieldSubmissionError(
 }
 
 export function submissionErrors(
-  content: FormContent,
+  content: PublicFormContent,
   input: Record<string, unknown>,
   files: Record<string, UploadedFile | UploadedFile[] | null>,
   maxFileBytes: number,
@@ -1051,7 +1054,7 @@ export function submissionErrors(
   return errors
 }
 
-export function conditionInputValues(content: FormContent, input: Record<string, unknown>): Record<string, string | string[]> {
+export function conditionInputValues(content: PublicFormContent, input: Record<string, unknown>): Record<string, string | string[]> {
   const values: Record<string, string | string[]> = {}
   for (const field of content.fields) {
     values[field.id] = conditionStoredValue(field, input[field.key])
@@ -1059,7 +1062,7 @@ export function conditionInputValues(content: FormContent, input: Record<string,
   return values
 }
 
-export function fieldConditionStates(content: FormContent, values: Record<string, string | string[]>): Record<string, FormFieldConditionState> {
+export function fieldConditionStates(content: PublicFormContent, values: Record<string, string | string[]>): Record<string, FormFieldConditionState> {
   const conditions = acyclicConditions(content.conditions ?? [])
   const states: Record<string, FormFieldConditionState> = {}
   for (const field of content.fields) {
@@ -1491,7 +1494,7 @@ function normalizeConditionGroups(raw: unknown, ids: Set<string>): FormCondition
 }
 
 export function emptySubmissionError(
-  content: FormContent,
+  content: PublicFormContent,
   input: Record<string, unknown>,
   files: Record<string, UploadedFile | UploadedFile[] | null>,
 ): string | null {

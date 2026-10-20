@@ -1,9 +1,9 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
-import { requireUser } from 'miraicms-nuxt/server'
+import { requireFormAccess } from '../../utils/access'
 import { readForm } from '../../utils/forms'
 
 export default defineEventHandler(async (event) => {
-  await requireUser(event)
+  await requireFormAccess(event, 'read')
   const form = await readForm(routeId(event))
   if (!form) {
     throw createError({ statusCode: 404, statusMessage: 'Form not found.' })

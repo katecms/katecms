@@ -1,8 +1,8 @@
 import { defineEventHandler } from 'h3'
-import { requireUser } from 'miraicms-nuxt/server'
+import { requireFormAccess } from '../utils/access'
 import { readMailSettings } from '../utils/mail'
 
 export default defineEventHandler(async (event) => {
-  await requireUser(event)
+  await requireFormAccess(event, 'read')
   return readMailSettings()
 })

@@ -137,7 +137,7 @@ $root: '.miraicms-button-group-field';
 
     &:focus-visible {
       z-index: 2;
-      box-shadow: 0 0 0 2px rgba($color-accent, 0.35);
+      box-shadow: 0 0 0 2px color-alpha($color-accent, 0.35);
     }
   }
 }

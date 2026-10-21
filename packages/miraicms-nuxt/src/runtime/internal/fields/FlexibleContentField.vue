@@ -1196,7 +1196,7 @@ $root: '.miraicms-flexible-content-field';
     align-items: center;
     justify-content: center;
     padding: math-rem(24);
-    background: rgba($color-ink, 0.45);
+    background: color-alpha($color-ink, 0.45);
 
     &-dialog {
       display: flex;

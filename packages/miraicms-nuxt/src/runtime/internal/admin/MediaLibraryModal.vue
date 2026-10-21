@@ -371,7 +371,7 @@ $root: '.miraicms-media-modal';
   z-index: 1000;
   display: flex;
   padding: math-rem(20);
-  background-color: rgba($color-ink, 0.45);
+  background-color: color-alpha($color-ink, 0.45);
 
   &__dialog {
     display: flex;

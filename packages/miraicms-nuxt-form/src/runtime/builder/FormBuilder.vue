@@ -2298,7 +2298,7 @@ $root: '.miraicms-form-builder';
     &.is-selected {
       border-color: $color-accent;
       border-style: dashed;
-      background-color: rgba($color-accent-wash, .4);
+      background-color: color-alpha($color-accent-wash, .4);
       z-index: 2;
     }
 

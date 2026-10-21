@@ -85,7 +85,7 @@ $root: '.miraicms-true-false-field';
     }
 
     &:focus-visible {
-      box-shadow: 0 0 0 2px rgba($color-accent, 0.35);
+      box-shadow: 0 0 0 2px color-alpha($color-accent, 0.35);
     }
 
     &.is-on {
@@ -148,7 +148,7 @@ $root: '.miraicms-true-false-field';
     }
 
     &:focus-visible {
-      box-shadow: 0 0 0 2px rgba($color-accent, 0.35);
+      box-shadow: 0 0 0 2px color-alpha($color-accent, 0.35);
     }
 
     &:before {

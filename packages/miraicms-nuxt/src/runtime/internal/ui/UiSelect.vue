@@ -1101,7 +1101,7 @@ $root: ".miraicms-select";
     gap: math-rem(8);
 
     &:focus-visible {
-      outline: 2px solid rgba($color-accent, .4);
+      outline: 2px solid color-alpha($color-accent, .4);
       outline-offset: 2px;
     }
   }

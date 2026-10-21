@@ -1019,7 +1019,7 @@ $root: '.miraicms-wysiwyg-field';
         content: '';
         position: absolute;
         inset: 0;
-        background: rgba($color-accent, 0.12);
+        background: color-alpha($color-accent, 0.12);
         pointer-events: none;
         z-index: 1;
       }

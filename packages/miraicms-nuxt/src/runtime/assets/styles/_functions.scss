@@ -1,4 +1,5 @@
 @use 'sass:math';
+@use 'sass:string';
 
 @function math-em($pixels, $context: 16) {
   @if (math.is-unitless($pixels)) {
@@ -61,4 +62,9 @@
   }
 
   @return $result;
+}
+
+/// Opacity of a theme color. Sass rgba() cannot read a CSS variable.
+@function color-alpha($color, $alpha) {
+  @return string.unquote('rgb(from #{$color} r g b / #{$alpha})');
 }

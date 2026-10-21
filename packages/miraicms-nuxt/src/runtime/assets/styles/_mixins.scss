@@ -23,6 +23,28 @@
 
 @mixin miraicms-document {
   body#miraicms-body {
+    --miraicms-color-accent: #2F6FED;
+    --miraicms-color-accent-hover: #1E58D4;
+    --miraicms-color-accent-wash: #EAF1FD;
+    --miraicms-color-ink: #141A2A;
+    --miraicms-color-muted: #6B7280;
+    --miraicms-color-bg: #F6F7F8;
+    --miraicms-color-surface: #FFFFFF;
+    --miraicms-color-border: #E6E8EB;
+    --miraicms-color-success: #2A9A66;
+    --miraicms-color-success-bg: #E7F6EE;
+    --miraicms-color-info: #2A7BBD;
+    --miraicms-color-info-bg: #E7F2FA;
+    --miraicms-color-warning: #C4851A;
+    --miraicms-color-warning-bg: #FBF3E3;
+    --miraicms-color-danger: #D64545;
+    --miraicms-color-danger-bg: #FDECEC;
+    --miraicms-shadow-sm: 0 1px 2px rgba(20, 26, 42, 0.05);
+    --miraicms-shadow-md: 0 8px 24px rgba(20, 26, 42, 0.08);
+    --miraicms-border-radius: #{math-rem(6)};
+    --miraicms-border-radius-inter: #{math-rem(5)};
+    --miraicms-sidebar-w: #{math-rem(250)};
+    --miraicms-topbar-h: #{math-rem(54)};
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;

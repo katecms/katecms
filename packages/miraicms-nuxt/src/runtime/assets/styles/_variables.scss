@@ -1,33 +1,33 @@
-@use "functions" as *;
+// Values are set on body#miraicms-body in miraicms-document.
 
 // Accent
-$color-accent: #2F6FED;
-$color-accent-hover: #1E58D4;
-$color-accent-wash: #EAF1FD;
+$color-accent: var(--miraicms-color-accent);
+$color-accent-hover: var(--miraicms-color-accent-hover);
+$color-accent-wash: var(--miraicms-color-accent-wash);
 
-$color-ink: #141A2A;
-$color-muted: #6B7280;
-$color-bg: #F6F7F8;
-$color-surface: #FFFFFF;
-$color-border: #E6E8EB;
+$color-ink: var(--miraicms-color-ink);
+$color-muted: var(--miraicms-color-muted);
+$color-bg: var(--miraicms-color-bg);
+$color-surface: var(--miraicms-color-surface);
+$color-border: var(--miraicms-color-border);
 
 // Status
-$color-success: #2A9A66;
-$color-success-bg: #E7F6EE;
-$color-info: #2A7BBD;
-$color-info-bg: #E7F2FA;
-$color-warning: #C4851A;
-$color-warning-bg: #FBF3E3;
-$color-danger: #D64545;
-$color-danger-bg: #FDECEC;
+$color-success: var(--miraicms-color-success);
+$color-success-bg: var(--miraicms-color-success-bg);
+$color-info: var(--miraicms-color-info);
+$color-info-bg: var(--miraicms-color-info-bg);
+$color-warning: var(--miraicms-color-warning);
+$color-warning-bg: var(--miraicms-color-warning-bg);
+$color-danger: var(--miraicms-color-danger);
+$color-danger-bg: var(--miraicms-color-danger-bg);
 
 // Shadow
-$shadow-sm: 0 1px 2px rgba(20, 26, 42, 0.05);
-$shadow-md: 0 8px 24px rgba(20, 26, 42, 0.08);
+$shadow-sm: var(--miraicms-shadow-sm);
+$shadow-md: var(--miraicms-shadow-md);
 
 // Radius
-$border-radius: math-rem(6);
-$border-radius-inter: math-rem(5);
+$border-radius: var(--miraicms-border-radius);
+$border-radius-inter: var(--miraicms-border-radius-inter);
 
-$sidebar-w: math-rem(250);
-$topbar-h: math-rem(54);
+$sidebar-w: var(--miraicms-sidebar-w);
+$topbar-h: var(--miraicms-topbar-h);

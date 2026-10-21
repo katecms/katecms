@@ -849,7 +849,7 @@ $marker: '.miraicms-osm-marker';
         height: 18px;
         margin-left: -9px;
         border-radius: 50%;
-        background: rgba($color-accent, 0.35);
+        background: color-alpha($color-accent, 0.35);
         animation: miraicms-osm-marker-pulse 1.4s ease-out infinite;
       }
     }
@@ -948,7 +948,7 @@ $marker: '.miraicms-osm-marker';
     line-height: 1.5;
 
     a {
-      -webkit-tap-highlight-color: rgba($color-accent, 0.4);
+      -webkit-tap-highlight-color: color-alpha($color-accent, 0.4);
       color: $color-accent;
     }
 
@@ -985,7 +985,7 @@ $marker: '.miraicms-osm-marker';
     }
 
     .leaflet-control-attribution {
-      background: rgba($color-surface, 0.8);
+      background: color-alpha($color-surface, 0.8);
       margin: 0;
     }
 
@@ -1052,7 +1052,7 @@ $marker: '.miraicms-osm-marker';
     box-sizing: border-box;
     z-index: 800;
     border: 2px dotted $color-accent;
-    background: rgba($color-surface, 0.5);
+    background: color-alpha($color-surface, 0.5);
   }
 
   :deep(.leaflet-overlay-pane) svg {
@@ -1205,7 +1205,7 @@ $marker: '.miraicms-osm-marker';
   :deep(.leaflet-touch) {
     .leaflet-bar {
       box-shadow: none;
-      border: 2px solid rgba($color-ink, 0.12);
+      border: 2px solid color-alpha($color-ink, 0.12);
       background-clip: padding-box;
 
       a {
@@ -1274,7 +1274,7 @@ $marker: '.miraicms-osm-marker';
     padding: 2px 5px 1px;
     white-space: nowrap;
     box-sizing: border-box;
-    background: rgba($color-surface, 0.8);
+    background: color-alpha($color-surface, 0.8);
     text-shadow: 1px 1px $color-surface;
 
     &:not(:first-child) {

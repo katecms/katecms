@@ -217,7 +217,7 @@ $root: '.miraicms-accordion-field';
     }
 
     &:focus-visible {
-      outline: 2px solid rgba($color-accent, 0.35);
+      outline: 2px solid color-alpha($color-accent, 0.35);
       outline-offset: -2px;
     }
   }

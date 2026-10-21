@@ -156,7 +156,7 @@ $root: '.miraicms-btn';
   }
 
   &:focus-visible {
-    outline: 2px solid rgba($color-accent, .4);
+    outline: 2px solid color-alpha($color-accent, .4);
     outline-offset: 2px;
   }
 
@@ -253,7 +253,7 @@ $root: '.miraicms-btn';
     }
 
     &:focus-visible {
-      outline-color: rgba($color-danger, .4);
+      outline-color: color-alpha($color-danger, .4);
     }
   }
 

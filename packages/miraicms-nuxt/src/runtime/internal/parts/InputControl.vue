@@ -158,7 +158,7 @@ $root: '.miraicms-input-control';
       }
 
       &:focus::-webkit-slider-thumb {
-        box-shadow: 0 0 0 2px rgba($color-accent, 0.4);
+        box-shadow: 0 0 0 2px color-alpha($color-accent, 0.4);
       }
 
       &::-moz-range-track {
@@ -176,7 +176,7 @@ $root: '.miraicms-input-control';
       }
 
       &:focus::-moz-range-thumb {
-        box-shadow: 0 0 0 2px rgba($color-accent, 0.4);
+        box-shadow: 0 0 0 2px color-alpha($color-accent, 0.4);
       }
     }
 

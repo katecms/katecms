@@ -130,6 +130,7 @@
 {"n":"ConditionValue","k":"type","p":"packages/core/src/config/types/conditional-logic.ts"}
 {"n":"confirmationTarget","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"ConfirmDialog","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/admin/ConfirmDialog.vue"}
+{"n":"connectOembed","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/oembed-fetch.ts"}
 {"n":"contentMatchesMime","k":"fn","p":"packages/core/src/media/filename.ts"}
 {"n":"copyDesktopLayout","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"countCollections","k":"fn","p":"packages/core/src/database/queries/collections.ts"}
@@ -615,6 +616,8 @@
 {"n":"notificationFieldErrors","k":"fn","p":"packages/miraicms-nuxt-form/src/runtime/form/model.ts"}
 {"n":"NumberField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/NumberField.vue"}
 {"n":"OEMBED_PROVIDERS","k":"const","p":"packages/core/src/oembed.ts"}
+{"n":"OembedConnect","k":"type","p":"packages/core/src/oembed.ts"}
+{"n":"OembedConnectInit","k":"iface","p":"packages/core/src/oembed.ts"}
 {"n":"OembedField","k":"cmp","p":"packages/miraicms-nuxt/src/runtime/internal/fields/OembedField.vue"}
 {"n":"OembedResponse","k":"iface","p":"packages/core/src/oembed.ts"}
 {"n":"OembedResult","k":"type","p":"packages/core/src/oembed.ts"}
@@ -795,6 +798,7 @@
 {"n":"resolveMediaConfig","k":"fn","p":"packages/core/src/config/resolve-media.ts"}
 {"n":"ResolveMediaResult","k":"iface","p":"packages/core/src/config/resolve-media.ts"}
 {"n":"resolveMiraiCmsConfig","k":"fn","p":"packages/core/src/config/resolve.ts"}
+{"n":"resolveOembedHost","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/oembed-fetch.ts"}
 {"n":"resolveOptionValues","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/options.ts"}
 {"n":"resolvePublicDictionaryTerm","k":"fn","p":"packages/miraicms-nuxt/src/runtime/server/utils/public-term.ts"}
 {"n":"resolvePublicStatuses","k":"fn","p":"packages/miraicms-nuxt/src/runtime/utils/preview.ts"}

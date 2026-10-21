@@ -159,11 +159,22 @@ const EMBED_HOSTS = [
   'flickr.com',
 ]
 
+export interface OembedConnectInit {
+  signal: AbortSignal
+  headers: Record<string, string>
+}
+
+/**
+ * Opens a socket to an address already checked by `resolve`.
+ * `url` keeps the original hostname for the Host header and TLS name.
+ */
+export type OembedConnect = (url: URL, address: string, init: OembedConnectInit) => Promise<Response>
+
 export interface FetchOembedOptions {
   url: string
   maxwidth?: string
   maxheight?: string
-  /** Injected `fetch`. Defaults to global fetch. */
+  /** Injected `fetch`. Used when `connect` is not set. Defaults to global fetch. */
   fetch?: typeof fetch
   /**
    * Resolves a hostname to IP addresses before the request is sent.
@@ -171,6 +182,11 @@ export interface FetchOembedOptions {
    * and link-local ranges are rejected.
    */
   resolve?: (hostname: string) => Promise<string[]>
+  /**
+   * Dials one address from `resolve` so a later DNS answer cannot move the
+   * connection. The Nuxt handler pins the socket this way.
+   */
+  connect?: OembedConnect
 }
 
 /** True for loopback, private, link-local, and unique-local addresses. */
@@ -218,9 +234,9 @@ function findProvider(url: URL) {
 async function assertResolvedHost(
   hostname: string,
   resolve: ((hostname: string) => Promise<string[]>) | undefined,
-): Promise<void> {
+): Promise<string[]> {
   if (!resolve) {
-    return
+    return []
   }
   const host = hostname.replace(/^\[|\]$/g, '')
   let addresses: string[]
@@ -230,9 +246,11 @@ async function assertResolvedHost(
   catch {
     throw new Error('Failed to resolve host.')
   }
-  if (addresses.length === 0 || addresses.some(address => isDisallowedAddress(address))) {
+  const normalized = addresses.map(address => address.trim()).filter(Boolean)
+  if (normalized.length === 0 || normalized.some(address => isDisallowedAddress(address))) {
     throw new Error('This host is not allowed.')
   }
+  return normalized
 }
 
 async function safeFetch(
@@ -240,17 +258,22 @@ async function safeFetch(
   rawUrl: string,
   redirectsLeft: number,
   resolve: ((hostname: string) => Promise<string[]>) | undefined,
+  connect: OembedConnect | undefined,
 ): Promise<Response> {
   const parsed = parseSafeUrl(rawUrl)
   if (!parsed.ok) {
     throw new Error(parsed.error)
   }
-  await assertResolvedHost(parsed.url.hostname, resolve)
-  const res = await fetchFn(parsed.url.toString(), {
-    headers: { 'user-agent': USER_AGENT },
-    redirect: 'manual',
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-  })
+  const addresses = await assertResolvedHost(parsed.url.hostname, resolve)
+  const signal = AbortSignal.timeout(FETCH_TIMEOUT_MS)
+  const headers = { 'user-agent': USER_AGENT }
+  const res = addresses.length > 0 && connect
+    ? await connect(parsed.url, addresses[0]!, { signal, headers })
+    : await fetchFn(parsed.url.toString(), {
+        headers,
+        redirect: 'manual',
+        signal,
+      })
   if ([301, 302, 303, 307, 308].includes(res.status)) {
     if (redirectsLeft <= 0) {
       throw new Error('Too many redirects.')
@@ -259,7 +282,7 @@ async function safeFetch(
     if (!location) {
       throw new Error('Redirect without Location.')
     }
-    return safeFetch(fetchFn, new URL(location, parsed.url).toString(), redirectsLeft - 1, resolve)
+    return safeFetch(fetchFn, new URL(location, parsed.url).toString(), redirectsLeft - 1, resolve, connect)
   }
   const buffer = Buffer.from(await res.arrayBuffer())
   if (buffer.byteLength > MAX_BODY_BYTES) {
@@ -303,8 +326,9 @@ async function discoverEndpoint(
   target: string,
   fetchFn: typeof fetch,
   resolve: ((hostname: string) => Promise<string[]>) | undefined,
+  connect: OembedConnect | undefined,
 ): Promise<string | null> {
-  const res = await safeFetch(fetchFn, target, MAX_REDIRECTS, resolve)
+  const res = await safeFetch(fetchFn, target, MAX_REDIRECTS, resolve, connect)
   if (!res.ok) {
     return null
   }
@@ -329,6 +353,7 @@ export async function fetchOembed(options: FetchOembedOptions): Promise<OembedRe
 
   const fetchFn = options.fetch ?? globalThis.fetch
   const resolve = options.resolve
+  const connect = options.connect
   const provider = findProvider(parsed.url)
   let endpoint = provider
     ? buildOembedEndpoint(provider.endpoint, target, options.maxwidth, options.maxheight)
@@ -336,7 +361,7 @@ export async function fetchOembed(options: FetchOembedOptions): Promise<OembedRe
 
   try {
     if (!endpoint) {
-      const discovered = await discoverEndpoint(target, fetchFn, resolve)
+      const discovered = await discoverEndpoint(target, fetchFn, resolve, connect)
       if (!discovered) {
         return { ok: false, error: 'oEmbed is not available for this URL.', status: 404 }
       }
@@ -348,7 +373,7 @@ export async function fetchOembed(options: FetchOembedOptions): Promise<OembedRe
       endpoint = absolute
     }
 
-    const res = await safeFetch(fetchFn, endpoint, MAX_REDIRECTS, resolve)
+    const res = await safeFetch(fetchFn, endpoint, MAX_REDIRECTS, resolve, connect)
     if (!res.ok) {
       return { ok: false, error: 'The oEmbed provider returned an error.', status: 502 }
     }

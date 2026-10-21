@@ -4,7 +4,7 @@ Read this file first. Grep `.ai/` instead of scanning `packages/` for imports, s
 
 Refresh after code changes: `pnpm ai:index`
 
-Counts: 389 files, 976 symbols, 65 handlers, 25 pages, 15 tables, 37 field types.
+Counts: 391 files, 980 symbols, 65 handlers, 25 pages, 15 tables, 37 field types.
 
 ## Files
 

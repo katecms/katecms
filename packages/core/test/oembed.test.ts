@@ -129,6 +129,63 @@ describe('fetchOembed', () => {
     expect(called).toBe(false)
     expect(result).toMatchObject({ ok: false, status: 422, error: 'This host is not allowed.' })
   })
+
+  it('dials the first resolved address and does not use fetch', async () => {
+    const hops: { host: string, address: string }[] = []
+    const result = await fetchOembed({
+      url: 'https://youtu.be/abc',
+      resolve: async () => ['93.184.216.34', '93.184.216.35'],
+      connect: async (url, address) => {
+        hops.push({ host: url.hostname, address })
+        return new Response(JSON.stringify({
+          type: 'video',
+          html: '<iframe src="https://www.youtube.com/embed/abc"></iframe>',
+        }), { status: 200, headers: { 'content-type': 'application/json' } })
+      },
+      fetch: async () => {
+        throw new Error('fetch should not run')
+      },
+    })
+    expect(hops).toEqual([{ host: 'www.youtube.com', address: '93.184.216.34' }])
+    expect(result.ok).toBe(true)
+  })
+
+  it('pins each redirect hop to the address resolved for that host', async () => {
+    const hops: { host: string, address: string }[] = []
+    const result = await fetchOembed({
+      url: 'https://youtu.be/abc',
+      resolve: async host => host === 'cdn.example' ? ['1.2.3.4'] : ['9.9.9.9'],
+      connect: async (url, address) => {
+        hops.push({ host: url.hostname, address })
+        if (url.hostname === 'www.youtube.com') {
+          return new Response(null, { status: 302, headers: { location: 'https://cdn.example/oembed' } })
+        }
+        return new Response(JSON.stringify({ title: 'Moved' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      },
+    })
+    expect(hops).toEqual([
+      { host: 'www.youtube.com', address: '9.9.9.9' },
+      { host: 'cdn.example', address: '1.2.3.4' },
+    ])
+    expect(result).toEqual({ ok: true, data: { title: 'Moved' } })
+  })
+
+  it('does not dial a redirect that resolves to a private address', async () => {
+    let dials = 0
+    const result = await fetchOembed({
+      url: 'https://youtu.be/abc',
+      resolve: async host => host === 'cdn.example' ? ['127.0.0.1'] : ['9.9.9.9'],
+      connect: async () => {
+        dials += 1
+        return new Response(null, { status: 302, headers: { location: 'https://cdn.example/oembed' } })
+      },
+    })
+    expect(dials).toBe(1)
+    expect(result).toMatchObject({ ok: false, status: 422 })
+  })
 })
 
 describe('embedUrlFromHtml', () => {

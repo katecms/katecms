@@ -1,9 +1,8 @@
-import { lookup } from 'node:dns/promises'
-import { isIP } from 'node:net'
 import { createError, defineEventHandler, getQuery } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import { can, fetchOembed, getRole } from '@miraicms/core'
 import type { ResourceRights, RoleMap, SafeUser } from '@miraicms/core'
+import { connectOembed, resolveOembedHost } from '../../utils/oembed-fetch'
 import { requireUser } from '../../utils/session'
 
 function queryString(value: unknown): string | undefined {
@@ -32,15 +31,6 @@ function canFetchOembed(user: SafeUser, roles: RoleMap): boolean {
   return Object.values(collections).some(right => canWrite(right))
 }
 
-async function resolveHost(hostname: string): Promise<string[]> {
-  const host = hostname.replace(/^\[|\]$/g, '')
-  if (isIP(host)) {
-    return [host]
-  }
-  const records = await lookup(host, { all: true, verbatim: true })
-  return records.map(record => record.address)
-}
-
 export default defineEventHandler(async (event) => {
   const user = await requireUser(event)
   const roles = useRuntimeConfig().miraicms?.roles ?? {}
@@ -57,7 +47,8 @@ export default defineEventHandler(async (event) => {
     url: queryString(query.url) ?? '',
     maxwidth: queryString(query.maxwidth),
     maxheight: queryString(query.maxheight),
-    resolve: resolveHost,
+    resolve: resolveOembedHost,
+    connect: connectOembed,
   })
 
   if (!result.ok) {

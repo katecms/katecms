@@ -98,7 +98,7 @@ $root: '.miraicms-true-false-field';
         }
         &__on,
         &__off {
-          color: $color-surface;
+          color: $color-on-accent;
         }
       }
     }
@@ -122,7 +122,7 @@ $root: '.miraicms-true-false-field';
     bottom: 2px;
     left: 2px;
     width: calc(50% - 4px);
-    background-color: $color-surface;
+    background-color: $color-on-accent;
     border: 1px solid $color-border;
     border-radius: $border-radius-inter;
     transition: left 0.3s ease;
@@ -160,7 +160,7 @@ $root: '.miraicms-true-false-field';
       height: math-rem(19);
       border-radius: 50%;
       transition: left .3s;
-      background-color: $color-surface;
+      background-color: $color-on-accent;
     }
 
     &.is-on {

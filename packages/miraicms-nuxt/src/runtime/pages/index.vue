@@ -3,12 +3,43 @@ import { computed } from 'vue'
 import { useCookie, useHead, useRoute } from '#imports'
 import { useCmsPaths } from '../composables/useCmsPaths'
 
-useHead({
+type ThemeMode = 'system' | 'light' | 'dark'
+
+const themeOrder: ThemeMode[] = ['system', 'light', 'dark']
+
+const theme = useCookie<ThemeMode>('miraicms-theme', {
+  default: () => 'system',
+  maxAge: 60 * 60 * 24 * 365,
+  sameSite: 'lax',
+  watch: true,
+})
+
+const themeMode = computed<ThemeMode>(() => themeOrder.includes(theme.value) ? theme.value : 'system')
+
+const themeClass = computed(() => themeMode.value === 'system' ? '' : `miraicms-theme-${themeMode.value}`)
+
+const themeLabel = computed(() => {
+  if (themeMode.value === 'light') {
+    return 'Light theme. Switch to dark'
+  }
+  if (themeMode.value === 'dark') {
+    return 'Dark theme. Switch to system'
+  }
+  return 'System theme. Switch to light'
+})
+
+useHead(() => ({
   bodyAttrs: {
     id: 'miraicms-body',
+    class: themeClass.value,
   },
-  titleTemplate: title => title ? `${title} - MiraiCMS` : 'MiraiCMS',
-})
+  titleTemplate: (title?: string) => title ? `${title} - MiraiCMS` : 'MiraiCMS',
+}))
+
+function cycleTheme() {
+  const index = themeOrder.indexOf(themeMode.value)
+  theme.value = themeOrder[(index + 1) % themeOrder.length] ?? 'system'
+}
 
 const route = useRoute()
 const paths = useCmsPaths()
@@ -62,6 +93,73 @@ function toggleSidebar() {
             d="M9 4.75v14.5"
             stroke="currentColor"
             stroke-width="1.6"
+          />
+        </svg>
+      </MiraiCmsUiButton>
+      <MiraiCmsUiButton
+        tag="button"
+        :class="`${rootClass}-theme-toggle`"
+        :variant="['tertiary', 'icon']"
+        :title="themeLabel"
+        :aria-label="themeLabel"
+        @click="cycleTheme"
+      >
+        <svg
+          v-if="themeMode === 'system'"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <rect
+            x="3.75"
+            y="4.75"
+            width="16.5"
+            height="11.5"
+            rx="1.5"
+            stroke="currentColor"
+            stroke-width="1.6"
+          />
+          <path
+            d="M8.5 19.75h7M12 16.25v3.5"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          />
+        </svg>
+        <svg
+          v-else-if="themeMode === 'light'"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="4"
+            stroke="currentColor"
+            stroke-width="1.6"
+          />
+          <path
+            d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          />
+        </svg>
+        <svg
+          v-else
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M16.2 14.8A6.2 6.2 0 0 1 9.4 4.6 6.4 6.4 0 1 0 16.2 14.8Z"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linejoin="round"
           />
         </svg>
       </MiraiCmsUiButton>
@@ -133,6 +231,10 @@ $root: '.miraicms';
 
       :deep(.miraicms-btn.miraicms-sidebar-toggle) {
         margin-right: auto;
+        color: $color-ink;
+      }
+
+      :deep(.miraicms-btn.miraicms-theme-toggle) {
         color: $color-ink;
       }
     }

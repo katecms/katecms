@@ -264,7 +264,7 @@ $root: '.miraicms-link-field';
     align-items: center;
     justify-content: center;
     padding: math-rem(60) math-rem(16);
-    background-color: color-alpha($color-ink, 0.45);
+    background-color: $color-overlay;
   }
 
   &__modal {

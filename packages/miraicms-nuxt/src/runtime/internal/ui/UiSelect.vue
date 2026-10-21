@@ -1389,7 +1389,7 @@ $root: ".miraicms-select";
 
     &[aria-selected="true"] {
       background-color: $color-accent;
-      color: $color-surface;
+      color: $color-on-accent;
     }
 
     &--highlighted:not([aria-selected="true"]):not([disabled]) {

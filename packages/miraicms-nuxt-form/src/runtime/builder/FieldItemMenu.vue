@@ -345,7 +345,7 @@ $root: '.miraicms-form-builder';
 
   &:hover {
     background: $color-accent;
-    color: $color-surface;
+    color: $color-on-accent;
   }
 }
 

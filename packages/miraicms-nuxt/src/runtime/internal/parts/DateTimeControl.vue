@@ -611,7 +611,7 @@ $root: '.miraicms-date-time-control';
 
     &.is-selected {
       background-color: $color-accent;
-      color: #fff;
+      color: $color-on-accent;
     }
 
     &:focus {

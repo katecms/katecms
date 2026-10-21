@@ -126,7 +126,7 @@ $root: '.miraicms-button-group-field';
     &.is-active {
       background-color: $color-accent;
       border-color: $color-accent;
-      color: $color-surface;
+      color: $color-on-accent;
       position: relative;
       z-index: 1;
     }

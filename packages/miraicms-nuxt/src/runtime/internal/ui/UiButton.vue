@@ -202,7 +202,7 @@ $root: '.miraicms-btn';
 
   &:not(#{$root}--secondary):not(#{$root}--tertiary):not(#{$root}--red) {
     background: $color-accent;
-    color: $color-surface;
+    color: $color-on-accent;
     box-shadow: $shadow-sm, 0 4px 12px rgba(47, 111, 237, .18);
 
     &:hover:not(:disabled):not(#{$root}--disabled),

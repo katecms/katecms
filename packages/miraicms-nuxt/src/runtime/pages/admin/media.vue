@@ -995,8 +995,8 @@ $root: '.miraicms-media';
       align-items: center;
       justify-content: center;
       gap: math-rem(6);
-      background: color-alpha($color-ink, 0.55);
-      color: $color-surface;
+      background: $color-overlay;
+      color: $color-on-accent;
       font-size: math-rem(12);
       font-weight: 600;
     }
@@ -1004,8 +1004,8 @@ $root: '.miraicms-media';
     &__spinner {
       width: math-rem(14);
       height: math-rem(14);
-      border: 2px solid color-alpha($color-surface, 0.4);
-      border-top-color: $color-surface;
+      border: 2px solid color-alpha($color-on-accent, 0.4);
+      border-top-color: $color-on-accent;
       border-radius: 50%;
       animation: miraicms-media-spin 0.7s linear infinite;
     }
@@ -1054,7 +1054,7 @@ $root: '.miraicms-media';
       align-items: center;
       justify-content: center;
       padding: math-rem(24);
-      background: color-alpha($color-ink, 0.45);
+      background: $color-overlay;
     }
 
     &__modal {

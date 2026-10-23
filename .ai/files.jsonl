@@ -1,4 +1,29 @@
 {"p":".vscode/settings.json","pkg":"miraicms-monorepo","k":"config","ln":4,"sum":"Config settings.json"}
+{"p":"docs/back/01-monorepo.md","pkg":"miraicms-monorepo","k":"doc","ln":53,"sum":"Монорепозиторий"}
+{"p":"docs/back/02-zhiznennyj-cikl-modulya.md","pkg":"miraicms-monorepo","k":"doc","ln":77,"sum":"Жизненный цикл модуля"}
+{"p":"docs/back/03-server.md","pkg":"miraicms-monorepo","k":"doc","ln":101,"sum":"Сервер"}
+{"p":"docs/back/04-admin-obolochka.md","pkg":"miraicms-monorepo","k":"doc","ln":67,"sum":"Админская оболочка"}
+{"p":"docs/back/05-polya-i-komponenty.md","pkg":"miraicms-monorepo","k":"doc","ln":55,"sum":"Виджеты полей и компоненты"}
+{"p":"docs/back/06-yadro.md","pkg":"miraicms-monorepo","k":"doc","ln":74,"sum":"Устройство ядра"}
+{"p":"docs/back/07-shema.md","pkg":"miraicms-monorepo","k":"doc","ln":95,"sum":"Схема базы"}
+{"p":"docs/back/08-seo.md","pkg":"miraicms-monorepo","k":"doc","ln":56,"sum":"Дополнение SEO изнутри"}
+{"p":"docs/back/09-formy.md","pkg":"miraicms-monorepo","k":"doc","ln":87,"sum":"Дополнение форм изнутри"}
+{"p":"docs/back/10-sborka.md","pkg":"miraicms-monorepo","k":"doc","ln":57,"sum":"Сборка, тесты и индекс"}
+{"p":"docs/back/README.md","pkg":"miraicms-monorepo","k":"doc","ln":31,"sum":"Внутри модуля"}
+{"p":"docs/front/01-granica-i-podklyuchenie.md","pkg":"miraicms-monorepo","k":"doc","ln":98,"sum":"Граница и подключение"}
+{"p":"docs/front/02-konfig-modulya.md","pkg":"miraicms-monorepo","k":"doc","ln":55,"sum":"Ключ `miraicms`"}
+{"p":"docs/front/03-kollekcii.md","pkg":"miraicms-monorepo","k":"doc","ln":83,"sum":"Коллекции"}
+{"p":"docs/front/04-slovari.md","pkg":"miraicms-monorepo","k":"doc","ln":58,"sum":"Словари"}
+{"p":"docs/front/05-opcii-i-bloki.md","pkg":"miraicms-monorepo","k":"doc","ln":58,"sum":"Страницы опций и блоки"}
+{"p":"docs/front/06-roli.md","pkg":"miraicms-monorepo","k":"doc","ln":66,"sum":"Роли"}
+{"p":"docs/front/07-baza-i-media.md","pkg":"miraicms-monorepo","k":"doc","ln":69,"sum":"База, медиа и секрет сессии"}
+{"p":"docs/front/08-polya.md","pkg":"miraicms-monorepo","k":"doc","ln":238,"sum":"Поля"}
+{"p":"docs/front/09-chtenie-s-sajta.md","pkg":"miraicms-monorepo","k":"doc","ln":154,"sum":"Чтение данных на сайте"}
+{"p":"docs/front/10-stranica-sajta.md","pkg":"miraicms-monorepo","k":"doc","ln":39,"sum":"Страница сайта"}
+{"p":"docs/front/11-dopolneniya.md","pkg":"miraicms-monorepo","k":"doc","ln":134,"sum":"Дополнения снаружи модуля"}
+{"p":"docs/front/12-yadro-snaruzhi.md","pkg":"miraicms-monorepo","k":"doc","ln":84,"sum":"Ядро без Nuxt"}
+{"p":"docs/front/README.md","pkg":"miraicms-monorepo","k":"doc","ln":27,"sum":"Снаружи модуля"}
+{"p":"docs/README.md","pkg":"miraicms-monorepo","k":"doc","ln":43,"sum":"Документация MiraiCMS"}
 {"p":"eslint.config.mjs","pkg":"miraicms-monorepo","k":"config","ln":31,"sum":"Config eslint.config.mjs","ext":["@nuxt/eslint-config"]}
 {"p":"fields_form.md","pkg":"miraicms-monorepo","k":"doc","ln":335,"sum":"Doc fields_form.md"}
 {"p":"package.json","pkg":"miraicms-monorepo","k":"manifest","ln":32,"sum":"MiraiCMS monorepo: framework-agnostic core and Nuxt adapter."}

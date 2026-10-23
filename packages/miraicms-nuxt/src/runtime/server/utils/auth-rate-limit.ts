@@ -1,37 +1,30 @@
 import type { H3Event } from 'h3'
-import { createError, getRequestHeader, getRequestIP, setHeader } from 'h3'
-import { createAuthRateLimiter } from '@miraicms/core'
-import { clientAddress, trustedProxyHops } from './client-address'
+import { createError, setHeader } from 'h3'
+import {
+  authAttemptKeys,
+  authAttemptRetryAfterMs,
+  recordAuthAttemptFailure,
+  recordAuthAttemptSuccess,
+} from './auth-attempts'
+import type { AuthAttemptKeys } from './auth-attempts'
+import { eventClientAddress } from './request-address'
 
-const limiter = createAuthRateLimiter()
+export { authAttemptKeys, recordAuthAttemptFailure, recordAuthAttemptSuccess }
+export type { AuthAttemptKeys }
 
-export function getAuthAttemptKey(
+export function getAuthAttemptKeys(
   event: H3Event,
   action: 'login' | 'register',
   email: string,
-): string {
-  const hops = trustedProxyHops()
-  const ip = clientAddress({
-    forwardedFor: hops > 0 ? getRequestHeader(event, 'x-forwarded-for') : undefined,
-    hops,
-    socketAddress: getRequestIP(event),
-  })
-  return `${action}:${ip}:${email.trim().toLowerCase()}`
+): AuthAttemptKeys {
+  return authAttemptKeys(action, eventClientAddress(event), email)
 }
 
-export function assertAuthAttemptAllowed(event: H3Event, key: string): void {
-  const decision = limiter.check(key)
-  if (!decision.allowed) {
-    throwTooManyAttempts(event, decision.retryAfterMs)
+export function assertAuthAttemptAllowed(event: H3Event, key: string | AuthAttemptKeys): void {
+  const retryAfterMs = authAttemptRetryAfterMs(key)
+  if (retryAfterMs > 0) {
+    throwTooManyAttempts(event, retryAfterMs)
   }
-}
-
-export function recordAuthAttemptFailure(key: string) {
-  return limiter.recordFailure(key)
-}
-
-export function recordAuthAttemptSuccess(key: string): void {
-  limiter.recordSuccess(key)
 }
 
 export function throwTooManyAttempts(event: H3Event, retryAfterMs: number): never {

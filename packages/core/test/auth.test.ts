@@ -3,6 +3,7 @@ import {
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
   createAuthRateLimiter,
+  createWindowRateLimiter,
   hashPassword,
   validateEmail,
   validatePassword,
@@ -128,5 +129,40 @@ describe('createAuthRateLimiter', () => {
     expect(limiter.check('b').allowed).toBe(false)
     now += 10_000
     expect(limiter.check('b').allowed).toBe(true)
+  })
+
+  it('clears only the key passed to recordSuccess', () => {
+    const limiter = createAuthRateLimiter({
+      maxAttempts: 3,
+      delayMs: 5_000,
+      now: () => 0,
+    })
+
+    limiter.recordFailure('login:ip:203.0.113.10')
+    limiter.recordFailure('login:ip:203.0.113.10')
+    limiter.recordFailure('login:ip:203.0.113.10')
+    limiter.recordSuccess('login:email:ada@example.com')
+
+    expect(limiter.check('login:ip:203.0.113.10').allowed).toBe(false)
+    expect(limiter.check('login:email:ada@example.com').allowed).toBe(true)
+  })
+})
+
+describe('createWindowRateLimiter', () => {
+  it('allows a fixed number of hits per window and then refuses', () => {
+    let now = 5_000
+    const limiter = createWindowRateLimiter({
+      max: 2,
+      windowMs: 1_000,
+      now: () => now,
+    })
+
+    expect(limiter.consume('submit:1')).toEqual({ allowed: true, retryAfterMs: 0 })
+    expect(limiter.consume('submit:1')).toEqual({ allowed: true, retryAfterMs: 0 })
+    expect(limiter.consume('submit:1')).toEqual({ allowed: false, retryAfterMs: 1_000 })
+    expect(limiter.consume('submit:2')).toEqual({ allowed: true, retryAfterMs: 0 })
+
+    now += 1_000
+    expect(limiter.consume('submit:1')).toEqual({ allowed: true, retryAfterMs: 0 })
   })
 })

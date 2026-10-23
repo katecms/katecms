@@ -280,6 +280,7 @@
       "DEFAULT_COLLECTION_PER_PAGE",
       "DEFAULT_IMAGE_QUALITY",
       "DEFAULT_MAX_INPUT_PIXELS",
+      "DEFAULT_WINDOW_RATE_LIMIT",
       "Database",
       "DatabaseConfig",
       "DatabaseDriver",
@@ -434,6 +435,8 @@
       "ValidationFailure",
       "ValidationResult",
       "ValidationSuccess",
+      "WindowRateLimitOptions",
+      "WindowRateLimiter",
       "applyFieldIndexDiff",
       "autop",
       "buildArchivePath",
@@ -473,6 +476,7 @@
       "createPostgresDb",
       "createSqliteDb",
       "createUser",
+      "createWindowRateLimiter",
       "decodeChoiceValue",
       "defaultRewrite",
       "defaults",
@@ -497,6 +501,7 @@
       "extensionForMime",
       "extractExpressionFromIndexDef",
       "fetchOembed",
+      "fieldsQueryUsesRegexp",
       "filterUsersByRole",
       "findCollectionById",
       "findCollectionBySlugPath",
@@ -856,10 +861,13 @@
       "useMiraiCmsTermPanels"
     ],
     "nuxt/server": [
+      "clientAddress",
+      "eventClientAddress",
       "getDb",
       "requireEntryPermission",
       "requirePermission",
-      "requireUser"
+      "requireUser",
+      "trustedProxyHops"
     ],
     "nuxt/styles": [],
     "nuxt-form": [],

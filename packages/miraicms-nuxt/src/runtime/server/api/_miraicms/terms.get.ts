@@ -16,6 +16,7 @@ import type {
   TermOrderField,
 } from '@miraicms/core'
 import { getDb } from '../../utils/db'
+import { rejectPublicRegexp } from '../../utils/public-fields-query'
 import { fail, getCollections, readPerPage } from '../../utils/collections'
 import { getDictionaries } from '../../utils/dictionaries'
 
@@ -126,7 +127,7 @@ function readFieldsQuery(value: unknown): FieldsQuery | undefined {
   if (typeof parsed !== 'object' || parsed == null || Array.isArray(parsed)) {
     fail(400, 'Invalid fieldsQuery.')
   }
-  return parseFieldsQuery(parsed)
+  return rejectPublicRegexp(parseFieldsQuery(parsed))
 }
 
 function readOrderByField(value: unknown): TermOrderField | undefined {
@@ -178,7 +179,8 @@ function resolveDictionaries(requested: string[], all: Dictionaries): string[] {
  * - `parentId` (`0` = top-level), `childOf`, `childless`
  * - `slug`, `title`, `search`
  * - `hideEmpty` (default true), `hierarchical` (default true), `padCounts`
- * - `fieldsQuery` — JSON object (`relation` + `queries`) against term `fields`
+ * - `fieldsQuery` — JSON object (`relation` + `queries`) against term `fields`.
+ *   `REGEXP` and `NOT REGEXP` are rejected.
  * - `orderBy`, `order`, `orderByField` — JSON `{ key, type? }` when `orderBy=field`
  * - `return` — `all`, `ids`, `titles`, `count`, `idParent`, `idSlug`, `idTitle`
  *

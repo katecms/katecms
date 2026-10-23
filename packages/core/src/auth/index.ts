@@ -10,10 +10,14 @@ export type { AuthState, SafeUser } from './types'
 export { hashPassword, verifyPassword } from './password'
 export {
   DEFAULT_AUTH_RATE_LIMIT,
+  DEFAULT_WINDOW_RATE_LIMIT,
   createAuthRateLimiter,
+  createWindowRateLimiter,
 } from './rate-limit'
 export type {
   AuthRateLimitDecision,
   AuthRateLimitOptions,
   AuthRateLimiter,
+  WindowRateLimitOptions,
+  WindowRateLimiter,
 } from './rate-limit'

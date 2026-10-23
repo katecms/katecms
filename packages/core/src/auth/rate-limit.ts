@@ -38,8 +38,10 @@ export const DEFAULT_AUTH_RATE_LIMIT = {
  * In-memory failed-attempt limiter for login/register.
  *
  * After {@link DEFAULT_AUTH_RATE_LIMIT.maxAttempts} consecutive failures the
- * next try is delayed by a few seconds (doubling up to `maxDelayMs`). Counts
- * reset on success or after `windowMs` of inactivity.
+ * next try is delayed by a few seconds (doubling up to `maxDelayMs`).
+ * {@link AuthRateLimiter.recordSuccess} drops only the key it is given, so a
+ * caller can keep an address bucket after a successful login. A key also
+ * resets after `windowMs` of inactivity once its cooldown has elapsed.
  */
 export function createAuthRateLimiter(options: AuthRateLimitOptions = {}): AuthRateLimiter {
   const maxAttempts = options.maxAttempts ?? DEFAULT_AUTH_RATE_LIMIT.maxAttempts
@@ -110,4 +112,71 @@ export function createAuthRateLimiter(options: AuthRateLimitOptions = {}): AuthR
   }
 
   return { check, recordFailure, recordSuccess }
+}
+
+export interface WindowRateLimitOptions {
+  /** Hits allowed inside one window. Default 10. */
+  max?: number
+  /** Window length in milliseconds. Default 10 minutes. */
+  windowMs?: number
+  now?: () => number
+}
+
+export interface WindowRateLimiter {
+  /** Record a hit, or refuse it when the current window is full. */
+  consume(key: string): AuthRateLimitDecision
+}
+
+export const DEFAULT_WINDOW_RATE_LIMIT = {
+  max: 10,
+  windowMs: 10 * 60 * 1000,
+} as const
+
+interface WindowEntry {
+  count: number
+  windowStart: number
+}
+
+/**
+ * Fixed-window counter for anonymous bursts (form submits).
+ *
+ * An allowed call consumes one hit. A refused call does not, and
+ * `retryAfterMs` is the time left in that window.
+ */
+export function createWindowRateLimiter(options: WindowRateLimitOptions = {}): WindowRateLimiter {
+  const max = Math.max(1, options.max ?? DEFAULT_WINDOW_RATE_LIMIT.max)
+  const windowMs = options.windowMs ?? DEFAULT_WINDOW_RATE_LIMIT.windowMs
+  const now = options.now ?? Date.now
+  const store = new Map<string, WindowEntry>()
+
+  function prune(t: number) {
+    if (store.size < 64) {
+      return
+    }
+    for (const [key, entry] of store) {
+      if (t - entry.windowStart >= windowMs) {
+        store.delete(key)
+      }
+    }
+  }
+
+  function consume(key: string): AuthRateLimitDecision {
+    const t = now()
+    prune(t)
+    const entry = store.get(key)
+    if (!entry || t - entry.windowStart >= windowMs) {
+      store.set(key, { count: 1, windowStart: t })
+      return { allowed: true, retryAfterMs: 0 }
+    }
+    if (entry.count >= max) {
+      return {
+        allowed: false,
+        retryAfterMs: Math.max(0, windowMs - (t - entry.windowStart)),
+      }
+    }
+    entry.count += 1
+    return { allowed: true, retryAfterMs: 0 }
+  }
+
+  return { consume }
 }

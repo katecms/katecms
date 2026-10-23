@@ -278,13 +278,16 @@ function likeMatch(
     : sql`${found} > 0`
 }
 
+/** Same bound as collection search. Longer patterns are ignored, not executed. */
+const MAX_REGEXP_PATTERN_LENGTH = 200
+
 function regexpMatch(
   expr: RawBuilder<unknown>,
   pattern: string,
   postgres: boolean,
   negate: boolean,
 ): RawBuilder<SqlBool> {
-  if (!pattern) {
+  if (!pattern || pattern.length > MAX_REGEXP_PATTERN_LENGTH) {
     return neverMatch()
   }
   if (postgres) {
@@ -449,6 +452,25 @@ function resolveItem(item: FieldsQueryItem): ResolvedItem | null {
     compare,
     type: normalizeCast(item.type),
   }
+}
+
+function isRegexpCompare(value: unknown): boolean {
+  if (typeof value !== 'string') {
+    return false
+  }
+  const token = value.trim().replace(/\s+/g, ' ').toUpperCase()
+  return token === 'REGEXP' || token === 'NOT REGEXP'
+}
+
+/**
+ * Whether a field filter uses a regexp compare on the value or the key.
+ * Public HTTP queries reject these; in-process callers may still use them.
+ */
+export function fieldsQueryUsesRegexp(query: FieldsQuery | undefined): boolean {
+  if (!query?.queries?.length) {
+    return false
+  }
+  return query.queries.some(item => isRegexpCompare(item.compare) || isRegexpCompare(item.compareKey))
 }
 
 /** Drop empty/invalid items. `undefined` means no field filter. */

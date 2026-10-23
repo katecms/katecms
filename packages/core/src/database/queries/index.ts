@@ -55,7 +55,7 @@ export type {
   DictionaryQueryRelation,
 } from './dictionary-query'
 export { parseDictionaryQuery } from './dictionary-query'
-export { parseFieldsQuery } from './fields-query'
+export { fieldsQueryUsesRegexp, parseFieldsQuery } from './fields-query'
 export type {
   FieldsQuery,
   FieldsQueryCast,

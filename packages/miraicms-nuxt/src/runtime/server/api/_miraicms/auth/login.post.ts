@@ -10,7 +10,7 @@ import { getDb } from '../../../utils/db'
 import { setUserSession } from '../../../utils/session'
 import {
   assertAuthAttemptAllowed,
-  getAuthAttemptKey,
+  getAuthAttemptKeys,
   invalidCredentialsError,
   recordAuthAttemptFailure,
   recordAuthAttemptSuccess,
@@ -30,13 +30,13 @@ export default defineEventHandler(async (event): Promise<{ user: SafeUser }> => 
     throw createError({ statusCode: 422, statusMessage: 'Unprocessable Entity', message: 'Enter email and password.' })
   }
 
-  const attemptKey = getAuthAttemptKey(event, 'login', email)
-  assertAuthAttemptAllowed(event, attemptKey)
+  const attemptKeys = getAuthAttemptKeys(event, 'login', email)
+  assertAuthAttemptAllowed(event, attemptKeys)
 
   // Same generic error for "no such user", "banned" and "wrong password" so the
   // endpoint doesn't reveal which emails are registered.
   function fail(): never {
-    const { retryAfterMs } = recordAuthAttemptFailure(attemptKey)
+    const { retryAfterMs } = recordAuthAttemptFailure(attemptKeys)
     throw invalidCredentialsError(retryAfterMs)
   }
 
@@ -56,7 +56,7 @@ export default defineEventHandler(async (event): Promise<{ user: SafeUser }> => 
     fail()
   }
 
-  recordAuthAttemptSuccess(attemptKey)
+  recordAuthAttemptSuccess(attemptKeys)
   await setUserSession(event, user.id, user.session_version)
   return { user: toSafeUser(user) }
 })

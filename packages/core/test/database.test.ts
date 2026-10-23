@@ -33,6 +33,7 @@ import {
   queryCollections,
   queryTerms,
   countQueryCollections,
+  fieldsQueryUsesRegexp,
   parseFieldsQuery,
   setCollectionDictionaries,
   setOption,
@@ -771,6 +772,19 @@ describe('database layer', () => {
     }
   })
 
+  it('detects regexp field filters', () => {
+    expect(fieldsQueryUsesRegexp(undefined)).toBe(false)
+    expect(fieldsQueryUsesRegexp(parseFieldsQuery({
+      queries: [{ key: 'color', value: 'red' }],
+    }))).toBe(false)
+    expect(fieldsQueryUsesRegexp(parseFieldsQuery({
+      queries: [{ key: 'sku', compare: 'regexp', value: '^bar' }],
+    }))).toBe(true)
+    expect(fieldsQueryUsesRegexp({
+      queries: [{ key: '^col', compareKey: 'not regexp', compare: 'EXISTS' }],
+    })).toBe(true)
+  })
+
   it('filters collections by fieldsQuery', async () => {
     const { db, close } = await memoryDb()
     try {
@@ -874,6 +888,15 @@ describe('database layer', () => {
           fieldsQuery: { queries: [{ key: 'sku', compare: 'REGEXP', value: '^bar' }] },
         })).map(row => row.slug),
       ).toEqual(['red-cheap'])
+
+      const oversizedPattern = `^bar${'.{0}'.repeat(50)}`
+      expect(oversizedPattern.length).toBeGreaterThan(200)
+      expect(
+        (await queryCollections(db, {
+          types: ['post'],
+          fieldsQuery: { queries: [{ key: 'sku', compare: 'REGEXP', value: oversizedPattern }] },
+        })).map(row => row.slug),
+      ).toEqual([])
 
       expect(
         (await queryCollections(db, {

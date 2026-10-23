@@ -16,7 +16,7 @@ import { getDb } from '../../../utils/db'
 import { setUserSession } from '../../../utils/session'
 import {
   assertAuthAttemptAllowed,
-  getAuthAttemptKey,
+  getAuthAttemptKeys,
   recordAuthAttemptFailure,
   recordAuthAttemptSuccess,
   throwTooManyAttempts,
@@ -38,6 +38,9 @@ interface RegisterBody {
  *
  * `registration: false` rejects every account after the first. Admin user
  * creation does not use this handler.
+ *
+ * A duplicate email is a generic 422. The message does not say the address
+ * is already registered, and no session is issued.
  */
 export default defineEventHandler(async (event): Promise<{ user: SafeUser }> => {
   const body = await readBody<RegisterBody>(event)
@@ -45,11 +48,11 @@ export default defineEventHandler(async (event): Promise<{ user: SafeUser }> => 
   const password = typeof body?.password === 'string' ? body.password : ''
   const passwordConfirm = typeof body?.passwordConfirm === 'string' ? body.passwordConfirm : ''
 
-  const attemptKey = getAuthAttemptKey(event, 'register', email || 'unknown')
-  assertAuthAttemptAllowed(event, attemptKey)
+  const attemptKeys = getAuthAttemptKeys(event, 'register', email)
+  assertAuthAttemptAllowed(event, attemptKeys)
 
   const failValidation = (statusMessage: string): never => {
-    const { retryAfterMs } = recordAuthAttemptFailure(attemptKey)
+    const { retryAfterMs } = recordAuthAttemptFailure(attemptKeys)
     if (retryAfterMs > 0) {
       throwTooManyAttempts(event, retryAfterMs)
     }
@@ -88,17 +91,21 @@ export default defineEventHandler(async (event): Promise<{ user: SafeUser }> => 
       })
     })
 
-    recordAuthAttemptSuccess(attemptKey)
+    recordAuthAttemptSuccess(attemptKeys)
     await setUserSession(event, user.id, user.session_version)
     return { user: toSafeUser(user) }
   }
   catch (error) {
     if (isUniqueConstraintError(error)) {
-      const { retryAfterMs } = recordAuthAttemptFailure(attemptKey)
+      const { retryAfterMs } = recordAuthAttemptFailure(attemptKeys)
       if (retryAfterMs > 0) {
         throwTooManyAttempts(event, retryAfterMs)
       }
-      throw createError({ statusCode: 409, statusMessage: 'Conflict', message: 'A user with this email already exists.' })
+      throw createError({
+        statusCode: 422,
+        statusMessage: 'Unprocessable Entity',
+        message: 'Could not create the account.',
+      })
     }
     throw error
   }

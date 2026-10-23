@@ -1,6 +1,6 @@
 import { createError } from 'h3'
 import type { H3Event } from 'h3'
-import { getRequestIP, readBody, readMultipartFormData } from 'h3'
+import { readBody, readMultipartFormData } from 'h3'
 import { sql } from 'kysely'
 import type {
   FormContent,
@@ -26,6 +26,7 @@ import { getFormDb, maxFileBytes } from './db'
 import { applyServerFormBreakpoints } from './breakpoints'
 import { sendSubmissionMail, type SubmissionMail } from './mail'
 import { deleteFormUploads, deleteStoredFile, saveFormFile } from './uploads'
+import { takeFormSubmission } from './submit-rate-limit'
 
 interface FormRow {
   id: number
@@ -181,16 +182,16 @@ export async function submitForm(event: H3Event, id: number): Promise<{ ok: true
   }
 
   const message = submissionMail(form, input, files)
+  const ip = takeFormSubmission(event)
   if (form.content.disableEntryStorage) {
     await deliverSubmissionMail(message, true)
     return { ok: true, id: 0 }
   }
 
   const db = getFormDb()
-  const ip = getRequestIP(event, { xForwardedFor: true }) || ''
   const inserted = await sql<{ id: number }>`
     INSERT INTO miraicms_form_submissions (form_id, ip, created_at)
-    VALUES (${form.id}, ${ip.slice(0, 80)}, ${nowIso()})
+    VALUES (${form.id}, ${ip}, ${nowIso()})
     RETURNING id
   `.execute(db)
   const submissionId = Number(inserted.rows[0]?.id)

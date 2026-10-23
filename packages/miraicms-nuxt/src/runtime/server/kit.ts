@@ -1,3 +1,5 @@
 export { getDb } from './utils/db'
 export { requireUser } from './utils/session'
 export { requireEntryPermission, requirePermission } from './utils/permissions'
+export { clientAddress, trustedProxyHops } from './utils/client-address'
+export { eventClientAddress } from './utils/request-address'

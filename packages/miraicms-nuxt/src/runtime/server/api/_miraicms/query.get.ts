@@ -21,6 +21,7 @@ import type {
   QueryCollectionsOptions,
 } from '@miraicms/core'
 import { getDb } from '../../utils/db'
+import { rejectPublicRegexp } from '../../utils/public-fields-query'
 import { getCurrentUser } from '../../utils/session'
 import {
   fail,
@@ -162,7 +163,7 @@ function readFieldsQuery(value: unknown): FieldsQuery | undefined {
   if (typeof parsed !== 'object' || parsed == null || Array.isArray(parsed)) {
     fail(400, 'Invalid fieldsQuery.')
   }
-  return parseFieldsQuery(parsed)
+  return rejectPublicRegexp(parseFieldsQuery(parsed))
 }
 
 function defaultPerPage(defs: CollectionDefinition[]): number {
@@ -201,7 +202,8 @@ function resolveQueryCollectionTypes(requested: string[], all: Collections): str
  * - `parentId` (`0` = top-level), `parentIds`, `excludeParentIds`
  * - `authorIn`, `authorNotIn`, `slug`, `slugs`
  * - `dictionaryQuery` — JSON object (`relation` + `queries`)
- * - `fieldsQuery` — JSON object (`relation` + `queries`) against `fields`
+ * - `fieldsQuery` — JSON object (`relation` + `queries`) against `fields`.
+ *   `REGEXP` and `NOT REGEXP` are rejected.
  * - `orderBy` (`date`, `modified`, `name`, `includeIds`, or a column), `order`
  *
  * Collections with `public: false` are skipped. Unknown types are skipped.

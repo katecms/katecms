@@ -50,6 +50,7 @@ export {
   listCollections,
   loadCollectionSlugPath,
   parseDictionaryQuery,
+  fieldsQueryUsesRegexp,
   parseFieldsQuery,
   queryCollections,
   updateCollection,

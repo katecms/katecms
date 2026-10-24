@@ -7,7 +7,7 @@
 - Вёрстку вокруг данных CMS: заголовок, списки, ссылки через `permalink`.
 - Стили публичной формы. Компонент `MiraiCmsForm` приходит без визуальной темы и отдаёт раскладку через data-атрибуты.
 - Плагин своего дополнения: регистрация вкладки сайдбара, пункта меню, панели термина.
-- Переменные окружения деплоя: `MIRAICMS_SESSION_PASSWORD`, при Postgres без `url` в конфиге — `DATABASE_URL`.
+- Переменные окружения деплоя: `MIRAICMS_SESSION_PASSWORD`, за обратным прокси — `MIRAICMS_TRUST_PROXY`, при Postgres без `url` в конфиге — `DATABASE_URL`.
 
 ## Что хост получает готовым
 
@@ -25,7 +25,7 @@
 | --- | --- |
 | `miraicms-nuxt` | Сам Nuxt-модуль. В `modules` достаточно строки имени |
 | `miraicms-nuxt/extensions` | Регистрация вкладок, меню, панелей термина, своего поля |
-| `miraicms-nuxt/server` | `getDb`, `requireUser`, `requirePermission`, `requireEntryPermission` для серверного кода дополнения |
+| `miraicms-nuxt/server` | `getDb`, `requireUser`, `requirePermission`, `requireEntryPermission`. Адрес клиента для своего лимита: `eventClientAddress`, `clientAddress`, `trustedProxyHops` |
 | `miraicms-nuxt/styles` | SCSS-токены админки для пакета-дополнения |
 | `@miraicms/core` | Ядро. В браузере резолвится в `browser`-сборку, на сервере — в полный вход |
 

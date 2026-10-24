@@ -1,6 +1,6 @@
 # Сервер
 
-Каталог `packages/miraicms-nuxt/src/runtime/server`. Точка для дополнений — `kit.ts`: наружу торчат только `getDb`, `requireUser`, `requirePermission`, `requireEntryPermission`. Остальные утилиты — внутренние импорты обработчиков.
+Каталог `packages/miraicms-nuxt/src/runtime/server`. Точка для дополнений — `kit.ts`: наружу торчат `getDb`, `requireUser`, `requirePermission`, `requireEntryPermission`, `clientAddress`, `trustedProxyHops`, `eventClientAddress`. Остальные утилиты — внутренние импорты обработчиков.
 
 ## Клиент базы
 
@@ -28,7 +28,9 @@
 
 ## Лимит попыток
 
-`utils/auth-rate-limit.ts` держит один `createAuthRateLimiter()` из ядра на процесс. Дефолт ядра: 3 неудачи, затем задержка 5 с с удвоением до 30 с, окно 15 минут. Ключ — `login|register` + IP + email в lower-case. IP берётся из сокета; `X-Forwarded-For` учитывается, только если заданы доверенные хопы (`client-address.ts`). Память лимитера не общая между воркерами.
+`utils/auth-attempts.ts` держит один `createAuthRateLimiter()` из ядра на процесс. Дефолт ядра: 3 неудачи, затем задержка 5 с с удвоением до 30 с, окно 15 минут. На попытку три ключа: действие + адрес + email, только адрес, только email. Успех снимает пару и email. Ключ адреса остаётся, чтобы один удачный вход не открывал перебор с того же адреса. Память лимитера не общая между воркерами.
+
+Адрес читает `eventClientAddress` (`request-address.ts`, разбор в `client-address.ts`). Это сокет. `X-Forwarded-For` учитывается только при `MIRAICMS_TRUST_PROXY`: `1` / `true` / `on` — один прокси, целое `N` — столько прокси с конца списка. Пустое значение, `0`, `false`, `off` и нечисло заголовок не включают. Тот же разбор у лимита отправки форм.
 
 Логин (`auth/login.post.ts`) на пустое тело отвечает 422. Неизвестный email, banned и неверный пароль дают один и тот же 401 `Invalid email or password.`, чтобы ручка не подтверждала существование адреса. Пароль длиннее `MAX_PASSWORD_LENGTH` отклоняется до scrypt. Успех пишет сессию и сбрасывает счётчик. 429 ставит `Retry-After`.
 

@@ -14,7 +14,7 @@
 | Таксономии | `miraicms.dictionaries` | [04](04-slovari.md) |
 | Синглтоны и реестр блоков | `options`, `blocks` | [05](05-opcii-i-bloki.md) |
 | Права | `miraicms.roles` | [06](06-roli.md) |
-| Подключение БД, лимиты файлов, cookie-секрет | `database`, `media`, env | [07](07-baza-i-media.md) |
+| Подключение БД, лимиты файлов, cookie-секрет, доверие прокси | `database`, `media`, env | [07](07-baza-i-media.md) |
 | Схема значений записи | `fields` у коллекции, словаря, опций, блока | [08](08-polya.md) |
 | Данные на публичной странице | `getCollection`, `getQueryCollection`, `getTerms`, `getOptions` | [09](09-chtenie-s-sajta.md) |
 | Маршрут сайта | catch-all страница хоста | [10](10-stranica-sajta.md) |

@@ -73,7 +73,7 @@
 | GET, PUT | `/api/_miraicms/forms/mail` | SMTP, одна строка id = 1 |
 | POST | `/api/_miraicms/forms/mail/test` | Проверочное письмо через nodemailer |
 
-Публичные `view` и `submit` без сессии админки. `submit` проверяет типы, обязательность, условия и потолок `maxFileBytes`. IP заявки берётся так же осторожно, как в лимитере входа.
+Публичные `view` и `submit` без сессии админки. `submit` проверяет типы, обязательность, условия и потолок `maxFileBytes`. После этой проверки `takeFormSubmission` пропускает 10 отправок с одного адреса за 10 минут, дальше 429 и `Retry-After`. Адрес заявки и корзина лимита — `eventClientAddress`: сокет, а `X-Forwarded-For` только при `MIRAICMS_TRUST_PROXY`, как у лимитера входа.
 
 Письмо собирает `runtime/server/utils/mail.ts` из `FormNotification` внутри content и строки `miraicms_form_mail`. Пароль ящика лежит в колонке `password` как есть: это секрет SMTP, не хеш пользователя CMS. `readMailSettings()` в браузер его не кладёт и отдаёт флаг `passwordSet`. Пустая строка в PUT пароль не затирает: остаётся прежнее значение. В nodemailer пароль уходит только в момент отправки.
 

@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import type { Kysely } from 'kysely'
-import type { Collections } from '../config/types/collection'
-import type { Database } from '../database/client/schema'
+import type { Collections } from '../config'
+import type { Database } from '../database'
 import {
   FIELD_INDEX_TABLE,
   INDEX_NAME_PREFIX,

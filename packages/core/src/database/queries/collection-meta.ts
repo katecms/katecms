@@ -1,5 +1,5 @@
 import type { Kysely, Selectable } from 'kysely'
-import type { CollectionMetaTable, Database } from '../client/schema'
+import type { CollectionMetaTable, Database } from '../client'
 
 export type CollectionMeta = Selectable<CollectionMetaTable>
 

@@ -1,5 +1,5 @@
 import type { Kysely, Selectable, Transaction } from 'kysely'
-import type { CollectionDictionariesTable, Database } from '../client/schema'
+import type { CollectionDictionariesTable, Database } from '../client'
 import type { Collection } from './collections'
 import type { Dictionary } from './dictionaries'
 

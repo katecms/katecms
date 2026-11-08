@@ -1,6 +1,6 @@
 import type { Kysely, SelectQueryBuilder, SqlBool } from 'kysely'
 import { sql } from 'kysely'
-import type { Database } from '../client/schema'
+import type { Database } from '../client'
 import { listDictionaries } from './dictionaries'
 import type { Dictionary } from './dictionaries'
 

@@ -1,5 +1,5 @@
 import type { Kysely } from 'kysely'
-import type { Database } from '../client/schema'
+import type { Database } from '../client'
 import { applyFieldsQueryFilters } from './fields-query'
 import type { FieldsQuery, FieldsQueryCast } from './fields-query'
 import type { Dictionary } from './dictionaries'

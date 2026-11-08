@@ -1,4 +1,4 @@
-import type { ColorArrayValue, LinkValue } from '../config/types/fields'
+import type { ColorArrayValue, LinkValue } from '../config'
 
 export function isLinkValue(value: unknown): value is LinkValue {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {

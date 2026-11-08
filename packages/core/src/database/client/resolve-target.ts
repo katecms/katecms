@@ -1,4 +1,4 @@
-import type { DatabaseDriver } from '../../config/types/database'
+import type { DatabaseDriver } from '../../config'
 
 export interface ResolveDatabaseTargetInput {
   /** `postgres` or `sqlite`. When omitted, a non-empty `url` selects Postgres. */

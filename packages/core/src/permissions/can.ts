@@ -1,4 +1,4 @@
-import type { ResolvedRole, ResourceRights, RoleAction, ScopedRights } from '../config/types/roles'
+import type { ResolvedRole, ResourceRights, RoleAction, ScopedRights } from '../config'
 
 /** Resources that rights can be granted on. */
 export const RESOURCES = ['collections', 'dictionaries', 'media', 'users', 'options', 'forms'] as const

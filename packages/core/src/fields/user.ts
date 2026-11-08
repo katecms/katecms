@@ -1,5 +1,5 @@
-import type { MediaItem } from '../media/types'
-import type { UserFieldValue } from '../config/types/fields'
+import type { MediaItem } from '../media'
+import type { UserFieldValue } from '../config'
 
 /** Row / object accepted by {@link toUserFieldValue}. Extra keys (including a password hash) are dropped. */
 export interface UserFieldSource {

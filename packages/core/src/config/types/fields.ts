@@ -1,4 +1,4 @@
-import type { MediaItem } from '../../media/types'
+import type { MediaItem } from '../../media'
 import type { ConditionalLogic } from './conditional-logic'
 
 /** Choice map: { value: label } */

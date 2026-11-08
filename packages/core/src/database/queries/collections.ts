@@ -1,6 +1,6 @@
 import type { Insertable, Kysely, RawBuilder, Selectable, SelectQueryBuilder, SqlBool, Updateable } from 'kysely'
 import { sql } from 'kysely'
-import type { CollectionStatus, Database, CollectionsTable } from '../client/schema'
+import type { CollectionStatus, Database, CollectionsTable } from '../client'
 import { buildSlugPathMap } from '../../rewrite'
 import { applyListPaging } from './paging'
 import type { ListPaging } from './paging'

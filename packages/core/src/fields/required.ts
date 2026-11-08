@@ -1,5 +1,5 @@
-import type { Field, Fields } from '../config/types/fields'
-import { isMediaItem } from '../media/types'
+import type { Field, Fields } from '../config'
+import { isMediaItem } from '../media'
 import { isColorArrayValue, isLinkValue } from './values'
 import { isOsmMarker } from './osm'
 import { isLayoutOnlyFieldType } from './layout'
@@ -30,7 +30,7 @@ function wysiwygText(value: unknown): string {
   return String(value ?? '')
     .replace(/<[^>]*>/g, ' ')
     .replace(/&nbsp;/gi, ' ')
-    .replace(/&#160;/gi, ' ')
+    .replace(/&#160;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 }

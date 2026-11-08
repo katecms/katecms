@@ -41,9 +41,43 @@ import {
   updateCollection,
   updateUser,
   validateCollectionParent,
+  isUniqueConstraintError,
 } from '../src'
 import { SCHEMA_SQL as postgresSchemaSql } from '../src/database/migrations/postgres/schema'
 import { SCHEMA_SQL as sqliteSchemaSql } from '../src/database/migrations/sqlite/schema'
+
+describe('isUniqueConstraintError', () => {
+  it('accepts unique violations and rejects other SQLite constraints', () => {
+    expect(isUniqueConstraintError({ code: '23505' })).toBe(true)
+    expect(isUniqueConstraintError({ code: 'SQLITE_CONSTRAINT_UNIQUE' })).toBe(true)
+    expect(isUniqueConstraintError({
+      code: 'SQLITE_CONSTRAINT',
+      message: 'UNIQUE constraint failed: users.email',
+    })).toBe(true)
+    expect(isUniqueConstraintError({
+      message: 'duplicate key value violates unique constraint "users_email_unique"',
+    })).toBe(true)
+
+    expect(isUniqueConstraintError({
+      code: 'SQLITE_CONSTRAINT',
+      message: 'CHECK constraint failed: collections',
+    })).toBe(false)
+    expect(isUniqueConstraintError({
+      code: 'SQLITE_CONSTRAINT_CHECK',
+      message: 'collections: slug must be unique among siblings',
+    })).toBe(false)
+    expect(isUniqueConstraintError({
+      code: 'SQLITE_CONSTRAINT_FOREIGNKEY',
+      message: 'FOREIGN KEY constraint failed: unique parent',
+    })).toBe(false)
+    expect(isUniqueConstraintError({
+      code: 'SQLITE_CONSTRAINT_NOTNULL',
+      message: 'NOT NULL constraint failed: users.email is unique',
+    })).toBe(false)
+    expect(isUniqueConstraintError({ message: 'something unique happened' })).toBe(false)
+    expect(isUniqueConstraintError(null)).toBe(false)
+  })
+})
 
 const require = createRequire(import.meta.url)
 const BetterSqlite = require('better-sqlite3') as new (file: string) => {

@@ -1,8 +1,8 @@
-import type { Insertable, Kysely, Selectable, Updateable } from 'kysely'
+import type { Insertable, Kysely, Selectable, SqlBool, Updateable } from 'kysely'
 import { sql } from 'kysely'
-import { OWNER_ROLE } from '../../config/resolve-roles'
-import type { SafeUser } from '../../auth/types'
-import type { Database, UsersTable } from '../client/schema'
+import { OWNER_ROLE } from '../../config'
+import type { SafeUser } from '../../auth'
+import type { Database, UsersTable } from '../client'
 import { applyListPaging } from './paging'
 import type { ListPaging } from './paging'
 
@@ -88,38 +88,42 @@ export async function createUser(
     .executeTakeFirstOrThrow()
 }
 
-export async function updateUser(
-  db: Kysely<Database>,
-  id: number,
-  values: UserUpdate,
-): Promise<User | undefined> {
-  const { id: _id, ...rest } = values
-  const patch = definedValues({
+const LAST_OWNER_ERROR = 'Cannot remove the last owner.'
+
+function isPostgres(db: Kysely<Database>): boolean {
+  return db.getExecutor().adapter.constructor.name === 'PostgresAdapter'
+}
+
+/** Keep a password change and the session bump in one UPDATE. */
+function withSessionBump(patch: UserUpdate) {
+  if (patch.password_hash === undefined) {
+    return patch
+  }
+  const { session_version: _sessionVersion, ...rest } = patch
+  return {
     ...rest,
-    ...rest.email !== undefined ? { email: rest.email.trim().toLowerCase() } : {},
-  })
-  if (Object.keys(patch).length === 0) {
-    return findUserById(db, id)
+    session_version: sql<number>`session_version + 1`,
   }
-  if (patch.password_hash !== undefined) {
-    const current = await findUserById(db, id)
-    if (!current) {
-      return undefined
-    }
-    patch.session_version = current.session_version + 1
-  }
-  if (patch.role !== undefined && patch.role !== OWNER_ROLE) {
-    const current = await findUserById(db, id)
-    if (current?.role === OWNER_ROLE) {
-      await assertNotLastOwner(db, id)
-    }
-  }
-  return db
-    .updateTable('users')
-    .set(patch)
-    .where('id', '=', id)
-    .returningAll()
-    .executeTakeFirst()
+}
+
+/**
+ * SQLite/D1 cannot `FOR UPDATE`. The count check lives in the write itself so
+ * two connections cannot both observe two owners and remove them.
+ */
+function keepsAnOwner() {
+  // Parentheses are required: `AND` binds tighter than `OR`, so a bare
+  // predicate would delete every row once more than one owner exists.
+  return sql<SqlBool>`(role <> ${OWNER_ROLE} or (select count(*) from users where role = ${OWNER_ROLE}) > 1)`
+}
+
+/** Lock every owner row so a second Postgres transaction sees the first commit. */
+async function lockOwners(db: Kysely<Database>): Promise<void> {
+  await db
+    .selectFrom('users')
+    .select('id')
+    .where('role', '=', OWNER_ROLE)
+    .forUpdate()
+    .execute()
 }
 
 async function countOwners(db: Kysely<Database>): Promise<number> {
@@ -135,18 +139,95 @@ async function assertNotLastOwner(db: Kysely<Database>, userId: number): Promise
   const remaining = await countOwners(db)
   const user = await findUserById(db, userId)
   if (user?.role === OWNER_ROLE && remaining <= 1) {
-    throw new Error('Cannot remove the last owner.')
+    throw new Error(LAST_OWNER_ERROR)
   }
+}
+
+/** The write matched nothing. That is the last-owner refusal when the row is still owner. */
+async function throwIfOwnerUnchanged(db: Kysely<Database>, id: number): Promise<void> {
+  const current = await findUserById(db, id)
+  if (current?.role === OWNER_ROLE) {
+    throw new Error(LAST_OWNER_ERROR)
+  }
+}
+
+export async function updateUser(
+  db: Kysely<Database>,
+  id: number,
+  values: UserUpdate,
+): Promise<User | undefined> {
+  const { id: _id, ...rest } = values
+  const patch = definedValues({
+    ...rest,
+    ...rest.email !== undefined ? { email: rest.email.trim().toLowerCase() } : {},
+  })
+  if (Object.keys(patch).length === 0) {
+    return findUserById(db, id)
+  }
+  const next = withSessionBump(patch)
+  const demoting = patch.role !== undefined && patch.role !== OWNER_ROLE
+
+  if (isPostgres(db)) {
+    if (!demoting) {
+      return db
+        .updateTable('users')
+        .set(next)
+        .where('id', '=', id)
+        .returningAll()
+        .executeTakeFirst()
+    }
+    return db.transaction().execute(async (trx) => {
+      await lockOwners(trx)
+      const current = await findUserById(trx, id)
+      if (current?.role === OWNER_ROLE) {
+        await assertNotLastOwner(trx, id)
+      }
+      return trx
+        .updateTable('users')
+        .set(next)
+        .where('id', '=', id)
+        .returningAll()
+        .executeTakeFirst()
+    })
+  }
+
+  const updated = await db
+    .updateTable('users')
+    .set(next)
+    .where('id', '=', id)
+    .$if(demoting, query => query.where(keepsAnOwner()))
+    .returningAll()
+    .executeTakeFirst()
+  if (!updated && demoting) {
+    await throwIfOwnerUnchanged(db, id)
+  }
+  return updated
 }
 
 export async function deleteUser(
   db: Kysely<Database>,
   id: number,
 ): Promise<User | undefined> {
-  await assertNotLastOwner(db, id)
-  return db
+  if (isPostgres(db)) {
+    return db.transaction().execute(async (trx) => {
+      await lockOwners(trx)
+      await assertNotLastOwner(trx, id)
+      return trx
+        .deleteFrom('users')
+        .where('id', '=', id)
+        .returningAll()
+        .executeTakeFirst()
+    })
+  }
+
+  const removed = await db
     .deleteFrom('users')
     .where('id', '=', id)
+    .where(keepsAnOwner())
     .returningAll()
     .executeTakeFirst()
+  if (!removed) {
+    await throwIfOwnerUnchanged(db, id)
+  }
+  return removed
 }

@@ -49,9 +49,18 @@ export async function hashPassword(password: string): Promise<string> {
   return `${ALGORITHM}$${SCRYPT_N}$${SCRYPT_R}$${SCRYPT_P}$${salt.toString('hex')}$${derived.toString('hex')}`
 }
 
+const HEX = /^[0-9a-f]+$/i
+
+/** Even-length hex. Odd length or other characters never reach scrypt. */
+function evenHex(value: string | undefined): value is string {
+  return typeof value === 'string' && value.length % 2 === 0 && HEX.test(value)
+}
+
 /**
  * Constant-time verification of a plaintext password against a stored hash.
- * Returns false (rather than throwing) for malformed/legacy hashes.
+ * Returns false (rather than throwing) for malformed hashes and for any
+ * scrypt cost other than the parameters {@link hashPassword} writes.
+ * Legacy `scrypt$<saltHex>$<hashHex>` hashes use those same Node defaults.
  */
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
   if (password.length > MAX_PASSWORD_LENGTH) {
@@ -62,9 +71,6 @@ export async function verifyPassword(password: string, stored: string): Promise<
     return false
   }
 
-  let n = SCRYPT_N
-  let r = SCRYPT_R
-  let p = SCRYPT_P
   let saltHex: string | undefined
   let hashHex: string | undefined
 
@@ -73,32 +79,33 @@ export async function verifyPassword(password: string, stored: string): Promise<
     hashHex = parts[2]
   }
   else if (parts.length === 6) {
-    n = Number(parts[1])
-    r = Number(parts[2])
-    p = Number(parts[3])
-    saltHex = parts[4]
-    hashHex = parts[5]
-    if (!Number.isFinite(n) || !Number.isFinite(r) || !Number.isFinite(p)) {
+    if (parts[1] !== String(SCRYPT_N) || parts[2] !== String(SCRYPT_R) || parts[3] !== String(SCRYPT_P)) {
       return false
     }
+    saltHex = parts[4]
+    hashHex = parts[5]
   }
   else {
     return false
   }
 
-  if (!saltHex || !hashHex) {
+  if (!evenHex(saltHex) || !evenHex(hashHex) || hashHex.length !== KEY_LENGTH * 2) {
     return false
   }
 
-  const expected = Buffer.from(hashHex, 'hex')
-  const derived = await scrypt(password, Buffer.from(saltHex, 'hex'), expected.length, {
-    N: n,
-    r,
-    p,
-  })
-
-  if (derived.length !== expected.length) {
+  try {
+    const expected = Buffer.from(hashHex, 'hex')
+    const derived = await scrypt(password, Buffer.from(saltHex, 'hex'), KEY_LENGTH, {
+      N: SCRYPT_N,
+      r: SCRYPT_R,
+      p: SCRYPT_P,
+    })
+    if (derived.length !== expected.length) {
+      return false
+    }
+    return timingSafeEqual(derived, expected)
+  }
+  catch {
     return false
   }
-  return timingSafeEqual(derived, expected)
 }

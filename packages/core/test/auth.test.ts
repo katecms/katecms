@@ -51,6 +51,20 @@ describe('hashPassword / verifyPassword', () => {
     await expect(hashPassword(tooLong)).rejects.toThrow(String(MAX_PASSWORD_LENGTH))
     expect(await verifyPassword(tooLong, 'scrypt$1$1$1$aa$bb')).toBe(false)
   })
+
+  it('rejects a disallowed scrypt cost without throwing', async () => {
+    const salt = 'ab'.repeat(16)
+    const hash = 'cd'.repeat(64)
+    await expect(verifyPassword('secret-pass', `scrypt$3$8$1$${salt}$${hash}`)).resolves.toBe(false)
+    await expect(verifyPassword('secret-pass', `scrypt$999999999$8$1$${salt}$${hash}`)).resolves.toBe(false)
+  })
+
+  it('rejects an odd-length salt and a hash that is not 64 bytes', async () => {
+    const salt = 'ab'.repeat(16)
+    const hash = 'cd'.repeat(64)
+    await expect(verifyPassword('secret-pass', `scrypt$16384$8$1$abc$${hash}`)).resolves.toBe(false)
+    await expect(verifyPassword('secret-pass', `scrypt$16384$8$1$${salt}$${'cd'.repeat(63)}`)).resolves.toBe(false)
+  })
 })
 
 describe('validateEmail', () => {

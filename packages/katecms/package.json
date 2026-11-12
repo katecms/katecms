@@ -30,7 +30,7 @@
     },
     "./extensions": "./src/runtime/composables/useKateCmsExtensions.ts",
     "./server": "./src/runtime/server/kit.ts",
-    "./styles": "./dist/runtime/assets/styles/_index.scss"
+    "./styles": "./src/runtime/assets/styles/_index.scss"
   },
   "main": "./dist/module.mjs",
   "typesVersions": {

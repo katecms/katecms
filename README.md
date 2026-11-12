@@ -1,12 +1,12 @@
 # KateCMS
 
-`katecms` — Nuxt-модуль KateCMS. Подключает к приложению админку для записей (коллекции, словари, блоки), медиа и ролей, а на сайте — композаблы, которыми этот контент читается.
+`katecms` is the KateCMS Nuxt module. It adds an admin for entries (collections, dictionaries, blocks), media, and roles, and composables that read that content on the site.
 
-Конфиг модуля: ключ `katecms` в `nuxt.config.ts`, параметры полей и вкладки сайдбара дополнений.
+Module config: the `katecms` key in `nuxt.config.ts`, field options, and addon sidebar tabs.
 
-## Установка
+## Installation
 
-В каталоге Nuxt-приложения:
+From the Nuxt app directory:
 
 ```sh
 pnpm add katecms
@@ -20,7 +20,7 @@ npm install katecms
 yarn add katecms
 ```
 
-В `nuxt.config.ts`:
+In `nuxt.config.ts`:
 
 ```ts
 export default defineNuxtConfig({
@@ -28,32 +28,32 @@ export default defineNuxtConfig({
 })
 ```
 
-Дальше ключи `katecms` описаны в [подключении](#config-setup).
+The `katecms` keys are described in [setup](#config-setup).
 
-## Навигация
+## Contents
 
-- [Установка](#установка)
-- [Конфиг модуля](#config)
-  - [Подключение](#config-setup)
-  - [Ключи `katecms`](#config-keys)
-  - [Пути](#config-paths)
-  - [База](#config-database)
-  - [Медиа](#config-media)
-  - [Роли](#config-roles)
-  - [Коллекции](#config-collections)
-  - [Словари](#config-dictionaries)
-  - [Публичные композаблы](#frontend-composables)
+- [Installation](#installation)
+- [Module config](#config)
+  - [Setup](#config-setup)
+  - [`katecms` keys](#config-keys)
+  - [Paths](#config-paths)
+  - [Database](#config-database)
+  - [Media](#config-media)
+  - [Roles](#config-roles)
+  - [Collections](#config-collections)
+  - [Dictionaries](#config-dictionaries)
+  - [Public composables](#frontend-composables)
     - [getCollection](#getCollection)
     - [getOptions](#getOptions)
     - [getQueryCollection](#getQueryCollection)
       - [dictionaryQuery](#getQueryCollection-dictionaryQuery)
       - [fieldsQuery](#getQueryCollection-fieldsQuery)
     - [getTerms](#getTerms)
-  - [Пример](#config-example)
-- [Точки расширения](#extensions)
-  - [Вкладки сайдбара записи](#extensions-entry-sidebar)
-- [Общие параметры полей](#fields-base)
-- [Поля](#fields)
+  - [Example](#config-example)
+- [Extension points](#extensions)
+  - [Entry sidebar tabs](#extensions-entry-sidebar)
+- [Shared field options](#fields-base)
+- [Fields](#fields)
   - [PostObjectField](#PostObjectField)
   - [PageLinkField](#PageLinkField)
   - [RelationshipField](#RelationshipField)
@@ -92,12 +92,12 @@ export default defineNuxtConfig({
   - [WysiwygField](#WysiwygField)
 
 <a id="config"></a>
-## Конфиг модуля
+## Module config
 
-Тип: `KateCmsConfig`. Ключ в `nuxt.config.ts`: `katecms`. Мета модуля: `configKey: 'katecms'`.
+Type: `KateCmsConfig`. Key in `nuxt.config.ts`: `katecms`. Module meta: `configKey: 'katecms'`.
 
 <a id="config-setup"></a>
-### Подключение
+### Setup
 
 ```ts
 export default defineNuxtConfig({
@@ -109,27 +109,27 @@ export default defineNuxtConfig({
 ```
 
 <a id="config-keys"></a>
-### Ключи `katecms`
+### `katecms` keys
 
-| Ключ | Тип | Дефолт | Смысл |
+| Key | Type | Default | Meaning |
 |---|---|---|---|
-| `adminPath` | `string` | `'admin'` | Сегмент URL админки |
-| `loginPath` | `string` | `'login'` | Сегмент входа, URL `/${adminPath}/login` |
-| `registerPath` | `string` | `'register'` | Сегмент регистрации, URL `/${adminPath}/register` |
-| `registration` | `boolean` | `false` | Саморегистрация. `true` — открыта после первого пользователя. `false` — закрыта; первый аккаунт всё равно создаётся как `owner`. Создание пользователей в админке не зависит от этого флага |
-| `collections` | `Collections` | `{}` | Типы записей. Ключ объекта = slug |
-| `dictionaries` | `Dictionaries` | `{}` | Словари. Ключ объекта = slug |
-| `blocks` | `Blocks` | `{}` | Реестр блоков. Ключ объекта = slug |
-| `database` | `DatabaseConfig` | SQLite `data/katecms.db` | База |
-| `media` | `MediaConfig` | см. ниже | Загрузки |
-| `roles` | `Roles` | `{}` поверх встроенных | Роли |
+| `adminPath` | `string` | `'admin'` | Admin URL segment |
+| `loginPath` | `string` | `'login'` | Login segment, URL `/${adminPath}/login` |
+| `registerPath` | `string` | `'register'` | Registration segment, URL `/${adminPath}/register` |
+| `registration` | `boolean` | `false` | Self-registration. `true` opens it after the first user. `false` keeps it closed; the first account is still created as `owner`. Creating users in the admin does not depend on this flag |
+| `collections` | `Collections` | `{}` | Entry types. Object key = slug |
+| `dictionaries` | `Dictionaries` | `{}` | Dictionaries. Object key = slug |
+| `blocks` | `Blocks` | `{}` | Block registry. Object key = slug |
+| `database` | `DatabaseConfig` | SQLite `data/katecms.db` | Database |
+| `media` | `MediaConfig` | see below | Uploads |
+| `roles` | `Roles` | `{}` on top of the built-ins | Roles |
 
-Пути — сегменты без ведущего `/`. Админка на `/${adminPath}`, вход на `/${adminPath}/${loginPath}`, регистрация на `/${adminPath}/${registerPath}`.
+Paths are segments without a leading `/`. The admin is at `/${adminPath}`, login at `/${adminPath}/${loginPath}`, registration at `/${adminPath}/${registerPath}`.
 
-Загрузки всегда в `<rootDir>/public/uploads` (модуль сам ставит `media.dir`).
+Uploads always go to `<rootDir>/public/uploads` (the module sets `media.dir` itself).
 
 <a id="config-paths"></a>
-### Пути
+### Paths
 
 ```ts
 katecms: {
@@ -140,7 +140,7 @@ katecms: {
 ```
 
 <a id="config-database"></a>
-### База
+### Database
 
 ```ts
 interface DatabaseConfig {
@@ -150,13 +150,13 @@ interface DatabaseConfig {
 }
 ```
 
-| Поле | Смысл |
+| Field | Meaning |
 |---|---|
-| `driver` | Явный движок. Без него непустой `url` → Postgres, иначе SQLite |
-| `url` | Строка Postgres, например `postgres://postgres:admin@127.0.0.1:5432/katecms` |
-| `sqliteFilename` | Файл SQLite, `:memory:` или `file:` URI. Относительный путь — от `rootDir`. Дефолт `data/katecms.db` |
+| `driver` | Explicit engine. With no driver, a non-empty `url` selects Postgres, otherwise SQLite |
+| `url` | Postgres connection string, for example `postgres://postgres:admin@127.0.0.1:5432/katecms` |
+| `sqliteFilename` | SQLite file, `:memory:`, or a `file:` URI. A relative path is resolved from `rootDir`. Default `data/katecms.db` |
 
-Нужен PostgreSQL **15+**. Если `driver: 'postgres'` и `url` пустой, адаптер читает `DATABASE_URL`.
+PostgreSQL **15+** is required. If `driver: 'postgres'` and `url` is empty, the adapter reads `DATABASE_URL`.
 
 ```ts
 database: {
@@ -166,18 +166,18 @@ database: {
 ```
 
 <a id="config-media"></a>
-### Медиа
+### Media
 
-| Поле | Дефолт | Смысл |
+| Field | Default | Meaning |
 |---|---|---|
-| `maxFileSize` | `10` | Лимит в МБ |
-| `allowedMimeTypes` | jpeg, png, webp, gif, pdf, mp4 | Пустой массив запрещает всё. Omit — дефолтный список. `svg+xml` в дефолт не входит; если его добавить, файл скачивается, а не открывается как страница |
-| `maxInputPixels` | `50_000_000` | Бюджет пикселей для вариантов. Более крупный исходник уменьшается |
-| `avif` | `false` | `true` или `{ quality: 1..100 }` (иначе 80) |
-| `webp` | `false` | То же |
-| `imageSizes` | `[]` | Пресеты. Имя `full` зарезервировано и игнорируется |
+| `maxFileSize` | `10` | Limit in MB |
+| `allowedMimeTypes` | jpeg, png, webp, gif, pdf, mp4 | An empty array rejects every file. Omit keeps the default list. `svg+xml` is not in the default; if you add it, the file is downloaded instead of opened as a page |
+| `maxInputPixels` | `50_000_000` | Pixel budget for variants. A larger source is scaled down |
+| `avif` | `false` | `true` or `{ quality: 1..100 }` (otherwise 80) |
+| `webp` | `false` | Same |
+| `imageSizes` | `[]` | Presets. The name `full` is reserved and ignored |
 
-Пресет: `name`, `width?`, `height?` (`0` = пропорционально другой стороне), `crop?` (`true` = cover, иначе inside). Увеличения сверх исходника нет.
+A preset has `name`, `width?`, `height?` (`0` means proportional to the other side), and `crop?` (`true` is cover, otherwise inside). Images are not enlarged past the source.
 
 ```ts
 media: {
@@ -191,22 +191,22 @@ media: {
 ```
 
 <a id="config-roles"></a>
-### Роли
+### Roles
 
-Встроенные: `owner`, `admin`, `editor`, `author`, `subscriber`. Карта `roles` добавляет роль, полностью заменяет встроенную или прячет (`author: false`). У `subscriber` по умолчанию нет прав на ресурсы: админский список, черновики и коллекции с `public: false` ему закрыты. Опубликованные публичные записи по-прежнему отдаёт фронт без входа.
+Built-in roles: `owner`, `admin`, `editor`, `author`, `subscriber`. The `roles` map adds a role, fully replaces a built-in, or hides one (`author: false`). `subscriber` has no resource rights by default: the admin list, drafts, and collections with `public: false` are closed to that role. The front still serves published public entries without a login.
 
-Свой пароль меняется только вместе с текущим. Чужой пароль может задать роль с правом `users: update`, кроме аккаунта `owner`. Если пароль забыт и войти некому, на сервере с доступом к базе:
+A user changes their own password only together with the current one. A role with `users: update` can set someone else's password, except an `owner` account. If the password is forgotten and nobody can sign in, on a server that can reach the database:
 
 ```bash
 node scripts/reset-password.mjs --db data/katecms.db --email owner@example.com --password "New-password-123"
 ```
 
-Для Postgres вместо `--db` укажите `--url`. Скрипт может сменить пароль owner. Письма для сброса нет.
+For Postgres, pass `--url` instead of `--db`. The script can change the owner password. There is no reset email.
 
-- `owner` зарезервирован, запись в конфиге игнорируется.
-- `admin` нельзя скрыть (`admin: false` игнорируется), определение `Role` заменяет права.
+- `owner` is reserved. A config entry is ignored.
+- `admin` cannot be hidden (`admin: false` is ignored). A `Role` definition replaces its rights.
 
-Права: `true` / `false` / `['read', 'create', 'update', 'delete']`. Для `collections` и `dictionaries` ещё карта по slug. Пропущенный ресурс = нет доступа. `true` на коллекцию/scope — править чужие записи; список действий — только свои.
+Rights: `true` / `false` / `['read', 'create', 'update', 'delete']`. `collections` and `dictionaries` also accept a map by slug. A missing resource means no access. `true` on a collection or scope means editing other people's entries; a list of actions means only one's own.
 
 ```ts
 roles: {
@@ -225,59 +225,59 @@ roles: {
 ```
 
 <a id="config-collections"></a>
-### Коллекции
+### Collections
 
-Ключ объекта = slug типа (колонка `type`).
+The object key is the type slug (the `type` column).
 
-| Поле | Тип | Дефолт | Смысл |
+| Field | Type | Default | Meaning |
 |---|---|---|---|
-| `labels.name` | `string` | — | Подпись, обязательно |
-| `labels.singularName` | `string` | `labels.name` | Одна запись |
-| `icon` | `string` | дефолтная иконка | Inline SVG в меню |
-| `hierarchical` | `boolean` | `false` | Дерево через `parent_id` |
-| `autosave` | `boolean` | `false` | Уход с новой несохранённой записи → `draft` |
-| `public` | `boolean` | `true` | `false` — страница записи/архива не работает, View в админке скрыт |
-| `has_archive` | `boolean \| string` | `false` | Архив: `true` → префикс rewrite, строка → свой слаг ЧПУ |
-| `perPage` | `number` | `10` | Записей на страницу архива, списка в админке и `getQueryCollection` (один тип). `-1` — все записи |
-| `rewrite` | `string` | `/{slug}/%name%` | Публичный URL. Нужен плейсхолдер `%name%` |
-| `fields` | `Fields` | `{}` | Поля записи. Ключ = имя поля |
-| `blocks` | `string[] \| boolean` | `false` | `true` — все блоки, массив — allow-list, иначе выкл |
+| `labels.name` | `string` | — | Label, required |
+| `labels.singularName` | `string` | `labels.name` | One entry |
+| `icon` | `string` | default icon | Inline SVG in the menu |
+| `hierarchical` | `boolean` | `false` | Tree via `parent_id` |
+| `autosave` | `boolean` | `false` | Leaving a new unsaved entry stores it as `draft` |
+| `public` | `boolean` | `true` | `false` disables the entry and archive pages, and hides View in the admin |
+| `has_archive` | `boolean \| string` | `false` | Archive: `true` uses the rewrite prefix, a string is a custom slug |
+| `perPage` | `number` | `10` | Entries per archive page, admin list, and `getQueryCollection` (one type). `-1` means all entries |
+| `rewrite` | `string` | `/{slug}/%name%` | Public URL. The `%name%` placeholder is required |
+| `fields` | `Fields` | `{}` | Entry fields. Key = field name |
+| `blocks` | `string[] \| boolean` | `false` | `true` enables every block, an array is an allow-list, otherwise off |
 
-Плоская коллекция: `%name%` — один сегмент. `hierarchical: true` — `parent/child`.
+A flat collection: `%name%` is one segment. `hierarchical: true` uses `parent/child`.
 
 <a id="config-dictionaries"></a>
-### Словари
+### Dictionaries
 
-Ключ объекта = slug словаря.
+The object key is the dictionary slug.
 
-| Поле | Тип | Дефолт | Смысл |
+| Field | Type | Default | Meaning |
 |---|---|---|---|
-| `labels.name` | `string` | — | Обязательно |
-| `labels.singularName` | `string` | `labels.name` | Один термин |
-| `icon` | `string` | дефолтная иконка | Inline SVG |
-| `fields` | `Fields` | `{}` | Поля термина |
-| `collections` | `string[]` | — | Обязательно. Slug коллекций, к которым привязан словарь |
-| `multiple` | `boolean` | `false` | Несколько терминов на запись |
+| `labels.name` | `string` | — | Required |
+| `labels.singularName` | `string` | `labels.name` | One term |
+| `icon` | `string` | default icon | Inline SVG |
+| `fields` | `Fields` | `{}` | Term fields |
+| `collections` | `string[]` | — | Required. Collection slugs this dictionary is attached to |
+| `multiple` | `boolean` | `false` | Several terms on one entry |
 
-Сайдбар записи использует join-таблицу. Поле `type: 'dictionary'` хранит значение в `fields` отдельно.
+The entry sidebar uses a join table. A `type: 'dictionary'` field stores its value in `fields` separately.
 
 <a id="frontend-composables"></a>
-### Публичные композаблы
+### Public composables
 
-Автоимпорт модуля. Черновики — только с `preview: true` (и правом `collections:read`). Коллекции с `public: false` с фронта не отдаются.
+Auto-imported by the module. Drafts are available only with `preview: true` (and the `collections:read` right). Collections with `public: false` are not served from the front.
 
 <a id="getCollection"></a>
 ### getCollection()
 
-Запись или архив по текущему пути (`rewrite` / `has_archive`).
+The entry or archive for the current path (`rewrite` / `has_archive`).
 
-| Опция | Тип | Дефолт | Смысл |
+| Option | Type | Default | Meaning |
 |---|---|---|---|
-| `path` | `string` | текущий URL | Публичный путь |
-| `preview` | `boolean` | `false` | Черновики при праве `collections:read`. Также `?preview=1` |
-| `status` | `'published' \| 'draft' \| array` | `'published'` | Также `?status=`. `draft` без preview игнорируется |
-| `page` | `number` | `1` | Страница архива. Также `?page=` |
-| `perPage` | `number` | `perPage` коллекции | Размер страницы архива. `-1` — все. Также `?perPage=` |
+| `path` | `string` | current URL | Public path |
+| `preview` | `boolean` | `false` | Drafts when the caller has `collections:read`. Also `?preview=1` |
+| `status` | `'published' \| 'draft' \| array` | `'published'` | Also `?status=`. `draft` without preview is ignored |
+| `page` | `number` | `1` | Archive page. Also `?page=` |
+| `perPage` | `number` | collection `perPage` | Archive page size. `-1` means all. Also `?perPage=` |
 
 ```vue
 <script setup lang="ts">
@@ -300,11 +300,11 @@ const { entry, entries, isArchive, collection, link, permalink } = await getColl
 <a id="getOptions"></a>
 ### getOptions()
 
-Значения options-страницы по slug из конфига (`katecms.options`).
+Values of an options page by the slug from config (`katecms.options`).
 
-| Опция | Тип | Дефолт | Смысл |
+| Option | Type | Default | Meaning |
 |---|---|---|---|
-| `option` | `string` | — | Slug страницы опций, обязательно |
+| `option` | `string` | — | Options page slug, required |
 
 ```vue
 <script setup lang="ts">
@@ -319,60 +319,60 @@ const { values } = await getOptions({ option: 'site' })
 <a id="getQueryCollection"></a>
 ### getQueryCollection()
 
-Выборка записей по фильтрам. По умолчанию `published`, сортировка по дате.
+A filtered entry query. Defaults to `published`, sorted by date.
 
-| Опция | Тип | Дефолт | Смысл |
+| Option | Type | Default | Meaning |
 |---|---|---|---|
-| `collection` | `'any' \| string \| string[]` | — | Slug типа(ов). `'any'` — все публичные коллекции |
-| `preview` | `boolean` | `false` | Черновики, если есть `collections:read` на все типы. Также `?preview=1` |
-| `status` | `'published' \| 'draft' \| array` | `'published'` | Также `?status=`. `draft` без preview игнорируется |
-| `page` | `number` | `1` | Номер страницы. Также `?page=` |
-| `perPage` | `number` | `perPage` типа или `10` | Размер страницы. `-1` — все. Также `?perPage=` |
-| `search` | `string` | — | Поиск по title/slug |
-| `title` | `string \| string[]` | — | Точное совпадение заголовка |
-| `slug` | `string \| string[]` | — | Слаг записи |
-| `slugs` | `string \| string[]` | — | Список слагов |
-| `includeIds` | `number \| number[]` | — | Только эти id |
-| `excludeIds` | `number \| number[]` | — | Кроме этих id |
-| `parentId` | `number \| null` | — | Родитель. `null` / `0` — корень |
-| `parentIds` | `number \| number[]` | — | Родитель из списка. `0` — корень |
-| `excludeParentIds` | `number \| number[]` | — | Кроме этих родителей. `0` — корень |
-| `authorIn` | `number[]` | — | Только записи этих авторов |
-| `authorNotIn` | `number[]` | — | Исключить записи этих авторов |
-| `dictionaryQuery` | `object` | — | Фильтр по словарям. [значения](#getQueryCollection-dictionaryQuery) |
-| `fieldsQuery` | `object` | — | Фильтр по JSON `fields`. [значения](#getQueryCollection-fieldsQuery) |
+| `collection` | `'any' \| string \| string[]` | — | Type slug(s). `'any'` is every public collection |
+| `preview` | `boolean` | `false` | Drafts when the caller has `collections:read` on every type. Also `?preview=1` |
+| `status` | `'published' \| 'draft' \| array` | `'published'` | Also `?status=`. `draft` without preview is ignored |
+| `page` | `number` | `1` | Page number. Also `?page=` |
+| `perPage` | `number` | the type's `perPage`, or `10` | Page size. `-1` means all. Also `?perPage=` |
+| `search` | `string` | — | Search in title and slug |
+| `title` | `string \| string[]` | — | Exact title match |
+| `slug` | `string \| string[]` | — | Entry slug |
+| `slugs` | `string \| string[]` | — | Slug list |
+| `includeIds` | `number \| number[]` | — | Only these ids |
+| `excludeIds` | `number \| number[]` | — | Except these ids |
+| `parentId` | `number \| null` | — | Parent. `null` / `0` is the root |
+| `parentIds` | `number \| number[]` | — | Parent is in this list. `0` is the root |
+| `excludeParentIds` | `number \| number[]` | — | Except these parents. `0` is the root |
+| `authorIn` | `number[]` | — | Only entries by these authors |
+| `authorNotIn` | `number[]` | — | Exclude entries by these authors |
+| `dictionaryQuery` | `object` | — | Dictionary filter. [values](#getQueryCollection-dictionaryQuery) |
+| `fieldsQuery` | `object` | — | Filter on the `fields` JSON. [values](#getQueryCollection-fieldsQuery) |
 | `orderBy` | `string` | `'date'` | `date`, `modified`, `name`, `title`, `slug`, `id`, `menu_order`, `published_at`, `created_at`, `updated_at`, `includeIds` |
-| `order` | `'asc' \| 'desc'` | по полю | Направление сортировки. Для `includeIds` — порядок массива (`desc` разворачивает) |
+| `order` | `'asc' \| 'desc'` | depends on the field | Sort direction. For `includeIds`, the array order (`desc` reverses it) |
 
 <a id="getQueryCollection-dictionaryQuery"></a>
 #### dictionaryQuery
 
-Связи записи со словарём (`collection_dictionaries`). Пустой или невалидный `queries` — фильтр не применяется.
+Links between an entry and a dictionary (`collection_dictionaries`). An empty or invalid `queries` list applies no filter.
 
-| Поле | Тип | Дефолт | Смысл |
+| Field | Type | Default | Meaning |
 |---|---|---|---|
-| `relation` | `'AND' \| 'OR'` | `'AND'` | Как сочетать элементы `queries` |
-| `queries` | `object[]` | — | Условия. Без валидных элементов фильтр снимается |
+| `relation` | `'AND' \| 'OR'` | `'AND'` | How to combine `queries` items |
+| `queries` | `object[]` | — | Conditions. With no valid items the filter is removed |
 
-Каждый элемент `queries[]`:
+Each `queries[]` item:
 
-| Поле | Тип | Дефолт | Смысл |
+| Field | Type | Default | Meaning |
 |---|---|---|---|
-| `dictionary` | `string` | — | Slug словаря (`type`), обязательно |
-| `field` | `'id' \| 'name' \| 'slug'` | `'id'` | По чему искать `terms`. `name` — заголовок строки словаря |
-| `terms` | `number \| string \| array` | — | id, заголовок или слаг. Не нужен для `EXISTS` / `NOT EXISTS` |
-| `operator` | см. ниже | `'IN'` | Как сопоставлять найденные строки |
-| `includeChildren` | `boolean` | `true` | Добавить потомков в дереве. Не для `EXISTS` / `NOT EXISTS` |
+| `dictionary` | `string` | — | Dictionary slug (`type`), required |
+| `field` | `'id' \| 'name' \| 'slug'` | `'id'` | What `terms` matches. `name` is the dictionary row title |
+| `terms` | `number \| string \| array` | — | id, title, or slug. Not used for `EXISTS` / `NOT EXISTS` |
+| `operator` | see below | `'IN'` | How to match the found rows |
+| `includeChildren` | `boolean` | `true` | Also include tree descendants. Not for `EXISTS` / `NOT EXISTS` |
 
 `operator`:
 
-| Значение | Смысл |
+| Value | Meaning |
 |---|---|
-| `IN` | Запись связана хотя бы с одним из `terms` |
-| `NOT IN` | Запись не связана ни с одним из `terms` |
-| `AND` | Запись связана со **всеми** `terms` |
-| `EXISTS` | Есть любая связь с этим словарём (`terms` игнорируются) |
-| `NOT EXISTS` | Нет связей с этим словарём |
+| `IN` | The entry is linked to at least one of `terms` |
+| `NOT IN` | The entry is linked to none of `terms` |
+| `AND` | The entry is linked to **every** term in `terms` |
+| `EXISTS` | Any link to this dictionary exists (`terms` is ignored) |
+| `NOT EXISTS` | No links to this dictionary |
 
 ```vue
 <script setup lang="ts">
@@ -404,57 +404,57 @@ const { entries, permalink, page, total } = await getQueryCollection({
 <a id="getQueryCollection-fieldsQuery"></a>
 #### fieldsQuery
 
-Смотрит в JSON `fields` записи, не в `collection_meta`. Пустой или невалидный `queries` — фильтр не применяется.
+Reads the entry `fields` JSON, not `collection_meta`. An empty or invalid `queries` list applies no filter.
 
-| Поле | Тип | Дефолт | Смысл |
+| Field | Type | Default | Meaning |
 |---|---|---|---|
-| `relation` | `'AND' \| 'OR'` | `'AND'` | Как сочетать элементы `queries` |
-| `queries` | `object[]` | — | Условия. Без валидных элементов фильтр снимается |
+| `relation` | `'AND' \| 'OR'` | `'AND'` | How to combine `queries` items |
+| `queries` | `object[]` | — | Conditions. With no valid items the filter is removed |
 
-Каждый элемент `queries[]`:
+Each `queries[]` item:
 
-| Поле | Тип | Дефолт | Смысл |
+| Field | Type | Default | Meaning |
 |---|---|---|---|
-| `key` | `string \| string[]` | — | Ключ в `fields`. Обязательно. Точечный путь (`seo.title`) только для `=` / `IN` |
-| `compareKey` | см. ниже | `=` или `IN` | Как сопоставлять **имя** ключа. `IN`, если `key` — массив |
-| `value` | `string \| number \| boolean \| array` | — | Не нужен для `EXISTS` / `NOT EXISTS` |
-| `compare` | см. ниже | `=` или `IN` | Оператор сравнения. `IN`, если `value` — массив |
-| `type` | см. ниже | `'TEXT'` | Приведение значения при сравнении |
+| `key` | `string \| string[]` | — | Key in `fields`. Required. A dotted path (`seo.title`) works only for `=` / `IN` |
+| `compareKey` | see below | `=` or `IN` | How to match the key **name**. `IN` when `key` is an array |
+| `value` | `string \| number \| boolean \| array` | — | Not used for `EXISTS` / `NOT EXISTS` |
+| `compare` | see below | `=` or `IN` | Comparison operator. `IN` when `value` is an array |
+| `type` | see below | `'TEXT'` | How the value is cast for comparison |
 
-`compareKey` (имя ключа):
+`compareKey` (key name):
 
-| Значение | Смысл |
+| Value | Meaning |
 |---|---|
-| `=` | Точное имя. Один ключ |
-| `IN` | Имя из списка |
-| `!=` | Имя не равно. Только корневые ключи объекта |
-| `NOT IN` | Имя не из списка. Только корневые ключи |
-| `LIKE` / `NOT LIKE` | Подстрока в имени. Только корневые ключи |
-| `REGEXP` / `NOT REGEXP` | Регулярка по имени. Только корневые ключи |
+| `=` | Exact name. One key |
+| `IN` | Name is in the list |
+| `!=` | Name is not equal. Root object keys only |
+| `NOT IN` | Name is not in the list. Root keys only |
+| `LIKE` / `NOT LIKE` | Substring of the name. Root keys only |
+| `REGEXP` / `NOT REGEXP` | Regular expression on the name. Root keys only |
 
 `compare`:
 
-| Значение | Смысл |
+| Value | Meaning |
 |---|---|
-| `=` / `!=` | Равно / не равно |
-| `>` / `>=` / `<` / `<=` | Числовое или текстовое сравнение |
-| `LIKE` / `NOT LIKE` | Подстрока, `%` не нужны |
-| `ILIKE` / `NOT ILIKE` | То же без регистра. PostgreSQL — `ILIKE`, SQLite — `LOWER()` |
-| `IN` / `NOT IN` | Значение из списка. Пустой `IN` — нет совпадений, пустой `NOT IN` — все строки |
-| `BETWEEN` / `NOT BETWEEN` | Интервал: `value: [min, max]` |
-| `EXISTS` / `NOT EXISTS` | Ключ есть / нет в `fields` (`value` игнорируется) |
-| `REGEXP` / `NOT REGEXP` | Регулярка по значению, без `/.../` |
+| `=` / `!=` | Equal / not equal |
+| `>` / `>=` / `<` / `<=` | Numeric or text comparison |
+| `LIKE` / `NOT LIKE` | Substring. `%` is not required |
+| `ILIKE` / `NOT ILIKE` | Same, case-insensitive. PostgreSQL uses `ILIKE`, SQLite uses `LOWER()` |
+| `IN` / `NOT IN` | Value is in the list. An empty `IN` matches nothing, an empty `NOT IN` matches every row |
+| `BETWEEN` / `NOT BETWEEN` | Range: `value: [min, max]` |
+| `EXISTS` / `NOT EXISTS` | The key is present or absent in `fields` (`value` is ignored) |
+| `REGEXP` / `NOT REGEXP` | Regular expression on the value, without `/.../` |
 
 `type`:
 
-| Значение | Смысл |
+| Value | Meaning |
 |---|---|
-| `TEXT` | Как строка |
-| `INTEGER` | Целое |
-| `NUMERIC` | Число с дробью |
-| `DATETIME` / `DATE` / `TIME` | Как текст (ISO-строки сравниваются лексикографически) |
+| `TEXT` | As a string |
+| `INTEGER` | Integer |
+| `NUMERIC` | Decimal number |
+| `DATETIME` / `DATE` / `TIME` | As text (ISO strings compare lexicographically) |
 
-`LIKE` / `REGEXP` / `!=` / `NOT IN` по **ключу** обходят только корневые ключи (`json_each` / `jsonb_each_text`), вложенные пути вроде `seo.title` там не работают. `REGEXP` в PostgreSQL — POSIX `~`, в SQLite — JS `RegExp`; на D1 кастомного `REGEXP` нет. JSON-массив в поле сравнивается целиком как текст, не поэлементно.
+`LIKE` / `REGEXP` / `!=` / `NOT IN` on the **key** walk only root keys (`json_each` / `jsonb_each_text`). Nested paths such as `seo.title` do not work there. `REGEXP` is POSIX `~` on PostgreSQL and JS `RegExp` on SQLite. D1 has no custom `REGEXP`. A JSON array in a field is compared as one text value, not element by element.
 
 ```ts
 const { entries } = await getQueryCollection({
@@ -469,7 +469,7 @@ const { entries } = await getQueryCollection({
 })
 ```
 
-`orderBy: 'includeIds'` сохраняет порядок `includeIds`:
+`orderBy: 'includeIds'` keeps the `includeIds` order:
 
 ```ts
 const { entries } = await getQueryCollection({
@@ -482,32 +482,32 @@ const { entries } = await getQueryCollection({
 <a id="getTerms"></a>
 ### getTerms()
 
-Строки словаря. `count` — число опубликованных записей публичных коллекций, связанных с термином. Пустой термин скрыт, пока у потомка нет записей.
+Dictionary rows. `count` is the number of published entries in public collections linked to the term. An empty term stays hidden until a descendant has entries.
 
-| Опция | Тип | Дефолт | Смысл |
+| Option | Type | Default | Meaning |
 |---|---|---|---|
-| `dictionary` | `string \| string[]` | — | Slug словаря, обязательно |
-| `perPage` | `number` | все | Размер страницы. `-1` — все |
-| `offset` | `number` | `0` | Сколько совпадений пропустить |
-| `includeIds` | `number \| number[]` | — | Только эти id. Пустой список — ничего |
-| `excludeIds` | `number \| number[]` | — | Кроме этих id |
-| `excludeTreeIds` | `number \| number[]` | — | Кроме этих терминов и всех потомков |
-| `parentId` | `number \| null` | — | Прямой родитель. `null` / `0` — корень |
-| `childOf` | `number` | — | Все потомки этого id, без него самого |
-| `childless` | `boolean` | `false` | Пропустить термины, у которых есть дети |
-| `slug` | `string \| string[]` | — | Точный слаг |
-| `title` | `string \| string[]` | — | Точный заголовок |
-| `search` | `string` | — | Подстрока в title или slug, без регистра |
-| `hideEmpty` | `boolean` | `true` | Скрыть термины с `count = 0` |
-| `hierarchical` | `boolean` | `true` | Оставить пустой термин, если у потомка есть записи |
-| `padCounts` | `boolean` | `false` | Прибавить к `count` записи потомков |
-| `fieldsQuery` | `object` | — | Фильтр JSON `fields`. [значения](#getQueryCollection-fieldsQuery) |
+| `dictionary` | `string \| string[]` | — | Dictionary slug, required |
+| `perPage` | `number` | all | Page size. `-1` means all |
+| `offset` | `number` | `0` | How many matches to skip |
+| `includeIds` | `number \| number[]` | — | Only these ids. An empty list matches nothing |
+| `excludeIds` | `number \| number[]` | — | Except these ids |
+| `excludeTreeIds` | `number \| number[]` | — | Except these terms and all descendants |
+| `parentId` | `number \| null` | — | Direct parent. `null` / `0` is the root |
+| `childOf` | `number` | — | Every descendant of this id, not the id itself |
+| `childless` | `boolean` | `false` | Skip terms that have children |
+| `slug` | `string \| string[]` | — | Exact slug |
+| `title` | `string \| string[]` | — | Exact title |
+| `search` | `string` | — | Case-insensitive substring of title or slug |
+| `hideEmpty` | `boolean` | `true` | Hide terms with `count = 0` |
+| `hierarchical` | `boolean` | `true` | Keep an empty term when a descendant has entries |
+| `padCounts` | `boolean` | `false` | Add descendant entries to `count` |
+| `fieldsQuery` | `object` | — | Filter the `fields` JSON. [values](#getQueryCollection-fieldsQuery) |
 | `orderBy` | `string` | `'title'` | `id`, `title`, `slug`, `count`, `parent`, `includeIds`, `slugs`, `field`, `none` |
-| `orderByField` | `{ key, type? }` | — | Ключ для `orderBy: 'field'`. `type` как в `fieldsQuery` |
-| `order` | `'asc' \| 'desc'` | `'asc'` | Направление сортировки |
-| `return` | `string` | `'all'` | `all` — объекты, `ids`, `titles`, `count`, `idParent`, `idSlug`, `idTitle` |
+| `orderByField` | `{ key, type? }` | — | Key for `orderBy: 'field'`. `type` is the same as in `fieldsQuery` |
+| `order` | `'asc' \| 'desc'` | `'asc'` | Sort direction |
+| `return` | `string` | `'all'` | `all` returns objects, or `ids`, `titles`, `count`, `idParent`, `idSlug`, `idTitle` |
 
-`return: 'count'` — это `total` до `perPage` и `offset`. Остальные режимы режут страницу, `total` остаётся полным. Карты `idParent` / `idSlug` / `idTitle` лежат в `map`, ключ — id строкой.
+`return: 'count'` is `total` before `perPage` and `offset`. The other modes page the rows, and `total` stays the full count. The `idParent` / `idSlug` / `idTitle` maps are in `map`, keyed by id as a string.
 
 ```ts
 const { terms, total } = await getTerms({
@@ -521,7 +521,7 @@ const { terms, total } = await getTerms({
 ```
 
 <a id="config-example"></a>
-### Пример
+### Example
 
 ```ts
 export default defineNuxtConfig({
@@ -535,8 +535,8 @@ export default defineNuxtConfig({
         rewrite: '/inf/%name%',
         has_archive: true,
         fields: {
-          body: { type: 'wysiwyg', label: 'Текст', toolbar: 'full' },
-          thumbnail: { type: 'image', label: 'Обложка', position: 'sidebar' },
+          body: { type: 'wysiwyg', label: 'Body', toolbar: 'full' },
+          thumbnail: { type: 'image', label: 'Cover', position: 'sidebar' },
         },
       },
     },
@@ -552,22 +552,22 @@ export default defineNuxtConfig({
 ```
 
 <a id="extensions"></a>
-## Точки расширения
+## Extension points
 
-Дополнение подключается своим Nuxt-модулем рядом с `katecms`. Точки расширения админки импортируются из `katecms/extensions`.
+An addon is its own Nuxt module, registered next to `katecms`. Admin extension points are imported from `katecms/extensions`.
 
 <a id="extensions-entry-sidebar"></a>
-### Вкладки сайдбара записи
+### Entry sidebar tabs
 
-Сайдбар формы записи (`.katecms-collection-form__sidebar`) показывает вкладки, когда дополнение зарегистрировало хотя бы одну. Первая вкладка — **Page**: публикация, словари и поля с `position: 'sidebar'`. Дальше идут вкладки дополнений в порядке регистрации. Ключ `page` занят этой вкладкой.
+The entry form sidebar (`.katecms-collection-form__sidebar`) shows tabs once an addon has registered at least one. The first tab is **Page**: publishing, dictionaries, and fields with `position: 'sidebar'`. Addon tabs follow in registration order. The `page` key is taken by that tab.
 
-Своя вкладка регистрируется из плагина. Компонент к этому моменту уже стоит на Vue-приложении. Повторный вызов с тем же `key` заменяет вкладку.
+Register a tab from a plugin. The component must already be on the Vue app. Calling again with the same `key` replaces the tab.
 
-| Поле | Тип | Смысл |
+| Field | Type | Meaning |
 |---|---|---|
-| `key` | `string` | Стабильный id. Не `page` |
-| `label` | `string` | Подпись вкладки |
-| `component` | `string` | Имя компонента на приложении |
+| `key` | `string` | Stable id. Not `page` |
+| `label` | `string` | Tab label |
+| `component` | `string` | Component name on the app |
 
 ```ts
 import { registerKateCmsEntrySidebarTab } from 'katecms/extensions'
@@ -583,33 +583,33 @@ export default defineNuxtPlugin((nuxtApp) => {
 })
 ```
 
-Панель вкладки монтируется при первом открытии и остаётся смонтированной при переключении. Вкладка Page тоже остаётся в дереве.
+The tab panel mounts on first open and stays mounted when switching tabs. The Page tab also stays in the tree.
 
-Пункт меню добавляется через `useKateCmsMenuItems()`. Панель под формой термина словаря — список имён компонентов в `useKateCmsTermPanels()`.
+Add a menu item with `useKateCmsMenuItems()`. The panel under a dictionary term form is the component-name list in `useKateCmsTermPanels()`.
 
 <a id="fields-base"></a>
-## Общие параметры полей
+## Shared field options
 
-Карта `fields`: **ключ = имя поля**, `type` — snake_case (`post_object`). PascalCase ниже — имя компонента (`KateCmsPostObjectField`).
+The `fields` map: **key = field name**, `type` is snake_case (`post_object`). PascalCase below is the component name (`KateCmsPostObjectField`).
 
-| Поле | Тип | Дефолт | Смысл |
+| Field | Type | Default | Meaning |
 |---|---|---|---|
-| `label` | `string` | — | Подпись |
-| `instructions` | `string` | — | Подсказка |
-| `required` | `boolean` | `false` | У записи коллекции на сервере проверяется только при `status: 'published'` |
-| `conditionalLogic` | `Condition[][]` | нет | Группы OR, внутри группы AND |
-| `position` | `'main' \| 'sidebar'` | `'main'` | Колонка формы |
-| `columnWidth` | `number` | — | Ширина в % |
+| `label` | `string` | — | Label |
+| `instructions` | `string` | — | Help text |
+| `required` | `boolean` | `false` | On a collection entry the server checks this only when `status: 'published'` |
+| `conditionalLogic` | `Condition[][]` | none | OR groups, AND inside a group |
+| `position` | `'main' \| 'sidebar'` | `'main'` | Form column |
+| `columnWidth` | `number` | — | Width in % |
 
-Нет ключа или `[]` — поле всегда видно. Скрытое поле не проверяется как `required` и не пишется в сохранённые значения.
+No key, or `[]`, means the field is always visible. A hidden field is not checked as `required` and is not written into the saved values.
 
-`Condition[][]`: внешний массив — **OR** (достаточно одной группы), внутренний — **AND** (все условия группы). `field` — ключ поля в `fields`, не `label`.
+`Condition[][]`: the outer array is **OR** (one group is enough), the inner array is **AND** (every condition in the group). `field` is the key in `fields`, not the `label`.
 
 ```ts
 tagline: {
   type: 'text',
   label: 'Tagline',
-  // показать, если title === 'show'
+  // show when title === 'show'
   conditionalLogic: [
     [{ field: 'title', operator: 'equal', value: 'show' }],
   ],
@@ -617,7 +617,7 @@ tagline: {
 seo_note: {
   type: 'message',
   label: 'SEO',
-  // (status === 'draft' И title не пустой) ИЛИ flag === true
+  // (status === 'draft' AND title is not empty) OR flag === true
   conditionalLogic: [
     [
       { field: 'status', operator: 'equal', value: 'draft' },
@@ -628,48 +628,48 @@ seo_note: {
 },
 ```
 
-| Оператор | `value` | Когда истинно |
+| Operator | `value` | True when |
 |---|---|---|
-| `empty` | не нужен | Нет значения: `null` / `undefined`, `''`, `false`, `[]` |
-| `notEmpty` | не нужен | Обратное `empty` |
-| `equal` | да | Скаляр: `String(значение) === String(value)` (регистр важен). Массив выбранных (multi-select и т.п.): содержит `value` |
-| `notEqual` | да | Обратное `equal` |
-| `contains` | да | Строка содержит подстроку `value`. Массив: элемент входит в выбранные |
-| `notContains` | да | Обратное `contains` |
-| `matches` | да | `RegExp(value)` по строке значения. Невалидный паттерн или длиннее 200 символов → ложь |
-| `gt` | да | Число: `Number(значение) > Number(value)`. Массив: `length > Number(value)` |
-| `lt` | да | Аналогично `gt`, но «меньше» |
+| `empty` | not used | No value: `null` / `undefined`, `''`, `false`, `[]` |
+| `notEmpty` | not used | The opposite of `empty` |
+| `equal` | yes | Scalar: `String(field value) === String(value)` (case-sensitive). A selection array (multi-select and similar): contains `value` |
+| `notEqual` | yes | The opposite of `equal` |
+| `contains` | yes | A string contains the `value` substring. An array: the item is among the selected values |
+| `notContains` | yes | The opposite of `contains` |
+| `matches` | yes | `RegExp(value)` against the string value. An invalid pattern, or one longer than 200 characters, is false |
+| `gt` | yes | Number: `Number(field value) > Number(value)`. Array: `length > Number(value)` |
+| `lt` | yes | Same as `gt`, but less than |
 
-`value` приводится к строке для `equal` / `contains` / `matches` (`true` → `'true'`). Для `gt` / `lt` — к числу.
+`value` is cast to a string for `equal` / `contains` / `matches` (`true` → `'true'`). For `gt` / `lt` it is cast to a number.
 
-Layout-only (`tab`, `accordion`, `separator`, `message`) не хранят значение под своим ключом. У `tab` / `accordion` `subFields` панелей пишутся плоско в родителя.
+Layout-only types (`tab`, `accordion`, `separator`, `message`) do not store a value under their own key. For `tab` / `accordion`, panel `subFields` are written flat onto the parent.
 
-`indexed: true` (где тип это допускает) — скалярный индекс Postgres JSONB. Nuxt создаёт/снимает их при старте после миграции. SQLite пропускает. Не работает внутри `repeater` / `flexible_content`.
+`indexed: true` (where the type allows it) is a scalar Postgres JSONB index. Nuxt creates and drops them at startup after migration. SQLite skips them. This does not work inside `repeater` / `flexible_content`.
 
-Зарезервированные ключи в строках: `fc_layout` (flexible content), `__katecmsCollapsed` (свёртка ряда).
+Reserved keys inside rows: `fc_layout` (flexible content), `__katecmsCollapsed` (row collapse).
 
-В карточках ниже общие свойства не повторяются.
+The field sections below do not repeat the shared options.
 
 <a id="fields"></a>
-## Поля
+## Fields
 
 <a id="PostObjectField"></a>
 ### PostObjectField — `type: 'post_object'`
 
-Select записей коллекций.
+Select of collection entries.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `postType` | `string[]` | Slug коллекций. Нет — все |
-| `dictionary` | `string[]` | Только записи с термином этих словарей |
-| `allowNull` | `boolean` | Пустое значение |
-| `multiple` | `boolean` | Несколько записей |
-| `returnFormat` | `'object' \| 'id'` | Объект записи или id. В UI без значения → объект |
+| `postType` | `string[]` | Collection slugs. Omit for every collection |
+| `dictionary` | `string[]` | Only entries that have a term from these dictionaries |
+| `allowNull` | `boolean` | Empty value |
+| `multiple` | `boolean` | Several entries |
+| `returnFormat` | `'object' \| 'id'` | Entry object or id. In the UI, no value means an object |
 
 ```ts
 related: {
   type: 'post_object',
-  label: 'Связанные',
+  label: 'Related',
   postType: ['pages', 'products'],
   multiple: true,
   allowNull: true,
@@ -680,20 +680,20 @@ related: {
 <a id="PageLinkField"></a>
 ### PageLinkField — `type: 'page_link'`
 
-Публичный URL записи (строка), не объект.
+Public URL of an entry (a string), not an object.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `postType` | `string[]` | Типы в пикере |
-| `dictionary` | `string[]` | Фильтр по словарям |
-| `allowNull` | `boolean` | Пусто |
-| `multiple` | `boolean` | Несколько URL |
-| `allowArchives` | `boolean` | Пункты архивов коллекции (только если у типа `has_archive`) |
+| `postType` | `string[]` | Types in the picker |
+| `dictionary` | `string[]` | Filter by dictionaries |
+| `allowNull` | `boolean` | Empty |
+| `multiple` | `boolean` | Several URLs |
+| `allowArchives` | `boolean` | Collection archive items (only when the type has `has_archive`) |
 
 ```ts
 cta: {
   type: 'page_link',
-  label: 'Ссылка',
+  label: 'Link',
   postType: ['pages'],
   multiple: true,
   allowArchives: true,
@@ -704,21 +704,21 @@ cta: {
 <a id="RelationshipField"></a>
 ### RelationshipField — `type: 'relationship'`
 
-Пикер записей: поиск, фильтры, порядок drag-and-drop.
+Entry picker: search, filters, drag-and-drop order.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `postType` | `string[]` | Типы записей |
-| `dictionary` | `string[]` | Словари фильтра. Нет — все из public-навигации |
-| `min` / `max` | `number` | Лимит выбранных |
-| `filters` | `Array<'search' \| 'post_type' \| 'dictionary'>` | В UI без значения → `['search']` |
-| `elements` | `string[]` | Ключи image/gallery-полей для превью, например `['thumbnail']` |
-| `returnFormat` | `'object' \| 'id'` | Как у `post_object` |
+| `postType` | `string[]` | Entry types |
+| `dictionary` | `string[]` | Filter dictionaries. Omit for every dictionary in the public navigation |
+| `min` / `max` | `number` | Limit on selected items |
+| `filters` | `Array<'search' \| 'post_type' \| 'dictionary'>` | In the UI, no value means `['search']` |
+| `elements` | `string[]` | Image or gallery field keys used as a preview, for example `['thumbnail']` |
+| `returnFormat` | `'object' \| 'id'` | Same as `post_object` |
 
 ```ts
 related: {
   type: 'relationship',
-  label: 'Похожие',
+  label: 'Similar',
   postType: ['pages', 'products'],
   dictionary: ['categories'],
   filters: ['search', 'post_type', 'dictionary'],
@@ -731,21 +731,21 @@ related: {
 <a id="DictionaryField"></a>
 ### DictionaryField — `type: 'dictionary'`
 
-Термины одного словаря. Значение в `fields`, не в сайдбар-join.
+Terms of one dictionary. The value is stored in `fields`, not in the sidebar join.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `dictionary` | `string` | Slug словаря, обязательно |
-| `fieldType` | `'checkbox' \| 'multi_select' \| 'radio' \| 'select'` | Вид. Дефолт в UI `'checkbox'` |
-| `multiple` | `boolean` | Для `select`. `checkbox` / `multi_select` всегда несколько, `radio` всегда один |
-| `allowNull` | `boolean` | Пусто |
-| `returnFormat` | `'object' \| 'id'` | Термин или id. В UI без значения → объект |
-| `addTerm` | `boolean` | Создать термин при праве `create` |
+| `dictionary` | `string` | Dictionary slug, required |
+| `fieldType` | `'checkbox' \| 'multi_select' \| 'radio' \| 'select'` | Control. The UI default is `'checkbox'` |
+| `multiple` | `boolean` | For `select`. `checkbox` / `multi_select` are always multiple, `radio` is always one |
+| `allowNull` | `boolean` | Empty |
+| `returnFormat` | `'object' \| 'id'` | Term or id. In the UI, no value means an object |
+| `addTerm` | `boolean` | Create a term when the user has the `create` right |
 
 ```ts
 category: {
   type: 'dictionary',
-  label: 'Категория',
+  label: 'Category',
   dictionary: 'categories',
   fieldType: 'select',
   allowNull: true,
@@ -757,21 +757,21 @@ category: {
 <a id="MessageField"></a>
 ### MessageField — `type: 'message'`
 
-Подсказка без значения (layout-only).
+Help text with no stored value (layout-only).
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `message` | `string` | Текст |
-| `escHtml` | `boolean` | Экранировать HTML |
-| `newLines` | `'autop' \| 'br' \| ''` | Переносы |
+| `message` | `string` | Text |
+| `escHtml` | `boolean` | Escape HTML |
+| `newLines` | `'autop' \| 'br' \| ''` | Line breaks |
 
-В модуле нет `MessageField.vue` — поле в админке не отрисуется, пока не появится компонент.
+The module has no `MessageField.vue`, so the field is not rendered in the admin until that component exists.
 
 ```ts
 hint: {
   type: 'message',
-  label: 'Подсказка',
-  message: 'Заполните блок ниже.',
+  label: 'Hint',
+  message: 'Fill in the block below.',
   escHtml: true,
   newLines: 'br',
 }
@@ -780,13 +780,13 @@ hint: {
 <a id="AccordionField"></a>
 ### AccordionField — `type: 'accordion'`
 
-Только UI. Из базы: `position`, `columnWidth`, `conditionalLogic`. Поля панелей — плоско в родителя. Ключи `subFields` должны быть уникальны в форме.
+UI only. From the database: `position`, `columnWidth`, `conditionalLogic`. Panel fields are written flat onto the parent. `subFields` keys must be unique in the form.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `open` | `number` | Индекс открытой панели с `0`. В UI без числа → `0` |
-| `multiExpand` | `boolean` | Несколько панелей сразу |
-| `panels` | `{ label: string, subFields: Fields }[]` | Панели |
+| `open` | `number` | Index of the open panel, from `0`. In the UI, no number means `0` |
+| `multiExpand` | `boolean` | Several panels open at once |
+| `panels` | `{ label: string, subFields: Fields }[]` | Panels |
 
 ```ts
 block: {
@@ -808,23 +808,23 @@ block: {
 <a id="ButtonGroupField"></a>
 ### ButtonGroupField — `type: 'button_group'`
 
-Один выбор кнопками. `choices`: `{ value: label }`.
+One choice, as buttons. `choices`: `{ value: label }`.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `choices` | `Record<string, string>` | Обязательно |
-| `defaultValue` | `string` | Начальный выбор |
-| `allowNull` | `boolean` | Снять выбор |
-| `returnFormat` | `'value' \| 'label' \| 'array'` | Ключ / подпись / `{ value, label }` |
-| `layout` | `'horizontal' \| 'vertical'` | Раскладка |
-| `indexed` | `boolean` | Индекс Postgres |
+| `choices` | `Record<string, string>` | Required |
+| `defaultValue` | `string` | Initial choice |
+| `allowNull` | `boolean` | Clear the choice |
+| `returnFormat` | `'value' \| 'label' \| 'array'` | Key / label / `{ value, label }` |
+| `layout` | `'horizontal' \| 'vertical'` | Layout |
+| `indexed` | `boolean` | Postgres index |
 
 ```ts
 tone: {
   type: 'button_group',
-  label: 'Тон',
+  label: 'Tone',
   layout: 'horizontal',
-  choices: { light: 'Светлый', dark: 'Тёмный' },
+  choices: { light: 'Light', dark: 'Dark' },
   defaultValue: 'light',
   returnFormat: 'value',
 }
@@ -833,22 +833,22 @@ tone: {
 <a id="CheckboxField"></a>
 ### CheckboxField — `type: 'checkbox'`
 
-Несколько вариантов. `choices`: `{ value: label }`.
+Several choices. `choices`: `{ value: label }`.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `choices` | `Record<string, string>` | Обязательно |
-| `defaultValue` | `string \| string[]` | Начальный выбор |
-| `layout` | `'vertical' \| 'horizontal'` | Раскладка |
-| `toggle` | `boolean` | «Выбрать все». Без `allowCustomChoices` текст — `customChoiceButtonText` или `'Select all'` |
-| `returnFormat` | `'value' \| 'label' \| 'array'` | Формат |
-| `allowCustomChoices` | `boolean` | Поле «Other» + кнопка, свой вариант добавляется в список и сразу отмечается |
-| `customChoiceButtonText` | `string` | Кнопка добавления (`'Add'`). Без `allowCustomChoices` — подпись toggle |
+| `choices` | `Record<string, string>` | Required |
+| `defaultValue` | `string \| string[]` | Initial choice |
+| `layout` | `'vertical' \| 'horizontal'` | Layout |
+| `toggle` | `boolean` | “Select all”. Without `allowCustomChoices` the text is `customChoiceButtonText` or `'Select all'` |
+| `returnFormat` | `'value' \| 'label' \| 'array'` | Format |
+| `allowCustomChoices` | `boolean` | An “Other” field plus a button. The custom choice is added to the list and selected immediately |
+| `customChoiceButtonText` | `string` | Add button (`'Add'`). Without `allowCustomChoices` this is the toggle label |
 
 ```ts
 flags: {
   type: 'checkbox',
-  label: 'Опции',
+  label: 'Options',
   layout: 'vertical',
   toggle: true,
   allowCustomChoices: true,
@@ -862,20 +862,20 @@ flags: {
 <a id="ColorPickerField"></a>
 ### ColorPickerField — `type: 'color_picker'`
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `defaultValue` | `string` | Начальный цвет |
-| `enableOpacity` | `boolean` | Альфа |
-| `returnFormat` | `'string' \| 'array'` | Строка или `{ hex, rgba, r, g, b, a }`. В UI без значения → `'string'` |
-| `paletteColors` | `string[]` | Палитра |
-| `showColorWheel` | `boolean` | Колесо |
-| `rgba` / `hsla` | `boolean` | Поля RGBA / HSLA |
-| `indexed` | `boolean` | Индекс Postgres |
+| `defaultValue` | `string` | Initial color |
+| `enableOpacity` | `boolean` | Alpha |
+| `returnFormat` | `'string' \| 'array'` | A string, or `{ hex, rgba, r, g, b, a }`. In the UI, no value means `'string'` |
+| `paletteColors` | `string[]` | Palette |
+| `showColorWheel` | `boolean` | Color wheel |
+| `rgba` / `hsla` | `boolean` | RGBA / HSLA fields |
+| `indexed` | `boolean` | Postgres index |
 
 ```ts
 accent: {
   type: 'color_picker',
-  label: 'Цвет',
+  label: 'Color',
   defaultValue: '#2F6FED',
   enableOpacity: true,
   returnFormat: 'array',
@@ -889,20 +889,20 @@ accent: {
 <a id="DatePickerField"></a>
 ### DatePickerField — `type: 'date_picker'`
 
-Токены формата: `YYYY` `YY` `MM` `M` `DD` `D` `HH` `H` `mm` `m` `ss` `s`.
+Format tokens: `YYYY` `YY` `MM` `M` `DD` `D` `HH` `H` `mm` `m` `ss` `s`.
 
-| Параметр | Тип | Дефолт | Смысл |
+| Option | Type | Default | Meaning |
 |---|---|---|---|
-| `displayFormat` | `string` | `DD.MM.YYYY` | Как показать |
-| `returnFormat` | `string` | `YYYY-MM-DD` | Как сохранить |
-| `firstDay` | `number` | — | Первый день недели (`1` = понедельник) |
-| `defaultToCurrentDate` | `boolean` | — | Подставить сегодня |
-| `indexed` | `boolean` | — | Индекс Postgres (`date`) |
+| `displayFormat` | `string` | `DD.MM.YYYY` | How to display |
+| `returnFormat` | `string` | `YYYY-MM-DD` | How to store |
+| `firstDay` | `number` | — | First day of the week (`1` = Monday) |
+| `defaultToCurrentDate` | `boolean` | — | Fill in today |
+| `indexed` | `boolean` | — | Postgres index (`date`) |
 
 ```ts
 event_date: {
   type: 'date_picker',
-  label: 'Дата',
+  label: 'Date',
   displayFormat: 'DD.MM.YYYY',
   returnFormat: 'YYYY-MM-DD',
   firstDay: 1,
@@ -913,12 +913,12 @@ event_date: {
 <a id="DateTimePickerField"></a>
 ### DateTimePickerField — `type: 'date_time_picker'`
 
-Те же параметры, что у даты. Дефолты: display `DD.MM.YYYY HH:mm`, return `YYYY-MM-DD HH:mm`. Индекс: `timestamptz`.
+Same options as the date field. Defaults: display `DD.MM.YYYY HH:mm`, return `YYYY-MM-DD HH:mm`. Index: `timestamptz`.
 
 ```ts
 starts_at: {
   type: 'date_time_picker',
-  label: 'Начало',
+  label: 'Start',
   displayFormat: 'DD.MM.YYYY HH:mm',
   returnFormat: 'YYYY-MM-DD HH:mm',
   firstDay: 1,
@@ -929,17 +929,17 @@ starts_at: {
 <a id="EmailField"></a>
 ### EmailField — `type: 'email'`
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `defaultValue` | `string` | Начальное |
-| `placeholder` | `string` | Плейсхолдер |
-| `prepend` / `append` | `string` | Текст слева / справа |
-| `indexed` | `boolean` | Индекс Postgres |
+| `defaultValue` | `string` | Initial value |
+| `placeholder` | `string` | Placeholder |
+| `prepend` / `append` | `string` | Text on the left / right |
+| `indexed` | `boolean` | Postgres index |
 
 ```ts
 contact: {
   type: 'email',
-  label: 'Почта',
+  label: 'Email',
   placeholder: 'name@example.com',
   prepend: '@',
 }
@@ -948,21 +948,21 @@ contact: {
 <a id="FileField"></a>
 ### FileField — `type: 'file'`
 
-Один файл из медиатеки.
+One file from the media library.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `returnFormat` | `'array' \| 'url' \| 'id'` | `MediaItem` / URL / id. В UI без значения → `'array'` |
-| `library` | `'all' \| 'uploadedTo'` | `'uploadedTo'` скрывает выбор из библиотеки |
-| `minSize` / `maxSize` | `number` | Размер файла |
-| `mimeTypes` | `string` | MIME/расширения через запятую или пробел |
+| `returnFormat` | `'array' \| 'url' \| 'id'` | `MediaItem` / URL / id. In the UI, no value means `'array'` |
+| `library` | `'all' \| 'uploadedTo'` | `'uploadedTo'` hides picking from the library |
+| `minSize` / `maxSize` | `number` | File size |
+| `mimeTypes` | `string` | MIME types or extensions, separated by comma or space |
 
-Глобальный лимит всё равно `media.maxFileSize` и `media.allowedMimeTypes`.
+The global limit is still `media.maxFileSize` and `media.allowedMimeTypes`.
 
 ```ts
 attachment: {
   type: 'file',
-  label: 'Файл',
+  label: 'File',
   returnFormat: 'array',
   library: 'all',
   maxSize: 10,
@@ -973,22 +973,22 @@ attachment: {
 <a id="FlexibleContentField"></a>
 ### FlexibleContentField — `type: 'flexible_content'`
 
-Массив блоков разных layout. Имя layout пишется в строку как `fc_layout`.
+An array of blocks with different layouts. The layout name is stored on the row as `fc_layout`.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `min` | `number` | Мягкий лимит (в типе: будущая валидация, UI строки сам не добавляет) |
-| `max` | `number` | Максимум блоков в UI |
-| `buttonLabel` | `string` | Текст кнопки |
-| `previewPath` | `string` | Каталог превью относительно `public` |
-| `layouts` | `Record<string, FlexibleLayout>` | Обязательно |
+| `min` | `number` | Soft limit (in the type: future validation; the UI does not add rows by itself) |
+| `max` | `number` | Maximum blocks in the UI |
+| `buttonLabel` | `string` | Button text |
+| `previewPath` | `string` | Preview directory, relative to `public` |
+| `layouts` | `Record<string, FlexibleLayout>` | Required |
 
-`FlexibleLayout`: `label`, `preview?` (файл в `previewPath` или URL), `min?` (мягкий), `max?` (лимит этого layout в UI), `subFields`.
+`FlexibleLayout`: `label`, `preview?` (a file in `previewPath`, or a URL), `min?` (soft), `max?` (limit of this layout in the UI), `subFields`.
 
 ```ts
 content: {
   type: 'flexible_content',
-  label: 'Контент',
+  label: 'Content',
   max: 5,
   buttonLabel: 'Add layout',
   layouts: {
@@ -1008,24 +1008,24 @@ content: {
 <a id="GalleryField"></a>
 ### GalleryField — `type: 'gallery'`
 
-Несколько изображений, drag-and-drop.
+Several images, with drag-and-drop.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `returnFormat` | `'array' \| 'url' \| 'id'` | Массив `MediaItem` / URL / id. В UI без значения → `'array'` |
-| `previewSize` | `string` | Имя варианта для превью |
-| `insert` | `'append' \| 'prepend'` | В UI без значения → `'append'` |
-| `library` | `'all' \| 'uploadedTo'` | Как у `image` |
-| `min` / `max` | `number` | Число файлов |
-| `minSize` / `maxSize` / `mimeTypes` | | Как у `file` |
-| `minWidth` / `minHeight` / `maxWidth` / `maxHeight` | `number` | Размеры картинки |
+| `returnFormat` | `'array' \| 'url' \| 'id'` | Array of `MediaItem` / URL / id. In the UI, no value means `'array'` |
+| `previewSize` | `string` | Variant name used for the preview |
+| `insert` | `'append' \| 'prepend'` | In the UI, no value means `'append'` |
+| `library` | `'all' \| 'uploadedTo'` | Same as `image` |
+| `min` / `max` | `number` | Number of files |
+| `minSize` / `maxSize` / `mimeTypes` | | Same as `file` |
+| `minWidth` / `minHeight` / `maxWidth` / `maxHeight` | `number` | Image dimensions |
 
-Пустой дефолт формы — `[]`.
+An empty form default is `[]`.
 
 ```ts
 photos: {
   type: 'gallery',
-  label: 'Галерея',
+  label: 'Gallery',
   returnFormat: 'array',
   insert: 'append',
   min: 1,
@@ -1036,11 +1036,11 @@ photos: {
 <a id="GroupField"></a>
 ### GroupField — `type: 'group'`
 
-Вложенный объект. Скаляры внутри можно индексировать.
+A nested object. Scalars inside it can be indexed.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `subFields` | `Fields` | Вложенные поля |
+| `subFields` | `Fields` | Nested fields |
 
 ```ts
 seo: {
@@ -1056,20 +1056,20 @@ seo: {
 <a id="ImageField"></a>
 ### ImageField — `type: 'image'`
 
-Одна картинка, опционально кроп.
+One image, with an optional crop.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `returnFormat` | `'array' \| 'url' \| 'id'` | `MediaItem` / URL / id. В UI без значения → `'array'` |
-| `library` | `'all' \| 'uploadedTo'` | Как у `file` |
-| `cropType` | `[number, number] \| boolean` | `true` — кроп; `[16, 9]` — соотношение |
-| `minSize` / `maxSize` / `mimeTypes` | | Ограничения файла. Пустой `mimeTypes` → `image/*` |
-| `minWidth` / `minHeight` / `maxWidth` / `maxHeight` | `number` | Размеры |
+| `returnFormat` | `'array' \| 'url' \| 'id'` | `MediaItem` / URL / id. In the UI, no value means `'array'` |
+| `library` | `'all' \| 'uploadedTo'` | Same as `file` |
+| `cropType` | `[number, number] \| boolean` | `true` enables crop; `[16, 9]` is the aspect ratio |
+| `minSize` / `maxSize` / `mimeTypes` | | File limits. An empty `mimeTypes` means `image/*` |
+| `minWidth` / `minHeight` / `maxWidth` / `maxHeight` | `number` | Dimensions |
 
 ```ts
 thumbnail: {
   type: 'image',
-  label: 'Обложка',
+  label: 'Cover',
   position: 'sidebar',
   returnFormat: 'array',
   cropType: [16, 9],
@@ -1079,22 +1079,22 @@ thumbnail: {
 <a id="ImageSelectField"></a>
 ### ImageSelectField — `type: 'image_select'`
 
-Варианты с превью: `{ key: { label, image } }`.
+Choices with a preview: `{ key: { label, image } }`.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `choices` | `Record<string, { label: string, image: string }>` | Обязательно. `image` — URL |
-| `defaultValue` | `string \| string[]` | Начальный выбор |
-| `layout` | `'vertical' \| 'horizontal'` | Раскладка |
-| `multiple` | `boolean` | Несколько |
-| `allowNull` | `boolean` | Сброс в одиночном режиме |
-| `returnFormat` | `'value' \| 'label' \| 'array'` | Формат |
-| `width` / `height` | `number` | Размер превью, px |
+| `choices` | `Record<string, { label: string, image: string }>` | Required. `image` is a URL |
+| `defaultValue` | `string \| string[]` | Initial choice |
+| `layout` | `'vertical' \| 'horizontal'` | Layout |
+| `multiple` | `boolean` | Several |
+| `allowNull` | `boolean` | Clear in single mode |
+| `returnFormat` | `'value' \| 'label' \| 'array'` | Format |
+| `width` / `height` | `number` | Preview size, px |
 
 ```ts
 hero: {
   type: 'image_select',
-  label: 'Макет',
+  label: 'Layout',
   layout: 'horizontal',
   multiple: true,
   choices: {
@@ -1110,31 +1110,31 @@ hero: {
 <a id="LinkField"></a>
 ### LinkField — `type: 'link'`
 
-Произвольный URL (не пикер CMS).
+Any URL (not the CMS picker).
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `returnFormat` | `'array' \| 'url'` | `{ url, title, target }` или строка. Без `'url'` → объект |
+| `returnFormat` | `'array' \| 'url'` | `{ url, title, target }` or a string. Without `'url'` the value is an object |
 
 ```ts
-btn: { type: 'link', label: 'Кнопка', returnFormat: 'array' }
+btn: { type: 'link', label: 'Button', returnFormat: 'array' }
 ```
 
 <a id="NumberField"></a>
 ### NumberField — `type: 'number'`
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `defaultValue` | `number` | Начальное |
-| `min` / `max` / `step` | `number` | Границы и шаг |
-| `placeholder` | `string` | Плейсхолдер |
-| `prepend` / `append` | `string` | Слева / справа |
-| `indexed` | `boolean` | Индекс Postgres (`numeric`) |
+| `defaultValue` | `number` | Initial value |
+| `min` / `max` / `step` | `number` | Bounds and step |
+| `placeholder` | `string` | Placeholder |
+| `prepend` / `append` | `string` | Left / right |
+| `indexed` | `boolean` | Postgres index (`numeric`) |
 
 ```ts
 price: {
   type: 'number',
-  label: 'Цена',
+  label: 'Price',
   defaultValue: 10,
   min: 0,
   max: 100,
@@ -1148,17 +1148,17 @@ price: {
 <a id="OembedField"></a>
 ### OembedField — `type: 'oembed'`
 
-URL эмбеда (YouTube и т.д.). Хранится строка URL.
+Embed URL (YouTube and similar). Stored as a URL string.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
 | `defaultValue` | `string` | URL |
-| `width` / `height` | `number` | `maxwidth` / `maxheight` запроса |
+| `width` / `height` | `number` | `maxwidth` / `maxheight` of the request |
 
 ```ts
 video: {
   type: 'oembed',
-  label: 'Видео',
+  label: 'Video',
   width: 560,
   height: 315,
 }
@@ -1167,19 +1167,19 @@ video: {
 <a id="OpenStreetMapField"></a>
 ### OpenStreetMapField — `type: 'open_street_map'`
 
-Leaflet + Nominatim. Значение: `OsmMarker` или массив, или `null`.
+Leaflet + Nominatim. The value is an `OsmMarker`, an array, or `null`.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `height` | `number` | Высота карты, px |
-| `centerLat` / `centerLng` | `string` | Центр (строки) |
-| `zoom` | `number` | Масштаб |
-| `multiple` | `boolean` | Несколько маркеров. Дефолт формы тогда `[]` |
+| `height` | `number` | Map height, px |
+| `centerLat` / `centerLng` | `string` | Center (strings) |
+| `zoom` | `number` | Zoom |
+| `multiple` | `boolean` | Several markers. The form default is then `[]` |
 
 ```ts
 place: {
   type: 'open_street_map',
-  label: 'Точка',
+  label: 'Point',
   height: 360,
   centerLat: '55.751244',
   centerLng: '37.618423',
@@ -1191,41 +1191,41 @@ place: {
 <a id="PasswordField"></a>
 ### PasswordField — `type: 'password'`
 
-Поле записи, не пароль пользователя CMS. `indexed` и `defaultValue` в типе нет.
+An entry field, not the CMS user password. The type has no `indexed` or `defaultValue`.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `placeholder` | `string` | Плейсхолдер |
-| `prepend` / `append` | `string` | Слева / справа |
+| `placeholder` | `string` | Placeholder |
+| `prepend` / `append` | `string` | Left / right |
 
 ```ts
-secret: { type: 'password', label: 'Секрет', placeholder: 'Password' }
+secret: { type: 'password', label: 'Secret', placeholder: 'Password' }
 ```
 
 <a id="RadioField"></a>
 ### RadioField — `type: 'radio'`
 
-Один вариант. `choices`: `{ value: label }`.
+One choice. `choices`: `{ value: label }`.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `choices` | `Record<string, string>` | Обязательно |
-| `defaultValue` | `string` | Начальный выбор |
-| `layout` | `'vertical' \| 'horizontal'` | Раскладка |
-| `allowNull` | `boolean` | Снять повторным кликом |
-| `returnFormat` | `'value' \| 'label' \| 'array'` | Формат |
-| `indexed` | `boolean` | Индекс Postgres |
-| `allowCustomChoices` | `boolean` | Поле «Other» + кнопка, свой вариант добавляется в список и выбирается |
-| `customChoiceButtonText` | `string` | Кнопка добавления (`'Add'`) |
+| `choices` | `Record<string, string>` | Required |
+| `defaultValue` | `string` | Initial choice |
+| `layout` | `'vertical' \| 'horizontal'` | Layout |
+| `allowNull` | `boolean` | Clear with a second click |
+| `returnFormat` | `'value' \| 'label' \| 'array'` | Format |
+| `indexed` | `boolean` | Postgres index |
+| `allowCustomChoices` | `boolean` | An “Other” field plus a button. The custom choice is added to the list and selected |
+| `customChoiceButtonText` | `string` | Add button (`'Add'`) |
 
 ```ts
 align: {
   type: 'radio',
-  label: 'Выравнивание',
+  label: 'Alignment',
   layout: 'vertical',
   allowNull: true,
   allowCustomChoices: true,
-  choices: { left: 'Слева', center: 'Центр' },
+  choices: { left: 'Left', center: 'Center' },
   defaultValue: 'left',
 }
 ```
@@ -1233,17 +1233,17 @@ align: {
 <a id="RangeField"></a>
 ### RangeField — `type: 'range'`
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `defaultValue` | `number` | Начальное |
-| `min` / `max` / `step` | `number` | Границы и шаг |
-| `prepend` / `append` | `string` | Подписи |
-| `indexed` | `boolean` | Индекс Postgres (`numeric`) |
+| `defaultValue` | `number` | Initial value |
+| `min` / `max` / `step` | `number` | Bounds and step |
+| `prepend` / `append` | `string` | Labels |
+| `indexed` | `boolean` | Postgres index (`numeric`) |
 
 ```ts
 volume: {
   type: 'range',
-  label: 'Громкость',
+  label: 'Volume',
   defaultValue: 25,
   min: 0,
   max: 200,
@@ -1254,19 +1254,19 @@ volume: {
 <a id="RepeaterField"></a>
 ### RepeaterField — `type: 'repeater'`
 
-Массив одинаковых строк. Можно вкладывать repeater. Индексы Postgres внутри не строятся. Пустой дефолт — `[]`.
+An array of identical rows. Repeaters can be nested. Postgres indexes are not built inside. An empty default is `[]`.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `min` / `max` | `number` | Число строк |
-| `buttonLabel` | `string` | Текст кнопки |
-| `collapsed` | `string` | Ключ subField для заголовка свёрнутой строки |
-| `subFields` | `Fields` | Поля строки |
+| `min` / `max` | `number` | Number of rows |
+| `buttonLabel` | `string` | Button text |
+| `collapsed` | `string` | `subField` key used as the title of a collapsed row |
+| `subFields` | `Fields` | Row fields |
 
 ```ts
 items: {
   type: 'repeater',
-  label: 'Пункты',
+  label: 'Items',
   collapsed: 'title',
   min: 1,
   max: 5,
@@ -1281,28 +1281,28 @@ items: {
 <a id="SelectField"></a>
 ### SelectField — `type: 'select'`
 
-`choices` — массив, не карта. Группа: `{ type: 'group', title, childs }`.
+`choices` is an array, not a map. A group is `{ type: 'group', title, childs }`.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `choices` | `SelectChoice[]` | Обязательно. Элемент `{ val?, lbl, img?, disabled?, check? }` |
-| `defaultValue` | `string \| number \| Array<string \| number>` | Начальный выбор |
-| `allowNull` | `boolean` | Сброс |
-| `multiple` | `boolean` | Несколько |
-| `placeholder` | `string` | Плейсхолдер |
-| `returnFormat` | `'value' \| 'label' \| 'array'` | Формат |
-| `allowCustomChoices` | `boolean` | Свои варианты |
-| `customChoiceButtonText` | `string` | Текст кнопки (дефолт `'Add'`) |
-| `min` / `max` | `number` | Число выбранных при `multiple` |
-| `search` | `boolean` | Фильтр списка |
-| `searchPlaceholder` | `string` | Плейсхолдер поиска |
-| `clearable` | `boolean` | Крестик очистки |
-| `indexed` | `boolean` | Индекс Postgres (скаляр) |
+| `choices` | `SelectChoice[]` | Required. An item is `{ val?, lbl, img?, disabled?, check? }` |
+| `defaultValue` | `string \| number \| Array<string \| number>` | Initial choice |
+| `allowNull` | `boolean` | Clear |
+| `multiple` | `boolean` | Several |
+| `placeholder` | `string` | Placeholder |
+| `returnFormat` | `'value' \| 'label' \| 'array'` | Format |
+| `allowCustomChoices` | `boolean` | Custom choices |
+| `customChoiceButtonText` | `string` | Button text (default `'Add'`) |
+| `min` / `max` | `number` | Number selected when `multiple` |
+| `search` | `boolean` | Filter the list |
+| `searchPlaceholder` | `string` | Search placeholder |
+| `clearable` | `boolean` | Clear button |
+| `indexed` | `boolean` | Postgres index (scalar) |
 
 ```ts
 color: {
   type: 'select',
-  label: 'Цвет',
+  label: 'Color',
   allowNull: true,
   clearable: true,
   search: true,
@@ -1318,21 +1318,21 @@ color: {
 <a id="SeparatorField"></a>
 ### SeparatorField — `type: 'separator'`
 
-Черта. Layout-only. `label` опционален (текст на линии).
+A rule. Layout-only. `label` is optional (text on the line).
 
 ```ts
-break: { type: 'separator', label: 'Дополнительно', columnWidth: 100 }
+break: { type: 'separator', label: 'More', columnWidth: 100 }
 ```
 
 <a id="TabField"></a>
 ### TabField — `type: 'tab'`
 
-Как аккордеон: layout-only, hoisting в родителя. Из базы: `position`, `columnWidth`, `conditionalLogic`.
+Like an accordion: layout-only, hoisted onto the parent. From the database: `position`, `columnWidth`, `conditionalLogic`.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `placement` | `'top' \| 'left'` | В UI без `'left'` → `'top'` |
-| `panels` | `{ label: string, subFields: Fields }[]` | Вкладки |
+| `placement` | `'top' \| 'left'` | In the UI, anything other than `'left'` means `'top'` |
+| `panels` | `{ label: string, subFields: Fields }[]` | Tabs |
 
 ```ts
 meta: {
@@ -1340,13 +1340,13 @@ meta: {
   placement: 'top',
   panels: [
     {
-      label: 'Основное',
+      label: 'General',
       subFields: {
         tab_title: { type: 'text', label: 'Title' },
       },
     },
     {
-      label: 'Дополнительно',
+      label: 'More',
       subFields: {
         tab_note: { type: 'textarea', label: 'Note' },
       },
@@ -1358,18 +1358,18 @@ meta: {
 <a id="TextField"></a>
 ### TextField — `type: 'text'`
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `defaultValue` | `string` | Начальное |
-| `maxLength` | `number` | Максимум символов |
-| `placeholder` | `string` | Плейсхолдер |
-| `prepend` / `append` | `string` | Слева / справа |
-| `indexed` | `boolean` | Индекс Postgres |
+| `defaultValue` | `string` | Initial value |
+| `maxLength` | `number` | Maximum characters |
+| `placeholder` | `string` | Placeholder |
+| `prepend` / `append` | `string` | Left / right |
+| `indexed` | `boolean` | Postgres index |
 
 ```ts
 headline: {
   type: 'text',
-  label: 'Заголовок',
+  label: 'Headline',
   required: true,
   maxLength: 120,
   placeholder: 'Title',
@@ -1380,19 +1380,19 @@ headline: {
 <a id="TextareaField"></a>
 ### TextareaField — `type: 'textarea'`
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `defaultValue` | `string` | Начальное |
-| `maxLength` | `number` | Максимум символов |
-| `rows` | `number` | Высота |
-| `placeholder` | `string` | Плейсхолдер |
-| `newLines` | `'autop' \| 'br' \| ''` | Переносы при выводе. Дефолт `''`. В форме сырой текст |
-| `indexed` | `boolean` | Индекс Postgres |
+| `defaultValue` | `string` | Initial value |
+| `maxLength` | `number` | Maximum characters |
+| `rows` | `number` | Height |
+| `placeholder` | `string` | Placeholder |
+| `newLines` | `'autop' \| 'br' \| ''` | Line breaks on output. Default `''`. The form stores raw text |
+| `indexed` | `boolean` | Postgres index |
 
 ```ts
 excerpt: {
   type: 'textarea',
-  label: 'Анонс',
+  label: 'Excerpt',
   rows: 6,
   maxLength: 500,
   newLines: 'autop',
@@ -1402,33 +1402,33 @@ excerpt: {
 <a id="TimePickerField"></a>
 ### TimePickerField — `type: 'time_picker'`
 
-Нет `firstDay` и `defaultToCurrentDate`.
+There is no `firstDay` or `defaultToCurrentDate`.
 
-| Параметр | Тип | Дефолт | Смысл |
+| Option | Type | Default | Meaning |
 |---|---|---|---|
-| `displayFormat` | `string` | `HH:mm` | Как показать |
-| `returnFormat` | `string` | `HH:mm` | Как сохранить |
-| `indexed` | `boolean` | — | Индекс Postgres (`time`) |
+| `displayFormat` | `string` | `HH:mm` | How to display |
+| `returnFormat` | `string` | `HH:mm` | How to store |
+| `indexed` | `boolean` | — | Postgres index (`time`) |
 
 ```ts
-opens: { type: 'time_picker', label: 'Открытие', displayFormat: 'HH:mm', returnFormat: 'HH:mm' }
+opens: { type: 'time_picker', label: 'Opens', displayFormat: 'HH:mm', returnFormat: 'HH:mm' }
 ```
 
 <a id="TrueFalseField"></a>
 ### TrueFalseField — `type: 'true_false'`
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `defaultValue` | `boolean` | Начальное |
-| `message` | `string` | Подпись рядом |
-| `ui` | `boolean` | Switch вместо чекбокса |
-| `uiOnText` / `uiOffText` | `string` | В UI без значения → `'Yes'` / `'No'` |
-| `indexed` | `boolean` | Индекс Postgres (`boolean`) |
+| `defaultValue` | `boolean` | Initial value |
+| `message` | `string` | Label beside the control |
+| `ui` | `boolean` | Switch instead of a checkbox |
+| `uiOnText` / `uiOffText` | `string` | In the UI, no value means `'Yes'` / `'No'` |
+| `indexed` | `boolean` | Postgres index (`boolean`) |
 
 ```ts
 enabled: {
   type: 'true_false',
-  label: 'Включено',
+  label: 'Enabled',
   message: 'Enable option',
   ui: true,
   uiOnText: 'On',
@@ -1440,34 +1440,34 @@ enabled: {
 <a id="UrlField"></a>
 ### UrlField — `type: 'url'`
 
-Строка URL. Для title/target см. [LinkField](#LinkField).
+A URL string. For title and target, see [LinkField](#LinkField).
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `defaultValue` | `string` | Начальное |
-| `placeholder` | `string` | Плейсхолдер |
-| `indexed` | `boolean` | Индекс Postgres |
+| `defaultValue` | `string` | Initial value |
+| `placeholder` | `string` | Placeholder |
+| `indexed` | `boolean` | Postgres index |
 
 ```ts
-homepage: { type: 'url', label: 'Сайт', placeholder: 'https://example.com' }
+homepage: { type: 'url', label: 'Website', placeholder: 'https://example.com' }
 ```
 
 <a id="UserField"></a>
 ### UserField — `type: 'user'`
 
-Пикер аккаунтов. В объект пароль не входит. `role` пустой или `'all'` — все пользователи.
+Account picker. The object does not include the password. An empty `role`, or `'all'`, means every user.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
-| `role` | `'all' \| string \| string[]` | Фильтр ролей |
-| `multiple` | `boolean` | Несколько |
-| `allowNull` | `boolean` | Пусто |
-| `returnFormat` | `'array' \| 'id'` | Объект или id. В UI без значения → объект |
+| `role` | `'all' \| string \| string[]` | Role filter |
+| `multiple` | `boolean` | Several |
+| `allowNull` | `boolean` | Empty |
+| `returnFormat` | `'array' \| 'id'` | Object or id. In the UI, no value means an object |
 
 ```ts
 editors: {
   type: 'user',
-  label: 'Редакторы',
+  label: 'Editors',
   role: 'all',
   multiple: true,
   allowNull: true,
@@ -1478,21 +1478,21 @@ editors: {
 <a id="WysiwygField"></a>
 ### WysiwygField — `type: 'wysiwyg'`
 
-TipTap. Хранится HTML.
+TipTap. Stored as HTML.
 
-| Параметр | Тип | Смысл |
+| Option | Type | Meaning |
 |---|---|---|
 | `defaultValue` | `string` | HTML |
-| `tabs` | `'all' \| 'visual' \| 'text'` | В UI без значения → `'all'` |
-| `toolbar` | `'full' \| 'basic'` | В UI без `'basic'` → полный набор |
-| `mediaUpload` | `boolean` | Есть в типе. Компонент не читает |
-| `fontSize` | `string[]` | Иначе 8px…96px |
-| `colorPalette` | `string[]` | Hex-палитра текста |
+| `tabs` | `'all' \| 'visual' \| 'text'` | In the UI, no value means `'all'` |
+| `toolbar` | `'full' \| 'basic'` | In the UI, anything other than `'basic'` means the full set |
+| `mediaUpload` | `boolean` | Present on the type. The component does not read it |
+| `fontSize` | `string[]` | Otherwise 8px…96px |
+| `colorPalette` | `string[]` | Text hex palette |
 
 ```ts
 body: {
   type: 'wysiwyg',
-  label: 'Текст',
+  label: 'Body',
   required: true,
   tabs: 'all',
   toolbar: 'full',

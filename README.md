@@ -4,8 +4,35 @@
 
 Конфиг модуля: ключ `katecms` в `nuxt.config.ts`, параметры полей и вкладки сайдбара дополнений.
 
+## Установка
+
+В каталоге Nuxt-приложения:
+
+```sh
+pnpm add katecms
+```
+
+```sh
+npm install katecms
+```
+
+```sh
+yarn add katecms
+```
+
+В `nuxt.config.ts`:
+
+```ts
+export default defineNuxtConfig({
+  modules: ['katecms'],
+})
+```
+
+Дальше ключи `katecms` описаны в [подключении](#config-setup).
+
 ## Навигация
 
+- [Установка](#установка)
 - [Конфиг модуля](#config)
   - [Подключение](#config-setup)
   - [Ключи `katecms`](#config-keys)

@@ -413,7 +413,7 @@
 {"p":"playground/scripts/seed.mjs","pkg":"katecms-playground","k":"config","ln":592,"sum":"Fills the playground SQLite database with users, media, dictionary terms, options, and 45 entries in each collection.","im":["packages/core/src/index.ts"],"ext":["node:fs/promises","node:module","node:path","node:url"]}
 {"p":"playground/server/tsconfig.json","pkg":"katecms-playground","k":"config","ln":4,"sum":"Config tsconfig.json"}
 {"p":"playground/tsconfig.json","pkg":"katecms-playground","k":"config","ln":4,"sum":"Config tsconfig.json"}
-{"p":"pnpm-workspace.yaml","pkg":"katecms-monorepo","k":"config","ln":8,"sum":"Config pnpm-workspace.yaml"}
+{"p":"pnpm-workspace.yaml","pkg":"katecms-monorepo","k":"config","ln":19,"sum":"Config pnpm-workspace.yaml"}
 {"p":"README.md","pkg":"katecms-monorepo","k":"doc","ln":1486,"sum":"KateCMS"}
 {"p":"scripts/ai-index.mjs","pkg":"katecms-monorepo","k":"script","ln":1697,"sum":"Build `.ai/` — a compact map of the KateCMS repo for later AI sessions.","ext":["node:fs","node:path"]}
 {"p":"scripts/reset-password.mjs","pkg":"katecms-monorepo","k":"script","ln":48,"sum":"Set a new password for an account when the old one is forgotten.","im":["packages/core/src/index.ts"]}

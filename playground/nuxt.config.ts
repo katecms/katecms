@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   compatibilityDate: 'latest',
   katecms: {
-    registration: false,
+    registration: true,
     // database: {
     //   driver: 'postgres',
     // },

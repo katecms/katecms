@@ -183,13 +183,6 @@
       box-shadow: $shadow-md;
     }
 
-    &__logo {
-      display: block;
-      width: math-rem(150);
-      height: auto;
-      margin: 0 auto math-rem(24);
-    }
-
     &__title {
       margin: 0 0 math-rem(8);
       font-size: math-rem(22);

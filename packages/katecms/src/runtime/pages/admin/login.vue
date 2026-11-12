@@ -16,7 +16,7 @@ useHead({
 })
 
 const paths = useCmsPaths()
-const registrationOpen = useRuntimeConfig().public.katecms?.registration === true
+const registrationOpen = useRuntimeConfig().public.katecms?.registration
 const { remainingSec, locked, start: startCooldown } = useAuthCooldown()
 const emailField = { label: 'Email', required: true }
 const passwordField = { type: 'password' as const, label: 'Password', required: true }
@@ -76,11 +76,6 @@ async function submit() {
 <template>
   <div :class="rootClass">
     <div :class="`${rootClass}__card`">
-      <img
-        :class="`${rootClass}__logo`"
-        src="../../assets/img/katecms-logo.svg"
-        alt="KateCMS"
-      >
       <div :class="`${rootClass}__title`">
         Sign in
       </div>

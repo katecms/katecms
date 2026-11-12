@@ -83,11 +83,6 @@ async function submit() {
 <template>
   <div :class="rootClass">
     <div :class="`${rootClass}__card`">
-      <img
-        :class="`${rootClass}__logo`"
-        src="../../assets/img/katecms-logo.svg"
-        alt="KateCMS"
-      >
       <div :class="`${rootClass}__title`">
         {{ isFirstUser ? 'Create owner' : 'Register' }}
       </div>

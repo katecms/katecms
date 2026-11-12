@@ -166,16 +166,6 @@ const groups = computed<MenuGroup[]>(() => {
 
 <template>
   <div :class="rootClass">
-    <!--    <NuxtLink
-      :class="`${rootClass}__logo`"
-      :to="paths.admin"
-    >
-      <img
-        src="../../assets/img/katecms-logo.svg"
-        alt="KateCMS"
-      >
-    </NuxtLink> -->
-
     <div :class="`${rootClass}__wrap`">
       <div
         v-for="group in groups"

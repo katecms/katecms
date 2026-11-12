@@ -1,12 +1,12 @@
 # Монорепозиторий
 
-Корень — приватный пакет `katecms-monorepo`. Публикуемые пакеты выпускаются по отдельности: `@katecms/core`, `katecms`, `katecms-form`, `katecms-seo`. Дополнения экспортируют `src/module.ts` и в `files` отдают исходники. Playground `playground` — приложение-хост для разработки, в npm не уходит.
+Корень — приватный пакет `katecms-monorepo`. Публикуемые пакеты выпускаются по отдельности: `@katecms/core`, `katecms`, `katecms-form-builder`, `katecms-seo`. Дополнения экспортируют `src/module.ts` и в `files` отдают исходники. Playground `playground` — приложение-хост для разработки, в npm не уходит.
 
 ```
 katecms
 ├── packages/core                 @katecms/core
 ├── packages/katecms        модуль админки и публичного API
-├── packages/katecms-form   конструктор форм
+├── packages/katecms-form-builder   конструктор форм
 ├── packages/katecms-seo    title, sitemap, robots, редиректы
 ├── playground               пример сайта
 ├── scripts/ai-index.mjs          индекс .ai/
@@ -20,7 +20,7 @@ katecms
 | --- | --- |
 | `@katecms/core` | `kysely`, `pg`, `better-sqlite3`, `sharp`. Vue и Nuxt отсутствуют |
 | `katecms` | ядро, `@nuxt/kit`, TipTap, Leaflet, `c12`, `magic-string` |
-| `katecms-form` | ядро, модуль, `kysely`, `nodemailer`, `sanitize-html`, `dompurify` |
+| `katecms-form-builder` | ядро, модуль, `kysely`, `nodemailer`, `sanitize-html`, `dompurify` |
 | `katecms-seo` | ядро, модуль, `kysely` |
 | playground | три Nuxt-пакета и `nuxt` |
 

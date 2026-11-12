@@ -108,13 +108,13 @@
       ]
     },
     {
-      "name": "katecms-form",
-      "dir": "packages/katecms-form",
+      "name": "katecms-form-builder",
+      "dir": "packages/katecms-form-builder",
       "sum": "Form builder addon for the KateCMS Nuxt module.",
       "entries": [
         {
-          "id": "form",
-          "p": "packages/katecms-form/src/module.ts"
+          "id": "form-builder",
+          "p": "packages/katecms-form-builder/src/module.ts"
         }
       ],
       "deps": [
@@ -164,7 +164,10 @@
         "dev:prepare",
         "lint",
         "prepack",
-        "release",
+        "publish:core",
+        "publish:form",
+        "publish:module",
+        "publish:seo",
         "test",
         "test:basic",
         "test:types",
@@ -177,13 +180,13 @@
       "dir": "playground",
       "deps": [
         "katecms",
-        "katecms-form",
+        "katecms-form-builder",
         "katecms-seo",
         "nuxt"
       ],
       "workspace": [
         "katecms",
-        "katecms-form",
+        "katecms-form-builder",
         "katecms-seo"
       ],
       "scripts": [
@@ -870,7 +873,7 @@
       "trustedProxyHops"
     ],
     "katecms/styles": [],
-    "form": [],
+    "form-builder": [],
     "seo": []
   },
   "tables": [
@@ -940,7 +943,7 @@
     "packages/core/src/database/migrations/postgres/schema.ts",
     "packages/core/src/database/migrations/sqlite/schema.ts",
     "packages/core/src/database/migrations/sqlite/sqlite.sql",
-    "packages/katecms-form/src/runtime/server/utils/schema.ts",
+    "packages/katecms-form-builder/src/runtime/server/utils/schema.ts",
     "packages/katecms-seo/src/runtime/server/utils/documents.ts",
     "packages/katecms-seo/src/runtime/server/utils/redirects.ts",
     "scripts/ai-index.mjs"
@@ -988,7 +991,7 @@
     },
     {
       "type": "form",
-      "ui": "packages/katecms-form/src/runtime/internal/fields/FormField.vue"
+      "ui": "packages/katecms-form-builder/src/runtime/internal/fields/FormField.vue"
     },
     {
       "type": "gallery",

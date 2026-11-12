@@ -6,7 +6,7 @@
 const fieldModules = import.meta.glob('../internal/fields/*.vue', { eager: true })
 ```
 
-Имя файла без `Field.vue` приводится к PascalCase от `type`: `image_select` → `ImageSelectField.vue`. Дополнение может положить виджет в `Map` через `registerKateCmsField(type, component)`. Сначала ищется файл глоба, потом карта. Сейчас так подключён `type: 'form'` из пакета форм (`FormField.vue` в `katecms-form`, не в глобе основного модуля).
+Имя файла без `Field.vue` приводится к PascalCase от `type`: `image_select` → `ImageSelectField.vue`. Дополнение может положить виджет в `Map` через `registerKateCmsField(type, component)`. Сначала ищется файл глоба, потом карта. Сейчас так подключён `type: 'form'` из пакета форм (`FormField.vue` в `katecms-form-builder`, не в глобе основного модуля).
 
 `message` в объединении типов ядра есть, файла `MessageField.vue` нет. Виджет для него не резолвится.
 

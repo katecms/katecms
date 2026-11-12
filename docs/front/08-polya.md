@@ -178,7 +178,7 @@ Select записей. `postType?: string[]` (нет — все), `dictionary?: 
 
 ### `form`
 
-Выбор формы из дополнения `katecms-form`. Виджет регистрирует это дополнение. Без него `resolveField('form')` компонент не найдёт. `multiple` хранит массив id, одиночное пустое значение при `allowNull` — `null`. На сайте саму форму рисует `KateCmsForm`, см. [дополнения](11-dopolneniya.md).
+Выбор формы из дополнения `katecms-form-builder`. Виджет регистрирует это дополнение. Без него `resolveField('form')` компонент не найдёт. `multiple` хранит массив id, одиночное пустое значение при `allowNull` — `null`. На сайте саму форму рисует `KateCmsForm`, см. [дополнения](11-dopolneniya.md).
 
 ## Структура
 

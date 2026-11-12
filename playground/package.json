@@ -9,7 +9,7 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
-    "katecms-form": "workspace:*",
+    "katecms-form-builder": "workspace:*",
     "katecms": "workspace:*",
     "katecms-seo": "workspace:*",
     "nuxt": "^4.5.2"

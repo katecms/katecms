@@ -48,7 +48,7 @@ Column codec in `domain.json`: `name:type`. `?` nullable. `*` generated or DB de
 - `@katecms/core` `packages/core` — Framework-agnostic KateCMS core: config, database, auth, fields, media.
 - `basic` `packages/katecms/test/fixtures/basic` — package
 - `katecms` `packages/katecms` — Nuxt module that adds KateCMS to your application.
-- `katecms-form` `packages/katecms-form` — Form builder addon for the KateCMS Nuxt module.
+- `katecms-form-builder` `packages/katecms-form-builder` — Form builder addon for the KateCMS Nuxt module.
 - `katecms-monorepo` `.` — KateCMS monorepo: framework-agnostic core and Nuxt adapter.
 - `katecms-playground` `playground` — package
 - `katecms-seo` `packages/katecms-seo` — SEO addon for the KateCMS Nuxt module: titles, sitemap, and robots.txt.

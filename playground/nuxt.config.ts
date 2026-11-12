@@ -2,7 +2,7 @@ export default defineNuxtConfig({
   modules: [
     'katecms',
     'katecms-seo',
-    'katecms-form',
+    'katecms-form-builder',
   ],
   devtools: { enabled: true },
   compatibilityDate: 'latest',

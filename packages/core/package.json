@@ -1,6 +1,6 @@
 {
   "name": "@katecms/core",
-  "version": "1.0.0",
+  "version": "v1.0.0-beta.1",
   "description": "Framework-agnostic KateCMS core: config, database, auth, fields, media.",
   "repository": {
     "type": "git",

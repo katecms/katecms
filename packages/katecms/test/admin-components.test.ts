@@ -12,7 +12,7 @@ const internalDir = fileURLToPath(new URL('../src/runtime/internal', import.meta
 describe('admin component resolution', () => {
   it('keeps admin tags inside the cms packages', () => {
     expect(isAdminConsumerId('E:/katecms/packages/katecms/src/runtime/pages/admin/register.vue')).toBe(true)
-    expect(isAdminConsumerId('E:/katecms/packages/katecms-form/src/runtime/builder/FormBuilder.vue?vue&type=script')).toBe(true)
+    expect(isAdminConsumerId('E:/katecms/packages/katecms-form-builder/src/runtime/builder/FormBuilder.vue?vue&type=script')).toBe(true)
     expect(isAdminConsumerId('E:/katecms/packages/katecms-seo/dist/runtime/pages/admin/seo.vue')).toBe(true)
     expect(isAdminConsumerId('E:/app/node_modules/katecms/dist/runtime/internal/fields/TextField.vue')).toBe(true)
     expect(isAdminConsumerId('E:/katecms/playground/pages/index.vue')).toBe(false)

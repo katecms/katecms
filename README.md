@@ -527,7 +527,7 @@ export default defineNuxtConfig({
 <a id="addons"></a>
 ## Дополнения
 
-Модули `katecms-seo` и `katecms-form` подключаются рядом с `katecms`. Точки расширения админки импортируются из `katecms/extensions`.
+Модули `katecms-seo` и `katecms-form-builder` подключаются рядом с `katecms`. Точки расширения админки импортируются из `katecms/extensions`.
 
 ```ts
 export default defineNuxtConfig({

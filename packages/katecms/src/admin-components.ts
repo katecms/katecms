@@ -6,7 +6,7 @@ import { addVitePlugin } from '@nuxt/kit'
 /** Packages whose runtime SFCs may use admin component tags. */
 export const ADMIN_COMPONENT_PACKAGES = [
   'katecms',
-  'katecms-form',
+  'katecms-form-builder',
   'katecms-seo',
 ] as const
 

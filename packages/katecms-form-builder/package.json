@@ -1,11 +1,11 @@
 {
-  "name": "katecms-form",
+  "name": "katecms-form-builder",
   "version": "1.0.0",
   "description": "Form builder addon for the KateCMS Nuxt module.",
   "repository": {
     "type": "git",
     "url": "https://github.com/katecms/katecms.git",
-    "directory": "packages/katecms-form"
+    "directory": "packages/katecms-form-builder"
   },
   "bugs": {
     "url": "https://github.com/katecms/katecms/issues"

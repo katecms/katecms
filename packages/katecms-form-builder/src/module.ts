@@ -10,7 +10,7 @@ import {
 
 export default defineNuxtModule({
   meta: {
-    name: 'katecms-form',
+    name: 'katecms-form-builder',
   },
   setup(_options, nuxt) {
     const resolver = createResolver(import.meta.url)

@@ -46,7 +46,7 @@ Middleware `admin-headers` на все запросы: если путь под 
 
 `addAdminComponents` из `src/admin-components.ts`. Каталог `runtime/internal` обходится рекурсивно. Имя файла `Foo.vue` становится тегом `KateCmsFoo`. Дубликат имени бросает ошибку на старте.
 
-Плагин Vite `katecms:admin-components` (`enforce: 'post'`) смотрит исходник `.vue`. Если путь лежит в `src/runtime` или `dist/runtime` пакетов `katecms`, `katecms-form`, `katecms-seo` и в коде есть вызов `resolveComponent` / `h()` с именем `KateCms*`, плагин дописывает прямой import и подменяет имя на локальный идентификатор. Хостовая страница в этот список не входит, поэтому тег `KateCmsTextField` у сайта не резолвится.
+Плагин Vite `katecms:admin-components` (`enforce: 'post'`) смотрит исходник `.vue`. Если путь лежит в `src/runtime` или `dist/runtime` пакетов `katecms`, `katecms-form-builder`, `katecms-seo` и в коде есть вызов `resolveComponent` / `h()` с именем `KateCms*`, плагин дописывает прямой import и подменяет имя на локальный идентификатор. Хостовая страница в этот список не входит, поэтому тег `KateCmsTextField` у сайта не резолвится.
 
 Каталог `internal` в `components` Nuxt не добавляется. Иначе префикс протекал бы на сайт.
 
@@ -69,7 +69,7 @@ meta.layout: false
 
 ## Дополнения в том же проходе
 
-`katecms-form` и `katecms-seo` — отдельные `defineNuxtModule`. Они читают уже записанный `adminPath`. Если основного модуля в конфиге не было, оба подставляют сегмент `admin`.
+`katecms-form-builder` и `katecms-seo` — отдельные `defineNuxtModule`. Они читают уже записанный `adminPath`. Если основного модуля в конфиге не было, оба подставляют сегмент `admin`.
 
 Порядок внутри формы: клиентский плагин, серверные плагины миграции и санитайзера HTML, `addComponentsDir` на `runtime/components` (это единственные теги для хоста), обработчики `/api/_katecms/forms/*`, дети админки.
 

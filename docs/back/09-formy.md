@@ -1,6 +1,6 @@
 # Дополнение форм изнутри
 
-Пакет `packages/katecms-form`. Это два разных «поля формы»:
+Пакет `packages/katecms-form-builder`. Это два разных «поля формы»:
 
 1. Виджет коллекции `type: 'form'` — выбор id формы в записи CMS. Файл `runtime/internal/fields/FormField.vue`, регистрация `registerKateCmsField('form', FormField)` в `runtime/plugin.ts`.
 2. Конструктор и публичный рендер самой формы. Модель — `runtime/form/model.ts`. Рендер для сайта — `runtime/components/Form.vue` (`KateCmsForm`).

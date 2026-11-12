@@ -71,7 +71,7 @@ PK `key`. `value` — любой JSON, в том числе не объект. �
 
 ## Таблицы форм
 
-Их создаёт `ensureFormTables` в `packages/katecms-form/src/runtime/server/utils/schema.ts` при старте серверного плагина, отдельным SQL для Postgres и SQLite. В журнал ядра эти `CREATE TABLE IF NOT EXISTS` не завязаны на версию колонок: повтор безопасен, смена колонки — нет.
+Их создаёт `ensureFormTables` в `packages/katecms-form-builder/src/runtime/server/utils/schema.ts` при старте серверного плагина, отдельным SQL для Postgres и SQLite. В журнал ядра эти `CREATE TABLE IF NOT EXISTS` не завязаны на версию колонок: повтор безопасен, смена колонки — нет.
 
 | Таблица | Колонки |
 | --- | --- |

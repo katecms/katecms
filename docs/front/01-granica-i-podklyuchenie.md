@@ -29,7 +29,7 @@
 | `katecms/styles` | SCSS-токены админки для пакета-дополнения |
 | `@katecms/core` | Ядро. В браузере резолвится в `browser`-сборку, на сервере — в полный вход |
 
-Компоненты из `runtime/internal` в хост не попадают. Vite-плагин модуля подставляет их только в `.vue` внутри `katecms`, `katecms-form` и `katecms-seo`. Единственный каталог компонентов, который Nuxt регистрирует для страниц сайта, — `katecms-form/src/runtime/components` с префиксом `KateCms`. Сейчас там `Form.vue`, то есть тег `KateCmsForm`.
+Компоненты из `runtime/internal` в хост не попадают. Vite-плагин модуля подставляет их только в `.vue` внутри `katecms`, `katecms-form-builder` и `katecms-seo`. Единственный каталог компонентов, который Nuxt регистрирует для страниц сайта, — `katecms-form-builder/src/runtime/components` с префиксом `KateCms`. Сейчас там `Form.vue`, то есть тег `KateCmsForm`.
 
 ## Подключение
 
@@ -40,7 +40,7 @@ export default defineNuxtConfig({
   modules: [
     'katecms',
     'katecms-seo',
-    'katecms-form',
+    'katecms-form-builder',
   ],
   katecms: {
     collections: {

@@ -42,7 +42,7 @@ export interface KateCmsConfig {
   roles?: Roles
   /**
    * Form addon. Breakpoints, upload directory, and the max upload size.
-   * Used when `katecms-form` is installed.
+   * Used when `katecms-form-builder` is installed.
    */
   form?: FormConfig
 }

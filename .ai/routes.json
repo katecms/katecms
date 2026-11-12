@@ -68,27 +68,27 @@
     {
       "n": "admin-forms",
       "path": "/{adminPath}/forms",
-      "p": "packages/katecms-form/src/runtime/pages/admin/forms/index.vue"
+      "p": "packages/katecms-form-builder/src/runtime/pages/admin/forms/index.vue"
     },
     {
       "n": "admin-forms-id",
       "path": "/{adminPath}/forms/:id(\\\\d+)",
-      "p": "packages/katecms-form/src/runtime/pages/admin/forms/[id].vue"
+      "p": "packages/katecms-form-builder/src/runtime/pages/admin/forms/[id].vue"
     },
     {
       "n": "admin-forms-entries",
       "path": "/{adminPath}/forms/:id(\\\\d+)/entries",
-      "p": "packages/katecms-form/src/runtime/pages/admin/forms/entries.vue"
+      "p": "packages/katecms-form-builder/src/runtime/pages/admin/forms/entries.vue"
     },
     {
       "n": "admin-forms-entry",
       "path": "/{adminPath}/forms/:id(\\\\d+)/entries/:submissionId(\\\\d+)",
-      "p": "packages/katecms-form/src/runtime/pages/admin/forms/entry.vue"
+      "p": "packages/katecms-form-builder/src/runtime/pages/admin/forms/entry.vue"
     },
     {
       "n": "admin-forms-mail",
       "path": "/{adminPath}/forms/mail",
-      "p": "packages/katecms-form/src/runtime/pages/admin/forms/mail.vue"
+      "p": "packages/katecms-form-builder/src/runtime/pages/admin/forms/mail.vue"
     },
     {
       "n": "admin-media",
@@ -210,72 +210,72 @@
     {
       "m": "GET",
       "path": "/api/_katecms/forms",
-      "p": "packages/katecms-form/src/runtime/server/api/forms.get.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/forms.get.ts"
     },
     {
       "m": "POST",
       "path": "/api/_katecms/forms",
-      "p": "packages/katecms-form/src/runtime/server/api/forms.post.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/forms.post.ts"
     },
     {
       "m": "DELETE",
       "path": "/api/_katecms/forms/item/:id",
-      "p": "packages/katecms-form/src/runtime/server/api/item/[id].delete.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/item/[id].delete.ts"
     },
     {
       "m": "GET",
       "path": "/api/_katecms/forms/item/:id",
-      "p": "packages/katecms-form/src/runtime/server/api/item/[id].get.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/item/[id].get.ts"
     },
     {
       "m": "PUT",
       "path": "/api/_katecms/forms/item/:id",
-      "p": "packages/katecms-form/src/runtime/server/api/item/[id].put.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/item/[id].put.ts"
     },
     {
       "m": "GET",
       "path": "/api/_katecms/forms/item/:id/submissions",
-      "p": "packages/katecms-form/src/runtime/server/api/item/submissions.get.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/item/submissions.get.ts"
     },
     {
       "m": "DELETE",
       "path": "/api/_katecms/forms/item/:id/submissions/:submissionId",
-      "p": "packages/katecms-form/src/runtime/server/api/item/submissions/[submissionId].delete.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/item/submissions/[submissionId].delete.ts"
     },
     {
       "m": "GET",
       "path": "/api/_katecms/forms/item/:id/submissions/:submissionId",
-      "p": "packages/katecms-form/src/runtime/server/api/item/submissions/[submissionId].get.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/item/submissions/[submissionId].get.ts"
     },
     {
       "m": "GET",
       "path": "/api/_katecms/forms/item/:id/submissions/:submissionId/files/:index",
-      "p": "packages/katecms-form/src/runtime/server/api/item/submissions/[submissionId]/files/[index].get.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/item/submissions/[submissionId]/files/[index].get.ts"
     },
     {
       "m": "GET",
       "path": "/api/_katecms/forms/mail",
-      "p": "packages/katecms-form/src/runtime/server/api/mail.get.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/mail.get.ts"
     },
     {
       "m": "PUT",
       "path": "/api/_katecms/forms/mail",
-      "p": "packages/katecms-form/src/runtime/server/api/mail.put.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/mail.put.ts"
     },
     {
       "m": "POST",
       "path": "/api/_katecms/forms/mail/test",
-      "p": "packages/katecms-form/src/runtime/server/api/mail/test.post.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/mail/test.post.ts"
     },
     {
       "m": "POST",
       "path": "/api/_katecms/forms/submit/:id",
-      "p": "packages/katecms-form/src/runtime/server/api/submit/[id].post.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/submit/[id].post.ts"
     },
     {
       "m": "GET",
       "path": "/api/_katecms/forms/view/:id",
-      "p": "packages/katecms-form/src/runtime/server/api/view/[id].get.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/api/view/[id].get.ts"
     },
     {
       "m": "GET",
@@ -456,15 +456,15 @@
   "plugins": [
     {
       "side": "client",
-      "p": "packages/katecms-form/src/runtime/plugin.ts"
+      "p": "packages/katecms-form-builder/src/runtime/plugin.ts"
     },
     {
       "side": "server",
-      "p": "packages/katecms-form/src/runtime/server/plugins/migrate.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/plugins/migrate.ts"
     },
     {
       "side": "server",
-      "p": "packages/katecms-form/src/runtime/server/plugins/html-sanitize.ts"
+      "p": "packages/katecms-form-builder/src/runtime/server/plugins/html-sanitize.ts"
     },
     {
       "side": "client",
@@ -545,7 +545,7 @@
   "components": [
     {
       "prefix": "KateCms",
-      "dir": "packages/katecms-form/src/runtime/components"
+      "dir": "packages/katecms-form-builder/src/runtime/components"
     },
     {
       "prefix": "KateCms",

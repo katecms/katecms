@@ -23,8 +23,8 @@
       - [fieldsQuery](#getQueryCollection-fieldsQuery)
     - [getTerms](#getTerms)
   - [Пример](#config-example)
-- [Дополнения](#addons)
-  - [Вкладки сайдбара записи](#addons-entry-sidebar)
+- [Точки расширения](#extensions)
+  - [Вкладки сайдбара записи](#extensions-entry-sidebar)
 - [Общие параметры полей](#fields-base)
 - [Поля](#fields)
   - [PostObjectField](#PostObjectField)
@@ -524,26 +524,15 @@ export default defineNuxtConfig({
 })
 ```
 
-<a id="addons"></a>
-## Дополнения
+<a id="extensions"></a>
+## Точки расширения
 
-Модули `katecms-seo` и `katecms-form-builder` подключаются рядом с `katecms`. Точки расширения админки импортируются из `katecms/extensions`.
+Дополнение подключается своим Nuxt-модулем рядом с `katecms`. Точки расширения админки импортируются из `katecms/extensions`.
 
-```ts
-export default defineNuxtConfig({
-  modules: [
-    'katecms',
-    'katecms-seo',
-  ],
-})
-```
-
-<a id="addons-entry-sidebar"></a>
+<a id="extensions-entry-sidebar"></a>
 ### Вкладки сайдбара записи
 
 Сайдбар формы записи (`.katecms-collection-form__sidebar`) показывает вкладки, когда дополнение зарегистрировало хотя бы одну. Первая вкладка — **Page**: публикация, словари и поля с `position: 'sidebar'`. Дальше идут вкладки дополнений в порядке регистрации. Ключ `page` занят этой вкладкой.
-
-`katecms-seo` регистрирует вкладку **SEO**. Панель — `SeoEntryPanel` в пакете `katecms-seo`. У новой записи на вкладке написано сохранить запись перед редактированием SEO. Сохранение SEO отдельное от кнопки Publish.
 
 Своя вкладка регистрируется из плагина. Компонент к этому моменту уже стоит на Vue-приложении. Повторный вызов с тем же `key` заменяет вкладку.
 

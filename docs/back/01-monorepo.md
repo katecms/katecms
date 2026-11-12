@@ -1,6 +1,6 @@
 # Монорепозиторий
 
-Корень — приватный пакет `katecms-monorepo`. Публикуемые библиотеки: `@katecms/core` и `katecms`. Дополнения `katecms-form` и `katecms-seo` пока экспортируют `src/module.ts` напрямую и в `files` отдают исходники. Playground `playground` — приложение-хост для разработки, в npm не уходит.
+Корень — приватный пакет `katecms-monorepo`. Публикуемые пакеты выпускаются по отдельности: `@katecms/core`, `katecms`, `katecms-form`, `katecms-seo`. Дополнения экспортируют `src/module.ts` и в `files` отдают исходники. Playground `playground` — приложение-хост для разработки, в npm не уходит.
 
 ```
 katecms

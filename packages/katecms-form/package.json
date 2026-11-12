@@ -25,11 +25,11 @@
     "test": "node --experimental-strip-types --test test/model.test.ts"
   },
   "dependencies": {
-    "@katecms/core": "workspace:*",
+    "@katecms/core": "workspace:^",
     "@nuxt/kit": "^4.5.2",
     "dompurify": "^3.4.17",
     "kysely": "^0.29.4",
-    "katecms": "workspace:*",
+    "katecms": "workspace:^",
     "nodemailer": "^7.0.6",
     "sanitize-html": "^2.18.1"
   },

@@ -24,10 +24,10 @@
     "dev:prepare": "nuxt-module-build prepare"
   },
   "dependencies": {
-    "@katecms/core": "workspace:*",
+    "@katecms/core": "workspace:^",
     "@nuxt/kit": "^4.5.2",
     "kysely": "^0.29.4",
-    "katecms": "workspace:*"
+    "katecms": "workspace:^"
   },
   "devDependencies": {
     "@nuxt/module-builder": "^1.0.3",

@@ -15,9 +15,12 @@
 | `pnpm lint` | ESLint |
 | `pnpm prepack` | Сборка ядра и `nuxt-module-build` модуля |
 | `pnpm ai:index` | Пересчёт `.ai/` |
-| `pnpm release` | lint, test, prepack, changelogen, publish ядра и модуля |
+| `pnpm publish:core` | npm: `@katecms/core`. Сначала поднять `version` в `packages/core` |
+| `pnpm publish:module` | npm: `katecms`. Зависимость `@katecms/core` уже должна быть в реестре |
+| `pnpm publish:form` | npm: `katecms-form`. Ядро и модуль этой версии уже должны быть в реестре |
+| `pnpm publish:seo` | npm: `katecms-seo`. Ядро и модуль этой версии уже должны быть в реестре |
 
-Ядро собирает unbuild в `packages/core/dist`: `index.mjs` и `browser.mjs` плюс типы. Модуль собирает `@nuxt/module-builder` в `packages/katecms/dist`. В `exports` модуля наружу смотрят `dist/module.mjs`, исходник `extensions` и `server/kit.ts`, и собранный SCSS стилей.
+Ядро собирает unbuild в `packages/core/dist`: `index.mjs` и `browser.mjs` плюс типы. Модуль собирает `@nuxt/module-builder` в `packages/katecms/dist`. В npm-архив модуля входят `dist` и `src`: `katecms/extensions` и `katecms/server` указывают на исходники. Перед публикацией пакета поднимают только его `version`. `workspace:^` при publish записывается как совместимый диапазон (`^1.0.0`), поэтому выпуск ядра не заставляет заново публиковать модуль и дополнения.
 
 Дополнения form и seo в `prepack` корня не входят. Playground в разработке резолвит их из исходников workspace.
 

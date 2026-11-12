@@ -1,4 +1,4 @@
-# MiraiCMS index
+# KateCMS index
 
 Read this file first. Grep `.ai/` instead of scanning `packages/` for imports, symbols, routes, or schema.
 
@@ -25,18 +25,18 @@ Empty keys are omitted. To see who imports a file, grep its `p` value: hits in o
 
 ## symbols.jsonl
 
-`n` name. `k` is `fn`, `const`, `type`, `iface`, `class`, `enum`, `cmp`, or `ns`. `p` defining file. `cmp` is a Nuxt component registered with the module prefix (`MiraiCms*`, `Mirai*`).
+`n` name. `k` is `fn`, `const`, `type`, `iface`, `class`, `enum`, `cmp`, or `ns`. `p` defining file. `cmp` is a Nuxt component registered with the module prefix (`KateCms*`, `Mirai*`).
 
 Public entry surfaces are name lists in `domain.json` under `public` (`core`, `core/browser`, `nuxt`, `nuxt/server`, `nuxt/extensions`, `seo`).
 
 ## Resolve rules
 
-- Client files under `runtime/` (not `runtime/server/`) import `@miraicms/core` from `packages/core/src/browser.ts`.
-- Server, tests, and `module.ts` import `@miraicms/core` from `packages/core/src/index.ts`.
-- Admin pages and `/api/_miraicms/*` handlers are registered in each package `module.ts`, not by Nuxt file-system routing. Paths are in `routes.json`. `{adminPath}` defaults to `admin`.
+- Client files under `runtime/` (not `runtime/server/`) import `@katecms/core` from `packages/core/src/browser.ts`.
+- Server, tests, and `module.ts` import `@katecms/core` from `packages/core/src/index.ts`.
+- Admin pages and `/api/_katecms/*` handlers are registered in each package `module.ts`, not by Nuxt file-system routing. Paths are in `routes.json`. `{adminPath}` defaults to `admin`.
 - App `pages/*.vue` outside `runtime/pages` (the playground) use Nuxt file routes, also listed in `routes.json`.
 - Field config `type` maps to a widget: snake_case to PascalCase plus `Field.vue` (`image_select` to `ImageSelectField.vue`). `resolveField()` globs `internal/fields/*.vue`.
-- Template tags `MiraiCms*` / `Mirai*` are edges in `im` even without a script import. `addAdminComponents()` dirs are internal: the tags resolve in admin and addon templates, and they are not host components.
+- Template tags `KateCms*` / `Mirai*` are edges in `im` even without a script import. `addAdminComponents()` dirs are internal: the tags resolve in admin and addon templates, and they are not host components.
 - A named call that matches a unique composable or util export is also an `im` edge.
 
 ## Tables
@@ -45,11 +45,11 @@ Column codec in `domain.json`: `name:type`. `?` nullable. `*` generated or DB de
 
 ## Packages
 
-- `@miraicms/core` `packages/core` — Framework-agnostic MiraiCMS core: config, database, auth, fields, media.
-- `basic` `packages/miraicms-nuxt/test/fixtures/basic` — package
-- `miraicms-monorepo` `.` — MiraiCMS monorepo: framework-agnostic core and Nuxt adapter.
-- `miraicms-nuxt` `packages/miraicms-nuxt` — Nuxt module that adds MiraiCMS to your application.
-- `miraicms-nuxt-form` `packages/miraicms-nuxt-form` — Form builder addon for the MiraiCMS Nuxt module.
-- `miraicms-nuxt-seo` `packages/miraicms-nuxt-seo` — SEO addon for the MiraiCMS Nuxt module: titles, sitemap, and robots.txt.
-- `miraicms-playground-nuxt` `playground-nuxt` — package
+- `@katecms/core` `packages/core` — Framework-agnostic KateCMS core: config, database, auth, fields, media.
+- `basic` `packages/katecms/test/fixtures/basic` — package
+- `katecms` `packages/katecms` — Nuxt module that adds KateCMS to your application.
+- `katecms-form` `packages/katecms-form` — Form builder addon for the KateCMS Nuxt module.
+- `katecms-monorepo` `.` — KateCMS monorepo: framework-agnostic core and Nuxt adapter.
+- `katecms-playground` `playground` — package
+- `katecms-seo` `packages/katecms-seo` — SEO addon for the KateCMS Nuxt module: titles, sitemap, and robots.txt.
 

@@ -23,7 +23,7 @@ function parseDriver(value: string): DatabaseDriver | '' {
   }
   if (value) {
     throw new Error(
-      `[MiraiCMS] Unknown database driver "${value}". Use "postgres" or "sqlite".`,
+      `[KateCMS] Unknown database driver "${value}". Use "postgres" or "sqlite".`,
     )
   }
   return ''
@@ -42,7 +42,7 @@ export function resolveDatabaseTarget(input: ResolveDatabaseTargetInput): Databa
   if (resolvedDriver === 'postgres') {
     if (!url) {
       throw new Error(
-        '[MiraiCMS] Postgres is selected but no connection URL was provided.',
+        '[KateCMS] Postgres is selected but no connection URL was provided.',
       )
     }
     return { driver: 'postgres', url }
@@ -50,7 +50,7 @@ export function resolveDatabaseTarget(input: ResolveDatabaseTargetInput): Databa
 
   if (!sqliteFilename) {
     throw new Error(
-      '[MiraiCMS] SQLite is selected but no filename was provided.',
+      '[KateCMS] SQLite is selected but no filename was provided.',
     )
   }
 

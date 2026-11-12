@@ -312,7 +312,7 @@ describe('relation field helpers', () => {
 
 describe('structure keys', () => {
   it('keeps reserved row keys stable', () => {
-    expect(ROW_COLLAPSED_KEY).toBe('__miraicmsCollapsed')
+    expect(ROW_COLLAPSED_KEY).toBe('__katecmsCollapsed')
     expect(FLEXIBLE_CONTENT_LAYOUT_KEY).toBe('fc_layout')
   })
 })

@@ -1,13 +1,13 @@
 ---
 description: Admin shell classes, styles, and field widgets
-globs: packages/miraicms-nuxt/**/*.{vue,scss},packages/miraicms-nuxt-form/**/*.{vue,scss},packages/miraicms-nuxt-seo/**/*.{vue,scss}
+globs: packages/katecms/**/*.{vue,scss},packages/katecms-form/**/*.{vue,scss},packages/katecms-seo/**/*.{vue,scss}
 alwaysApply: false
 ---
 
 # Admin shell
 
-- Class names and nested SCSS follow the component styles rule. Tokens (`$color-*`, `$shadow-*`, `$sidebar-w`) and `math-rem()` come from `assets/styles` in this package, and from `@use "miraicms-nuxt/styles"` in the form and SEO addons.
-- Admin SFCs live in `runtime/internal/**`. `addAdminComponents` registers them with the `MiraiCms` prefix. Do not add them to the host `components` config.
-- Field `type` maps to `internal/fields/{Pascal}Field.vue` through `resolveField()` (`image_select` to `ImageSelectField.vue`). Add the widget there and the config type in `@miraicms/core`.
-- Host-facing form widgets live in `miraicms-nuxt-form/src/runtime/components` (`addComponentsDir`).
-- Addons add menu items through `useMiraiCmsMenuItems`, collection-entry sidebar tabs through `registerMiraiCmsEntrySidebarTab`, and dictionary term panels through `useMiraiCmsTermPanels`. Import them from `miraicms-nuxt/extensions`. The entry form owns the "Page" tab; an addon registers its own tab and component.
+- Class names and nested SCSS follow the component styles rule. Tokens (`$color-*`, `$shadow-*`, `$sidebar-w`) and `math-rem()` come from `assets/styles` in this package, and from `@use "katecms/styles"` in the form and SEO addons.
+- Admin SFCs live in `runtime/internal/**`. `addAdminComponents` registers them with the `KateCms` prefix. Do not add them to the host `components` config.
+- Field `type` maps to `internal/fields/{Pascal}Field.vue` through `resolveField()` (`image_select` to `ImageSelectField.vue`). Add the widget there and the config type in `@katecms/core`.
+- Host-facing form widgets live in `katecms-form/src/runtime/components` (`addComponentsDir`).
+- Addons add menu items through `useKateCmsMenuItems`, collection-entry sidebar tabs through `registerKateCmsEntrySidebarTab`, and dictionary term panels through `useKateCmsTermPanels`. Import them from `katecms/extensions`. The entry form owns the "Page" tab; an addon registers its own tab and component.

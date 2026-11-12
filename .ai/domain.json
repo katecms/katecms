@@ -1,9 +1,9 @@
 {
   "packages": [
     {
-      "name": "@miraicms/core",
+      "name": "@katecms/core",
       "dir": "packages/core",
-      "sum": "Framework-agnostic MiraiCMS core: config, database, auth, fields, media.",
+      "sum": "Framework-agnostic KateCMS core: config, database, auth, fields, media.",
       "entries": [
         {
           "id": "core",
@@ -38,59 +38,32 @@
     },
     {
       "name": "basic",
-      "dir": "packages/miraicms-nuxt/test/fixtures/basic"
+      "dir": "packages/katecms/test/fixtures/basic"
     },
     {
-      "name": "miraicms-monorepo",
-      "dir": ".",
-      "sum": "MiraiCMS monorepo: framework-agnostic core and Nuxt adapter.",
-      "dev": [
-        "@nuxt/eslint-config",
-        "changelogen",
-        "eslint",
-        "npm-check-updates",
-        "typescript"
-      ],
-      "scripts": [
-        "ai:index",
-        "check-updates",
-        "dev",
-        "dev:build",
-        "dev:prepare",
-        "lint",
-        "prepack",
-        "release",
-        "test",
-        "test:basic",
-        "test:types",
-        "test:watch",
-        "upgrade-deps"
-      ]
-    },
-    {
-      "name": "miraicms-nuxt",
-      "dir": "packages/miraicms-nuxt",
-      "sum": "Nuxt module that adds MiraiCMS to your application.",
+      "name": "katecms",
+      "dir": "packages/katecms",
+      "sum": "Nuxt module that adds KateCMS to your application.",
       "entries": [
         {
-          "id": "nuxt",
-          "p": "packages/miraicms-nuxt/src/module.ts"
+          "id": "katecms",
+          "p": "packages/katecms/src/module.ts"
         },
         {
-          "id": "nuxt/extensions",
-          "p": "packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"
+          "id": "katecms/extensions",
+          "p": "packages/katecms/src/runtime/composables/useKateCmsExtensions.ts"
         },
         {
-          "id": "nuxt/server",
-          "p": "packages/miraicms-nuxt/src/runtime/server/kit.ts"
+          "id": "katecms/server",
+          "p": "packages/katecms/src/runtime/server/kit.ts"
         },
         {
-          "id": "nuxt/styles",
-          "p": "packages/miraicms-nuxt/src/runtime/assets/styles/_index.scss"
+          "id": "katecms/styles",
+          "p": "packages/katecms/src/runtime/assets/styles/_index.scss"
         }
       ],
       "deps": [
-        "@miraicms/core",
+        "@katecms/core",
         "@nuxt/kit",
         "@tiptap/core",
         "@tiptap/extension-subscript",
@@ -123,7 +96,7 @@
         "vue-tsc"
       ],
       "workspace": [
-        "@miraicms/core"
+        "@katecms/core"
       ],
       "scripts": [
         "dev:prepare",
@@ -135,21 +108,21 @@
       ]
     },
     {
-      "name": "miraicms-nuxt-form",
-      "dir": "packages/miraicms-nuxt-form",
-      "sum": "Form builder addon for the MiraiCMS Nuxt module.",
+      "name": "katecms-form",
+      "dir": "packages/katecms-form",
+      "sum": "Form builder addon for the KateCMS Nuxt module.",
       "entries": [
         {
-          "id": "nuxt-form",
-          "p": "packages/miraicms-nuxt-form/src/module.ts"
+          "id": "form",
+          "p": "packages/katecms-form/src/module.ts"
         }
       ],
       "deps": [
-        "@miraicms/core",
+        "@katecms/core",
         "@nuxt/kit",
         "dompurify",
+        "katecms",
         "kysely",
-        "miraicms-nuxt",
         "nodemailer",
         "sanitize-html"
       ],
@@ -164,8 +137,8 @@
         "vue"
       ],
       "workspace": [
-        "@miraicms/core",
-        "miraicms-nuxt"
+        "@katecms/core",
+        "katecms"
       ],
       "scripts": [
         "dev:prepare",
@@ -173,20 +146,68 @@
       ]
     },
     {
-      "name": "miraicms-nuxt-seo",
-      "dir": "packages/miraicms-nuxt-seo",
-      "sum": "SEO addon for the MiraiCMS Nuxt module: titles, sitemap, and robots.txt.",
+      "name": "katecms-monorepo",
+      "dir": ".",
+      "sum": "KateCMS monorepo: framework-agnostic core and Nuxt adapter.",
+      "dev": [
+        "@nuxt/eslint-config",
+        "changelogen",
+        "eslint",
+        "npm-check-updates",
+        "typescript"
+      ],
+      "scripts": [
+        "ai:index",
+        "check-updates",
+        "dev",
+        "dev:build",
+        "dev:prepare",
+        "lint",
+        "prepack",
+        "release",
+        "test",
+        "test:basic",
+        "test:types",
+        "test:watch",
+        "upgrade-deps"
+      ]
+    },
+    {
+      "name": "katecms-playground",
+      "dir": "playground",
+      "deps": [
+        "katecms",
+        "katecms-form",
+        "katecms-seo",
+        "nuxt"
+      ],
+      "workspace": [
+        "katecms",
+        "katecms-form",
+        "katecms-seo"
+      ],
+      "scripts": [
+        "build",
+        "dev",
+        "generate",
+        "seed"
+      ]
+    },
+    {
+      "name": "katecms-seo",
+      "dir": "packages/katecms-seo",
+      "sum": "SEO addon for the KateCMS Nuxt module: titles, sitemap, and robots.txt.",
       "entries": [
         {
-          "id": "nuxt-seo",
-          "p": "packages/miraicms-nuxt-seo/src/module.ts"
+          "id": "seo",
+          "p": "packages/katecms-seo/src/module.ts"
         }
       ],
       "deps": [
-        "@miraicms/core",
+        "@katecms/core",
         "@nuxt/kit",
-        "kysely",
-        "miraicms-nuxt"
+        "katecms",
+        "kysely"
       ],
       "dev": [
         "@nuxt/module-builder",
@@ -195,32 +216,11 @@
         "vue"
       ],
       "workspace": [
-        "@miraicms/core",
-        "miraicms-nuxt"
+        "@katecms/core",
+        "katecms"
       ],
       "scripts": [
         "dev:prepare"
-      ]
-    },
-    {
-      "name": "miraicms-playground-nuxt",
-      "dir": "playground-nuxt",
-      "deps": [
-        "miraicms-nuxt",
-        "miraicms-nuxt-form",
-        "miraicms-nuxt-seo",
-        "nuxt"
-      ],
-      "workspace": [
-        "miraicms-nuxt",
-        "miraicms-nuxt-form",
-        "miraicms-nuxt-seo"
-      ],
-      "scripts": [
-        "build",
-        "dev",
-        "generate",
-        "seed"
       ]
     }
   ],
@@ -329,6 +329,7 @@
       "ImageSize",
       "IndexSyncChange",
       "IndexSyncDiff",
+      "KateCmsConfig",
       "LAYOUT_ONLY_FIELD_TYPES",
       "LinkFieldValue",
       "LinkValue",
@@ -348,9 +349,8 @@
       "MediaUpdate",
       "MediaVariant",
       "MediaVariantsStatus",
-      "MergedMiraiCmsConfig",
+      "MergedKateCmsConfig",
       "MigrationsTable",
-      "MiraiCmsConfig",
       "NewCollection",
       "NewCollectionRevision",
       "NewDictionary",
@@ -397,8 +397,8 @@
       "ResolvedFormConfig",
       "ResolvedImageFormat",
       "ResolvedImageSize",
+      "ResolvedKateCmsConfig",
       "ResolvedMediaConfig",
-      "ResolvedMiraiCmsConfig",
       "ResolvedRole",
       "ResolvedRoleRights",
       "Resource",
@@ -480,7 +480,7 @@
       "decodeChoiceValue",
       "defaultRewrite",
       "defaults",
-      "defineMiraiCmsConfig",
+      "defineKateCmsConfig",
       "deleteCollection",
       "deleteCollectionMeta",
       "deleteDictionary",
@@ -573,7 +573,7 @@
       "matchCollectionArchive",
       "matchCollectionPath",
       "matchPublicCollectionRoute",
-      "mergeMiraiCmsConfig",
+      "mergeKateCmsConfig",
       "migratePostgres",
       "migrateSqlite",
       "newBlockId",
@@ -601,8 +601,8 @@
       "resolveDatabaseTarget",
       "resolveExtension",
       "resolveFormConfig",
+      "resolveKateCmsConfig",
       "resolveMediaConfig",
-      "resolveMiraiCmsConfig",
       "resolveRoles",
       "sanitizeFilename",
       "selectChoiceLookup",
@@ -682,6 +682,7 @@
       "ImageDimensions",
       "ImageFormatOptions",
       "ImageSize",
+      "KateCmsConfig",
       "LAYOUT_ONLY_FIELD_TYPES",
       "LinkFieldValue",
       "LinkValue",
@@ -693,8 +694,7 @@
       "MediaItem",
       "MediaVariant",
       "MediaVariantsStatus",
-      "MergedMiraiCmsConfig",
-      "MiraiCmsConfig",
+      "MergedKateCmsConfig",
       "OEMBED_PROVIDERS",
       "OSM_ADDRESS_KEYS",
       "OWNER_ROLE",
@@ -728,8 +728,8 @@
       "ResolvedFormConfig",
       "ResolvedImageFormat",
       "ResolvedImageSize",
+      "ResolvedKateCmsConfig",
       "ResolvedMediaConfig",
-      "ResolvedMiraiCmsConfig",
       "ResolvedRole",
       "ResolvedRoleRights",
       "Resource",
@@ -777,7 +777,7 @@
       "decodeChoiceValue",
       "defaultRewrite",
       "defaults",
-      "defineMiraiCmsConfig",
+      "defineKateCmsConfig",
       "embedUrlFromHtml",
       "emptyOsmAddress",
       "encodeChoiceValue",
@@ -817,7 +817,7 @@
       "matchCollectionArchive",
       "matchCollectionPath",
       "matchPublicCollectionRoute",
-      "mergeMiraiCmsConfig",
+      "mergeKateCmsConfig",
       "newBlockId",
       "nl2br",
       "normalizePublicPath",
@@ -832,8 +832,8 @@
       "resolveArchivePath",
       "resolveDatabaseConfig",
       "resolveFormConfig",
+      "resolveKateCmsConfig",
       "resolveMediaConfig",
-      "resolveMiraiCmsConfig",
       "resolveRoles",
       "selectChoiceLookup",
       "selectChoiceValue",
@@ -847,20 +847,20 @@
       "validateRequiredFields",
       "walkSelectChoices"
     ],
-    "nuxt": [],
-    "nuxt/extensions": [
+    "katecms": [],
+    "katecms/extensions": [
+      "KateCmsEntrySidebarTab",
+      "KateCmsMenuExtra",
+      "KateCmsPublicPage",
       "MIRAICMS_COLLECTION_HOOK",
-      "MiraiCmsEntrySidebarTab",
-      "MiraiCmsMenuExtra",
-      "MiraiCmsPublicPage",
-      "provideMiraiCmsFieldErrors",
-      "registerMiraiCmsEntrySidebarTab",
-      "registerMiraiCmsField",
-      "useMiraiCmsEntrySidebar",
-      "useMiraiCmsMenuItems",
-      "useMiraiCmsTermPanels"
+      "provideKateCmsFieldErrors",
+      "registerKateCmsEntrySidebarTab",
+      "registerKateCmsField",
+      "useKateCmsEntrySidebar",
+      "useKateCmsMenuItems",
+      "useKateCmsTermPanels"
     ],
-    "nuxt/server": [
+    "katecms/server": [
       "clientAddress",
       "eventClientAddress",
       "getDb",
@@ -869,9 +869,9 @@
       "requireUser",
       "trustedProxyHops"
     ],
-    "nuxt/styles": [],
-    "nuxt-form": [],
-    "nuxt-seo": []
+    "katecms/styles": [],
+    "form": [],
+    "seo": []
   },
   "tables": [
     {
@@ -907,23 +907,23 @@
       "cols": "key:string,value:json?"
     },
     {
-      "n": "_miraicms_migrations",
+      "n": "_katecms_migrations",
       "cols": "id:string,applied_at:ts"
     },
     {
-      "n": "miraicms_forms",
+      "n": "katecms_forms",
       "cols": "id,name,content,created_at,updated_at"
     },
     {
-      "n": "miraicms_form_submissions",
+      "n": "katecms_form_submissions",
       "cols": "id,form_id,ip,created_at"
     },
     {
-      "n": "miraicms_form_submission_values",
+      "n": "katecms_form_submission_values",
       "cols": "id,submission_id,field_key,value"
     },
     {
-      "n": "miraicms_form_mail",
+      "n": "katecms_form_mail",
       "cols": "id,host,port,encryption,username,password,from_email,from_name"
     },
     {
@@ -940,158 +940,158 @@
     "packages/core/src/database/migrations/postgres/schema.ts",
     "packages/core/src/database/migrations/sqlite/schema.ts",
     "packages/core/src/database/migrations/sqlite/sqlite.sql",
-    "packages/miraicms-nuxt-form/src/runtime/server/utils/schema.ts",
-    "packages/miraicms-nuxt-seo/src/runtime/server/utils/documents.ts",
-    "packages/miraicms-nuxt-seo/src/runtime/server/utils/redirects.ts",
+    "packages/katecms-form/src/runtime/server/utils/schema.ts",
+    "packages/katecms-seo/src/runtime/server/utils/documents.ts",
+    "packages/katecms-seo/src/runtime/server/utils/redirects.ts",
     "scripts/ai-index.mjs"
   ],
   "fields": [
     {
       "type": "accordion",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/AccordionField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/AccordionField.vue"
     },
     {
       "type": "button_group",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/ButtonGroupField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/ButtonGroupField.vue"
     },
     {
       "type": "checkbox",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/CheckboxField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/CheckboxField.vue"
     },
     {
       "type": "color_picker",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/ColorPickerField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/ColorPickerField.vue"
     },
     {
       "type": "date_picker",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/DatePickerField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/DatePickerField.vue"
     },
     {
       "type": "date_time_picker",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/DateTimePickerField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/DateTimePickerField.vue"
     },
     {
       "type": "dictionary",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/DictionaryField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/DictionaryField.vue"
     },
     {
       "type": "email",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/EmailField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/EmailField.vue"
     },
     {
       "type": "file",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/FileField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/FileField.vue"
     },
     {
       "type": "flexible_content",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/FlexibleContentField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/FlexibleContentField.vue"
     },
     {
       "type": "form",
-      "ui": "packages/miraicms-nuxt-form/src/runtime/internal/fields/FormField.vue"
+      "ui": "packages/katecms-form/src/runtime/internal/fields/FormField.vue"
     },
     {
       "type": "gallery",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/GalleryField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/GalleryField.vue"
     },
     {
       "type": "group",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/GroupField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/GroupField.vue"
     },
     {
       "type": "image",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/ImageField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/ImageField.vue"
     },
     {
       "type": "image_select",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/ImageSelectField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/ImageSelectField.vue"
     },
     {
       "type": "link",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/LinkField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/LinkField.vue"
     },
     {
       "type": "message"
     },
     {
       "type": "number",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/NumberField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/NumberField.vue"
     },
     {
       "type": "oembed",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/OembedField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/OembedField.vue"
     },
     {
       "type": "open_street_map",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/OpenStreetMapField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/OpenStreetMapField.vue"
     },
     {
       "type": "page_link",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/PageLinkField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/PageLinkField.vue"
     },
     {
       "type": "password",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/PasswordField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/PasswordField.vue"
     },
     {
       "type": "post_object",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/PostObjectField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/PostObjectField.vue"
     },
     {
       "type": "radio",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/RadioField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/RadioField.vue"
     },
     {
       "type": "range",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/RangeField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/RangeField.vue"
     },
     {
       "type": "relationship",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/RelationshipField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/RelationshipField.vue"
     },
     {
       "type": "repeater",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/RepeaterField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/RepeaterField.vue"
     },
     {
       "type": "select",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/SelectField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/SelectField.vue"
     },
     {
       "type": "separator",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/SeparatorField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/SeparatorField.vue"
     },
     {
       "type": "tab",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/TabField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/TabField.vue"
     },
     {
       "type": "text",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/TextField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/TextField.vue"
     },
     {
       "type": "textarea",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/TextareaField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/TextareaField.vue"
     },
     {
       "type": "time_picker",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/TimePickerField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/TimePickerField.vue"
     },
     {
       "type": "true_false",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/TrueFalseField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/TrueFalseField.vue"
     },
     {
       "type": "url",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/UrlField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/UrlField.vue"
     },
     {
       "type": "user",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/UserField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/UserField.vue"
     },
     {
       "type": "wysiwyg",
-      "ui": "packages/miraicms-nuxt/src/runtime/internal/fields/WysiwygField.vue"
+      "ui": "packages/katecms/src/runtime/internal/fields/WysiwygField.vue"
     }
   ],
   "fieldRule": "Config type snake_case maps to PascalCase + Field.vue. resolveField() globs internal/fields/*.vue."

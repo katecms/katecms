@@ -28,7 +28,7 @@ function breakpointLabel(name: string, label: string | undefined): string {
 function resolveBreakpoints(input: FormBreakpointConfig[] | undefined, warnings: string[]): ResolvedFormBreakpoint[] {
   if (!input?.length) {
     if (input) {
-      warnings.push('miraicms.form.breakpoints is empty. Using phone, tablet, and desktop.')
+      warnings.push('katecms.form.breakpoints is empty. Using phone, tablet, and desktop.')
     }
     return defaultBreakpoints()
   }
@@ -68,7 +68,7 @@ function resolveBreakpoints(input: FormBreakpointConfig[] | undefined, warnings:
   return next
 }
 
-/** Normalise `miraicms.form`. */
+/** Normalise `katecms.form`. */
 export function resolveFormConfig(form: FormConfig | undefined): ResolveFormResult {
   const warnings: string[] = []
   const uploadDir = typeof form?.uploadDir === 'string' ? form.uploadDir.trim() : ''
@@ -77,7 +77,7 @@ export function resolveFormConfig(form: FormConfig | undefined): ResolveFormResu
     ? Math.floor(rawMax)
     : DEFAULT_MAX_FILE_BYTES
   if (rawMax != null && maxFileBytes === DEFAULT_MAX_FILE_BYTES && rawMax !== DEFAULT_MAX_FILE_BYTES) {
-    warnings.push('miraicms.form.maxFileBytes must be a positive number. Using 10MB.')
+    warnings.push('katecms.form.maxFileBytes must be a positive number. Using 10MB.')
   }
   return {
     form: {

@@ -1,12 +1,12 @@
 ---
 description: CMS shell markup uses div and span, except links and form controls
-globs: packages/miraicms-nuxt/**/*.vue,packages/miraicms-nuxt/**/*.scss,packages/miraicms-nuxt-form/**/*.vue,packages/miraicms-nuxt-form/**/*.scss,packages/miraicms-nuxt-seo/**/*.vue,packages/miraicms-nuxt-seo/**/*.scss
+globs: packages/katecms/**/*.vue,packages/katecms/**/*.scss,packages/katecms-form/**/*.vue,packages/katecms-form/**/*.scss,packages/katecms-seo/**/*.vue,packages/katecms-seo/**/*.scss
 alwaysApply: false
 ---
 
 # Shell markup
 
-In `miraicms-nuxt`, `miraicms-nuxt-form`, and `miraicms-nuxt-seo`, layout and text in templates are `div` and `span`. A host site's element CSS must not restyle the CMS shell.
+In `katecms`, `katecms-form`, and `katecms-seo`, layout and text in templates are `div` and `span`. A host site's element CSS must not restyle the CMS shell.
 
 Do not use `p`, headings, `section`, `header`, `footer`, `main`, `nav`, `article`, `aside`, `ul`, `ol`, `li`, `blockquote`, `figure`, or `hr` in our templates. Style with classes, not those selectors.
 

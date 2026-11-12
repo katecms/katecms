@@ -3,7 +3,7 @@
  */
 export const SCHEMA_SQL = `PRAGMA foreign_keys = ON;
 
-CREATE TABLE IF NOT EXISTS _miraicms_migrations (
+CREATE TABLE IF NOT EXISTS _katecms_migrations (
   id         TEXT PRIMARY KEY,
   applied_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );

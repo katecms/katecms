@@ -7,7 +7,7 @@
 - рядом `postgres.sql` и `sqlite.sql` — копии для чтения, раннер их не открывает;
 - типы строк — `packages/core/src/database/client/schema.ts`.
 
-Журнал `_miraicms_migrations` хранит id применённой схемы. Id ядра фиксированный. Повторный старт его пропускает. Изменение колонки в живой базе само не произойдёт: нужен новый SQL у дополнения со своим `schemaId` или ручной скрипт. Версий «001, 002» у ядра нет.
+Журнал `_katecms_migrations` хранит id применённой схемы. Id ядра фиксированный. Повторный старт его пропускает. Изменение колонки в живой базе само не произойдёт: нужен новый SQL у дополнения со своим `schemaId` или ручной скрипт. Версий «001, 002» у ядра нет.
 
 Postgres дополнительно создаёт функции `cms_set_updated_at` и `cms_prevent_hierarchy_cycle` и триггеры на `collections` и `dictionaries`.
 
@@ -71,16 +71,16 @@ PK `key`. `value` — любой JSON, в том числе не объект. �
 
 ## Таблицы форм
 
-Их создаёт `ensureFormTables` в `packages/miraicms-nuxt-form/src/runtime/server/utils/schema.ts` при старте серверного плагина, отдельным SQL для Postgres и SQLite. В журнал ядра эти `CREATE TABLE IF NOT EXISTS` не завязаны на версию колонок: повтор безопасен, смена колонки — нет.
+Их создаёт `ensureFormTables` в `packages/katecms-form/src/runtime/server/utils/schema.ts` при старте серверного плагина, отдельным SQL для Postgres и SQLite. В журнал ядра эти `CREATE TABLE IF NOT EXISTS` не завязаны на версию колонок: повтор безопасен, смена колонки — нет.
 
 | Таблица | Колонки |
 | --- | --- |
-| `miraicms_forms` | `id`, `name`, `content` (JSON текстом), `created_at`, `updated_at` |
-| `miraicms_form_submissions` | `id`, `form_id`, `ip`, `created_at` |
-| `miraicms_form_submission_values` | `id`, `submission_id`, `field_key`, `value` |
-| `miraicms_form_mail` | Одна строка `id = 1`: `host`, `port`, `encryption` (`none`, `starttls`, `ssl`), `username`, `password`, `from_email`, `from_name` |
+| `katecms_forms` | `id`, `name`, `content` (JSON текстом), `created_at`, `updated_at` |
+| `katecms_form_submissions` | `id`, `form_id`, `ip`, `created_at` |
+| `katecms_form_submission_values` | `id`, `submission_id`, `field_key`, `value` |
+| `katecms_form_mail` | Одна строка `id = 1`: `host`, `port`, `encryption` (`none`, `starttls`, `ssl`), `username`, `password`, `from_email`, `from_name` |
 
-Файлы заявок лежат в каталоге `miraicms.form.uploadDir`, не в таблице. В значении хранится ссылка, скачивание идёт отдельной ручкой с проверкой права.
+Файлы заявок лежат в каталоге `katecms.form.uploadDir`, не в таблице. В значении хранится ссылка, скачивание идёт отдельной ручкой с проверкой права.
 
 ## Таблицы SEO
 

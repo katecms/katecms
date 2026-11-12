@@ -8,7 +8,7 @@ import type { Dictionaries } from './dictionary'
 import type { FormConfig, ResolvedFormConfig } from './form'
 
 /** User-facing CMS configuration (framework-agnostic). */
-export interface MiraiCmsConfig {
+export interface KateCmsConfig {
   adminPath?: string
   loginPath?: string
   registerPath?: string
@@ -26,10 +26,10 @@ export interface MiraiCmsConfig {
   options?: OptionPages
   blocks?: Blocks
   /**
-   * Database connection. Default is SQLite at `data/miraicms.db`.
+   * Database connection. Default is SQLite at `data/katecms.db`.
    *
    * @example
-   * { driver: 'postgres', url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms' }
+   * { driver: 'postgres', url: 'postgres://postgres:admin@127.0.0.1:5432/katecms' }
    */
   database?: DatabaseConfig
   media?: MediaConfig
@@ -42,13 +42,13 @@ export interface MiraiCmsConfig {
   roles?: Roles
   /**
    * Form addon. Breakpoints, upload directory, and the max upload size.
-   * Used when `miraicms-nuxt-form` is installed.
+   * Used when `katecms-form` is installed.
    */
   form?: FormConfig
 }
 
 /** CMS config after defaults, role merge, media and database normalisation. */
-export interface ResolvedMiraiCmsConfig {
+export interface ResolvedKateCmsConfig {
   adminPath: string
   loginPath: string
   registerPath: string

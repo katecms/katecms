@@ -14,7 +14,7 @@ import type { Database } from '../src'
 
 /** Override with DATABASE_URL. Default is the local URL from the README. */
 const POSTGRES_URL = process.env.DATABASE_URL
-  ?? 'postgres://postgres:admin@127.0.0.1:5432/miraicms'
+  ?? 'postgres://postgres:admin@127.0.0.1:5432/katecms'
 
 async function postgresAvailable(url: string): Promise<boolean> {
   const client = new pg.Client({

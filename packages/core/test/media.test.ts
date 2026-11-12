@@ -128,7 +128,7 @@ describe('variantFilename / readImageSize', () => {
 
 describe('createLocalMediaStorage', () => {
   it('writes, reads, and deletes files under dir', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'miraicms-media-'))
+    const dir = mkdtempSync(join(tmpdir(), 'katecms-media-'))
     tempDirs.push(dir)
     const storage = createLocalMediaStorage({ dir, publicPrefix: '/uploads' })
 
@@ -142,7 +142,7 @@ describe('createLocalMediaStorage', () => {
   })
 
   it('refuses path traversal', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'miraicms-media-'))
+    const dir = mkdtempSync(join(tmpdir(), 'katecms-media-'))
     tempDirs.push(dir)
     const storage = createLocalMediaStorage({ dir, publicPrefix: '/uploads' })
     await expect(storage.put('../escape.txt', Buffer.from('x'))).rejects.toThrow(/outside/)

@@ -14,7 +14,7 @@ export type RoleHolder = { role: string }
 export type RoleMap = Record<string, ResolvedRole>
 
 export interface CanOptions {
-  /** Resolved roles from {@link resolveRoles} / {@link resolveMiraiCmsConfig}. */
+  /** Resolved roles from {@link resolveRoles} / {@link resolveKateCmsConfig}. */
   roles: RoleMap
   /** Collection, dictionary, or option page slug when `resource` is scoped. */
   scope?: string

@@ -1,0 +1,256 @@
+@use 'sass:math';
+@use 'functions' as *;
+@use 'variables' as *;
+
+@mixin placeholder($color: #555555, $opacity: 1) {
+  &::-webkit-input-placeholder {
+    color: $color;
+    opacity: $opacity;
+  }
+  &::-moz-placeholder {
+    color: $color;
+    opacity: $opacity;
+  }
+  &::-ms-input-placeholder {
+    color: $color;
+    opacity: $opacity;
+  }
+  &::placeholder {
+    color: $color;
+    opacity: $opacity;
+  }
+}
+
+@mixin katecms-theme-light {
+  --katecms-color-accent: #2F6FED;
+  --katecms-color-accent-hover: #1E58D4;
+  --katecms-color-accent-wash: #EAF1FD;
+  --katecms-color-ink: #141A2A;
+  --katecms-color-muted: #6B7280;
+  --katecms-color-bg: #F6F7F8;
+  --katecms-color-surface: #FFFFFF;
+  --katecms-color-border: #E6E8EB;
+  --katecms-color-on-accent: #FFFFFF;
+  --katecms-color-overlay: rgba(20, 26, 42, 0.45);
+  --katecms-color-success: #2A9A66;
+  --katecms-color-success-bg: #E7F6EE;
+  --katecms-color-info: #2A7BBD;
+  --katecms-color-info-bg: #E7F2FA;
+  --katecms-color-warning: #C4851A;
+  --katecms-color-warning-bg: #FBF3E3;
+  --katecms-color-danger: #D64545;
+  --katecms-color-danger-bg: #FDECEC;
+  --katecms-shadow-sm: 0 1px 2px rgba(20, 26, 42, 0.05);
+  --katecms-shadow-md: 0 8px 24px rgba(20, 26, 42, 0.08);
+  color-scheme: light;
+}
+
+@mixin katecms-theme-dark {
+  --katecms-color-accent: #2F6FED;
+  --katecms-color-accent-hover: #1E58D4;
+  --katecms-color-accent-wash: #243456;
+  --katecms-color-ink: #E8EBF3;
+  --katecms-color-muted: #98A2B6;
+  --katecms-color-bg: #10141C;
+  --katecms-color-surface: #1A2030;
+  --katecms-color-border: #313A4E;
+  --katecms-color-on-accent: #FFFFFF;
+  --katecms-color-overlay: rgba(0, 0, 0, 0.64);
+  --katecms-color-success: #4ECA8E;
+  --katecms-color-success-bg: #143226;
+  --katecms-color-info: #79B7E4;
+  --katecms-color-info-bg: #152A3E;
+  --katecms-color-warning: #E6B15A;
+  --katecms-color-warning-bg: #3A2C14;
+  --katecms-color-danger: #F08B8B;
+  --katecms-color-danger-bg: #3C1E1E;
+  --katecms-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --katecms-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+@mixin katecms-document {
+  body#katecms-body {
+    @include katecms-theme-light;
+    color-scheme: light dark;
+    --katecms-border-radius: #{math-rem(6)};
+    --katecms-border-radius-inter: #{math-rem(5)};
+    --katecms-sidebar-w: #{math-rem(250)};
+    --katecms-topbar-h: #{math-rem(54)};
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    font-family: system-ui, sans-serif;
+    font-size: math-rem(15);
+    font-weight: 400;
+    font-style: normal;
+    font-variant: normal;
+    font-stretch: normal;
+    line-height: 1.5;
+    letter-spacing: normal;
+    word-spacing: normal;
+    text-align: start;
+    text-indent: 0;
+    text-transform: none;
+    text-shadow: none;
+    text-rendering: optimizeLegibility;
+    color: $color-ink;
+    background-color: $color-surface;
+    background-image: none;
+    caret-color: $color-ink;
+    accent-color: $color-accent;
+    tab-size: 4;
+    hyphens: none;
+    word-break: normal;
+    overflow-wrap: break-word;
+    direction: ltr;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-height: 100%;
+    overflow: hidden;
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: $color-muted transparent;
+      font-family: inherit;
+    }
+
+    img,
+    svg,
+    video,
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+
+    form {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      font: inherit;
+      min-width: 0;
+    }
+
+    &.katecms-theme-light {
+      @include katecms-theme-light;
+    }
+
+    &.katecms-theme-dark {
+      @include katecms-theme-dark;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body#katecms-body:not(.katecms-theme-light):not(.katecms-theme-dark) {
+      @include katecms-theme-dark;
+    }
+  }
+
+  html:has(> body#katecms-body) {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@mixin katecms-auth($root: '.katecms-auth') {
+  body#katecms-body #{$root} {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: math-rem(24);
+    background: $color-bg;
+    color: $color-ink;
+
+    &__card {
+      width: 100%;
+      max-width: math-rem(400);
+      padding: math-rem(32);
+      background: $color-surface;
+      border: 1px solid $color-border;
+      border-radius: math-rem(10);
+      box-shadow: $shadow-md;
+    }
+
+    &__logo {
+      display: block;
+      width: math-rem(150);
+      height: auto;
+      margin: 0 auto math-rem(24);
+    }
+
+    &__title {
+      margin: 0 0 math-rem(8);
+      font-size: math-rem(22);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: $color-ink;
+    }
+
+    &__subtitle {
+      margin: 0 0 math-rem(24);
+      font-size: math-rem(14);
+      line-height: 1.5;
+      color: $color-muted;
+    }
+
+    &__form {
+      display: flex;
+      flex-direction: column;
+      gap: math-rem(14);
+    }
+
+    &__actions {
+      margin-top: math-rem(6);
+
+      :deep(.katecms-btn) {
+        width: 100%;
+      }
+    }
+
+    &__error {
+      margin-top: math-rem(16);
+      padding: math-rem(12) math-rem(14);
+      border-radius: $border-radius;
+      background: $color-danger-bg;
+      color: $color-danger;
+      font-size: math-rem(14);
+      line-height: 1.5;
+    }
+
+    &__footer {
+      margin: math-rem(20) 0 0;
+      font-size: math-rem(13);
+      color: $color-muted;
+      text-align: center;
+
+      a {
+        color: $color-accent;
+        font-weight: 600;
+        text-decoration: none;
+
+        &:hover {
+          color: $color-accent-hover;
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+}
+
+@mixin katecms-wrapper {
+  body#katecms-body {
+    @content;
+  }
+}

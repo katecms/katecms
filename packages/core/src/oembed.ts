@@ -23,7 +23,7 @@ export const OEMBED_PROVIDERS: { hosts: string[], endpoint: string }[] = [
   { hosts: ['flickr.com'], endpoint: 'https://www.flickr.com/services/oembed' },
 ]
 
-const USER_AGENT = 'miraicms-oembed'
+const USER_AGENT = 'katecms-oembed'
 const FETCH_TIMEOUT_MS = 10_000
 const MAX_BODY_BYTES = 1_000_000
 const MAX_REDIRECTS = 3

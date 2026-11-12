@@ -13,7 +13,7 @@ interface MigrateOptions extends ClientConfig {
   schemaSql?: string
 }
 
-const SCHEMA_ID = 'miraicms'
+const SCHEMA_ID = 'katecms'
 
 // Arbitrary but stable key for pg_advisory_xact_lock, preventing two processes
 // (server instances or CLI runs) from migrating concurrently.
@@ -59,18 +59,18 @@ function resolveExtraSchema(options: MigrateOptions): SchemaJob | undefined {
   }
   if (schemaId == null || schemaSql == null) {
     throw new Error(
-      '[MiraiCMS] schemaId and schemaSql must be passed together so the add-on SQL can be recorded in `_miraicms_migrations`.',
+      '[KateCMS] schemaId and schemaSql must be passed together so the add-on SQL can be recorded in `_katecms_migrations`.',
     )
   }
 
   const id = schemaId.trim()
   const sql = schemaSql.trim()
   if (!id || !sql) {
-    throw new Error('[MiraiCMS] schemaId and schemaSql must be non-empty.')
+    throw new Error('[KateCMS] schemaId and schemaSql must be non-empty.')
   }
   if (id === SCHEMA_ID) {
     throw new Error(
-      `[MiraiCMS] schemaId "${SCHEMA_ID}" is reserved for the core schema. Choose another id for add-on SQL.`,
+      `[KateCMS] schemaId "${SCHEMA_ID}" is reserved for the core schema. Choose another id for add-on SQL.`,
     )
   }
   return { id, sql }
@@ -78,13 +78,13 @@ function resolveExtraSchema(options: MigrateOptions): SchemaJob | undefined {
 
 async function loadAppliedIds(client: Queryable): Promise<Set<string>> {
   const exists = await client.query<{ regclass: string | null }>(
-    `SELECT to_regclass('_miraicms_migrations') AS regclass`,
+    `SELECT to_regclass('_katecms_migrations') AS regclass`,
   )
   if (!exists.rows[0]?.regclass) {
     return new Set()
   }
   const ledger = await client.query<{ id: string }>(
-    'SELECT id FROM _miraicms_migrations',
+    'SELECT id FROM _katecms_migrations',
   )
   return new Set(ledger.rows.map(row => row.id))
 }
@@ -98,7 +98,7 @@ async function applyOne(
   // a multi-statement script as one batch.
   await client.query(sql)
   await client.query(
-    'INSERT INTO _miraicms_migrations (id) VALUES ($1)',
+    'INSERT INTO _katecms_migrations (id) VALUES ($1)',
     [id],
   )
 }
@@ -117,7 +117,7 @@ async function applySchemas(
     const { num, label, db } = version.rows[0]!
     if (Number(num) < MIN_SERVER_VERSION_NUM) {
       throw new Error(
-        `[MiraiCMS] PostgreSQL 15 or newer is required to run CMS migrations (found ${label}).`,
+        `[KateCMS] PostgreSQL 15 or newer is required to run CMS migrations (found ${label}).`,
       )
     }
 
@@ -191,15 +191,15 @@ function logMigrationResult(result: MigrationResult, database: string): void {
   for (const id of result.applied) {
     console.log(
       id === SCHEMA_ID
-        ? `[MiraiCMS] The ${database} has been imported successfully.`
-        : `[MiraiCMS] Schema «${id}» imported successfully into the ${database}.`,
+        ? `[KateCMS] The ${database} has been imported successfully.`
+        : `[KateCMS] Schema «${id}» imported successfully into the ${database}.`,
     )
   }
   for (const id of result.alreadyApplied) {
     console.log(
       id === SCHEMA_ID
-        ? `[MiraiCMS] The ${database} has already been imported previously.`
-        : `[MiraiCMS] Schema «${id}» has already been imported previously into the ${database}.`,
+        ? `[KateCMS] The ${database} has already been imported previously.`
+        : `[KateCMS] Schema «${id}» has already been imported previously into the ${database}.`,
     )
   }
 }
@@ -208,7 +208,7 @@ export async function migratePostgres(input: string | MigrateOptions): Promise<M
   const options = resolveOptions(input)
   if (!options.pool && !hasConnectionConfig(options)) {
     throw new Error(
-      '[MiraiCMS] migratePostgres() needs a database connection: pass a URL string, `connectionString`, host/database credentials, or an existing `pool`.',
+      '[KateCMS] migratePostgres() needs a database connection: pass a URL string, `connectionString`, host/database credentials, or an existing `pool`.',
     )
   }
 

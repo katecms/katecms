@@ -1,14 +1,14 @@
-# MiraiCMS
+# KateCMS
 
-`miraicms-nuxt` — Nuxt-модуль MiraiCMS. Подключает к приложению админку для записей (коллекции, словари, блоки), медиа и ролей, а на сайте — композаблы, которыми этот контент читается.
+`katecms` — Nuxt-модуль KateCMS. Подключает к приложению админку для записей (коллекции, словари, блоки), медиа и ролей, а на сайте — композаблы, которыми этот контент читается.
 
-Конфиг модуля: ключ `miraicms` в `nuxt.config.ts`, параметры полей и вкладки сайдбара дополнений.
+Конфиг модуля: ключ `katecms` в `nuxt.config.ts`, параметры полей и вкладки сайдбара дополнений.
 
 ## Навигация
 
 - [Конфиг модуля](#config)
   - [Подключение](#config-setup)
-  - [Ключи `miraicms`](#config-keys)
+  - [Ключи `katecms`](#config-keys)
   - [Пути](#config-paths)
   - [База](#config-database)
   - [Медиа](#config-media)
@@ -67,22 +67,22 @@
 <a id="config"></a>
 ## Конфиг модуля
 
-Тип: `MiraiCmsConfig`. Ключ в `nuxt.config.ts`: `miraicms`. Мета модуля: `configKey: 'miraicms'`.
+Тип: `KateCmsConfig`. Ключ в `nuxt.config.ts`: `katecms`. Мета модуля: `configKey: 'katecms'`.
 
 <a id="config-setup"></a>
 ### Подключение
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['miraicms-nuxt'],
-  miraicms: {
+  modules: ['katecms'],
+  katecms: {
     // ...
   },
 })
 ```
 
 <a id="config-keys"></a>
-### Ключи `miraicms`
+### Ключи `katecms`
 
 | Ключ | Тип | Дефолт | Смысл |
 |---|---|---|---|
@@ -93,7 +93,7 @@ export default defineNuxtConfig({
 | `collections` | `Collections` | `{}` | Типы записей. Ключ объекта = slug |
 | `dictionaries` | `Dictionaries` | `{}` | Словари. Ключ объекта = slug |
 | `blocks` | `Blocks` | `{}` | Реестр блоков. Ключ объекта = slug |
-| `database` | `DatabaseConfig` | SQLite `data/miraicms.db` | База |
+| `database` | `DatabaseConfig` | SQLite `data/katecms.db` | База |
 | `media` | `MediaConfig` | см. ниже | Загрузки |
 | `roles` | `Roles` | `{}` поверх встроенных | Роли |
 
@@ -105,7 +105,7 @@ export default defineNuxtConfig({
 ### Пути
 
 ```ts
-miraicms: {
+katecms: {
   adminPath: 'admin',
   loginPath: 'login',
   registerPath: 'register',
@@ -126,15 +126,15 @@ interface DatabaseConfig {
 | Поле | Смысл |
 |---|---|
 | `driver` | Явный движок. Без него непустой `url` → Postgres, иначе SQLite |
-| `url` | Строка Postgres, например `postgres://postgres:admin@127.0.0.1:5432/miraicms` |
-| `sqliteFilename` | Файл SQLite, `:memory:` или `file:` URI. Относительный путь — от `rootDir`. Дефолт `data/miraicms.db` |
+| `url` | Строка Postgres, например `postgres://postgres:admin@127.0.0.1:5432/katecms` |
+| `sqliteFilename` | Файл SQLite, `:memory:` или `file:` URI. Относительный путь — от `rootDir`. Дефолт `data/katecms.db` |
 
 Нужен PostgreSQL **15+**. Если `driver: 'postgres'` и `url` пустой, адаптер читает `DATABASE_URL`.
 
 ```ts
 database: {
   driver: 'postgres',
-  url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
+  url: 'postgres://postgres:admin@127.0.0.1:5432/katecms',
 }
 ```
 
@@ -171,7 +171,7 @@ media: {
 Свой пароль меняется только вместе с текущим. Чужой пароль может задать роль с правом `users: update`, кроме аккаунта `owner`. Если пароль забыт и войти некому, на сервере с доступом к базе:
 
 ```bash
-node scripts/reset-password.mjs --db data/miraicms.db --email owner@example.com --password "New-password-123"
+node scripts/reset-password.mjs --db data/katecms.db --email owner@example.com --password "New-password-123"
 ```
 
 Для Postgres вместо `--db` укажите `--url`. Скрипт может сменить пароль owner. Письма для сброса нет.
@@ -273,7 +273,7 @@ const { entry, entries, isArchive, collection, link, permalink } = await getColl
 <a id="getOptions"></a>
 ### getOptions()
 
-Значения options-страницы по slug из конфига (`miraicms.options`).
+Значения options-страницы по slug из конфига (`katecms.options`).
 
 | Опция | Тип | Дефолт | Смысл |
 |---|---|---|---|
@@ -498,8 +498,8 @@ const { terms, total } = await getTerms({
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['miraicms-nuxt'],
-  miraicms: {
+  modules: ['katecms'],
+  katecms: {
     collections: {
       pages: {
         labels: { name: 'Pages', singularName: 'Page' },
@@ -527,13 +527,13 @@ export default defineNuxtConfig({
 <a id="addons"></a>
 ## Дополнения
 
-Модули `miraicms-nuxt-seo` и `miraicms-nuxt-form` подключаются рядом с `miraicms-nuxt`. Точки расширения админки импортируются из `miraicms-nuxt/extensions`.
+Модули `katecms-seo` и `katecms-form` подключаются рядом с `katecms`. Точки расширения админки импортируются из `katecms/extensions`.
 
 ```ts
 export default defineNuxtConfig({
   modules: [
-    'miraicms-nuxt',
-    'miraicms-nuxt-seo',
+    'katecms',
+    'katecms-seo',
   ],
 })
 ```
@@ -541,9 +541,9 @@ export default defineNuxtConfig({
 <a id="addons-entry-sidebar"></a>
 ### Вкладки сайдбара записи
 
-Сайдбар формы записи (`.miraicms-collection-form__sidebar`) показывает вкладки, когда дополнение зарегистрировало хотя бы одну. Первая вкладка — **Page**: публикация, словари и поля с `position: 'sidebar'`. Дальше идут вкладки дополнений в порядке регистрации. Ключ `page` занят этой вкладкой.
+Сайдбар формы записи (`.katecms-collection-form__sidebar`) показывает вкладки, когда дополнение зарегистрировало хотя бы одну. Первая вкладка — **Page**: публикация, словари и поля с `position: 'sidebar'`. Дальше идут вкладки дополнений в порядке регистрации. Ключ `page` занят этой вкладкой.
 
-`miraicms-nuxt-seo` регистрирует вкладку **SEO**. Панель — `SeoEntryPanel` в пакете `miraicms-nuxt-seo`. У новой записи на вкладке написано сохранить запись перед редактированием SEO. Сохранение SEO отдельное от кнопки Publish.
+`katecms-seo` регистрирует вкладку **SEO**. Панель — `SeoEntryPanel` в пакете `katecms-seo`. У новой записи на вкладке написано сохранить запись перед редактированием SEO. Сохранение SEO отдельное от кнопки Publish.
 
 Своя вкладка регистрируется из плагина. Компонент к этому моменту уже стоит на Vue-приложении. Повторный вызов с тем же `key` заменяет вкладку.
 
@@ -554,27 +554,27 @@ export default defineNuxtConfig({
 | `component` | `string` | Имя компонента на приложении |
 
 ```ts
-import { registerMiraiCmsEntrySidebarTab } from 'miraicms-nuxt/extensions'
+import { registerKateCmsEntrySidebarTab } from 'katecms/extensions'
 import MyPanel from './MyPanel.vue'
 
 export default defineNuxtPlugin((nuxtApp) => {
-  nuxtApp.vueApp.component('MiraiCmsMyPanel', MyPanel)
-  registerMiraiCmsEntrySidebarTab({
+  nuxtApp.vueApp.component('KateCmsMyPanel', MyPanel)
+  registerKateCmsEntrySidebarTab({
     key: 'my-addon',
     label: 'Notes',
-    component: 'MiraiCmsMyPanel',
+    component: 'KateCmsMyPanel',
   })
 })
 ```
 
 Панель вкладки монтируется при первом открытии и остаётся смонтированной при переключении. Вкладка Page тоже остаётся в дереве.
 
-Пункт меню добавляется через `useMiraiCmsMenuItems()`. Панель под формой термина словаря — список имён компонентов в `useMiraiCmsTermPanels()`.
+Пункт меню добавляется через `useKateCmsMenuItems()`. Панель под формой термина словаря — список имён компонентов в `useKateCmsTermPanels()`.
 
 <a id="fields-base"></a>
 ## Общие параметры полей
 
-Карта `fields`: **ключ = имя поля**, `type` — snake_case (`post_object`). PascalCase ниже — имя компонента (`MiraiCmsPostObjectField`).
+Карта `fields`: **ключ = имя поля**, `type` — snake_case (`post_object`). PascalCase ниже — имя компонента (`KateCmsPostObjectField`).
 
 | Поле | Тип | Дефолт | Смысл |
 |---|---|---|---|
@@ -630,7 +630,7 @@ Layout-only (`tab`, `accordion`, `separator`, `message`) не хранят зн�
 
 `indexed: true` (где тип это допускает) — скалярный индекс Postgres JSONB. Nuxt создаёт/снимает их при старте после миграции. SQLite пропускает. Не работает внутри `repeater` / `flexible_content`.
 
-Зарезервированные ключи в строках: `fc_layout` (flexible content), `__miraicmsCollapsed` (свёртка ряда).
+Зарезервированные ключи в строках: `fc_layout` (flexible content), `__katecmsCollapsed` (свёртка ряда).
 
 В карточках ниже общие свойства не повторяются.
 

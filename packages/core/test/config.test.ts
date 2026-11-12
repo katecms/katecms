@@ -3,12 +3,12 @@ import {
   OWNER_ROLE,
   can,
   canOnEntry,
-  defineMiraiCmsConfig,
+  defineKateCmsConfig,
   defaults,
   isOwner,
   isValidRole,
-  mergeMiraiCmsConfig,
-  resolveMiraiCmsConfig,
+  mergeKateCmsConfig,
+  resolveKateCmsConfig,
   resolveMediaConfig,
   resolveRoles,
   isMimeAllowed,
@@ -18,9 +18,9 @@ import {
   UNLIMITED_COLLECTION_PER_PAGE,
 } from '../src'
 
-describe('defineMiraiCmsConfig', () => {
+describe('defineKateCmsConfig', () => {
   it('returns the given config', () => {
-    const config = defineMiraiCmsConfig({ adminPath: 'studio' })
+    const config = defineKateCmsConfig({ adminPath: 'studio' })
     expect(config.adminPath).toBe('studio')
   })
 })
@@ -123,35 +123,35 @@ describe('resolveMediaConfig', () => {
   })
 })
 
-describe('mergeMiraiCmsConfig', () => {
+describe('mergeKateCmsConfig', () => {
   it('fills defaults and lets user values win', () => {
-    const config = mergeMiraiCmsConfig({
+    const config = mergeKateCmsConfig({
       adminPath: 'studio',
-      database: { url: 'postgres://localhost/miraicms' },
+      database: { url: 'postgres://localhost/katecms' },
       media: { maxFileSize: 20 },
     })
     expect(config.adminPath).toBe('studio')
     expect(config.loginPath).toBe('login')
     expect(config.database.sqliteFilename).toBe(defaults.database.sqliteFilename)
-    expect(config.database.url).toBe('postgres://localhost/miraicms')
+    expect(config.database.url).toBe('postgres://localhost/katecms')
     expect(config.media.maxFileSize).toBe(20)
     expect(config.media.allowedMimeTypes).toEqual(defaults.media.allowedMimeTypes)
   })
 
   it('skips undefined overlay keys so they do not wipe defaults', () => {
-    const config = mergeMiraiCmsConfig({
+    const config = mergeKateCmsConfig({
       adminPath: undefined,
-      database: { sqliteFilename: undefined, url: 'postgres://localhost/miraicms' },
+      database: { sqliteFilename: undefined, url: 'postgres://localhost/katecms' },
     })
     expect(config.adminPath).toBe('admin')
     expect(config.database.sqliteFilename).toBe(defaults.database.sqliteFilename)
-    expect(config.database.url).toBe('postgres://localhost/miraicms')
+    expect(config.database.url).toBe('postgres://localhost/katecms')
   })
 })
 
-describe('resolveMiraiCmsConfig', () => {
+describe('resolveKateCmsConfig', () => {
   it('fills paths and merges warnings', () => {
-    const resolved = resolveMiraiCmsConfig({
+    const resolved = resolveKateCmsConfig({
       adminPath: 'backoffice',
       roles: { owner: { label: 'Nope' } },
       media: { imageSizes: [{ name: 'full' }] },
@@ -166,19 +166,19 @@ describe('resolveMiraiCmsConfig', () => {
   })
 
   it('keeps registration closed unless config opens it', () => {
-    expect(resolveMiraiCmsConfig().registration).toBe(false)
-    expect(resolveMiraiCmsConfig({ registration: true }).registration).toBe(true)
+    expect(resolveKateCmsConfig().registration).toBe(false)
+    expect(resolveKateCmsConfig({ registration: true }).registration).toBe(true)
   })
 
   it('resolves form defaults and custom breakpoints', () => {
-    const resolved = resolveMiraiCmsConfig()
+    const resolved = resolveKateCmsConfig()
     expect(resolved.form.uploadDir).toBe('')
     expect(resolved.form.maxFileBytes).toBe(10 * 1024 * 1024)
     expect(resolved.form.breakpoints.map(item => item.name)).toEqual(['phone', 'tablet', 'desktop'])
     expect(resolved.form.breakpoints[0]?.maxWidth).toBe(390)
     expect(resolved.form.breakpoints[2]?.maxWidth).toBeNull()
 
-    const custom = resolveMiraiCmsConfig({
+    const custom = resolveKateCmsConfig({
       form: {
         maxFileBytes: 1024,
         uploadDir: ' /var/forms ',
@@ -198,7 +198,7 @@ describe('resolveMiraiCmsConfig', () => {
   })
 
   it('keeps option pages from config', () => {
-    const resolved = resolveMiraiCmsConfig({
+    const resolved = resolveKateCmsConfig({
       options: {
         site: {
           label: 'Site',
@@ -211,19 +211,19 @@ describe('resolveMiraiCmsConfig', () => {
   })
 
   it('fills database defaults and accepts Postgres', () => {
-    expect(resolveMiraiCmsConfig().database).toEqual({
+    expect(resolveKateCmsConfig().database).toEqual({
       driver: '',
       url: '',
       sqliteFilename: defaults.database?.sqliteFilename,
     })
-    expect(resolveMiraiCmsConfig({
+    expect(resolveKateCmsConfig({
       database: {
         driver: 'postgres',
-        url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
+        url: 'postgres://postgres:admin@127.0.0.1:5432/katecms',
       },
     }).database).toEqual({
       driver: 'postgres',
-      url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
+      url: 'postgres://postgres:admin@127.0.0.1:5432/katecms',
       sqliteFilename: defaults.database?.sqliteFilename,
     })
   })

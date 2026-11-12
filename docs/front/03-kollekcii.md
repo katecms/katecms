@@ -1,6 +1,6 @@
 # Коллекции
 
-Ключ `miraicms.collections` — карта `CollectionDefinition`. Ключ объекта (`pages`) хранится в колонке `collections.type`. Это тип записей. Строка таблицы `collections` — одна запись этого типа.
+Ключ `katecms.collections` — карта `CollectionDefinition`. Ключ объекта (`pages`) хранится в колонке `collections.type`. Это тип записей. Строка таблицы `collections` — одна запись этого типа.
 
 Тип: `packages/core/src/config/types/collection.ts`.
 
@@ -17,7 +17,7 @@
 | `perPage` | `number` | `10` | Страница архива, список в админке и `getQueryCollection` по одному типу. `-1` — все записи. Неположительное целое, кроме `-1`, откатывается к 10 |
 | `rewrite` | `string` | `/{slug}/%name%` | Публичный URL. Обязателен плейсхолдер `%name%` |
 | `fields` | `Fields` | `{}` | Поля записи. Ключ карты = имя поля в JSON `fields` |
-| `blocks` | `string[] \| boolean` | `false` | Allow-list slug из `miraicms.blocks`, `true` — все зарегистрированные, иначе блоки выключены |
+| `blocks` | `string[] \| boolean` | `false` | Allow-list slug из `katecms.blocks`, `true` — все зарегистрированные, иначе блоки выключены |
 
 Плоская коллекция: `%name%` — один сегмент (`about`). Иерархическая: путь предков (`parent/child`).
 

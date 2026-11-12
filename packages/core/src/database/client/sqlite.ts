@@ -92,7 +92,7 @@ export function createSqliteDb(input: string | CreateSqliteDbOptions): Kysely<Da
     + Number(Boolean(options.d1))
   if (targets !== 1) {
     throw new Error(
-      '[MiraiCMS] createSqliteDb() needs exactly one target: a file path, `{ filename }`, `{ database }`, or `{ d1 }`.',
+      '[KateCMS] createSqliteDb() needs exactly one target: a file path, `{ filename }`, `{ database }`, or `{ d1 }`.',
     )
   }
 

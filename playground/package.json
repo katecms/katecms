@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "name": "katecms-playground",
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "seed": "node ./scripts/seed.mjs",
+    "build": "nuxt build",
+    "generate": "nuxt generate"
+  },
+  "dependencies": {
+    "katecms-form": "workspace:*",
+    "katecms": "workspace:*",
+    "katecms-seo": "workspace:*",
+    "nuxt": "^4.5.2"
+  }
+}

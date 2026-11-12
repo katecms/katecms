@@ -2,47 +2,47 @@
 
 ## Что хост пишет сам
 
-- Список модулей и объект `miraicms` в `nuxt.config.ts`.
-- Страницы сайта. Модуль не создаёт публичный catch-all: маршрут `/:slug(.*)*` принадлежит приложению. Образец — `playground-nuxt/pages/[...slug].vue`.
+- Список модулей и объект `katecms` в `nuxt.config.ts`.
+- Страницы сайта. Модуль не создаёт публичный catch-all: маршрут `/:slug(.*)*` принадлежит приложению. Образец — `playground/pages/[...slug].vue`.
 - Вёрстку вокруг данных CMS: заголовок, списки, ссылки через `permalink`.
-- Стили публичной формы. Компонент `MiraiCmsForm` приходит без визуальной темы и отдаёт раскладку через data-атрибуты.
+- Стили публичной формы. Компонент `KateCmsForm` приходит без визуальной темы и отдаёт раскладку через data-атрибуты.
 - Плагин своего дополнения: регистрация вкладки сайдбара, пункта меню, панели термина.
 - Переменные окружения деплоя: `MIRAICMS_SESSION_PASSWORD`, за обратным прокси — `MIRAICMS_TRUST_PROXY`, при Postgres без `url` в конфиге — `DATABASE_URL`.
 
 ## Что хост получает готовым
 
-После `modules: ['miraicms-nuxt']` приложение получает:
+После `modules: ['katecms']` приложение получает:
 
 - админку на `/${adminPath}` (по умолчанию `/admin`);
 - автоимпорт `getCollection`, `getQueryCollection`, `getTerms`, `getOptions`;
-- публичный runtime config `useRuntimeConfig().public.miraicms` — урезанный снимок навигации, без схем полей, ролей и строки базы;
-- серверный runtime config `useRuntimeConfig().miraicms` — полный `ResolvedMiraiCmsConfig` (только сервер);
+- публичный runtime config `useRuntimeConfig().public.katecms` — урезанный снимок навигации, без схем полей, ролей и строки базы;
+- серверный runtime config `useRuntimeConfig().katecms` — полный `ResolvedKateCmsConfig` (только сервер);
 - загрузки в `<rootDir>/public/uploads`.
 
-Пакетные экспорты, которые можно импортировать снаружи `miraicms-nuxt`:
+Пакетные экспорты, которые можно импортировать снаружи `katecms`:
 
 | Импорт | Назначение |
 | --- | --- |
-| `miraicms-nuxt` | Сам Nuxt-модуль. В `modules` достаточно строки имени |
-| `miraicms-nuxt/extensions` | Регистрация вкладок, меню, панелей термина, своего поля |
-| `miraicms-nuxt/server` | `getDb`, `requireUser`, `requirePermission`, `requireEntryPermission`. Адрес клиента для своего лимита: `eventClientAddress`, `clientAddress`, `trustedProxyHops` |
-| `miraicms-nuxt/styles` | SCSS-токены админки для пакета-дополнения |
-| `@miraicms/core` | Ядро. В браузере резолвится в `browser`-сборку, на сервере — в полный вход |
+| `katecms` | Сам Nuxt-модуль. В `modules` достаточно строки имени |
+| `katecms/extensions` | Регистрация вкладок, меню, панелей термина, своего поля |
+| `katecms/server` | `getDb`, `requireUser`, `requirePermission`, `requireEntryPermission`. Адрес клиента для своего лимита: `eventClientAddress`, `clientAddress`, `trustedProxyHops` |
+| `katecms/styles` | SCSS-токены админки для пакета-дополнения |
+| `@katecms/core` | Ядро. В браузере резолвится в `browser`-сборку, на сервере — в полный вход |
 
-Компоненты из `runtime/internal` в хост не попадают. Vite-плагин модуля подставляет их только в `.vue` внутри `miraicms-nuxt`, `miraicms-nuxt-form` и `miraicms-nuxt-seo`. Единственный каталог компонентов, который Nuxt регистрирует для страниц сайта, — `miraicms-nuxt-form/src/runtime/components` с префиксом `MiraiCms`. Сейчас там `Form.vue`, то есть тег `MiraiCmsForm`.
+Компоненты из `runtime/internal` в хост не попадают. Vite-плагин модуля подставляет их только в `.vue` внутри `katecms`, `katecms-form` и `katecms-seo`. Единственный каталог компонентов, который Nuxt регистрирует для страниц сайта, — `katecms-form/src/runtime/components` с префиксом `KateCms`. Сейчас там `Form.vue`, то есть тег `KateCmsForm`.
 
 ## Подключение
 
-`miraicms-nuxt` стоит в `modules` раньше дополнений. SEO и формы читают `runtimeConfig.miraicms.adminPath`, который выставляет основной модуль в своём `setup`.
+`katecms` стоит в `modules` раньше дополнений. SEO и формы читают `runtimeConfig.katecms.adminPath`, который выставляет основной модуль в своём `setup`.
 
 ```ts
 export default defineNuxtConfig({
   modules: [
-    'miraicms-nuxt',
-    'miraicms-nuxt-seo',
-    'miraicms-nuxt-form',
+    'katecms',
+    'katecms-seo',
+    'katecms-form',
   ],
-  miraicms: {
+  katecms: {
     collections: {
       pages: {
         labels: { name: 'Pages', singularName: 'Page' },
@@ -59,14 +59,14 @@ export default defineNuxtConfig({
 pnpm dev
 ```
 
-Скрипт поднимает сборку ядра, stub модуля и `playground-nuxt`.
+Скрипт поднимает сборку ядра, stub модуля и `playground`.
 
 ## Публичный runtime config
 
-На клиент уходит только то, что собирает `toPublicCollections` / `toPublicDictionaries` / `toPublicOptions` в `packages/miraicms-nuxt/src/module.ts`.
+На клиент уходит только то, что собирает `toPublicCollections` / `toPublicDictionaries` / `toPublicOptions` в `packages/katecms/src/module.ts`.
 
 ```ts
-interface PublicMiraiCms {
+interface PublicKateCms {
   adminPath: string
   loginPath: string
   registerPath: string

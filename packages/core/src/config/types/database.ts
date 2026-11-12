@@ -9,11 +9,11 @@ export type DatabaseDriver = 'postgres' | 'sqlite'
  *
  * @example
  * // PostgreSQL 15+
- * { driver: 'postgres', url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms' }
+ * { driver: 'postgres', url: 'postgres://postgres:admin@127.0.0.1:5432/katecms' }
  *
  * @example
- * // SQLite (default filename is `data/miraicms.db`)
- * { sqliteFilename: 'data/miraicms.db' }
+ * // SQLite (default filename is `data/katecms.db`)
+ * { sqliteFilename: 'data/katecms.db' }
  */
 export interface DatabaseConfig {
   /**
@@ -23,13 +23,13 @@ export interface DatabaseConfig {
   driver?: DatabaseDriver
   /**
    * PostgreSQL connection string.
-   * Example: `postgres://postgres:admin@127.0.0.1:5432/miraicms`.
+   * Example: `postgres://postgres:admin@127.0.0.1:5432/katecms`.
    */
   url?: string
   /**
    * SQLite file path, `:memory:`, or `file:` URI.
    * Relative paths are resolved by the adapter (Nuxt: against `rootDir`).
-   * Default: `data/miraicms.db`.
+   * Default: `data/katecms.db`.
    */
   sqliteFilename?: string
 }

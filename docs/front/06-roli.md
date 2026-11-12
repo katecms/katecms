@@ -1,6 +1,6 @@
 # Роли
 
-Карта `miraicms.roles` добавляет роль, целиком заменяет встроенную или прячет её значением `false`. Разрешение ролей — `resolveRoles` в `@miraicms/core`.
+Карта `katecms.roles` добавляет роль, целиком заменяет встроенную или прячет её значением `false`. Разрешение ролей — `resolveRoles` в `@katecms/core`.
 
 ## Встроенные
 
@@ -38,10 +38,10 @@
 Свой пароль меняется вместе с текущим. Чужой пароль задаёт роль с `users: update`, кроме аккаунта `owner`. Последнего `owner` нельзя снять с роли и нельзя удалить. Забытый пароль при доступе к серверу:
 
 ```bash
-node scripts/reset-password.mjs --db playground-nuxt/data/miraicms.db --email owner@example.com --password "New-password-123"
+node scripts/reset-password.mjs --db playground/data/katecms.db --email owner@example.com --password "New-password-123"
 ```
 
-Для Postgres вместо `--db` — `--url`. Письма для сброса нет. Скрипт лежит в корне репозитория и вызывает собранный `@miraicms/core`.
+Для Postgres вместо `--db` — `--url`. Письма для сброса нет. Скрипт лежит в корне репозитория и вызывает собранный `@katecms/core`.
 
 ## Пример
 

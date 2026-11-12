@@ -1,7 +1,7 @@
 /**
  * Browser-safe subset of the core package.
  *
- * Vite/Nuxt client builds resolve `@miraicms/core` here (package.json
+ * Vite/Nuxt client builds resolve `@katecms/core` here (package.json
  * `"browser"` export). Database, media runtime, indexes apply, and password hashing
  * stay on the Node entry (`src/index.ts`). Media DTOs (`MediaItem`, …) are safe
  * to share with the client and are re-exported here.

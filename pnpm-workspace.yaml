@@ -1,7 +1,18 @@
 packages:
   - packages/*
-  - playground-nuxt
+  - playground
+
+# pnpm 11 refuses a lockfile that contains versions published in the last day.
+minimumReleaseAge: 0
 
 onlyBuiltDependencies:
-  - better-sqlite3
   - sharp
+  - esbuild
+  - "@parcel/watcher"
+
+allowBuilds:
+  # Published package ships prebuilds. node-gyp rebuild needs a Windows SDK this machine does not have.
+  better-sqlite3: false
+  "@parcel/watcher": true
+  esbuild: true
+  sharp: true

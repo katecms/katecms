@@ -1,14 +1,14 @@
 # Монорепозиторий
 
-Корень — приватный пакет `miraicms-monorepo`. Публикуемые библиотеки: `@miraicms/core` и `miraicms-nuxt`. Дополнения `miraicms-nuxt-form` и `miraicms-nuxt-seo` пока экспортируют `src/module.ts` напрямую и в `files` отдают исходники. Playground `playground-nuxt` — приложение-хост для разработки, в npm не уходит.
+Корень — приватный пакет `katecms-monorepo`. Публикуемые библиотеки: `@katecms/core` и `katecms`. Дополнения `katecms-form` и `katecms-seo` пока экспортируют `src/module.ts` напрямую и в `files` отдают исходники. Playground `playground` — приложение-хост для разработки, в npm не уходит.
 
 ```
-miraicms
-├── packages/core                 @miraicms/core
-├── packages/miraicms-nuxt        модуль админки и публичного API
-├── packages/miraicms-nuxt-form   конструктор форм
-├── packages/miraicms-nuxt-seo    title, sitemap, robots, редиректы
-├── playground-nuxt               пример сайта
+katecms
+├── packages/core                 @katecms/core
+├── packages/katecms        модуль админки и публичного API
+├── packages/katecms-form   конструктор форм
+├── packages/katecms-seo    title, sitemap, robots, редиректы
+├── playground               пример сайта
 ├── scripts/ai-index.mjs          индекс .ai/
 ├── scripts/reset-password.mjs    операционный скрипт поверх dist ядра
 └── docs                          эта документация
@@ -18,10 +18,10 @@ miraicms
 
 | Пакет | Тянет |
 | --- | --- |
-| `@miraicms/core` | `kysely`, `pg`, `better-sqlite3`, `sharp`. Vue и Nuxt отсутствуют |
-| `miraicms-nuxt` | ядро, `@nuxt/kit`, TipTap, Leaflet, `c12`, `magic-string` |
-| `miraicms-nuxt-form` | ядро, модуль, `kysely`, `nodemailer`, `sanitize-html`, `dompurify` |
-| `miraicms-nuxt-seo` | ядро, модуль, `kysely` |
+| `@katecms/core` | `kysely`, `pg`, `better-sqlite3`, `sharp`. Vue и Nuxt отсутствуют |
+| `katecms` | ядро, `@nuxt/kit`, TipTap, Leaflet, `c12`, `magic-string` |
+| `katecms-form` | ядро, модуль, `kysely`, `nodemailer`, `sanitize-html`, `dompurify` |
+| `katecms-seo` | ядро, модуль, `kysely` |
 | playground | три Nuxt-пакета и `nuxt` |
 
 Ядро делится на два публичных входа, потому что админские SFC попадают в клиентский бандл:
@@ -29,13 +29,13 @@ miraicms
 - `src/index.ts` — Node. Реэкспорт database, config, permissions, auth, fields, rewrite, blocks, text, media, indexes, oembed.
 - `src/browser.ts` — то же без драйверов, sharp, применения индексов и `hashPassword`. Тип `SafeUser` и проверка длины пароля здесь есть.
 
-`package.json` ядра ставит `"browser": "./dist/browser.mjs"`. Vite на клиенте берёт его сам. Серверный код пишет обычный импорт `@miraicms/core` и получает `index`.
+`package.json` ядра ставит `"browser": "./dist/browser.mjs"`. Vite на клиенте берёт его сам. Серверный код пишет обычный импорт `@katecms/core` и получает `index`.
 
 Тип импортируют из файла, который его объявляет (`media/types`, `config/types/*`, `database/client/schema`). Баррели `media/index.ts`, `config/index.ts`, `database/index.ts` подтягивают sharp, все резолверы или `pg`. Клиентский файл, которому нужен только тип, через эти баррели не ходит.
 
 ## Что считается внутренним
 
-Внутри `miraicms-nuxt` три зоны:
+Внутри `katecms` три зоны:
 
 | Зона | Путь | Виден хосту |
 | --- | --- | --- |
@@ -43,10 +43,10 @@ miraicms
 | Публичный runtime | composable чтения, `extensions`, `server/kit.ts`, стили | Да, перечисленными экспортами |
 | Админка | `runtime/pages`, `runtime/internal`, почти все `runtime/server/api` | Нет. Страницы регистрирует модуль, компоненты резолвит свой Vite-плагин |
 
-`runtime/server/api/_miraicms/*` вызывает админский интерфейс и composable хоста. Это протокол модуля, не документированный внешний REST для чужих клиентов. Хостовая страница ходит в четыре composable, а те уже знают нужные URL (`/api/_miraicms/resolve`, `query`, `terms`, options).
+`runtime/server/api/_katecms/*` вызывает админский интерфейс и composable хоста. Это протокол модуля, не документированный внешний REST для чужих клиентов. Хостовая страница ходит в четыре composable, а те уже знают нужные URL (`/api/_katecms/resolve`, `query`, `terms`, options).
 
 ## Playground
 
-`playground-nuxt/nuxt.config.ts` — полный пример ключа `miraicms`: роли, медиа, коллекции, словари. `pages/[...slug].vue` — единственный правильный образец публичной страницы. `pages/forms/[id].vue` показывает `MiraiCmsForm`. Сид: `pnpm --filter miraicms-playground-nuxt seed`.
+`playground/nuxt.config.ts` — полный пример ключа `katecms`: роли, медиа, коллекции, словари. `pages/[...slug].vue` — единственный правильный образец публичной страницы. `pages/forms/[id].vue` показывает `KateCmsForm`. Сид: `pnpm --filter katecms-playground seed`.
 
-Фикстура модуля `packages/miraicms-nuxt/test/fixtures/basic` — минимальное Nuxt-приложение для `test:basic`.
+Фикстура модуля `packages/katecms/test/fixtures/basic` — минимальное Nuxt-приложение для `test:basic`.

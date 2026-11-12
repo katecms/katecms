@@ -300,7 +300,7 @@ interface PostObjectField extends BaseField {
 
 /**
  * Picks a form from the form addon.
- * The widget is registered by `miraicms-nuxt-form` when that module is installed.
+ * The widget is registered by `katecms-form` when that module is installed.
  * `multiple` stores an array. A single empty value is `null` when `allowNull` is set.
  */
 interface FormField extends BaseField {

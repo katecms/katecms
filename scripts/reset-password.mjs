@@ -4,10 +4,10 @@
  * It can reset the owner. The admin UI cannot change the owner.
  *
  * SQLite:
- *   node scripts/reset-password.mjs --db playground-nuxt/data/miraicms.db --email owner@example.com --password "New-password-123"
+ *   node scripts/reset-password.mjs --db playground/data/katecms.db --email owner@example.com --password "New-password-123"
  *
  * Postgres:
- *   node scripts/reset-password.mjs --url postgres://user:pass@127.0.0.1:5432/miraicms --email owner@example.com --password "New-password-123"
+ *   node scripts/reset-password.mjs --url postgres://user:pass@127.0.0.1:5432/katecms --email owner@example.com --password "New-password-123"
  */
 import { createPostgresDb, createSqliteDb, findUserByEmail, hashPassword, updateUser, validatePassword } from '../packages/core/dist/index.mjs'
 

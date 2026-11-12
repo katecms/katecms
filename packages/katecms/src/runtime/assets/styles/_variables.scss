@@ -1,0 +1,35 @@
+// Values are set on body#katecms-body in katecms-document.
+
+// Accent
+$color-accent: var(--katecms-color-accent);
+$color-accent-hover: var(--katecms-color-accent-hover);
+$color-accent-wash: var(--katecms-color-accent-wash);
+
+$color-ink: var(--katecms-color-ink);
+$color-muted: var(--katecms-color-muted);
+$color-bg: var(--katecms-color-bg);
+$color-surface: var(--katecms-color-surface);
+$color-border: var(--katecms-color-border);
+$color-on-accent: var(--katecms-color-on-accent);
+$color-overlay: var(--katecms-color-overlay);
+
+// Status
+$color-success: var(--katecms-color-success);
+$color-success-bg: var(--katecms-color-success-bg);
+$color-info: var(--katecms-color-info);
+$color-info-bg: var(--katecms-color-info-bg);
+$color-warning: var(--katecms-color-warning);
+$color-warning-bg: var(--katecms-color-warning-bg);
+$color-danger: var(--katecms-color-danger);
+$color-danger-bg: var(--katecms-color-danger-bg);
+
+// Shadow
+$shadow-sm: var(--katecms-shadow-sm);
+$shadow-md: var(--katecms-shadow-md);
+
+// Radius
+$border-radius: var(--katecms-border-radius);
+$border-radius-inter: var(--katecms-border-radius-inter);
+
+$sidebar-w: var(--katecms-sidebar-w);
+$topbar-h: var(--katecms-topbar-h);

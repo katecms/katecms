@@ -1,5 +1,5 @@
 /**
- * Build `.ai/` — a compact map of the MiraiCMS repo for later AI sessions.
+ * Build `.ai/` — a compact map of the KateCMS repo for later AI sessions.
  *
  *   pnpm ai:index
  *
@@ -500,7 +500,7 @@ function isClientFile(file) {
     return false
   if (file.includes('/runtime/'))
     return true
-  if (file.startsWith('playground-nuxt/') && !file.endsWith('nuxt.config.ts') && !file.endsWith('tsconfig.json'))
+  if (file.startsWith('playground/') && !file.endsWith('nuxt.config.ts') && !file.endsWith('tsconfig.json'))
     return true
   return false
 }
@@ -573,8 +573,8 @@ function pickCondition(value, client) {
 
 function entryId(pkgName, sub, client) {
   const short = pkgName
-    .replace(/^@miraicms\//, '')
-    .replace(/^miraicms-/, '')
+    .replace(/^@katecms\//, '')
+    .replace(/^katecms-/, '')
   const tail = sub === '.' ? '' : sub.replace(/^\.\//, '')
   if (client && sub === '.')
     return `${short}/browser`
@@ -1587,7 +1587,7 @@ function assertIndex(fileRows, symbolRows, routes, domain, misses) {
       throw new Error(`Missing symbol ${name} in ${file}`)
   }
   symbol('hashPassword', 'packages/core/src/auth/password.ts')
-  symbol('resolveField', 'packages/miraicms-nuxt/src/runtime/utils/helpers.ts')
+  symbol('resolveField', 'packages/katecms/src/runtime/utils/helpers.ts')
   const core = domain.public.core || []
   const browser = domain.public['core/browser'] || []
   if (!core.includes('createSqliteDb'))
@@ -1602,13 +1602,13 @@ function assertIndex(fileRows, symbolRows, routes, domain, misses) {
   const text = domain.fields.find(row => row.type === 'text')
   if (!text?.ui?.endsWith('TextField.vue'))
     throw new Error('field type text has no TextField.vue')
-  const media = routes.api.find(row => row.m === 'GET' && row.path === '/api/_miraicms/media')
+  const media = routes.api.find(row => row.m === 'GET' && row.path === '/api/_katecms/media')
   if (!media?.p.endsWith('media/index.get.ts'))
-    throw new Error('GET /api/_miraicms/media not mapped')
+    throw new Error('GET /api/_katecms/media not mapped')
   const userPage = routes.pages.find(row => row.n === 'admin-users-id')
   if (userPage?.path !== '/{adminPath}/users/:id')
     throw new Error(`user page path: ${userPage?.path}`)
-  const home = routes.pages.find(row => row.p === 'playground-nuxt/pages/index.vue')
+  const home = routes.pages.find(row => row.p === 'playground/pages/index.vue')
   if (home?.path !== '/')
     throw new Error(`playground home path: ${home?.path}`)
   const slug = routes.pages.find(row => row.p.endsWith('/pages/[...slug].vue'))
@@ -1616,12 +1616,12 @@ function assertIndex(fileRows, symbolRows, routes, domain, misses) {
     throw new Error(`playground slug path: ${slug?.path}`)
   const link = fileRows.find(row => row.p.endsWith('internal/fields/LinkField.vue'))
   if (!link?.im.includes('packages/core/src/browser.ts'))
-    throw new Error('client field did not resolve @miraicms/core to browser.ts')
+    throw new Error('client field did not resolve @katecms/core to browser.ts')
   if (link.im.includes('packages/core/src/index.ts'))
-    throw new Error('client field resolved @miraicms/core to the node entry')
-  const mediaApi = fileRows.find(row => row.p.endsWith('server/api/_miraicms/media/index.get.ts'))
+    throw new Error('client field resolved @katecms/core to the node entry')
+  const mediaApi = fileRows.find(row => row.p.endsWith('server/api/_katecms/media/index.get.ts'))
   if (!mediaApi?.im.includes('packages/core/src/index.ts'))
-    throw new Error('server handler did not resolve @miraicms/core to index.ts')
+    throw new Error('server handler did not resolve @katecms/core to index.ts')
   const helpers = fileRows.find(row => row.p.endsWith('runtime/utils/helpers.ts'))
   if (!helpers?.im.some(item => item.endsWith('/internal/fields/TextField.vue')))
     throw new Error('resolveField glob missed TextField.vue')
@@ -1629,7 +1629,7 @@ function assertIndex(fileRows, symbolRows, routes, domain, misses) {
   if (!register?.im.some(item => item.endsWith('/assets/styles/_index.scss')))
     throw new Error('register.vue missed styles import')
   if (!register.im.some(item => item.endsWith('/internal/fields/PasswordField.vue')))
-    throw new Error('register.vue missed MiraiCmsPasswordField')
+    throw new Error('register.vue missed KateCmsPasswordField')
   const redirects = domain.tables.find(row => row.n === 'seo_redirects')
   if (!redirects?.cols.includes('from_path'))
     throw new Error('seo_redirects columns missing')
@@ -1642,7 +1642,7 @@ function renderIndex(fileRows, symbolRows, routes, domain) {
     .map(pkg => `- \`${pkg.name}\` \`${pkg.dir}\` — ${pkg.sum || 'package'}`)
     .join('\n')
   const counts = `${fileRows.length} files, ${symbolRows.length} symbols, ${routes.api.length} handlers, ${routes.pages.length} pages, ${domain.tables.length} tables, ${domain.fields.length} field types`
-  return `# MiraiCMS index
+  return `# KateCMS index
 
 Read this file first. Grep \`.ai/\` instead of scanning \`packages/\` for imports, symbols, routes, or schema.
 
@@ -1669,18 +1669,18 @@ Empty keys are omitted. To see who imports a file, grep its \`p\` value: hits in
 
 ## symbols.jsonl
 
-\`n\` name. \`k\` is \`fn\`, \`const\`, \`type\`, \`iface\`, \`class\`, \`enum\`, \`cmp\`, or \`ns\`. \`p\` defining file. \`cmp\` is a Nuxt component registered with the module prefix (\`MiraiCms*\`, \`Mirai*\`).
+\`n\` name. \`k\` is \`fn\`, \`const\`, \`type\`, \`iface\`, \`class\`, \`enum\`, \`cmp\`, or \`ns\`. \`p\` defining file. \`cmp\` is a Nuxt component registered with the module prefix (\`KateCms*\`, \`Mirai*\`).
 
 Public entry surfaces are name lists in \`domain.json\` under \`public\` (\`core\`, \`core/browser\`, \`nuxt\`, \`nuxt/server\`, \`nuxt/extensions\`, \`seo\`).
 
 ## Resolve rules
 
-- Client files under \`runtime/\` (not \`runtime/server/\`) import \`@miraicms/core\` from \`packages/core/src/browser.ts\`.
-- Server, tests, and \`module.ts\` import \`@miraicms/core\` from \`packages/core/src/index.ts\`.
-- Admin pages and \`/api/_miraicms/*\` handlers are registered in each package \`module.ts\`, not by Nuxt file-system routing. Paths are in \`routes.json\`. \`{adminPath}\` defaults to \`admin\`.
+- Client files under \`runtime/\` (not \`runtime/server/\`) import \`@katecms/core\` from \`packages/core/src/browser.ts\`.
+- Server, tests, and \`module.ts\` import \`@katecms/core\` from \`packages/core/src/index.ts\`.
+- Admin pages and \`/api/_katecms/*\` handlers are registered in each package \`module.ts\`, not by Nuxt file-system routing. Paths are in \`routes.json\`. \`{adminPath}\` defaults to \`admin\`.
 - App \`pages/*.vue\` outside \`runtime/pages\` (the playground) use Nuxt file routes, also listed in \`routes.json\`.
 - Field config \`type\` maps to a widget: snake_case to PascalCase plus \`Field.vue\` (\`image_select\` to \`ImageSelectField.vue\`). \`resolveField()\` globs \`internal/fields/*.vue\`.
-- Template tags \`MiraiCms*\` / \`Mirai*\` are edges in \`im\` even without a script import. \`addAdminComponents()\` dirs are internal: the tags resolve in admin and addon templates, and they are not host components.
+- Template tags \`KateCms*\` / \`Mirai*\` are edges in \`im\` even without a script import. \`addAdminComponents()\` dirs are internal: the tags resolve in admin and addon templates, and they are not host components.
 - A named call that matches a unique composable or util export is also an \`im\` edge.
 
 ## Tables

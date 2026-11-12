@@ -1,6 +1,6 @@
 # Сервер
 
-Каталог `packages/miraicms-nuxt/src/runtime/server`. Точка для дополнений — `kit.ts`: наружу торчат `getDb`, `requireUser`, `requirePermission`, `requireEntryPermission`, `clientAddress`, `trustedProxyHops`, `eventClientAddress`. Остальные утилиты — внутренние импорты обработчиков.
+Каталог `packages/katecms/src/runtime/server`. Точка для дополнений — `kit.ts`: наружу торчат `getDb`, `requireUser`, `requirePermission`, `requireEntryPermission`, `clientAddress`, `trustedProxyHops`, `eventClientAddress`. Остальные утилиты — внутренние импорты обработчиков.
 
 ## Клиент базы
 
@@ -14,7 +14,7 @@
 
 | Параметр | Значение |
 | --- | --- |
-| Cookie | `miraicms_session` |
+| Cookie | `katecms_session` |
 | Срок | 7 суток |
 | Флаги | httpOnly, SameSite=Lax, Secure на https, path `/` |
 | Полезная нагрузка | `userId`, `sessionVersion` |
@@ -40,7 +40,7 @@
 
 `utils/permissions.ts` оборачивает `can` / `canOnEntry`. Нет права — 403 `Insufficient permissions.` Для коллекций, словарей и опций в `requirePermission` передают slug. `requireEntryPermission` дополнительно проверяет автора при `update` / `delete`, если право на ресурс не blanket `true`.
 
-`GET /api/_miraicms/menu` без пользователя возвращает `{ visible: [] }`. С пользователем — список ресурсов из `RESOURCES`, на которые есть `read` без scope. Оболочка прячет пункты дополнений, чей `access` в этот список не входит. Скоуп «только коллекция pages» на этом списке не виден: `can` без scope для карты по slug не даёт blanket read. Пункт коллекции в меню строится отдельно, по конфигу и правам на конкретный slug.
+`GET /api/_katecms/menu` без пользователя возвращает `{ visible: [] }`. С пользователем — список ресурсов из `RESOURCES`, на которые есть `read` без scope. Оболочка прячет пункты дополнений, чей `access` в этот список не входит. Скоуп «только коллекция pages» на этом списке не виден: `can` без scope для карты по slug не даёт blanket read. Пункт коллекции в меню строится отдельно, по конфигу и правам на конкретный slug.
 
 ## Публичные ручки, которые дергают composable
 
@@ -48,10 +48,10 @@
 
 | Метод | Путь | Кто вызывает |
 | --- | --- | --- |
-| GET | `/api/_miraicms/resolve` | `getCollection` |
-| GET | `/api/_miraicms/query` | `getQueryCollection` |
-| GET | `/api/_miraicms/terms` | `getTerms` |
-| GET | `/api/_miraicms/options/:page` | `getOptions` и редактор опций |
+| GET | `/api/_katecms/resolve` | `getCollection` |
+| GET | `/api/_katecms/query` | `getQueryCollection` |
+| GET | `/api/_katecms/terms` | `getTerms` |
+| GET | `/api/_katecms/options/:page` | `getOptions` и редактор опций |
 
 `resolve` матчит путь через ядро (`matchPublicCollectionRoute` и словарь с `rewrite`). Ответ — дискриминант `kind`: `entry`, `archive`, `term`. Preview и `status=draft` проходят, только если у сессии есть `collections: read` на этот тип. Иначе остаётся `published`.
 
@@ -61,27 +61,27 @@
 
 | Метод | Путь | Назначение |
 | --- | --- | --- |
-| GET | `/api/_miraicms/auth/state` | `{ user, hasUsers }` для middleware и шапки |
-| POST | `/api/_miraicms/auth/login` | Вход |
-| POST | `/api/_miraicms/auth/logout` | Сброс cookie |
-| POST | `/api/_miraicms/auth/register` | Саморегистрация или первый owner |
-| GET | `/api/_miraicms/menu` | Ресурсы с правом read |
-| GET, POST | `/api/_miraicms/users` | Список и создание |
-| PATCH, DELETE | `/api/_miraicms/users/:id` | Правка и удаление. Owner защищён правилами ядра |
-| GET, POST | `/api/_miraicms/collections/:collection` | Список и создание |
-| GET, PATCH, DELETE | `/api/_miraicms/collections/:collection/:id` | Запись |
+| GET | `/api/_katecms/auth/state` | `{ user, hasUsers }` для middleware и шапки |
+| POST | `/api/_katecms/auth/login` | Вход |
+| POST | `/api/_katecms/auth/logout` | Сброс cookie |
+| POST | `/api/_katecms/auth/register` | Саморегистрация или первый owner |
+| GET | `/api/_katecms/menu` | Ресурсы с правом read |
+| GET, POST | `/api/_katecms/users` | Список и создание |
+| PATCH, DELETE | `/api/_katecms/users/:id` | Правка и удаление. Owner защищён правилами ядра |
+| GET, POST | `/api/_katecms/collections/:collection` | Список и создание |
+| GET, PATCH, DELETE | `/api/_katecms/collections/:collection/:id` | Запись |
 | GET | `.../:id/revisions` | Список снимков |
 | POST | `.../revisions/:revisionId` | Откат |
-| GET, POST | `/api/_miraicms/dictionaries/:dictionary` | Термины |
+| GET, POST | `/api/_katecms/dictionaries/:dictionary` | Термины |
 | GET, PATCH, DELETE | `.../:id` | Один термин |
-| PATCH | `/api/_miraicms/options/:page` | Запись синглтона |
-| GET, POST | `/api/_miraicms/media` | Библиотека и загрузка |
-| GET, PATCH, DELETE | `/api/_miraicms/media/:id` | Карточка |
-| POST | `/api/_miraicms/media/:id/regenerate` | Варианты одного файла |
-| POST | `/api/_miraicms/media/regenerate` | Варианты пакетом |
-| GET | `/api/_miraicms/relation/entries` | Пикер записей |
-| GET | `/api/_miraicms/relation/terms` | Пикер терминов |
-| GET | `/api/_miraicms/oembed` | Прокси oEmbed для виджета. Разрешение URL и отказы — в ядре, ручка добавляет авторизацию админки |
+| PATCH | `/api/_katecms/options/:page` | Запись синглтона |
+| GET, POST | `/api/_katecms/media` | Библиотека и загрузка |
+| GET, PATCH, DELETE | `/api/_katecms/media/:id` | Карточка |
+| POST | `/api/_katecms/media/:id/regenerate` | Варианты одного файла |
+| POST | `/api/_katecms/media/regenerate` | Варианты пакетом |
+| GET | `/api/_katecms/relation/entries` | Пикер записей |
+| GET | `/api/_katecms/relation/terms` | Пикер терминов |
+| GET | `/api/_katecms/oembed` | Прокси oEmbed для виджета. Разрешение URL и отказы — в ядре, ручка добавляет авторизацию админки |
 | GET | `/uploads/**` | Файл с диска |
 
 Сохранение записи проходит `runtime/server/utils/collections.ts`: обязательные поля при `published` (`validateRequiredFields`), видимость по `conditionalLogic`, родитель (`validateCollectionParent`), словари сайдбара с учётом `multiple`. Ревизия пишется, если у коллекции не стоит `revisions: false`. Корзина — смена `status`, не `DELETE`. `DELETE` снимает строку.
@@ -97,6 +97,6 @@
 3. Регистрация при уже существующих пользователях и `registration !== true` ведёт на логин.
 4. Уже вошедшего с логина и регистрации возвращает на `/${adminPath}`.
 
-Состояние берётся `GET /api/_miraicms/auth/state`. Сбой запроса считается отсутствием пользователя и `hasUsers: false` только в `.catch` — на первой установке это как раз путь к регистрации, если ручка недоступна по другой причине, гость тоже окажется на регистрации.
+Состояние берётся `GET /api/_katecms/auth/state`. Сбой запроса считается отсутствием пользователя и `hasUsers: false` только в `.catch` — на первой установке это как раз путь к регистрации, если ручка недоступна по другой причине, гость тоже окажется на регистрации.
 
-Тема админки к сессии не привязана: cookie `miraicms-theme` (`system` | `light` | `dark`) пишет `runtime/pages/index.vue`.
+Тема админки к сессии не привязана: cookie `katecms-theme` (`system` | `light` | `dark`) пишет `runtime/pages/index.vue`.

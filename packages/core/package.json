@@ -1,16 +1,16 @@
 {
-  "name": "@miraicms/core",
+  "name": "@katecms/core",
   "version": "1.0.0",
-  "description": "Framework-agnostic MiraiCMS core: config, database, auth, fields, media.",
+  "description": "Framework-agnostic KateCMS core: config, database, auth, fields, media.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ldu1991/miraicms.git",
+    "url": "https://github.com/katecms/katecms.git",
     "directory": "packages/core"
   },
   "bugs": {
-    "url": "https://github.com/ldu1991/miraicms/issues"
+    "url": "https://github.com/katecms/katecms/issues"
   },
-  "homepage": "https://github.com/ldu1991/miraicms#readme",
+  "homepage": "https://github.com/katecms/katecms#readme",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,

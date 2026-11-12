@@ -1,6 +1,6 @@
 ---
 description: BEM class variables and nested SCSS in CMS Vue components
-globs: packages/miraicms-nuxt/**/*.vue,packages/miraicms-nuxt/**/*.scss,packages/miraicms-nuxt-form/**/*.vue,packages/miraicms-nuxt-form/**/*.scss,packages/miraicms-nuxt-seo/**/*.vue,packages/miraicms-nuxt-seo/**/*.scss
+globs: packages/katecms/**/*.vue,packages/katecms/**/*.scss,packages/katecms-form/**/*.vue,packages/katecms-form/**/*.scss,packages/katecms-seo/**/*.vue,packages/katecms-seo/**/*.scss
 alwaysApply: false
 ---
 
@@ -9,7 +9,7 @@ alwaysApply: false
 One root class per component. Store it in script and reuse it in the template and SCSS. Do not repeat the class string in the template.
 
 ```ts
-const rootClass = 'miraicms-admin-header'
+const rootClass = 'katecms-admin-header'
 ```
 
 ```vue
@@ -30,7 +30,7 @@ Scoped SCSS uses the same name. Nest under `#{$root}`: hyphen parts with `&-`, m
 ```scss
 @use "../../assets/styles" as *;
 
-$root: '.miraicms-admin-header';
+$root: '.katecms-admin-header';
 
 #{$root} {
   display: flex;
@@ -66,6 +66,6 @@ $root: '.miraicms-admin-header';
 }
 ```
 
-In the form and SEO packages, import tokens with `@use "miraicms-nuxt/styles" as *;`. Use `$color-*`, `$shadow-*`, and `math-rem()` from that import.
+In the form and SEO packages, import tokens with `@use "katecms/styles" as *;`. Use `$color-*`, `$shadow-*`, and `math-rem()` from that import.
 
-`@include miraicms-wrapper` wraps rules in `body#miraicms-body` so host CSS does not override the shell. Use it for admin pages and shell chrome: pages, menu, header, user menu, entry forms, notices. Put `#{$root}` inside the mixin. Leave fields, parts, and controls (buttons, selects) unwrapped. Follow the nearest component of the same kind.
+`@include katecms-wrapper` wraps rules in `body#katecms-body` so host CSS does not override the shell. Use it for admin pages and shell chrome: pages, menu, header, user menu, entry forms, notices. Put `#{$root}` inside the mixin. Leave fields, parts, and controls (buttons, selects) unwrapped. Follow the nearest component of the same kind.

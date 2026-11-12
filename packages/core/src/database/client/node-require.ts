@@ -12,7 +12,7 @@ function requireAnchor(): string {
 /**
  * `require` for native addons such as `better-sqlite3`.
  *
- * Prefers this module's real `import.meta.url` (when `@miraicms/core` is not
+ * Prefers this module's real `import.meta.url` (when `@katecms/core` is not
  * inlined by Nitro). Falls back to `package.json` in `process.cwd()` because
  * Nitro rewrites `import.meta.url` to `file:///_entry.js`.
  *

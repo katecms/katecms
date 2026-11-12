@@ -16,7 +16,7 @@ Query-параметры страницы, которые composable подхв�
 | `page` | `number` | `1` | Страница архива |
 | `perPage` | `number` | `perPage` коллекции | `-1` — все записи архива |
 
-Если путь не совпал ни с записью, ни с архивом, ни с термином, функция возвращает **пустой массив**, не объект и не ошибку Nuxt. Страница хоста проверяет это так же, как `playground-nuxt/pages/[...slug].vue`: `Array.isArray(data)` значит «страницы CMS нет».
+Если путь не совпал ни с записью, ни с архивом, ни с термином, функция возвращает **пустой массив**, не объект и не ошибку Nuxt. Страница хоста проверяет это так же, как `playground/pages/[...slug].vue`: `Array.isArray(data)` значит «страницы CMS нет».
 
 Успешный результат — объект computed-полей:
 
@@ -35,11 +35,11 @@ Query-параметры страницы, которые composable подхв�
 | `page`, `perPage`, `total` | Пагинация архива. У записи `page` = 1, `total` = 0 |
 | `pending`, `error`, `refresh`, `path` | Состояние `useAsyncData` и разрешённый путь |
 
-Вызов для **текущего** маршрута (свой `path` не передан или совпадает с адресом страницы) один раз на экземпляр компонента шлёт хук `miraicms:collection`. Дополнение SEO вешает на него `useMiraiSeoHead`. Свой плагин может сделать то же:
+Вызов для **текущего** маршрута (свой `path` не передан или совпадает с адресом страницы) один раз на экземпляр компонента шлёт хук `katecms:collection`. Дополнение SEO вешает на него `useMiraiSeoHead`. Свой плагин может сделать то же:
 
 ```ts
 export default defineNuxtPlugin((nuxtApp) => {
-  nuxtApp.hook('miraicms:collection', (page) => {
+  nuxtApp.hook('katecms:collection', (page) => {
     // page.entry, page.term, page.isArchive, page.link — computed
   })
 })
@@ -148,6 +148,6 @@ fieldsQuery: {
 
 ## `getOptions({ option })`
 
-`option` — slug страницы из `miraicms.options`. Ответ: `slug`, `values` (объект полей или `{}`), `pending`, `error`, `refresh`, `option`.
+`option` — slug страницы из `katecms.options`. Ответ: `slug`, `values` (объект полей или `{}`), `pending`, `error`, `refresh`, `option`.
 
 Права на чтение опций для этой функции не требуются: страница сайта получает сохранённый JSON. Запись по-прежнему закрыта правом `options` в админке.

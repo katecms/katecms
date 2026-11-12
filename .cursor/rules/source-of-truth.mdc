@@ -5,10 +5,10 @@ alwaysApply: true
 
 # Source of truth
 
-Edit `packages/*/src` and `playground-nuxt`. Do not edit `dist`, `.nuxt`, `.output`, or `public/uploads`.
+Edit `packages/*/src` and `playground`. Do not edit `dist`, `.nuxt`, `.output`, or `public/uploads`.
 
-Client code imports `@miraicms/core` through `packages/core/src/browser.ts`. Server code, tests, and `module.ts` import `packages/core/src/index.ts`. Do not import the database, sharp, kysely, or password hashing into Vue or other client files.
+Client code imports `@katecms/core` through `packages/core/src/browser.ts`. Server code, tests, and `module.ts` import `packages/core/src/index.ts`. Do not import the database, sharp, kysely, or password hashing into Vue or other client files.
 
-`nuxtcms-module` (`/api/_cms`, `src/runtime/components`) is an older tree. Do not copy from it or change it while working on MiraiCMS.
+`nuxtcms-module` (`/api/_cms`, `src/runtime/components`) is an older tree. Do not copy from it or change it while working on KateCMS.
 
 Admin UI copy is English.

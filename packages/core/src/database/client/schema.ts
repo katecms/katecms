@@ -128,5 +128,5 @@ export interface Database {
   dictionaries: DictionariesTable
   collection_dictionaries: CollectionDictionariesTable
   options: OptionsTable
-  _miraicms_migrations: MigrationsTable
+  _katecms_migrations: MigrationsTable
 }

@@ -18,6 +18,6 @@ describe('browser entry', () => {
       status: 'active',
       created_at: '2024-01-01T00:00:00.000Z',
     })).toBe(true)
-    expect(ROW_COLLAPSED_KEY).toBe('__miraicmsCollapsed')
+    expect(ROW_COLLAPSED_KEY).toBe('__katecmsCollapsed')
   })
 })

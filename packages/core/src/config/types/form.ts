@@ -6,9 +6,9 @@ export interface FormBreakpointConfig {
   maxWidth?: number | null
 }
 
-/** Form addon settings. Read from the main CMS config as `miraicms.form`. */
+/** Form addon settings. Read from the main CMS config as `katecms.form`. */
 export interface FormConfig {
-  /** Absolute directory for files submitted through forms. Empty uses `data/miraicms-nuxt-form`. */
+  /** Absolute directory for files submitted through forms. Empty uses `data/katecms-form`. */
   uploadDir?: string
   /** Largest accepted upload, in bytes. */
   maxFileBytes?: number

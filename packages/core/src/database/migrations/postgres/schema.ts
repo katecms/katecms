@@ -1,7 +1,7 @@
 /**
  * Canonical PostgreSQL DDL. `postgres.sql` is a generated copy for humans; `migratePostgres()` imports this module.
  */
-export const SCHEMA_SQL = `CREATE TABLE IF NOT EXISTS _miraicms_migrations (
+export const SCHEMA_SQL = `CREATE TABLE IF NOT EXISTS _katecms_migrations (
   id         text PRIMARY KEY,
   applied_at timestamptz NOT NULL DEFAULT now()
 );

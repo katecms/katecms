@@ -1,8 +1,8 @@
 # Ядро без Nuxt
 
-`@miraicms/core` можно вызывать из своего адаптера, скрипта или серверного кода, который не хочет зависеть от страниц админки. Пакет не знает про Nuxt, Nitro, Vue и env. HTTP, cookie и чтение `DATABASE_URL` остаются на вызывающей стороне. Nuxt-модуль как раз такой адаптер: порядок у него `resolveMiraiCmsConfig` → цель базы → миграция → `getDb()` → запросы.
+`@katecms/core` можно вызывать из своего адаптера, скрипта или серверного кода, который не хочет зависеть от страниц админки. Пакет не знает про Nuxt, Nitro, Vue и env. HTTP, cookie и чтение `DATABASE_URL` остаются на вызывающей стороне. Nuxt-модуль как раз такой адаптер: порядок у него `resolveKateCmsConfig` → цель базы → миграция → `getDb()` → запросы.
 
-Установка: `pnpm add @miraicms/core`. Зависимости пакета: `kysely`, `pg`, `better-sqlite3`, `sharp`. В Cloudflare Worker нативные драйверы и sharp недоступны: туда передают биндинг `{ d1 }` и не генерируют варианты картинок на сервере.
+Установка: `pnpm add @katecms/core`. Зависимости пакета: `kysely`, `pg`, `better-sqlite3`, `sharp`. В Cloudflare Worker нативные драйверы и sharp недоступны: туда передают биндинг `{ d1 }` и не генерируют варианты картинок на сервере.
 
 Два входа сборки:
 
@@ -15,33 +15,33 @@
 
 ```ts
 import {
-  defineMiraiCmsConfig,
-  resolveMiraiCmsConfig,
+  defineKateCmsConfig,
+  resolveKateCmsConfig,
   resolveDatabaseTarget,
   migrateSqlite,
   createSqliteDb,
   createUser,
   hashPassword,
   can,
-} from '@miraicms/core'
+} from '@katecms/core'
 ```
 
 ## Конфиг
 
-`defineMiraiCmsConfig` не меняет объект. `resolveMiraiCmsConfig` заполняет дефолты и кладёт предупреждения в `warnings`. Разбор базы из уже резолвнутого конфига — `resolveDatabaseTarget`. Неизвестный `driver` на этом шаге бросает ошибку.
+`defineKateCmsConfig` не меняет объект. `resolveKateCmsConfig` заполняет дефолты и кладёт предупреждения в `warnings`. Разбор базы из уже резолвнутого конфига — `resolveDatabaseTarget`. Неизвестный `driver` на этом шаге бросает ошибку.
 
 Дальше вызывающий сам открывает клиент. Фабрики возвращают `Kysely<Database>`.
 
 ```ts
-await migrateSqlite('./data/miraicms.db')
-const db = createSqliteDb('./data/miraicms.db')
+await migrateSqlite('./data/katecms.db')
+const db = createSqliteDb('./data/katecms.db')
 ```
 
 Postgres: `migratePostgres(url)` и `createPostgresDb(url | { connectionString } | { host, port, database, user, password } | { pool })`. Пул, который создала фабрика, закрывает `db.destroy()`. Чужой `pool` фабрика не закрывает и парсер `bigint` на нём не включает.
 
 D1: `migrateSqlite({ d1 })` и `createSqliteDb({ d1 })`. `db.transaction()` на D1 не работает: нет сессии между запросами. `PRAGMA foreign_keys` между запросами Worker тоже не держит, хотя каскады в DDL описаны.
 
-Схема CMS применяется один раз (id в `_miraicms_migrations`). Дополнение передаёт свой `schemaId` и `schemaSql` в тот же раннер. Версионированных миграций ядра нет: изменение DDL после первого прогона требует нового id или ручного SQL.
+Схема CMS применяется один раз (id в `_katecms_migrations`). Дополнение передаёт свой `schemaId` и `schemaSql` в тот же раннер. Версионированных миграций ядра нет: изменение DDL после первого прогона требует нового id или ручного SQL.
 
 Канонический DDL — `packages/core/src/database/migrations/postgres/schema.ts` и `.../sqlite/schema.ts`. Файлы `.sql` рядом — копия для чтения, раннер их не выполняет.
 

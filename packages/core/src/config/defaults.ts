@@ -1,10 +1,10 @@
-import type { Blocks, Collections, Dictionaries, ImageSize, MiraiCmsConfig, OptionPages, Roles } from './types'
+import type { Blocks, Collections, Dictionaries, ImageSize, KateCmsConfig, OptionPages, Roles } from './types'
 
 /**
  * Built-in CMS defaults.
  *
- * Database is SQLite at `data/miraicms.db`. For PostgreSQL 15+:
- * `{ driver: 'postgres', url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms' }`.
+ * Database is SQLite at `data/katecms.db`. For PostgreSQL 15+:
+ * `{ driver: 'postgres', url: 'postgres://postgres:admin@127.0.0.1:5432/katecms' }`.
  */
 export const defaults = {
   adminPath: 'admin',
@@ -17,7 +17,7 @@ export const defaults = {
   blocks: {} as Blocks,
   roles: {} as Roles,
   database: {
-    sqliteFilename: 'data/miraicms.db',
+    sqliteFilename: 'data/katecms.db',
   },
   media: {
     maxFileSize: 10,
@@ -43,4 +43,4 @@ export const defaults = {
       { name: 'desktop', label: 'Desktop', maxWidth: null },
     ],
   },
-} satisfies MiraiCmsConfig
+} satisfies KateCmsConfig

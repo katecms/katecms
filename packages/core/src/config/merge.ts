@@ -1,8 +1,8 @@
-import type { MiraiCmsConfig } from './types'
+import type { KateCmsConfig } from './types'
 import { defaults } from './defaults'
 
 /** User config with built-in {@link defaults} filled in. User values win. */
-export type MergedMiraiCmsConfig = typeof defaults & MiraiCmsConfig
+export type MergedKateCmsConfig = typeof defaults & KateCmsConfig
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype
@@ -27,6 +27,6 @@ function mergeSkipUndefined(base: Record<string, unknown>, overlay: unknown): Re
 }
 
 /** Merge user CMS config onto {@link defaults}. Nested objects merge; arrays replace. */
-export function mergeMiraiCmsConfig(config: MiraiCmsConfig = {}): MergedMiraiCmsConfig {
-  return mergeSkipUndefined(defaults as Record<string, unknown>, config) as unknown as MergedMiraiCmsConfig
+export function mergeKateCmsConfig(config: KateCmsConfig = {}): MergedKateCmsConfig {
+  return mergeSkipUndefined(defaults as Record<string, unknown>, config) as unknown as MergedKateCmsConfig
 }

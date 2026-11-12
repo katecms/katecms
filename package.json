@@ -1,29 +1,29 @@
 {
-  "name": "miraicms-monorepo",
+  "name": "katecms-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "MiraiCMS monorepo: framework-agnostic core and Nuxt adapter.",
+  "description": "KateCMS monorepo: framework-agnostic core and Nuxt adapter.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ldu1991/miraicms.git"
+    "url": "https://github.com/katecms/katecms.git"
   },
   "bugs": {
-    "url": "https://github.com/ldu1991/miraicms/issues"
+    "url": "https://github.com/katecms/katecms/issues"
   },
-  "homepage": "https://github.com/ldu1991/miraicms#readme",
+  "homepage": "https://github.com/katecms/katecms#readme",
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "pnpm run dev:prepare && pnpm --filter miraicms-playground-nuxt dev",
-    "dev:build": "pnpm --filter miraicms-playground-nuxt build",
-    "dev:prepare": "pnpm --filter @miraicms/core build && pnpm --filter miraicms-nuxt dev:prepare && pnpm --filter miraicms-playground-nuxt exec nuxt prepare",
-    "prepack": "pnpm --filter @miraicms/core build && pnpm --filter miraicms-nuxt prepack",
-    "release": "pnpm run lint && pnpm run test && pnpm run prepack && changelogen --release && pnpm --filter @miraicms/core publish && pnpm --filter miraicms-nuxt publish && git push --follow-tags",
+    "dev": "pnpm run dev:prepare && pnpm --filter katecms-playground dev",
+    "dev:build": "pnpm --filter katecms-playground build",
+    "dev:prepare": "pnpm --filter @katecms/core build && pnpm --filter katecms dev:prepare && pnpm --filter katecms-form --filter katecms-seo dev:prepare && pnpm --filter katecms-playground exec nuxt prepare",
+    "prepack": "pnpm --filter @katecms/core build && pnpm --filter katecms prepack",
+    "release": "pnpm run lint && pnpm run test && pnpm run prepack && changelogen --release && pnpm --filter @katecms/core publish && pnpm --filter katecms publish && git push --follow-tags",
     "lint": "eslint .",
-    "test": "pnpm --filter @miraicms/core test && pnpm --filter @miraicms/core build && pnpm --filter miraicms-nuxt test",
-    "test:watch": "pnpm --filter @miraicms/core test:watch",
-    "test:types": "pnpm --filter @miraicms/core typecheck && pnpm --filter miraicms-nuxt test:types",
-    "test:basic": "pnpm --filter miraicms-nuxt test:basic",
+    "test": "pnpm --filter @katecms/core test && pnpm --filter @katecms/core build && pnpm --filter katecms test",
+    "test:watch": "pnpm --filter @katecms/core test:watch",
+    "test:types": "pnpm --filter @katecms/core typecheck && pnpm --filter katecms test:types",
+    "test:basic": "pnpm --filter katecms test:basic",
     "ai:index": "node scripts/ai-index.mjs",
     "check-updates": "ncu --target minor",
     "upgrade-deps": "ncu --target minor -u && pnpm install"

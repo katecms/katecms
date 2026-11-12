@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS _miraicms_migrations (
+CREATE TABLE IF NOT EXISTS _katecms_migrations (
   id         text PRIMARY KEY,
   applied_at timestamptz NOT NULL DEFAULT now()
 );

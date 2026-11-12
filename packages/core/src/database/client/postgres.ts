@@ -68,7 +68,7 @@ export function createPostgresDb(input: string | CreatePostgresDbOptions): Kysel
   const options = resolveOptions(input)
   if (!options.pool && !hasConnectionConfig(options)) {
     throw new Error(
-      '[MiraiCMS] createPostgresDb() needs a database connection: pass a URL string, `connectionString`, host/database credentials, or an existing `pool`.',
+      '[KateCMS] createPostgresDb() needs a database connection: pass a URL string, `connectionString`, host/database credentials, or an existing `pool`.',
     )
   }
 

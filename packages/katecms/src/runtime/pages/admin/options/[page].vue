@@ -1,0 +1,174 @@
+<script setup lang="ts">
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { $fetch, useHead, useRoute } from '#imports'
+import { parseAuthError } from '../../../utils/auth-error'
+import { optionApi } from '../../../utils/options'
+import type { AdminOptionMeta, OptionPageResponse } from '../../../utils/options'
+
+const route = useRoute()
+const rootClass = 'katecms-options-page'
+const formId = 'cms-options-form'
+
+const pageSlug = computed(() => String(route.params.page ?? ''))
+
+const page = ref<AdminOptionMeta | null>(null)
+const found = ref(false)
+const loading = ref(true)
+const saving = ref(false)
+const error = ref<string | null>(null)
+const savedNoticeId = ref(0)
+const canRead = ref(false)
+const canUpdate = ref(false)
+const entryForm = ref<{ validateForSubmit: () => boolean } | null>(null)
+
+const form = reactive<Record<string, unknown>>({})
+
+const pageTitle = computed(() => page.value?.label || 'Options')
+useHead({ title: pageTitle })
+
+function applyPage(res: OptionPageResponse) {
+  page.value = res.page
+  canRead.value = res.canRead
+  canUpdate.value = res.canUpdate
+  replaceForm(res.values ?? {})
+  found.value = true
+}
+
+function replaceForm(next: Record<string, unknown>) {
+  for (const key of Object.keys(form)) {
+    Reflect.deleteProperty(form, key)
+  }
+  Object.assign(form, next)
+}
+
+async function load() {
+  loading.value = true
+  error.value = null
+  found.value = false
+  try {
+    const res = await $fetch<OptionPageResponse>(optionApi(pageSlug.value))
+    applyPage(res)
+    if (!res.canRead) {
+      found.value = false
+      error.value = 'Insufficient permissions.'
+    }
+  }
+  catch (err) {
+    error.value = parseAuthError(err, 'Could not load the options.').message
+  }
+  finally {
+    loading.value = false
+  }
+}
+
+async function submit() {
+  if (saving.value || !page.value || !canUpdate.value) {
+    return
+  }
+  if (!entryForm.value?.validateForSubmit()) {
+    return
+  }
+  saving.value = true
+  error.value = null
+  try {
+    const res = await $fetch<OptionPageResponse>(optionApi(pageSlug.value), {
+      method: 'PATCH',
+      body: { fields: { ...form } },
+    })
+    applyPage(res)
+    await nextTick()
+    savedNoticeId.value += 1
+  }
+  catch (err) {
+    error.value = parseAuthError(err, 'Could not save the options.').message
+  }
+  finally {
+    saving.value = false
+  }
+}
+
+onMounted(load)
+watch(pageSlug, load)
+</script>
+
+<template>
+  <div :class="rootClass">
+    <KateCmsAdminHeader :title="pageTitle">
+      <KateCmsUiButton
+        v-if="found && canUpdate"
+        tag="button"
+        type="submit"
+        :form="formId"
+        :disabled="saving"
+      >
+        {{ saving ? 'Saving…' : 'Save' }}
+      </KateCmsUiButton>
+    </KateCmsAdminHeader>
+
+    <KateCmsUiNotice
+      v-if="savedNoticeId"
+      :key="savedNoticeId"
+      placement="fixed"
+      message="Changes saved."
+      @close="savedNoticeId = 0"
+    />
+    <KateCmsUiNotice
+      v-if="loading"
+      placement="static"
+      variant="info"
+      message="Loading…"
+      :closable="false"
+    />
+    <KateCmsUiNotice
+      v-else-if="!found"
+      placement="static"
+      variant="danger"
+      :message="error || 'Options page not found.'"
+      :closable="false"
+    />
+
+    <div
+      v-else-if="page"
+      :class="`${rootClass}__fields`"
+    >
+      <KateCmsOptionPageForm
+        ref="entryForm"
+        :form-id="formId"
+        :page="page"
+        :model-value="form"
+        :saving="saving"
+        :error="error"
+        :can-update="canUpdate"
+        @update:model-value="replaceForm"
+        @submit="submit"
+      />
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+@use "../../../assets/styles" as *;
+
+$root: '.katecms-options-page';
+
+@include katecms-wrapper {
+  #{$root} {
+    display: flex;
+    flex-direction: column;
+    gap: math-rem(16);
+    padding: 0;
+    height: 100%;
+
+    &__fields {
+      padding: 0 math-rem(8) math-rem(8);
+      flex-grow: 1;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    :deep(.katecms-admin-header) {
+      padding: math-rem(8);
+    }
+  }
+}
+</style>

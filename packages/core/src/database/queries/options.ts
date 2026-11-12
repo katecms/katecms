@@ -33,7 +33,7 @@ export async function setOption(
 ): Promise<Option> {
   const normalized = key.trim()
   if (!normalized) {
-    throw new Error('[MiraiCMS] option key must be non-empty.')
+    throw new Error('[KateCMS] option key must be non-empty.')
   }
   return db
     .insertInto('options')

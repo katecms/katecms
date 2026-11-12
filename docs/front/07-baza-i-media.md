@@ -18,18 +18,18 @@ interface DatabaseConfig {
 2. Иначе непустой `url` выбирает Postgres.
 3. Иначе SQLite.
 
-Дефолт файла — `data/miraicms.db` относительно `rootDir` приложения. `:memory:` и `file:` URI модуль не переписывает.
+Дефолт файла — `data/katecms.db` относительно `rootDir` приложения. `:memory:` и `file:` URI модуль не переписывает.
 
 Нужен PostgreSQL 15+ (`NULLS NOT DISTINCT` в уникальных индексах). Если `driver: 'postgres'` и `url` пустой, Nuxt-адаптер подставляет `DATABASE_URL`. Ядро само env не читает.
 
 ```ts
 database: {
   driver: 'postgres',
-  url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
+  url: 'postgres://postgres:admin@127.0.0.1:5432/katecms',
 }
 ```
 
-При старте Nitro модуль сам применяет схему (один bootstrap, журнал `_miraicms_migrations`) и на Postgres синхронизирует JSONB-индексы полей с `indexed: true`. Повторный старт уже записанные id миграций пропускает. Правка DDL после первого применения в живую базу сама не попадает.
+При старте Nitro модуль сам применяет схему (один bootstrap, журнал `_katecms_migrations`) и на Postgres синхронизирует JSONB-индексы полей с `indexed: true`. Повторный старт уже записанные id миграций пропускает. Правка DDL после первого применения в живую базу сама не попадает.
 
 SQLite-файл открывается через `better-sqlite3`, для файла включаются `busy_timeout` и WAL. Каталог родителя создаётся сам.
 
@@ -56,7 +56,7 @@ SQLite-файл открывается через `better-sqlite3`, для фа�
 
 ## Сессия
 
-Cookie `miraicms_session`, httpOnly, `SameSite=Lax`, `Secure` на https, срок 7 суток. Внутри — id пользователя и `session_version`. Смена пароля увеличивает версию в базе, старая cookie перестаёт подходить. Заблокированный статус `banned` тоже считается выходом.
+Cookie `katecms_session`, httpOnly, `SameSite=Lax`, `Secure` на https, срок 7 суток. Внутри — id пользователя и `session_version`. Смена пароля увеличивает версию в базе, старая cookie перестаёт подходить. Заблокированный статус `banned` тоже считается выходом.
 
 Секрет подписи:
 

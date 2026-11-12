@@ -84,7 +84,7 @@ class D1Connection implements DatabaseConnection {
   }
 
   streamQuery(): AsyncIterableIterator<QueryResult<never>> {
-    throw new Error('[MiraiCMS] D1 does not support streaming queries.')
+    throw new Error('[KateCMS] D1 does not support streaming queries.')
   }
 }
 
@@ -107,16 +107,16 @@ class D1Driver implements Driver {
 
   async beginTransaction(): Promise<void> {
     throw new Error(
-      '[MiraiCMS] Kysely transactions are not supported on D1. Use a single query or D1 batch().',
+      '[KateCMS] Kysely transactions are not supported on D1. Use a single query or D1 batch().',
     )
   }
 
   async commitTransaction(): Promise<void> {
-    throw new Error('[MiraiCMS] Kysely transactions are not supported on D1.')
+    throw new Error('[KateCMS] Kysely transactions are not supported on D1.')
   }
 
   async rollbackTransaction(): Promise<void> {
-    throw new Error('[MiraiCMS] Kysely transactions are not supported on D1.')
+    throw new Error('[KateCMS] Kysely transactions are not supported on D1.')
   }
 
   async releaseConnection(): Promise<void> {

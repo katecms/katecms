@@ -3,553 +3,553 @@
     {
       "n": "index",
       "path": "/",
-      "p": "packages/miraicms-nuxt/test/fixtures/basic/pages/index.vue"
+      "p": "packages/katecms/test/fixtures/basic/pages/index.vue"
     },
     {
       "n": "index",
       "path": "/",
-      "p": "playground-nuxt/pages/index.vue"
+      "p": "playground/pages/index.vue"
     },
     {
       "n": "[...slug]",
       "path": "/:slug(.*)*",
-      "p": "playground-nuxt/pages/[...slug].vue"
+      "p": "playground/pages/[...slug].vue"
     },
     {
       "n": "admin",
       "path": "/{adminPath}",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/index.vue"
+      "p": "packages/katecms/src/runtime/pages/index.vue"
     },
     {
       "n": "admin-index",
       "path": "/{adminPath}",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/index.vue"
+      "p": "packages/katecms/src/runtime/pages/admin/index.vue"
     },
     {
       "n": "admin-login",
       "path": "/{adminPath}/{loginPath}",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/login.vue"
+      "p": "packages/katecms/src/runtime/pages/admin/login.vue"
     },
     {
       "n": "admin-register",
       "path": "/{adminPath}/{registerPath}",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/register.vue"
+      "p": "packages/katecms/src/runtime/pages/admin/register.vue"
     },
     {
       "n": "admin-collections",
       "path": "/{adminPath}/collections/:collection",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/collections/index.vue"
+      "p": "packages/katecms/src/runtime/pages/admin/collections/index.vue"
     },
     {
       "n": "admin-collections-id",
       "path": "/{adminPath}/collections/:collection/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/collections/[id].vue"
+      "p": "packages/katecms/src/runtime/pages/admin/collections/[id].vue"
     },
     {
       "n": "admin-collections-create",
       "path": "/{adminPath}/collections/:collection/create",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/collections/create.vue"
+      "p": "packages/katecms/src/runtime/pages/admin/collections/create.vue"
     },
     {
       "n": "admin-demo-fields",
       "path": "/{adminPath}/demo-fields",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/demo-fields.vue"
+      "p": "packages/katecms/src/runtime/pages/admin/demo-fields.vue"
     },
     {
       "n": "admin-dictionaries",
       "path": "/{adminPath}/dictionaries/:dictionary",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/dictionaries/index.vue"
+      "p": "packages/katecms/src/runtime/pages/admin/dictionaries/index.vue"
     },
     {
       "n": "admin-dictionaries-id",
       "path": "/{adminPath}/dictionaries/:dictionary/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/dictionaries/[id].vue"
+      "p": "packages/katecms/src/runtime/pages/admin/dictionaries/[id].vue"
     },
     {
       "n": "admin-forms",
       "path": "/{adminPath}/forms",
-      "p": "packages/miraicms-nuxt-form/src/runtime/pages/admin/forms/index.vue"
+      "p": "packages/katecms-form/src/runtime/pages/admin/forms/index.vue"
     },
     {
       "n": "admin-forms-id",
       "path": "/{adminPath}/forms/:id(\\\\d+)",
-      "p": "packages/miraicms-nuxt-form/src/runtime/pages/admin/forms/[id].vue"
+      "p": "packages/katecms-form/src/runtime/pages/admin/forms/[id].vue"
     },
     {
       "n": "admin-forms-entries",
       "path": "/{adminPath}/forms/:id(\\\\d+)/entries",
-      "p": "packages/miraicms-nuxt-form/src/runtime/pages/admin/forms/entries.vue"
+      "p": "packages/katecms-form/src/runtime/pages/admin/forms/entries.vue"
     },
     {
       "n": "admin-forms-entry",
       "path": "/{adminPath}/forms/:id(\\\\d+)/entries/:submissionId(\\\\d+)",
-      "p": "packages/miraicms-nuxt-form/src/runtime/pages/admin/forms/entry.vue"
+      "p": "packages/katecms-form/src/runtime/pages/admin/forms/entry.vue"
     },
     {
       "n": "admin-forms-mail",
       "path": "/{adminPath}/forms/mail",
-      "p": "packages/miraicms-nuxt-form/src/runtime/pages/admin/forms/mail.vue"
+      "p": "packages/katecms-form/src/runtime/pages/admin/forms/mail.vue"
     },
     {
       "n": "admin-media",
       "path": "/{adminPath}/media",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/media.vue"
+      "p": "packages/katecms/src/runtime/pages/admin/media.vue"
     },
     {
       "n": "admin-options",
       "path": "/{adminPath}/options/:page",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/options/[page].vue"
+      "p": "packages/katecms/src/runtime/pages/admin/options/[page].vue"
     },
     {
       "n": "admin-seo",
       "path": "/{adminPath}/seo",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/pages/admin/seo.vue"
+      "p": "packages/katecms-seo/src/runtime/pages/admin/seo.vue"
     },
     {
       "n": "admin-users",
       "path": "/{adminPath}/users",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/users/index.vue"
+      "p": "packages/katecms/src/runtime/pages/admin/users/index.vue"
     },
     {
       "n": "admin-users-id",
       "path": "/{adminPath}/users/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/users/[id].vue"
+      "p": "packages/katecms/src/runtime/pages/admin/users/[id].vue"
     },
     {
       "n": "admin-users-create",
       "path": "/{adminPath}/users/create",
-      "p": "packages/miraicms-nuxt/src/runtime/pages/admin/users/create.vue"
+      "p": "packages/katecms/src/runtime/pages/admin/users/create.vue"
     },
     {
       "n": "[id]",
       "path": "/forms/:id",
-      "p": "playground-nuxt/pages/forms/[id].vue"
+      "p": "playground/pages/forms/[id].vue"
     }
   ],
   "api": [
     {
       "m": "POST",
-      "path": "/api/_miraicms/auth/login",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/auth/login.post.ts"
+      "path": "/api/_katecms/auth/login",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/auth/login.post.ts"
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/auth/logout",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/auth/logout.post.ts"
+      "path": "/api/_katecms/auth/logout",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/auth/logout.post.ts"
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/auth/register",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/auth/register.post.ts"
+      "path": "/api/_katecms/auth/register",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/auth/register.post.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/auth/state",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/auth/state.get.ts"
+      "path": "/api/_katecms/auth/state",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/auth/state.get.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/collections/:collection",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection].get.ts"
+      "path": "/api/_katecms/collections/:collection",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/collections/[collection].get.ts"
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/collections/:collection",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection].post.ts"
+      "path": "/api/_katecms/collections/:collection",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/collections/[collection].post.ts"
     },
     {
       "m": "DELETE",
-      "path": "/api/_miraicms/collections/:collection/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection]/[id].delete.ts"
+      "path": "/api/_katecms/collections/:collection/:id",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/collections/[collection]/[id].delete.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/collections/:collection/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection]/[id].get.ts"
+      "path": "/api/_katecms/collections/:collection/:id",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/collections/[collection]/[id].get.ts"
     },
     {
       "m": "PATCH",
-      "path": "/api/_miraicms/collections/:collection/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection]/[id].patch.ts"
+      "path": "/api/_katecms/collections/:collection/:id",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/collections/[collection]/[id].patch.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/collections/:collection/:id/revisions",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection]/revisions.get.ts"
+      "path": "/api/_katecms/collections/:collection/:id/revisions",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/collections/[collection]/revisions.get.ts"
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/collections/:collection/:id/revisions/:revisionId",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/collections/[collection]/revisions/[revisionId].post.ts"
+      "path": "/api/_katecms/collections/:collection/:id/revisions/:revisionId",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/collections/[collection]/revisions/[revisionId].post.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/dictionaries/:dictionary",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/dictionaries/[dictionary].get.ts"
+      "path": "/api/_katecms/dictionaries/:dictionary",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/dictionaries/[dictionary].get.ts"
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/dictionaries/:dictionary",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/dictionaries/[dictionary].post.ts"
+      "path": "/api/_katecms/dictionaries/:dictionary",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/dictionaries/[dictionary].post.ts"
     },
     {
       "m": "DELETE",
-      "path": "/api/_miraicms/dictionaries/:dictionary/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/dictionaries/[dictionary]/[id].delete.ts"
+      "path": "/api/_katecms/dictionaries/:dictionary/:id",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/dictionaries/[dictionary]/[id].delete.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/dictionaries/:dictionary/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/dictionaries/[dictionary]/[id].get.ts"
+      "path": "/api/_katecms/dictionaries/:dictionary/:id",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/dictionaries/[dictionary]/[id].get.ts"
     },
     {
       "m": "PATCH",
-      "path": "/api/_miraicms/dictionaries/:dictionary/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/dictionaries/[dictionary]/[id].patch.ts"
+      "path": "/api/_katecms/dictionaries/:dictionary/:id",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/dictionaries/[dictionary]/[id].patch.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/forms",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/forms.get.ts"
+      "path": "/api/_katecms/forms",
+      "p": "packages/katecms-form/src/runtime/server/api/forms.get.ts"
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/forms",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/forms.post.ts"
+      "path": "/api/_katecms/forms",
+      "p": "packages/katecms-form/src/runtime/server/api/forms.post.ts"
     },
     {
       "m": "DELETE",
-      "path": "/api/_miraicms/forms/item/:id",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/[id].delete.ts"
+      "path": "/api/_katecms/forms/item/:id",
+      "p": "packages/katecms-form/src/runtime/server/api/item/[id].delete.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/forms/item/:id",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/[id].get.ts"
+      "path": "/api/_katecms/forms/item/:id",
+      "p": "packages/katecms-form/src/runtime/server/api/item/[id].get.ts"
     },
     {
       "m": "PUT",
-      "path": "/api/_miraicms/forms/item/:id",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/[id].put.ts"
+      "path": "/api/_katecms/forms/item/:id",
+      "p": "packages/katecms-form/src/runtime/server/api/item/[id].put.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/forms/item/:id/submissions",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/submissions.get.ts"
+      "path": "/api/_katecms/forms/item/:id/submissions",
+      "p": "packages/katecms-form/src/runtime/server/api/item/submissions.get.ts"
     },
     {
       "m": "DELETE",
-      "path": "/api/_miraicms/forms/item/:id/submissions/:submissionId",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/submissions/[submissionId].delete.ts"
+      "path": "/api/_katecms/forms/item/:id/submissions/:submissionId",
+      "p": "packages/katecms-form/src/runtime/server/api/item/submissions/[submissionId].delete.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/forms/item/:id/submissions/:submissionId",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/submissions/[submissionId].get.ts"
+      "path": "/api/_katecms/forms/item/:id/submissions/:submissionId",
+      "p": "packages/katecms-form/src/runtime/server/api/item/submissions/[submissionId].get.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/forms/item/:id/submissions/:submissionId/files/:index",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/item/submissions/[submissionId]/files/[index].get.ts"
+      "path": "/api/_katecms/forms/item/:id/submissions/:submissionId/files/:index",
+      "p": "packages/katecms-form/src/runtime/server/api/item/submissions/[submissionId]/files/[index].get.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/forms/mail",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/mail.get.ts"
+      "path": "/api/_katecms/forms/mail",
+      "p": "packages/katecms-form/src/runtime/server/api/mail.get.ts"
     },
     {
       "m": "PUT",
-      "path": "/api/_miraicms/forms/mail",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/mail.put.ts"
+      "path": "/api/_katecms/forms/mail",
+      "p": "packages/katecms-form/src/runtime/server/api/mail.put.ts"
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/forms/mail/test",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/mail/test.post.ts"
+      "path": "/api/_katecms/forms/mail/test",
+      "p": "packages/katecms-form/src/runtime/server/api/mail/test.post.ts"
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/forms/submit/:id",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/submit/[id].post.ts"
+      "path": "/api/_katecms/forms/submit/:id",
+      "p": "packages/katecms-form/src/runtime/server/api/submit/[id].post.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/forms/view/:id",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/api/view/[id].get.ts"
+      "path": "/api/_katecms/forms/view/:id",
+      "p": "packages/katecms-form/src/runtime/server/api/view/[id].get.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/media",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/index.get.ts"
+      "path": "/api/_katecms/media",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/media/index.get.ts"
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/media",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/index.post.ts"
+      "path": "/api/_katecms/media",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/media/index.post.ts"
     },
     {
       "m": "DELETE",
-      "path": "/api/_miraicms/media/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/[id].delete.ts"
+      "path": "/api/_katecms/media/:id",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/media/[id].delete.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/media/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/[id].get.ts"
+      "path": "/api/_katecms/media/:id",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/media/[id].get.ts"
     },
     {
       "m": "PATCH",
-      "path": "/api/_miraicms/media/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/[id].patch.ts"
+      "path": "/api/_katecms/media/:id",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/media/[id].patch.ts"
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/media/:id/regenerate",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/[id]/regenerate.post.ts"
+      "path": "/api/_katecms/media/:id/regenerate",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/media/[id]/regenerate.post.ts"
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/media/regenerate",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/media/regenerate.post.ts"
+      "path": "/api/_katecms/media/regenerate",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/media/regenerate.post.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/menu",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/menu.get.ts"
+      "path": "/api/_katecms/menu",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/menu.get.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/oembed",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/oembed.get.ts"
+      "path": "/api/_katecms/oembed",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/oembed.get.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/options/:page",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/options/[page].get.ts"
+      "path": "/api/_katecms/options/:page",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/options/[page].get.ts"
     },
     {
       "m": "PATCH",
-      "path": "/api/_miraicms/options/:page",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/options/[page].patch.ts"
+      "path": "/api/_katecms/options/:page",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/options/[page].patch.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/query",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/query.get.ts"
+      "path": "/api/_katecms/query",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/query.get.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/relation/entries",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/relation/entries.get.ts"
+      "path": "/api/_katecms/relation/entries",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/relation/entries.get.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/relation/terms",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/relation/terms.get.ts"
+      "path": "/api/_katecms/relation/terms",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/relation/terms.get.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/resolve",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/resolve.get.ts"
+      "path": "/api/_katecms/resolve",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/resolve.get.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/seo/entries/:id",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/entries/[id].get.ts"
+      "path": "/api/_katecms/seo/entries/:id",
+      "p": "packages/katecms-seo/src/runtime/server/api/entries/[id].get.ts"
     },
     {
       "m": "PUT",
-      "path": "/api/_miraicms/seo/entries/:id",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/entries/[id].put.ts"
+      "path": "/api/_katecms/seo/entries/:id",
+      "p": "packages/katecms-seo/src/runtime/server/api/entries/[id].put.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/seo/head",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/head.get.ts"
+      "path": "/api/_katecms/seo/head",
+      "p": "packages/katecms-seo/src/runtime/server/api/head.get.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/seo/redirect",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/redirect.get.ts"
+      "path": "/api/_katecms/seo/redirect",
+      "p": "packages/katecms-seo/src/runtime/server/api/redirect.get.ts"
     },
     {
       "m": "DELETE",
-      "path": "/api/_miraicms/seo/redirects",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/redirects.delete.ts"
+      "path": "/api/_katecms/seo/redirects",
+      "p": "packages/katecms-seo/src/runtime/server/api/redirects.delete.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/seo/redirects",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/redirects.get.ts"
+      "path": "/api/_katecms/seo/redirects",
+      "p": "packages/katecms-seo/src/runtime/server/api/redirects.get.ts"
     },
     {
       "m": "PATCH",
-      "path": "/api/_miraicms/seo/redirects",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/redirects.patch.ts"
+      "path": "/api/_katecms/seo/redirects",
+      "p": "packages/katecms-seo/src/runtime/server/api/redirects.patch.ts"
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/seo/redirects",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/redirects.post.ts"
+      "path": "/api/_katecms/seo/redirects",
+      "p": "packages/katecms-seo/src/runtime/server/api/redirects.post.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/seo/site",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/site.get.ts"
+      "path": "/api/_katecms/seo/site",
+      "p": "packages/katecms-seo/src/runtime/server/api/site.get.ts"
     },
     {
       "m": "PUT",
-      "path": "/api/_miraicms/seo/site",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/site.put.ts"
+      "path": "/api/_katecms/seo/site",
+      "p": "packages/katecms-seo/src/runtime/server/api/site.put.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/seo/terms/:id",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/terms/[id].get.ts"
+      "path": "/api/_katecms/seo/terms/:id",
+      "p": "packages/katecms-seo/src/runtime/server/api/terms/[id].get.ts"
     },
     {
       "m": "PUT",
-      "path": "/api/_miraicms/seo/terms/:id",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/api/terms/[id].put.ts"
+      "path": "/api/_katecms/seo/terms/:id",
+      "p": "packages/katecms-seo/src/runtime/server/api/terms/[id].put.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/terms",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/terms.get.ts"
+      "path": "/api/_katecms/terms",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/terms.get.ts"
     },
     {
       "m": "GET",
-      "path": "/api/_miraicms/users",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/users.get.ts"
+      "path": "/api/_katecms/users",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/users.get.ts"
     },
     {
       "m": "POST",
-      "path": "/api/_miraicms/users",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/users.post.ts"
+      "path": "/api/_katecms/users",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/users.post.ts"
     },
     {
       "m": "DELETE",
-      "path": "/api/_miraicms/users/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/users/[id].delete.ts"
+      "path": "/api/_katecms/users/:id",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/users/[id].delete.ts"
     },
     {
       "m": "PATCH",
-      "path": "/api/_miraicms/users/:id",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/_miraicms/users/[id].patch.ts"
+      "path": "/api/_katecms/users/:id",
+      "p": "packages/katecms/src/runtime/server/api/_katecms/users/[id].patch.ts"
     },
     {
       "m": "GET",
       "path": "/robots.txt",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/routes/robots.get.ts"
+      "p": "packages/katecms-seo/src/runtime/server/routes/robots.get.ts"
     },
     {
       "m": "GET",
       "path": "/sitemap.xml",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/routes/sitemap.get.ts"
+      "p": "packages/katecms-seo/src/runtime/server/routes/sitemap.get.ts"
     },
     {
       "m": "GET",
       "path": "/uploads/**",
-      "p": "packages/miraicms-nuxt/src/runtime/server/api/uploads/[...key].get.ts"
+      "p": "packages/katecms/src/runtime/server/api/uploads/[...key].get.ts"
     }
   ],
   "plugins": [
     {
       "side": "client",
-      "p": "packages/miraicms-nuxt-form/src/runtime/plugin.ts"
+      "p": "packages/katecms-form/src/runtime/plugin.ts"
     },
     {
       "side": "server",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/plugins/migrate.ts"
+      "p": "packages/katecms-form/src/runtime/server/plugins/migrate.ts"
     },
     {
       "side": "server",
-      "p": "packages/miraicms-nuxt-form/src/runtime/server/plugins/html-sanitize.ts"
+      "p": "packages/katecms-form/src/runtime/server/plugins/html-sanitize.ts"
     },
     {
       "side": "client",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/plugin.ts"
+      "p": "packages/katecms-seo/src/runtime/plugin.ts"
     },
     {
       "side": "server",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/plugins/migrate.ts"
+      "p": "packages/katecms-seo/src/runtime/server/plugins/migrate.ts"
     },
     {
       "side": "server",
-      "p": "packages/miraicms-nuxt/src/runtime/server/plugins/auto-migrate.ts"
+      "p": "packages/katecms/src/runtime/server/plugins/auto-migrate.ts"
     }
   ],
   "middleware": [
     {
       "n": "redirect",
       "global": true,
-      "p": "packages/miraicms-nuxt-seo/src/runtime/server/middleware/redirect.ts"
+      "p": "packages/katecms-seo/src/runtime/server/middleware/redirect.ts"
     },
     {
       "n": "admin-headers",
       "global": true,
-      "p": "packages/miraicms-nuxt/src/runtime/server/middleware/admin-headers.ts"
+      "p": "packages/katecms/src/runtime/server/middleware/admin-headers.ts"
     },
     {
-      "n": "miraicms-auth-guard",
+      "n": "katecms-auth-guard",
       "global": true,
-      "p": "packages/miraicms-nuxt/src/runtime/middleware/auth-guard.ts"
+      "p": "packages/katecms/src/runtime/middleware/auth-guard.ts"
     }
   ],
   "imports": [
     {
       "n": "getCollection",
-      "p": "packages/miraicms-nuxt/src/runtime/composables/getCollection.ts"
+      "p": "packages/katecms/src/runtime/composables/getCollection.ts"
     },
     {
       "n": "getOptions",
-      "p": "packages/miraicms-nuxt/src/runtime/composables/getOptions.ts"
+      "p": "packages/katecms/src/runtime/composables/getOptions.ts"
     },
     {
       "n": "getQueryCollection",
-      "p": "packages/miraicms-nuxt/src/runtime/composables/getQueryCollection.ts"
+      "p": "packages/katecms/src/runtime/composables/getQueryCollection.ts"
     },
     {
       "n": "getTerms",
-      "p": "packages/miraicms-nuxt/src/runtime/composables/getTerms.ts"
+      "p": "packages/katecms/src/runtime/composables/getTerms.ts"
     },
     {
-      "n": "miraicms-nuxt",
-      "p": "packages/miraicms-nuxt/src/runtime/composables/useAuth.ts"
+      "n": "katecms",
+      "p": "packages/katecms/src/runtime/composables/useAuth.ts"
     },
     {
-      "n": "miraicms-nuxt-seo",
-      "p": "packages/miraicms-nuxt-seo/src/runtime/composables/useMiraiSeoHead.ts"
+      "n": "katecms-seo",
+      "p": "packages/katecms-seo/src/runtime/composables/useMiraiSeoHead.ts"
     },
     {
-      "n": "registerMiraiCmsEntrySidebarTab",
-      "p": "packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"
+      "n": "registerKateCmsEntrySidebarTab",
+      "p": "packages/katecms/src/runtime/composables/useKateCmsExtensions.ts"
     },
     {
       "n": "useCmsPaths",
-      "p": "packages/miraicms-nuxt/src/runtime/composables/useCmsPaths.ts"
+      "p": "packages/katecms/src/runtime/composables/useCmsPaths.ts"
     },
     {
-      "n": "useMiraiCmsEntrySidebar",
-      "p": "packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"
+      "n": "useKateCmsEntrySidebar",
+      "p": "packages/katecms/src/runtime/composables/useKateCmsExtensions.ts"
     },
     {
-      "n": "useMiraiCmsMenuItems",
-      "p": "packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"
+      "n": "useKateCmsMenuItems",
+      "p": "packages/katecms/src/runtime/composables/useKateCmsExtensions.ts"
     },
     {
-      "n": "useMiraiCmsTermPanels",
-      "p": "packages/miraicms-nuxt/src/runtime/composables/useMiraiCmsExtensions.ts"
+      "n": "useKateCmsTermPanels",
+      "p": "packages/katecms/src/runtime/composables/useKateCmsExtensions.ts"
     }
   ],
   "components": [
     {
-      "prefix": "MiraiCms",
-      "dir": "packages/miraicms-nuxt-form/src/runtime/components"
+      "prefix": "KateCms",
+      "dir": "packages/katecms-form/src/runtime/components"
     },
     {
-      "prefix": "MiraiCms",
-      "dir": "packages/miraicms-nuxt/src/runtime/internal",
+      "prefix": "KateCms",
+      "dir": "packages/katecms/src/runtime/internal",
       "internal": true
     }
   ]

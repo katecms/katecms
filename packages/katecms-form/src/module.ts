@@ -1,0 +1,131 @@
+import {
+  addComponentsDir,
+  addPlugin,
+  addServerHandler,
+  addServerPlugin,
+  createResolver,
+  defineNuxtModule,
+  extendPages,
+} from '@nuxt/kit'
+
+export default defineNuxtModule({
+  meta: {
+    name: 'katecms-form',
+  },
+  setup(_options, nuxt) {
+    const resolver = createResolver(import.meta.url)
+    const adminPath = String(nuxt.options.runtimeConfig.katecms?.adminPath || 'admin')
+      .replace(/^\/+|\/+$/g, '') || 'admin'
+
+    addPlugin(resolver.resolve('./runtime/plugin'))
+    addServerPlugin(resolver.resolve('./runtime/server/plugins/migrate'))
+    addServerPlugin(resolver.resolve('./runtime/server/plugins/html-sanitize'))
+    addComponentsDir({
+      path: resolver.resolve('./runtime/components'),
+      prefix: 'KateCms',
+      pathPrefix: false,
+    })
+
+    addServerHandler({
+      route: '/api/_katecms/forms',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/forms.get'),
+    })
+    addServerHandler({
+      route: '/api/_katecms/forms',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/forms.post'),
+    })
+    addServerHandler({
+      route: '/api/_katecms/forms/item/:id',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/item/[id].get'),
+    })
+    addServerHandler({
+      route: '/api/_katecms/forms/item/:id',
+      method: 'put',
+      handler: resolver.resolve('./runtime/server/api/item/[id].put'),
+    })
+    addServerHandler({
+      route: '/api/_katecms/forms/item/:id',
+      method: 'delete',
+      handler: resolver.resolve('./runtime/server/api/item/[id].delete'),
+    })
+    addServerHandler({
+      route: '/api/_katecms/forms/item/:id/submissions',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/item/submissions.get'),
+    })
+    addServerHandler({
+      route: '/api/_katecms/forms/item/:id/submissions/:submissionId',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/item/submissions/[submissionId].get'),
+    })
+    addServerHandler({
+      route: '/api/_katecms/forms/item/:id/submissions/:submissionId',
+      method: 'delete',
+      handler: resolver.resolve('./runtime/server/api/item/submissions/[submissionId].delete'),
+    })
+    addServerHandler({
+      route: '/api/_katecms/forms/item/:id/submissions/:submissionId/files/:index',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/item/submissions/[submissionId]/files/[index].get'),
+    })
+    addServerHandler({
+      route: '/api/_katecms/forms/view/:id',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/view/[id].get'),
+    })
+    addServerHandler({
+      route: '/api/_katecms/forms/submit/:id',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/submit/[id].post'),
+    })
+    addServerHandler({
+      route: '/api/_katecms/forms/mail',
+      method: 'get',
+      handler: resolver.resolve('./runtime/server/api/mail.get'),
+    })
+    addServerHandler({
+      route: '/api/_katecms/forms/mail',
+      method: 'put',
+      handler: resolver.resolve('./runtime/server/api/mail.put'),
+    })
+    addServerHandler({
+      route: '/api/_katecms/forms/mail/test',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/api/mail/test.post'),
+    })
+
+    extendPages((pages) => {
+      const admin = pages.find(page => page.name === 'admin' || page.path === `/${adminPath}`)
+      admin?.children?.push(
+        {
+          name: 'admin-forms',
+          path: 'forms',
+          file: resolver.resolve('./runtime/pages/admin/forms/index.vue'),
+        },
+        {
+          name: 'admin-forms-entries',
+          path: 'forms/:id(\\d+)/entries',
+          file: resolver.resolve('./runtime/pages/admin/forms/entries.vue'),
+        },
+        {
+          name: 'admin-forms-entry',
+          path: 'forms/:id(\\d+)/entries/:submissionId(\\d+)',
+          file: resolver.resolve('./runtime/pages/admin/forms/entry.vue'),
+        },
+        {
+          name: 'admin-forms-mail',
+          path: 'forms/mail',
+          file: resolver.resolve('./runtime/pages/admin/forms/mail.vue'),
+        },
+        {
+          name: 'admin-forms-id',
+          path: 'forms/:id(\\d+)',
+          file: resolver.resolve('./runtime/pages/admin/forms/[id].vue'),
+        },
+      )
+    })
+  },
+})

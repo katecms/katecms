@@ -6,7 +6,7 @@
 
 | Путь | Ответственность |
 | --- | --- |
-| `config/` | `MiraiCmsConfig`, `defineMiraiCmsConfig`, `merge`, `resolve*` для ролей, медиа, базы, формы. Типы полей, коллекций, словарей, опций, блоков |
+| `config/` | `KateCmsConfig`, `defineKateCmsConfig`, `merge`, `resolve*` для ролей, медиа, базы, формы. Типы полей, коллекций, словарей, опций, блоков |
 | `config/defaults.ts` | Единственные дефолты: пути, SQLite, MIME, роли пустые (встроенные роли добавляет `resolve-roles`), брейкпоинты форм |
 | `permissions/can.ts` | `can`, `canOnEntry`, список `RESOURCES` |
 | `auth/password.ts` | scrypt |
@@ -28,7 +28,7 @@
 
 ## Конфиг
 
-`resolveMiraiCmsConfig` не открывает базу и не читает процесс. Он возвращает заполненный объект и `warnings`. Модуль печатает warnings и кладёт объект в `runtimeConfig`.
+`resolveKateCmsConfig` не открывает базу и не читает процесс. Он возвращает заполненный объект и `warnings`. Модуль печатает warnings и кладёт объект в `runtimeConfig`.
 
 `resolveRoles` копирует `BUILT_IN_ROLES`, накладывает карту пользователя, выкидывает `owner` из конфига, игнорирует `admin: false`, затем добавляет owner с `superuser: true` и полными правами. Скрытая роль (`false`) в итоговую карту не попадает.
 
@@ -66,8 +66,8 @@ SQLite-ветка плагина миграции индексы не синхр
 
 ## oEmbed
 
-`fetchOembed` отказывается от не-http(s), частных IPv4, тела сверх лимита и цепочки длиннее 3 редиректов. User-Agent `miraicms-oembed`, таймаут 10 с. Ручка модуля добавляет сессию админки; ядро авторизацию не знает.
+`fetchOembed` отказывается от не-http(s), частных IPv4, тела сверх лимита и цепочки длиннее 3 редиректов. User-Agent `katecms-oembed`, таймаут 10 с. Ручка модуля добавляет сессию админки; ядро авторизацию не знает.
 
 ## Тесты
 
-Поведение ядра покрывается `packages/core/test` (vitest). Схему меняют одновременно в `schema.ts` обоих движков, в `.sql`-копии и в `database/client/schema.ts`, затем гоняют `pnpm --filter @miraicms/core test`.
+Поведение ядра покрывается `packages/core/test` (vitest). Схему меняют одновременно в `schema.ts` обоих движков, в `.sql`-копии и в `database/client/schema.ts`, затем гоняют `pnpm --filter @katecms/core test`.

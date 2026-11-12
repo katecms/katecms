@@ -1,6 +1,6 @@
 # Словари
 
-Ключ `miraicms.dictionaries` — карта `DictionaryDefinition`. Ключ объекта (`categories`) хранится в `dictionaries.type`. Строка таблицы — один термин.
+Ключ `katecms.dictionaries` — карта `DictionaryDefinition`. Ключ объекта (`categories`) хранится в `dictionaries.type`. Строка таблицы — один термин.
 
 Тип: `packages/core/src/config/types/dictionary.ts`.
 

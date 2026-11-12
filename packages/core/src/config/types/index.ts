@@ -13,8 +13,8 @@ export type {
   ResolvedDatabaseConfig,
 } from './database'
 export type {
-  MiraiCmsConfig,
-  ResolvedMiraiCmsConfig,
+  KateCmsConfig,
+  ResolvedKateCmsConfig,
 } from './cms'
 export type {
   Condition,

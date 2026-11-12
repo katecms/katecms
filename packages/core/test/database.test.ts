@@ -375,9 +375,9 @@ describe('database layer', () => {
   })
 
   it('enables WAL and busy_timeout on file databases', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'miraicms-'))
+    const dir = mkdtempSync(join(tmpdir(), 'katecms-'))
     tempDirs.push(dir)
-    const file = join(dir, 'miraicms.db')
+    const file = join(dir, 'katecms.db')
     await migrateSqlite(file)
     const db = createSqliteDb(file)
     try {

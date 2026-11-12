@@ -1,0 +1,28 @@
+import { createError, defineEventHandler, getRouterParam } from 'h3'
+import { useRuntimeConfig } from '#imports'
+import { sql } from 'kysely'
+import { requirePermission, requireUser } from 'katecms/server'
+import { getSeoDb } from '../../utils/db'
+import { entryEditorPayload } from '../../utils/editor'
+import type { SeoEditorPayload } from '../../../types'
+
+export default defineEventHandler(async (event): Promise<SeoEditorPayload> => {
+  const actor = await requireUser(event)
+  const id = Number(getRouterParam(event, 'id'))
+  if (!Number.isInteger(id) || id < 1) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid entry.' })
+  }
+  const row = await sql<{ type: string }>`
+    SELECT type FROM collections WHERE id = ${id}
+  `.execute(getSeoDb())
+  const entry = row.rows[0]
+  if (!entry) {
+    throw createError({ statusCode: 404, statusMessage: 'Entry not found.' })
+  }
+  requirePermission(actor, 'collections', 'read', useRuntimeConfig().katecms?.roles ?? {}, entry.type)
+  const payload = await entryEditorPayload(id)
+  if (!payload) {
+    throw createError({ statusCode: 404, statusMessage: 'Entry not found.' })
+  }
+  return payload
+})

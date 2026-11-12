@@ -1,6 +1,6 @@
 # Поля
 
-Карта `fields` пишется в конфиге коллекции, словаря, страницы опций или блока. Ключ объекта — имя поля в сохранённом JSON. `type` — snake_case (`image_select`). Компонент админки называется PascalCase + `Field` (`ImageSelectField`), тег внутри модуля — `MiraiCmsImageSelectField`. Хост этот тег в своих страницах не использует: он описывает поле объектом конфига.
+Карта `fields` пишется в конфиге коллекции, словаря, страницы опций или блока. Ключ объекта — имя поля в сохранённом JSON. `type` — snake_case (`image_select`). Компонент админки называется PascalCase + `Field` (`ImageSelectField`), тег внутри модуля — `KateCmsImageSelectField`. Хост этот тег в своих страницах не использует: он описывает поле объектом конфига.
 
 Источник типов: `packages/core/src/config/types/fields.ts`.
 
@@ -40,7 +40,7 @@ Layout-only типы `tab`, `accordion`, `separator`, `message` не храня�
 
 `indexed: true` там, где ключ есть в типе, просит скалярный индекс Postgres по JSONB. Nuxt создаёт и снимает такие индексы при старте после миграции. SQLite индексы пропускает. Внутри `repeater` и `flexible_content` индекс не строится.
 
-Зарезервированные ключи в строках: `fc_layout` (имя раскладки flexible content), `__miraicmsCollapsed` (свёртка ряда).
+Зарезервированные ключи в строках: `fc_layout` (имя раскладки flexible content), `__katecmsCollapsed` (свёртка ряда).
 
 Типы, у которых есть `indexed`: `text`, `textarea`, `number`, `range`, `email`, `url`, `select`, `radio`, `button_group`, `true_false`, `date_picker`, `date_time_picker`, `time_picker`, `color_picker`.
 
@@ -178,7 +178,7 @@ Select записей. `postType?: string[]` (нет — все), `dictionary?: 
 
 ### `form`
 
-Выбор формы из дополнения `miraicms-nuxt-form`. Виджет регистрирует это дополнение. Без него `resolveField('form')` компонент не найдёт. `multiple` хранит массив id, одиночное пустое значение при `allowNull` — `null`. На сайте саму форму рисует `MiraiCmsForm`, см. [дополнения](11-dopolneniya.md).
+Выбор формы из дополнения `katecms-form`. Виджет регистрирует это дополнение. Без него `resolveField('form')` компонент не найдёт. `multiple` хранит массив id, одиночное пустое значение при `allowNull` — `null`. На сайте саму форму рисует `KateCmsForm`, см. [дополнения](11-dopolneniya.md).
 
 ## Структура
 

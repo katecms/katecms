@@ -1,17 +1,17 @@
-# `@miraicms/core`
+# `@katecms/core`
 
-Ядро MiraiCMS без Nuxt, Next, Vue и Nitro. Конфиг, роли, поля, ЧПУ, медиа, oEmbed, Kysely-клиент и запросы. HTTP, сессии и чтение env — в адаптере (`miraicms-nuxt` и т.д.).
+Ядро KateCMS без Nuxt, Next, Vue и Nitro. Конфиг, роли, поля, ЧПУ, медиа, oEmbed, Kysely-клиент и запросы. HTTP, сессии и чтение env — в адаптере (`katecms` и т.д.).
 
 Импорт всегда из пакета:
 
 ```ts
 import {
-  resolveMiraiCmsConfig,
+  resolveKateCmsConfig,
   createSqliteDb,
   migrateSqlite,
   hashPassword,
   can,
-} from '@miraicms/core'
+} from '@katecms/core'
 ```
 
 ## Содержание
@@ -54,7 +54,7 @@ import {
 
 Ядро не знает о фреймворке. Адаптер передаёт конфиг, URL базы, каталог загрузок и вызывает функции. Env (`DATABASE_URL`, `NUXT_…`) ядро не читает.
 
-Типичный порядок в адаптере: `resolveMiraiCmsConfig` → `resolveDatabaseTarget` → миграция → клиент → запросы / медиа / права.
+Типичный порядок в адаптере: `resolveKateCmsConfig` → `resolveDatabaseTarget` → миграция → клиент → запросы / медиа / права.
 
 Исходники: `src/config`, `src/permissions`, `src/auth`, `src/fields`, `src/rewrite`, `src/blocks`, `src/text`, `src/media`, `src/indexes`, `src/oembed`, `src/database`. Сборка — `unbuild` в `dist/`. Публичный вход — `src/index.ts`.
 
@@ -62,7 +62,7 @@ import {
 ## Установка
 
 ```bash
-pnpm add @miraicms/core
+pnpm add @katecms/core
 ```
 
 Пакет тянет `kysely`, `pg`, `better-sqlite3`, `sharp`. В Cloudflare Worker нативные драйверы и sharp недоступны: там только `{ d1 }` для SQLite-слоя, без обработки картинок на сервере.
@@ -70,12 +70,12 @@ pnpm add @miraicms/core
 <a id="config"></a>
 ## Конфиг
 
-Пользовательский объект — `MiraiCmsConfig`. После нормализации — `ResolvedMiraiCmsConfig` (все ключи заполнены, плюс `warnings`).
+Пользовательский объект — `KateCmsConfig`. После нормализации — `ResolvedKateCmsConfig` (все ключи заполнены, плюс `warnings`).
 
 ```ts
-import { defineMiraiCmsConfig, resolveMiraiCmsConfig } from '@miraicms/core'
+import { defineKateCmsConfig, resolveKateCmsConfig } from '@katecms/core'
 
-const config = defineMiraiCmsConfig({
+const config = defineKateCmsConfig({
   adminPath: 'admin',
   collections: {
     pages: {
@@ -104,14 +104,14 @@ const config = defineMiraiCmsConfig({
   },
   database: {
     driver: 'postgres',
-    url: 'postgres://postgres:admin@127.0.0.1:5432/miraicms',
+    url: 'postgres://postgres:admin@127.0.0.1:5432/katecms',
   },
 })
 
-const resolved = resolveMiraiCmsConfig(config)
+const resolved = resolveKateCmsConfig(config)
 ```
 
-`defineMiraiCmsConfig` — только типизация, значение не меняет. `resolveMiraiCmsConfig` подставляет дефолты, мержит роли, нормализует media/database. Предупреждения (зарезервированное имя размера, дубликаты, неизвестный драйвер, попытка переопределить `owner`) попадают в `resolved.warnings`.
+`defineKateCmsConfig` — только типизация, значение не меняет. `resolveKateCmsConfig` подставляет дефолты, мержит роли, нормализует media/database. Предупреждения (зарезервированное имя размера, дубликаты, неизвестный драйвер, попытка переопределить `owner`) попадают в `resolved.warnings`.
 
 Пути админки по умолчанию: `adminPath: 'admin'`, вход `/${adminPath}/${loginPath}` (`/admin/login`), регистрация `/${adminPath}/${registerPath}` (`/admin/register`).
 
@@ -168,7 +168,7 @@ const resolved = resolveMiraiCmsConfig(config)
 interface DatabaseConfig {
   driver?: 'postgres' | 'sqlite'
   url?: string
-  sqliteFilename?: string // default: data/miraicms.db
+  sqliteFilename?: string // default: data/katecms.db
 }
 ```
 
@@ -376,7 +376,7 @@ const result = await fetchOembed({ url, maxwidth, maxheight, fetch })
 
 Сначала известные хосты (YouTube, Vimeo, Twitter/X, SoundCloud, Flickr), иначе `<link rel="alternate">` со страницы. Не прокси с открытым доступом: авторизацию оставляет адаптер.
 
-Отказ: не-http(s), private IPv4, слишком большое тело, больше 3 редиректов. Таймаут 10 с, User-Agent `miraicms-oembed`. Результат: `{ ok: true, data }` или `{ ok: false, error, status: 422 | 404 | 502 }`.
+Отказ: не-http(s), private IPv4, слишком большое тело, больше 3 редиректов. Таймаут 10 с, User-Agent `katecms-oembed`. Результат: `{ ok: true, data }` или `{ ok: false, error, status: 422 | 404 | 502 }`.
 
 <a id="database"></a>
 ## База данных
@@ -387,7 +387,7 @@ Kysely, миграции, запросы. Подключение передаё�
 
 Папки: `database/client` — Kysely и типы таблиц, `database/queries` — запросы, `database/migrations` — SQL и раннеры.
 
-Таблицы: `users`, `collections`, `collection_meta`, `collection_revisions`, `media`, `dictionaries`, `collection_dictionaries`, `options`, журнал `_miraicms_migrations`.
+Таблицы: `users`, `collections`, `collection_meta`, `collection_revisions`, `media`, `dictionaries`, `collection_dictionaries`, `options`, журнал `_katecms_migrations`.
 
 Уникальность среди соседей: коллекции и словари — `(type, parent_id, slug)` (Postgres `NULLS NOT DISTINCT`, SQLite `COALESCE(parent_id, 0)`). Email пользователя и `media.filename` уникальны. Циклы `parent_id` на коллекциях и словарях режет триггер в БД (на D1 FK/триггеры между запросами не держатся).
 
@@ -403,7 +403,7 @@ JSON-колонки всегда через `JSON.stringify` / `JSON.parse`, п�
 #### PostgreSQL
 
 ```ts
-const url = 'postgres://postgres:admin@127.0.0.1:5432/miraicms'
+const url = 'postgres://postgres:admin@127.0.0.1:5432/katecms'
 
 await migratePostgres(url)
 
@@ -422,7 +422,7 @@ await db.destroy() // закрывает пул, который создал cre
 #### SQLite (файл)
 
 ```ts
-const file = './data/miraicms.db'
+const file = './data/katecms.db'
 
 await migrateSqlite(file)
 
@@ -475,12 +475,12 @@ SQLite и D1 хранят даты как ISO-текст, JSON как текст
 #### PostgreSQL
 
 ```ts
-const db = createPostgresDb('postgres://postgres:admin@127.0.0.1:5432/miraicms')
+const db = createPostgresDb('postgres://postgres:admin@127.0.0.1:5432/katecms')
 const db = createPostgresDb({ connectionString: process.env.DATABASE_URL })
 const db = createPostgresDb({
   host: '127.0.0.1',
   port: 5432,
-  database: 'miraicms',
+  database: 'katecms',
   user: 'postgres',
   password: 'admin',
 })
@@ -493,8 +493,8 @@ const db = createPostgresDb({ pool })
 #### SQLite (файл)
 
 ```ts
-const db = createSqliteDb('./data/miraicms.db')
-const db = createSqliteDb({ filename: './data/miraicms.db' })
+const db = createSqliteDb('./data/katecms.db')
+const db = createSqliteDb({ filename: './data/katecms.db' })
 const db = createSqliteDb({ filename: ':memory:' })
 const db = createSqliteDb({ database })
 // database — соединение better-sqlite3; destroy() его не закрывает
@@ -513,17 +513,17 @@ const db = createSqliteDb({ d1: env.DB })
 <a id="db-migrations"></a>
 ### Миграции
 
-Схема CMS применяется **один раз** (bootstrap), затем SQL дополнений. Журнал — `_miraicms_migrations`. Повторный запуск пропускает уже записанные id. Результат: `{ applied, alreadyApplied }`. Правка DDL после первого применения **не попадёт** в живую базу: нужен новый `schemaId` или ручной SQL. Версионированных миграций ядра нет.
+Схема CMS применяется **один раз** (bootstrap), затем SQL дополнений. Журнал — `_katecms_migrations`. Повторный запуск пропускает уже записанные id. Результат: `{ applied, alreadyApplied }`. Правка DDL после первого применения **не попадёт** в живую базу: нужен новый `schemaId` или ручной SQL. Версионированных миграций ядра нет.
 
 #### PostgreSQL
 
 ```ts
-await migratePostgres('postgres://postgres:admin@127.0.0.1:5432/miraicms')
+await migratePostgres('postgres://postgres:admin@127.0.0.1:5432/katecms')
 await migratePostgres({ connectionString: process.env.DATABASE_URL })
 await migratePostgres({
   host: '127.0.0.1',
   port: 5432,
-  database: 'miraicms',
+  database: 'katecms',
   user: 'postgres',
   password: 'admin',
 })
@@ -548,8 +548,8 @@ await migratePostgres({
 #### SQLite (файл)
 
 ```ts
-await migrateSqlite('./data/miraicms.db')
-await migrateSqlite({ filename: './data/miraicms.db' })
+await migrateSqlite('./data/katecms.db')
+await migrateSqlite({ filename: './data/katecms.db' })
 await migrateSqlite({ filename: ':memory:' })
 await migrateSqlite({ database })
 ```
@@ -566,7 +566,7 @@ await migrateSqlite({ d1: env.DB })
 
 #### Таблицы дополнения
 
-`schemaId` стабильный и не равен `miraicms`.
+`schemaId` стабильный и не равен `katecms`.
 
 ```ts
 await migratePostgres({
@@ -576,7 +576,7 @@ await migratePostgres({
 })
 
 await migrateSqlite({
-  filename: './data/miraicms.db',
+  filename: './data/katecms.db',
   schemaId: 'shop',
   schemaSql: 'CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT);',
 })

@@ -40,7 +40,7 @@ export async function setCollectionMeta(
 ): Promise<CollectionMeta> {
   const normalized = key.trim()
   if (!normalized) {
-    throw new Error('[MiraiCMS] collection meta key must be non-empty.')
+    throw new Error('[KateCMS] collection meta key must be non-empty.')
   }
   return db
     .insertInto('collection_meta')

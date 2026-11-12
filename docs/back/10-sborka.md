@@ -11,13 +11,13 @@
 | `pnpm dev:build` | Production-сборка playground |
 | `pnpm test` | Тесты ядра, сборка ядра, тесты модуля |
 | `pnpm test:types` | `tsc` ядра и `vue-tsc` модуля |
-| `pnpm test:basic` | Фикстура `packages/miraicms-nuxt/test/fixtures/basic` |
+| `pnpm test:basic` | Фикстура `packages/katecms/test/fixtures/basic` |
 | `pnpm lint` | ESLint |
 | `pnpm prepack` | Сборка ядра и `nuxt-module-build` модуля |
 | `pnpm ai:index` | Пересчёт `.ai/` |
 | `pnpm release` | lint, test, prepack, changelogen, publish ядра и модуля |
 
-Ядро собирает unbuild в `packages/core/dist`: `index.mjs` и `browser.mjs` плюс типы. Модуль собирает `@nuxt/module-builder` в `packages/miraicms-nuxt/dist`. В `exports` модуля наружу смотрят `dist/module.mjs`, исходник `extensions` и `server/kit.ts`, и собранный SCSS стилей.
+Ядро собирает unbuild в `packages/core/dist`: `index.mjs` и `browser.mjs` плюс типы. Модуль собирает `@nuxt/module-builder` в `packages/katecms/dist`. В `exports` модуля наружу смотрят `dist/module.mjs`, исходник `extensions` и `server/kit.ts`, и собранный SCSS стилей.
 
 Дополнения form и seo в `prepack` корня не входят. Playground в разработке резолвит их из исходников workspace.
 
@@ -28,8 +28,8 @@
 | Место | Чем |
 | --- | --- |
 | `packages/core/test` | vitest. Конфиг, права, запросы, медиа, индексы, ЧПУ |
-| `packages/miraicms-nuxt` | vitest, в том числе `test/basic.test.ts` на фикстуре |
-| `packages/miraicms-nuxt-form/test/model.test.ts` | `node --test` чистой модели, без подъёма Nuxt |
+| `packages/katecms` | vitest, в том числе `test/basic.test.ts` на фикстуре |
+| `packages/katecms-form/test/model.test.ts` | `node --test` чистой модели, без подъёма Nuxt |
 
 Правка поведения ядра сопровождается тестом в `packages/core/test`. Правка виджета, у которого нет браузерного прогона в репозитории, проверяется вручную в playground: админка и публичная страница, которая это поле читает.
 
@@ -53,4 +53,4 @@
 
 Сгенерированные `dist`, `.nuxt`, `.output` и загруженные файлы `public/uploads` к исходникам не относятся. Схему меняют в `schema.ts`, типы Kysely правят руками рядом, `.sql` рядом с миграцией держат копией для чтения.
 
-Секреты в репозиторий не кладут: `MIRAICMS_SESSION_PASSWORD`, строка Postgres, пароль SMTP из таблицы `miraicms_form_mail`. В development сессия поднимается без переменной, с предупреждением в логе.
+Секреты в репозиторий не кладут: `MIRAICMS_SESSION_PASSWORD`, строка Postgres, пароль SMTP из таблицы `katecms_form_mail`. В development сессия поднимается без переменной, с предупреждением в логе.

@@ -1,9 +1,10 @@
 import { createReadStream, existsSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { isAbsolute, join, resolve, sep } from 'node:path'
 import {
   defineNuxtModule,
   createResolver,
-  addServerPlugin,
+  addNitroPlugin,
   addServerHandler,
   addRouteMiddleware,
   addImports,
@@ -14,11 +15,19 @@ import type {
   ResolvedKateCmsConfig,
 } from '@katecms/core'
 import {
+  hasImageWork,
   mergeKateCmsConfig,
   resolveKateCmsConfig,
 } from '@katecms/core'
 import { addAdminComponents } from './admin-components'
 import { uploadResponseHeaders } from './runtime/server/utils/upload-headers'
+
+const require = createRequire(import.meta.url)
+
+/** Leaflet's `main` is a UMD file. Vite serves it as ESM, so `L.map` is missing. */
+function leafletEsmEntry(): string {
+  return require.resolve('leaflet/dist/leaflet-src.esm.js')
+}
 
 function resolveModuleSqliteFilename(rootDir: string, filename: string): string {
   const value = filename.trim()
@@ -82,6 +91,8 @@ export default defineNuxtModule<KateCmsConfig>({
     configKey: 'katecms',
   },
   setup(options, nuxt) {
+    nuxt.options.alias.leaflet = leafletEsmEntry()
+
     const resolver = createResolver(import.meta.url)
     const existing = nuxt.options.runtimeConfig.katecms
     const existingDatabase = existing?.database
@@ -125,6 +136,7 @@ export default defineNuxtModule<KateCmsConfig>({
       loginPath: resolved.loginPath,
       registerPath: resolved.registerPath,
       registration: resolved.registration,
+      imageVariants: hasImageWork(resolved.media),
       collections: toPublicCollections(resolved.collections),
       dictionaries: toPublicDictionaries(resolved.dictionaries),
       options: toPublicOptions(resolved.options),
@@ -133,7 +145,7 @@ export default defineNuxtModule<KateCmsConfig>({
       },
     }
 
-    addServerPlugin(resolver.resolve('./runtime/server/plugins/auto-migrate'))
+    addNitroPlugin(resolver.resolve('./runtime/server/plugins/auto-migrate'))
     addServerHandler({
       middleware: true,
       handler: resolver.resolve('./runtime/server/middleware/admin-headers'),
@@ -154,7 +166,7 @@ export default defineNuxtModule<KateCmsConfig>({
             next()
             return
           }
-          let key = ''
+          let key: string
           try {
             key = decodeURIComponent(raw.slice('/uploads/'.length))
           }
@@ -528,6 +540,7 @@ declare module '@nuxt/schema' {
       loginPath: string
       registerPath: string
       registration: boolean
+      imageVariants: boolean
       collections: Record<string, {
         labels: { name: string, singularName: string }
         icon: string
@@ -566,6 +579,7 @@ declare module 'nuxt/schema' {
       loginPath: string
       registerPath: string
       registration: boolean
+      imageVariants: boolean
       collections: Record<string, {
         labels: { name: string, singularName: string }
         icon: string

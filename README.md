@@ -30,9 +30,27 @@ export default defineNuxtConfig({
 
 The `katecms` keys are described in [setup](#config-setup).
 
+<a id="app-shell"></a>
+### App shell
+
+`app/app.vue` has to render the current route:
+
+```vue
+<template>
+  <NuxtPage />
+</template>
+```
+
+KateCMS registers `/admin` and the screens under it (login, media, entries) with `extendPages`. That turns on Nuxt’s page router. `<NuxtPage />` is the outlet that mounts the matched route. The admin shell is the parent page for `/admin`; each child screen is rendered through the `<NuxtPage />` inside that shell.
+
+A new Nuxt app ships `app/app.vue` with `<NuxtWelcome />` only. After the module is installed, `/` has no page file, so the router answers 404. `/admin` still shows the welcome screen, because that component stays in `app.vue` and the matched admin page is never mounted.
+
+Put the site homepage in `app/pages/index.vue`. `<NuxtWelcome />` can live there if you still want the starter screen at `/`.
+
 ## Contents
 
 - [Installation](#installation)
+  - [App shell](#app-shell)
 - [Module config](#config)
   - [Setup](#config-setup)
   - [`katecms` keys](#config-keys)

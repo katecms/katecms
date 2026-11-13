@@ -968,10 +968,6 @@ $marker: '.katecms-osm-marker';
       padding: 0;
     }
 
-    img.leaflet-tile {
-      mix-blend-mode: plus-lighter;
-    }
-
     &.leaflet-touch-zoom {
       touch-action: pan-x pan-y;
     }

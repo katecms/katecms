@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useHead } from '#imports'
+import { useHead, useRuntimeConfig } from '#imports'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { isImageMedia, RESERVED_SIZE_NAME } from '@katecms/core'
 import type { MediaItem } from '@katecms/core'
@@ -17,6 +17,7 @@ import type { MediaLibraryFilterState, MediaLibraryPage } from '../../utils/medi
 useHead({ title: 'Media library' })
 
 const rootClass = 'katecms-media'
+const imageVariants = Boolean(useRuntimeConfig().public.katecms?.imageVariants)
 
 const POLL_MAX_ATTEMPTS = 60
 const POLL_INTERVAL_MS = 2000
@@ -114,13 +115,13 @@ async function fetchPage(offset: number) {
 
 async function load(options?: { silent?: boolean }) {
   const id = ++requestId
-    if (!options?.silent) {
-      loading.value = true
-      error.value = null
-      items.value = []
-      fetched.value = 0
-      markedIds.value = []
-    }
+  if (!options?.silent) {
+    loading.value = true
+    error.value = null
+    items.value = []
+    fetched.value = 0
+    markedIds.value = []
+  }
   try {
     const res = await fetchPage(0)
     if (id !== requestId) {
@@ -534,6 +535,7 @@ watch([scroller, sentinel, hasMore], () => {
         {{ deleting ? 'Deleting…' : `Delete selected (${markedCount})` }}
       </KateCmsUiButton>
       <KateCmsUiButton
+        v-if="imageVariants"
         tag="button"
         variant="secondary"
         :disabled="regenerating || !items.length"
@@ -853,7 +855,7 @@ watch([scroller, sentinel, hasMore], () => {
             </form>
 
             <KateCmsUiButton
-              v-if="isImageMedia(selected)"
+              v-if="imageVariants && isImageMedia(selected)"
               tag="button"
               variant="secondary"
               :disabled="selected.variants_status === 'pending'"

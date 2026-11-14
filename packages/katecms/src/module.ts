@@ -92,6 +92,15 @@ export default defineNuxtModule<KateCmsConfig>({
   },
   setup(options, nuxt) {
     nuxt.options.alias.leaflet = leafletEsmEntry()
+    // Vite must load the ESM build. TypeScript should keep resolving `leaflet` to @types/leaflet.
+    nuxt.hook('prepare:types', ({ tsConfig }) => {
+      const paths = tsConfig.compilerOptions?.paths
+      if (!paths) {
+        return
+      }
+      delete paths.leaflet
+      delete paths['leaflet/*']
+    })
 
     const resolver = createResolver(import.meta.url)
     const existing = nuxt.options.runtimeConfig.katecms

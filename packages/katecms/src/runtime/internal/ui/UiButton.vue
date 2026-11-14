@@ -203,7 +203,7 @@ $root: '.katecms-btn';
   &:not(#{$root}--secondary):not(#{$root}--tertiary):not(#{$root}--red) {
     background: $color-accent;
     color: $color-on-accent;
-    box-shadow: $shadow-sm, 0 4px 12px rgba(47, 111, 237, .18);
+    box-shadow: $shadow-sm, 0 4px 12px rgba(232, 85, 47, .22);
 
     &:hover:not(:disabled):not(#{$root}--disabled),
     &#{$root}--active:not(:disabled):not(#{$root}--disabled) {

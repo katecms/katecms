@@ -22,16 +22,16 @@
 }
 
 @mixin katecms-theme-light {
-  --katecms-color-accent: #2F6FED;
-  --katecms-color-accent-hover: #1E58D4;
-  --katecms-color-accent-wash: #EAF1FD;
-  --katecms-color-ink: #141A2A;
-  --katecms-color-muted: #6B7280;
-  --katecms-color-bg: #F6F7F8;
+  --katecms-color-accent: #E8552F;
+  --katecms-color-accent-hover: #C44522;
+  --katecms-color-accent-wash: #FBE6DF;
+  --katecms-color-ink: #1F1B3A;
+  --katecms-color-muted: #726F88;
+  --katecms-color-bg: #FAF8F5;
   --katecms-color-surface: #FFFFFF;
-  --katecms-color-border: #E6E8EB;
+  --katecms-color-border: #E6E1DA;
   --katecms-color-on-accent: #FFFFFF;
-  --katecms-color-overlay: rgba(20, 26, 42, 0.45);
+  --katecms-color-overlay: rgba(31, 27, 58, 0.45);
   --katecms-color-success: #2A9A66;
   --katecms-color-success-bg: #E7F6EE;
   --katecms-color-info: #2A7BBD;
@@ -40,8 +40,8 @@
   --katecms-color-warning-bg: #FBF3E3;
   --katecms-color-danger: #D64545;
   --katecms-color-danger-bg: #FDECEC;
-  --katecms-shadow-sm: 0 1px 2px rgba(20, 26, 42, 0.05);
-  --katecms-shadow-md: 0 8px 24px rgba(20, 26, 42, 0.08);
+  --katecms-shadow-sm: 0 1px 2px rgba(31, 27, 58, 0.05);
+  --katecms-shadow-md: 0 8px 24px rgba(31, 27, 58, 0.08);
   color-scheme: light;
 }
 

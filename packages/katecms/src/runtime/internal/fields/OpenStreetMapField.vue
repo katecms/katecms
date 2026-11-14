@@ -228,7 +228,7 @@ function applyMarkerSelection() {
 }
 
 function bindMarkerEvents(marker: LeafletMarker, index: number) {
-  marker.on('click', (event) => {
+  marker.on('click', (event: LeafletMouseEvent) => {
     L?.DomEvent.stopPropagation(event)
     selectMarker(index)
   })
@@ -241,8 +241,8 @@ function bindMarkerEvents(marker: LeafletMarker, index: number) {
     }
     list[index] = {
       ...current,
-      lat: Number(pos.lat.toFixed(6)),
-      lng: Number(pos.lng.toFixed(6)),
+      lat: pos.lat,
+      lng: pos.lng,
       zoom: currentZoom(),
     }
     writeModel(list, index)
@@ -352,9 +352,7 @@ function placeMarkerAt(lat: number, lng: number, partial?: Partial<OsmMarker>) {
 }
 
 function onMapDblClick(event: LeafletMouseEvent) {
-  const lat = Number(event.latlng.lat.toFixed(6))
-  const lng = Number(event.latlng.lng.toFixed(6))
-  placeMarkerAt(lat, lng)
+  placeMarkerAt(event.latlng.lat, event.latlng.lng)
 }
 
 function onZoomEnd() {
@@ -452,7 +450,7 @@ function createFitBoundsControl(leaflet: LeafletModule): LeafletControl {
       link.innerHTML = '<span class="leaflet-control-fit-bounds__icon" aria-hidden="true"></span>'
 
       leaflet.DomEvent.disableClickPropagation(container)
-      leaflet.DomEvent.on(link, 'click', (event) => {
+      leaflet.DomEvent.on(link, 'click', (event: Event) => {
         leaflet.DomEvent.preventDefault(event)
         if (link.classList.contains('is-disabled')) {
           return
@@ -468,8 +466,8 @@ function createFitBoundsControl(leaflet: LeafletModule): LeafletControl {
 
 function onMarkGeocode(event: { geocode: GeocodingResult }) {
   const { geocode } = event
-  const lat = Number(geocode.center.lat.toFixed(6))
-  const lng = Number(geocode.center.lng.toFixed(6))
+  const lat = geocode.center.lat
+  const lng = geocode.center.lng
   const label = parseGeocodeResult([geocode], { lat, lng })
   const zoom = currentZoom()
 
@@ -641,9 +639,7 @@ function onLocationFound(event: LocationEvent) {
   if (isMultiple.value) {
     return
   }
-  const lat = Number(event.latlng.lat.toFixed(6))
-  const lng = Number(event.latlng.lng.toFixed(6))
-  placeMarkerAt(lat, lng)
+  placeMarkerAt(event.latlng.lat, event.latlng.lng)
 }
 
 watch(
@@ -837,7 +833,7 @@ $marker: '.katecms-osm-marker';
     &#{$marker}--selected {
       #{$marker}__pin {
         background: $color-accent-hover;
-        box-shadow: 0 2px 8px rgba(47, 111, 237, 0.45);
+        box-shadow: 0 2px 8px rgba(232, 85, 47, 0.45);
       }
 
       #{$marker}__pulse {
